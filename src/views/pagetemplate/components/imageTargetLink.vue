@@ -114,8 +114,7 @@
       displayName: {
         get() {
           if (this.targetUrl !== null && this.targetUrl.trim()) {
-            if (this.targetType === 'aggregation' &&
-              (this.targetUrl.indexOf('aggregation') >= 0 || this.targetUrl.indexOf('category') >= 0)) {
+            if (this.targetType === 'aggregation' && this.targetUrl.indexOf('aggregation') >= 0) {
               return this.targetName
             } else if (this.targetType === 'commodity' && this.targetUrl.indexOf('commodity') >= 0) {
               return this.targetName
