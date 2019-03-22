@@ -4,6 +4,7 @@ process.env.VUE_APP_USER_BASE_URL = 'http://115.159.100.38:8082/seller/'
 process.env.VUE_APP_BASE_URL = 'http://115.159.100.38:8080/'
 
 module.exports = {
+  productionSourceMap: false,
   pluginOptions: {
     i18n: {
       locale: 'zh-CN',
@@ -26,5 +27,10 @@ module.exports = {
       .tap(options => {
         return Object.assign({}, options, { symbolId: 'icon-[name]' })
       })
+  },
+  pwa: {
+    workboxOptions: {
+      importWorkboxFrom: 'local'
+    }
   }
 }
