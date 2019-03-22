@@ -36,9 +36,13 @@
               row-key="id" border fit
               highlight-current-row
               @current-change="handleDialogSelectionChange">
-      <el-table-column
-        type="selection"
-        width="50" />
+
+      <el-table-column label="已选" align="center" width="100px">
+        <template slot-scope="scope">
+          <el-checkbox :value="aggregationSelect !== null && aggregationSelect.id === scope.row.id" />
+        </template>
+      </el-table-column>
+
       <el-table-column label="ID" align="center" width="100px">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
@@ -187,10 +191,6 @@
         }
       },
       handleDialogSelectionChange(row) {
-        if (this.aggregationSelect) {
-          this.$refs.dialogAggregationTable.toggleRowSelection(this.aggregationSelect)
-        }
-        this.$refs.dialogAggregationTable.toggleRowSelection(row)
         this.aggregationSelect = row
       },
       handleDialogCancel() {
@@ -198,8 +198,16 @@
         this.$emit('onSelectionCancelled')
       },
       handleDialogConfirm() {
-        this.$emit('onSelectionConfirmed', Object.assign({}, this.aggregationSelect))
-        this.clearDialogData()
+        if (this.aggregationSelect) {
+          this.$emit('onSelectionConfirmed', Object.assign({}, this.aggregationSelect))
+          this.clearDialogData()
+        } else {
+          this.$message({
+            showClose: true,
+            message: '请选择一个聚合页！',
+            type: 'warning'
+          });
+        }
       },
       clearDialogData() {
         this.total = 0

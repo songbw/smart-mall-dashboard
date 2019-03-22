@@ -76,7 +76,7 @@
         pageTemplateList: 'currentAggregationContent',
         currentTemplateIndex: 'currentAggregationContentIndex'
       }),
-      gridInfo: function() {
+      gridInfo: function () {
         if (this.pageTemplateList[this.currentTemplateIndex].type === gridType) {
           return this.pageTemplateList[this.currentTemplateIndex].data
         } else {
@@ -209,7 +209,7 @@
         const grid = {
           count: 1,
           targetType: 'aggregation',
-          grids: [{ imageUrl: null, targetUrl: null, targetName: null }]
+          grids: [{ imageUrl: null, targetType: 'blank', targetUrl: 'about:blank', targetName: '无链接' }]
         }
         this.$store.commit('changeTemplateGridListContent', { index: -1, value: grid })
       },
@@ -221,7 +221,7 @@
         if (delta > 0) {
           this.gridList[index].grids.forEach(item => newGrid.grids.push(item))
           for (let i = 0; i < delta; i++) {
-            newGrid.grids.push({ imageUrl: null, targetUrl: null, targetName: null })
+            newGrid.grids.push({ imageUrl: null, targetType: 'blank', targetUrl: 'about:blank', targetName: '无链接' })
           }
         } else if (delta < 0) {
           for (let i = 0; i < value; i++) {

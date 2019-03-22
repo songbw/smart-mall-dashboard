@@ -42,9 +42,11 @@
       max-height="250"
       highlight-current-row
       @current-change="handleDialogSelectionChange">
-      <el-table-column
-        type="selection"
-        width="50" />
+      <el-table-column label="已选" align="center" width="100px">
+        <template slot-scope="scope">
+          <el-checkbox :value="promotionSelection !== null && promotionSelection.id === scope.row.id" />
+        </template>
+      </el-table-column>
       <el-table-column label="活动编号" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
@@ -194,8 +196,6 @@
         }
       },
       handleDialogSelectionChange(row) {
-        this.$refs.dialogPromotionTable.clearSelection()
-        this.$refs.dialogPromotionTable.toggleRowSelection(row)
         this.promotionSelection = row
       },
       handleDialogCancel() {
@@ -203,8 +203,16 @@
         this.$emit('onSelectionCancelled')
       },
       handleDialogConfirm() {
-        this.$emit('onSelectionConfirmed', Object.assign({}, this.promotionSelection))
-        this.clearDialogData()
+        if (this.promotionSelection) {
+          this.$emit('onSelectionConfirmed', Object.assign({}, this.promotionSelection))
+          this.clearDialogData()
+        } else {
+          this.$message({
+            showClose: true,
+            message: '请选择一个促销活动！',
+            type: 'warning'
+          });
+        }
       },
       clearDialogData() {
         this.promotionSelection = null
