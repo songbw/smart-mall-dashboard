@@ -1,7 +1,7 @@
-process.env.VUE_APP_UPLOAD_URL = 'http://115.159.100.38:8080/upload/relative'
-process.env.VUE_APP_AUTH_BASE_URL = 'http://115.159.100.38:8081/'
-process.env.VUE_APP_USER_BASE_URL = 'http://115.159.100.38:8082/seller/'
-process.env.VUE_APP_BASE_URL = 'http://115.159.100.38:8080/'
+process.env.VUE_APP_UPLOAD_URL = 'http://119.3.3.226:8080/upload/relative'
+process.env.VUE_APP_AUTH_BASE_URL = 'http://119.3.3.226:8081/'
+process.env.VUE_APP_USER_BASE_URL = 'http://119.3.3.226:8082/seller/'
+process.env.VUE_APP_BASE_URL = 'http://119.3.3.226:8080/'
 
 module.exports = {
   productionSourceMap: false,
