@@ -129,10 +129,10 @@
         typeOptions: [{
           value: 0,
           label: '减价'
-        }, {
+        }/*, {
           value: 1,
           label: '折扣'
-        }],
+        }*/],
         dataLoading: false,
         promotionValue: null,
         dialogSelectionVisible: false,

@@ -262,6 +262,8 @@
                 hasPromotionActivity: false,
                 promotionActivityId: -1,
                 promotionActivityName: '',
+                promotionActivityStartDate: '',
+                promotionActivityEndDate: '',
                 hasImage: false,
                 imageUrl: '',
                 targetUrl: '',

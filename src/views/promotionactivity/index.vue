@@ -48,8 +48,9 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column
+        align="center"
         type="selection"
-        width="50" />
+        width="55" />
       <el-table-column label="活动编号" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
@@ -87,7 +88,7 @@
       </el-table-column>
       <el-table-column :label="$t('aggregation_table_ops_title')" align="center" width="200">
         <template slot-scope="scope">
-          <el-dropdown placement="bottom-start" trigger="click" @command="handleOpsAction">
+          <el-dropdown placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>

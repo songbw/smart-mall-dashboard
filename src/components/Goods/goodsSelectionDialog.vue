@@ -39,7 +39,7 @@
       @selection-change="handleDialogSelectionChange">
       <el-table-column
         type="selection"
-        width="30" />
+        width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
@@ -53,6 +53,11 @@
       <el-table-column :label="$t('product_table_price_title')" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="hasPromotion" label="减价(元)" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.discount }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('product_detail_edit_title')" align="center" width="80">
@@ -181,12 +186,16 @@
       handleDialogSelectionChange(val) {
         if (val.length > 0) {
           this.dialogSelectedItems = val.map(item => {
-            return {
+            const selectItem = {
               skuid: item.skuid,
               price: item.price,
               imagePath: item.image,
               intro: item.brand + ' ' + item.name
             }
+            if (this.hasPromotion) {
+              selectItem.discount = item.discount
+            }
+            return selectItem
           })
         } else {
           this.dialogSelectedItems = []

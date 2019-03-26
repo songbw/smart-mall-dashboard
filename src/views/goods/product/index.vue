@@ -78,7 +78,7 @@
       <el-table-column
         :selectable="productSelectable"
         type="selection"
-        width="50" />
+        width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>

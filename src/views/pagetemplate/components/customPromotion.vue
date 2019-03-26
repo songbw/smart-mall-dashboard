@@ -20,7 +20,8 @@
                          @click="dialogPromotionVisible = true">
                 选择促销活动
               </el-button>
-              <span style="margin-left: 10px">{{ titlePromotionActivityName }}</span>
+              <div>活动名称： {{ titlePromotionActivityName }}</div>
+              <div>活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}</div>
             </el-form-item>
             <el-form-item :label="$t('aggregation_customization_promotion_has_image')">
               <el-switch v-model="titleHasImage" />
@@ -71,7 +72,7 @@
     </el-container>
     <div class="header-container">
       <div class="header-ops-container">
-        <el-button size="mini" @click="dialogImportVisible = true">
+        <el-button v-if="titleHasPromotionActivity === false" size="mini" @click="dialogImportVisible = true">
           {{ $t('aggregation_customization_goods_import_title') }}
         </el-button>
         <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
@@ -93,7 +94,7 @@
       @selection-change="handleSelectionChange">
       <el-table-column
         type="selection"
-        width="30" />
+        width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
@@ -188,7 +189,7 @@
           return this.promotionData.list
         }
       },
-      promotionData: function() {
+      promotionData: function () {
         if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
           return this.pageTemplateList[this.currentTemplateIndex].data
         } else {
@@ -202,6 +203,8 @@
                 hasPromotionActivity: false,
                 promotionActivityId: -1,
                 promotionActivityName: '',
+                promotionActivityStartDate: '',
+                promotionActivityEndDate: '',
                 hasImage: false,
                 imageUrl: '',
                 targetType: '',
@@ -306,6 +309,24 @@
         },
         set(newValue) {
           const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityName: newValue })
+          this.changeTitle(title)
+        }
+      },
+      titlePromotionActivityStartDate: {
+        get() {
+          return this.promotionData.settings.title.promotionActivityStartDate
+        },
+        set(newValue) {
+          const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityStartDate: newValue })
+          this.changeTitle(title)
+        }
+      },
+      titlePromotionActivityEndDate: {
+        get() {
+          return this.promotionData.settings.title.promotionActivityEndDate
+        },
+        set(newValue) {
+          const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityEndDate: newValue })
           this.changeTitle(title)
         }
       },
@@ -453,6 +474,8 @@
         this.dialogPromotionVisible = false
         this.titlePromotionActivityId = promotion.id
         this.titlePromotionActivityName = promotion.name
+        this.titlePromotionActivityStartDate = promotion.startDate
+        this.titlePromotionActivityEndDate = promotion.endDate
         this.titleImageTargetType = 'promotion'
         this.titleImageTargetUrl = 'route://promotion/' + promotion.id
         this.titleImageTargetName = promotion.name

@@ -58,7 +58,7 @@
         @selection-change="handleSelectionChange">
         <el-table-column
           type="selection"
-          width="30" />
+          width="55" />
         <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
           <template slot-scope="scope">
             <span>{{ scope.row.skuid }}</span>
