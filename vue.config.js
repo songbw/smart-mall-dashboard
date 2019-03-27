@@ -27,10 +27,5 @@ module.exports = {
       .tap(options => {
         return Object.assign({}, options, { symbolId: 'icon-[name]' })
       })
-  },
-  pwa: {
-    workboxOptions: {
-      importWorkboxFrom: 'local'
-    }
   }
 }
