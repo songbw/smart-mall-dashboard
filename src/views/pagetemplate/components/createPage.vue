@@ -1,13 +1,13 @@
 <template>
-  <el-form v-loading="creatingPage" ref="ruleForm" :model="pageForm" :rules="pageRules"
+  <el-form v-loading="creatingPage" ref="ruleForm" :model="pageForm"
            label-position="right" label-width="120px" status-icon>
-    <el-form-item :label="$t('aggregation_creation_form_name_title')" prop="name" required>
-      <el-input v-model="pageName"/>
+    <el-form-item :label="$t('aggregation_creation_form_name_title')" prop="name">
+      <el-input v-model="pageName" />
     </el-form-item>
     <el-form-item :label="$t('aggregation_creation_form_home_title')" prop="homePage">
-      <el-switch v-model="homePage"/>
+      <el-switch v-model="homePage" />
     </el-form-item>
-    <el-form-item :label="$t('aggregation_creation_form_date_title')" prop="effectiveDate" required>
+    <el-form-item :label="$t('aggregation_creation_form_date_title')" prop="effectiveDate">
       <el-date-picker
         :placeholder="$t('aggregation_creation_form_date_placeholder')"
         v-model="pageDate"
@@ -17,7 +17,7 @@
       />
     </el-form-item>
     <el-form-item :label="$t('aggregation_creation_form_color_title')" prop="backgroundColor">
-      <el-color-picker v-model="pageColor"/>
+      <el-color-picker v-model="pageColor" />
       <el-tag>{{ pageColor }}</el-tag>
     </el-form-item>
     <el-form-item>
@@ -40,14 +40,6 @@
           homePage: null,
           effectiveDate: null,
           backgroundColor: null
-        },
-        pageRules: {
-          name: [
-            { required: true, message: this.$t('aggregation_creation_form_name_validator'), trigger: 'change' }
-          ],
-          effectiveDate: [
-            { required: true, message: this.$t('aggregation_creation_form_date_validator'), trigger: 'change' }
-          ]
         }
       }
     },
@@ -57,7 +49,7 @@
       }),
       pageName: {
         get() {
-          return this.pageForm.name ? this.pageForm.name : this.pageInfo.name
+          return this.pageForm.name != null ? this.pageForm.name : this.pageInfo.name
         },
         set(newValue) {
           this.pageForm.name = newValue
@@ -73,7 +65,7 @@
       },
       pageDate: {
         get() {
-          return this.pageForm.effectiveDate ? this.pageForm.effectiveDate : this.pageInfo.effectiveDate
+          return this.pageForm.effectiveDate != null ? this.pageForm.effectiveDate : this.pageInfo.effectiveDate
         },
         set(newValue) {
           this.pageForm.effectiveDate = newValue
@@ -81,7 +73,7 @@
       },
       pageColor: {
         get() {
-          return this.pageForm.backgroundColor ? this.pageForm.backgroundColor : this.pageInfo.backgroundColor
+          return this.pageForm.backgroundColor != null ? this.pageForm.backgroundColor : this.pageInfo.backgroundColor
         },
         set(newValue) {
           this.pageForm.backgroundColor = newValue

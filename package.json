@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "echarts": "^4.2.1",
-    "element-ui": "^2.6.3",
+    "element-ui": "^2.7.0",
     "file-saver": "^2.0.0",
     "js-cookie": "^2.2.0",
     "moment": "^2.24.0",
@@ -31,9 +31,9 @@
     "xlsx": "^0.14.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.5.1",
+    "@vue/cli-plugin-babel": "^3.5.3",
     "@vue/cli-plugin-eslint": "^3.5.1",
-    "@vue/cli-service": "^3.5.1",
+    "@vue/cli-service": "^3.5.3",
     "babel-eslint": "^10.0.1",
     "babel-plugin-component": "^1.1.1",
     "eslint": "^5.15.3",
