@@ -24,7 +24,21 @@
     </el-form>
     <el-table :data="excelData.results" border highlight-current-row style="width: 100%;margin-top:20px;"
               max-height="250">
-      <el-table-column v-for="item of excelData.header" :prop="item" :label="item" :key="item" />
+      <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.skuid }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('product_table_name_title')" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.intro }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('product_table_price_title')" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
     </el-table>
     <span slot="footer">
       <el-button @click="handleDialogCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
@@ -35,6 +49,7 @@
 
 <script>
   import XLSX from 'xlsx'
+  import { searchProductInfo } from '@/api/products'
 
   export default {
     name: 'GoodsImportDialog',
@@ -68,7 +83,7 @@
       },
       handleTemplate() {
         import('@/utils/exportToExcel').then(excel => {
-          const tHeader = ['商品编码', '商品型号', '商品类别', '商品名称', '商品品牌', '商品状态', '销售价', '市场价']
+          const tHeader = ['skuID']
           const data = []
           excel.export_json_to_excel({
             header: tHeader,
@@ -82,17 +97,7 @@
         this.$emit('onSelectionCancelled')
       },
       handleDialogConfirm() {
-        const skus = this.excelData.results.map(item => {
-          if (item.hasOwnProperty('商品编码') && item.hasOwnProperty('销售价') &&
-            item.hasOwnProperty('商品品牌') &&
-            item.hasOwnProperty('商品名称')) {
-            return {
-              skuid: item['商品编码'],
-              price: item['销售价'],
-              intro: item['商品品牌'] + ` ` + item['商品名称']
-            }
-          }
-        })
+        const skus = this.excelData.results
         this.$emit('onSelectionConfirmed', skus)
         this.clearDialogData()
       },
@@ -113,7 +118,6 @@
             const header = this.getHeaderRow(worksheet)
             const results = XLSX.utils.sheet_to_json(worksheet)
             this.generateData({ header, results })
-            this.loading = false
             resolve()
           }
           reader.readAsArrayBuffer(rawFile)
@@ -134,9 +138,29 @@
         }
         return headers
       },
-      generateData({ header, results }) {
+      async generateData({ header, results }) {
         this.excelData.header = header
-        this.excelData.results = results
+        const fetchedSkus = []
+        for (let i = 0; i < results.length; i++) {
+          const skuID = results[i].skuID
+          try {
+            const response = await searchProductInfo({ offset: 1, limit: 10, skuid: skuID })
+            const data = response.result
+            if (data.total > 0) {
+              const product = data.list[0]
+              const item = {}
+              item.skuid = product.skuid
+              item.price = product.price
+              item.image = product.image
+              item.intro = product.brand + ` ` + product.name
+              fetchedSkus.push(item)
+            }
+          } catch (err) {
+            console.log('GoodImport: search error ' + skuID)
+          }
+        }
+        this.excelData.results = fetchedSkus
+        this.loading = false
       }
     }
   }

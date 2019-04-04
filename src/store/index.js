@@ -12,7 +12,7 @@ import getters from './getters'
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
-  strict: true,
+  strict: false,
   modules: {
     app,
     user,

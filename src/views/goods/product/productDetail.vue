@@ -245,7 +245,6 @@
           limit: 10,
           skuid: skuID
         }
-        console.log('getProductInfo:' + skuID)
         searchProductInfo(params).then(response => {
           const data = response.result
           if (data.total > 0) {
