@@ -157,7 +157,10 @@
               const data = response.result
               if (data.total > 0) {
                 const product = data.list[0]
-                this.dialogSkuData.push(product)
+                const price = Number.parseFloat(product.price)
+                if (Number.isNaN(price) === false) {
+                  this.dialogSkuData.push(product)
+                }
               }
             }).catch(error => {
               console.log('getProductInfo:' + error)
@@ -173,7 +176,10 @@
           searchProductInfo(params).then(response => {
             const data = response.result
             if (data.total > 0) {
-              this.dialogSkuData = data.list
+              this.dialogSkuData = data.list.filter(item => {
+                const price = Number.parseFloat(item.price)
+                return Number.isNaN(price) === false
+              })
             }
             this.total = data.total
           }).catch(error => {

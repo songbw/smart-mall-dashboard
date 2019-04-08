@@ -22,7 +22,8 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="excelData.results" border highlight-current-row style="width: 100%;margin-top:20px;"
+    <el-table :loading="loading" :data="excelData.results" border highlight-current-row
+              style="width: 100%;margin-top:20px;"
               max-height="250">
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
@@ -148,12 +149,16 @@
             const data = response.result
             if (data.total > 0) {
               const product = data.list[0]
-              const item = {}
-              item.skuid = product.skuid
-              item.price = product.price
-              item.image = product.image
-              item.intro = product.brand + ` ` + product.name
-              fetchedSkus.push(item)
+              const price = Number.parseFloat(product.price)
+              if (Number.isNaN(price) === false) {
+                const item = {
+                  skuid: product.skuid,
+                  price: product.price,
+                  image: product.image,
+                  intro: product.brand + ` ` + product.name
+                }
+                fetchedSkus.push(item)
+              }
             }
           } catch (err) {
             console.log('GoodImport: search error ' + skuID)
