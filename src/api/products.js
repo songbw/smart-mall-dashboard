@@ -20,10 +20,17 @@ export function searchProductInfo(params) {
 
 export function updateProductInfo(params) {
   return request({
-    url: '/adminProd/updateProduct',
+    url: '/prodExtend/update',
     method: 'post',
     data: {
       ...params
     }
+  })
+}
+
+export function resetProductExtendInfo(params) {
+  return request({
+    url: `/prodExtend/delete?skuid=${params.skuid}`,
+    method: 'delete'
   })
 }

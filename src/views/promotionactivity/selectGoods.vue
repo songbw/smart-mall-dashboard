@@ -230,6 +230,7 @@
           type: 'warning'
         }).then(() => {
           this.handleSetSelectedDiscount(discount)
+        }).catch(() => {
         })
       },
       handleSetSelectedDiscount(discount) {
@@ -272,6 +273,7 @@
           }
           const index = this.promotionData.promotionSkus.findIndex(item => item.skuid === sku.skuid)
           this.$store.commit('deletePromotionContent', index)
+        }).catch(() => {
         })
       },
       handleDeleteSelection() {
@@ -290,6 +292,7 @@
           promise.then(() => {
             this.dataLoading = false
           })
+        }).catch(() => {
         })
       },
       onGoodsSelectionCancelled() {

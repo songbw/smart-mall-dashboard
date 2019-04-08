@@ -18,19 +18,17 @@
           :on-progress="handleUploadProgress"
           list-type="picture"
           name="file">
-          <el-button slot="trigger" :disabled="couldEdit === false"
-                     size="small" type="primary">
+          <el-button slot="trigger" size="small" type="primary">
             {{ $t('product_detail_introduction_select_title', {index: index + 1}) }}
           </el-button>
         </el-upload>
         <el-button-group>
-          <el-button :disabled="couldEdit === false"
-                     size="mini" type="danger" icon="el-icon-delete"
+          <el-button size="mini" type="danger" icon="el-icon-delete"
                      @click="handleDeleteIntroduction(index)" />
-          <el-button :disabled="index === 0 || couldEdit === false"
+          <el-button :disabled="index === 0"
                      size="mini" type="primary" icon="el-icon-arrow-up"
                      @click="handleSortIntroduction(index, true)" />
-          <el-button :disabled="index === length - 1 || couldEdit === false"
+          <el-button :disabled="index === length - 1"
                      size="mini" type="primary"
                      icon="el-icon-arrow-down" @click="handleSortIntroduction(index, false)" />
         </el-button-group>
@@ -43,10 +41,6 @@
   export default {
     name: 'CustomIntroduction',
     props: {
-      couldEdit: {
-        type: Boolean,
-        default: true
-      },
       imageUrl: {
         type: String,
         default: ''
@@ -85,6 +79,7 @@
             type: 'warning'
           }).then(() => {
           this.$emit('deleteIntroduction', this.index)
+        }).catch(() => {
         })
       },
       handleUploadSuccess(res) {

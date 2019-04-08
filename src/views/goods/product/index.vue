@@ -76,8 +76,8 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column
-        :selectable="productSelectable"
         type="selection"
+        align="center"
         width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
@@ -87,7 +87,7 @@
       <el-table-column :label="$t('product_table_image_title')" align="center" width="200">
         <template slot-scope="scope">
           <img v-if="scope.row.image"
-               :src="scope.row.prodInfo && scope.row.prodInfo.image ? scope.row.prodInfo.image : scope.row.image"
+               :src="getProductImage(scope.row)"
                class="image-container">
         </template>
       </el-table-column>
@@ -112,7 +112,7 @@
           </template>
           <template v-else>
             <span>{{ scope.row.price }}</span>
-            <el-button :disabled="couldEditProduct === false" icon="el-icon-edit" size="mini" type="primary" circle
+            <el-button v-if="couldEditProduct" icon="el-icon-edit" size="mini" type="primary" circle
                        @click="scope.row.editPrice=!scope.row.editPrice" />
           </template>
         </template>
@@ -136,6 +136,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import { validateURL } from '@/utils/validate'
   import { updateProductInfo } from '@/api/products'
   import pagination from '@/components/Pagination'
 
@@ -232,12 +233,6 @@
         get() {
           return this.productsData.map(item => {
             const newItem = Object.assign({}, item)
-            if (newItem.hasOwnProperty('prodInfo') && newItem.prodInfo !== null) {
-              const prodInfo = newItem.prodInfo
-              if (prodInfo.hasOwnProperty('price') && prodInfo.price !== null && prodInfo.price.trim()) {
-                newItem.price = prodInfo.price
-              }
-            }
             this.$set(newItem, 'editPrice', false)
             this.$set(newItem, 'originalPrice', newItem.price)
             return newItem
@@ -380,6 +375,7 @@
             this.$message.error('更新产品信息失败！')
           })
           row.editPrice = false
+        }).catch(() => {
         })
       },
       handleFirstCategoryChanged(value) {
@@ -406,7 +402,7 @@
       handleExportSelection() {
         this.productExporting = true
         import('@/utils/exportToExcel').then(excel => {
-          const tHeader = ['商品编码', '商品型号', '商品类别', '商品名称', '商品品牌', '商品状态', '销售价', '市场价']
+          const tHeader = ['skuID', '商品型号', '商品类别', '商品名称', '商品品牌', '商品状态', '销售价', '市场价']
           const filterVal = ['skuid', 'model', 'categoryName', 'name', 'brand', 'state', 'price', 'sprice']
           const list = this.productSelection
           const data = this.formatJson(filterVal, list)
@@ -432,8 +428,12 @@
           }
         }))
       },
-      productSelectable(row, index) {
-        return this.couldEditProduct
+      getProductImage(row) {
+        if (validateURL(row.imageExtend)) {
+          return row.imageExtend
+        } else {
+          return row.image
+        }
       }
     }
   }

@@ -15,18 +15,18 @@
         :on-progress="handleUploadProgress"
         list-type="picture"
         name="file">
-        <el-button slot="trigger" :disabled="couldEdit === false"
+        <el-button slot="trigger"
                    type="primary" icon="el-icon-edit">
           {{ $t('product_detail_thumbnail_select_title', {index: index + 1}) }}
         </el-button>
       </el-upload>
       <el-button-group>
-        <el-button :disabled="couldEdit === false" size="mini" type="danger" icon="el-icon-delete"
+        <el-button size="mini" type="danger" icon="el-icon-delete"
                    @click="handleDeleteThumbnail(index)" />
-        <el-button :disabled="index === 0 || couldEdit === false"
+        <el-button :disabled="index === 0"
                    size="mini" type="primary" icon="el-icon-arrow-left"
                    @click="handleSortThumbnail(index, true)" />
-        <el-button :disabled="index === length - 1 || couldEdit === false"
+        <el-button :disabled="index === length - 1"
                    size="mini" type="primary"
                    icon="el-icon-arrow-right" @click="handleSortThumbnail(index, false)" />
       </el-button-group>
@@ -38,10 +38,6 @@
   export default {
     name: 'CustomThumbnail',
     props: {
-      couldEdit: {
-        type: Boolean,
-        default: true
-      },
       imageUrl: {
         type: String,
         default: ''
@@ -80,6 +76,7 @@
             type: 'warning'
           }).then(() => {
           this.$emit('deleteThumbnail', this.index)
+        }).catch(() => {
         })
       },
       handleUploadSuccess(res) {

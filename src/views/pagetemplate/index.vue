@@ -273,6 +273,7 @@
             this.listLoading = false
             this.$message(error)
           })
+        }).catch(() => {
         })
       },
       publishPage(index) {
@@ -292,6 +293,7 @@
             type: 'warning'
           }).then(() => {
             this.publishPage(index)
+          }).catch(() => {
           })
         } else {
           this.publishPage(index)
@@ -310,6 +312,7 @@
             this.listLoading = false
             this.$message(error)
           })
+        }).catch(() => {
         })
       }
     }

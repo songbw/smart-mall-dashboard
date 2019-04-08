@@ -307,6 +307,7 @@
             console.log('Start Promotion: ' + err)
             this.$message({ message: '活动结束失败！', type: 'error' })
           })
+        }).catch(() => {
         })
       },
       handleDeletePromotion(index) {
@@ -323,6 +324,7 @@
             console.log('Start Promotion: ' + err)
             this.$message({ message: '活动删除失败！', type: 'error' })
           })
+        }).catch(() => {
         })
       },
       handleOpsAction(action) {
@@ -368,6 +370,7 @@
               this.$message({ message: '活动结束失败！', type: 'error' })
             })
           }
+        }).catch(() => {
         })
       }
     }
