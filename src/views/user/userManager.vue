@@ -9,13 +9,13 @@
              class="user_form">
       <el-row :span="24" type="flex" justify="center">
         <el-col :span="10">
-          <el-form-item label="  "/>
+          <el-form-item label="  " />
         </el-col>
       </el-row>
       <el-row :span="24" type="flex" justify="start">
         <el-col :span="8" prop="loginName">
           <el-form-item :label="$t('user_login_name_label')" prop="loginName">
-            <el-input v-model="userForm.loginName" name="loginName" class="user_form_input"/>
+            <el-input v-model="userForm.loginName" name="loginName" class="user_form_input" />
           </el-form-item>
         </el-col>
         <el-col :span="8">
@@ -32,7 +32,7 @@
         </el-col>
         <el-col :span="8">
           <el-form-item :label="$t('brand_table_cname_title')" prop="zhName">
-            <el-input v-model="userForm.zhName" class="user_form_input" name="zhName"/>
+            <el-input v-model="userForm.zhName" class="user_form_input" name="zhName" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -53,7 +53,7 @@
                 placeholder="请选择日期"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 format="yyyy-MM-dd HH:mm:ss"
-                class="user_form_input"/>
+                class="user_form_input" />
             </el-form-item>
           </el-col>
           <el-col :span="2" :push="1">
@@ -81,7 +81,7 @@
                 placeholder="请选择日期"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 format="yyyy-MM-dd HH:mm:ss"
-                class="user_form_input"/>
+                class="user_form_input" />
             </el-form-item>
           </el-col>
           <el-col :span="2" :push="1">
@@ -102,9 +102,14 @@
       </el-row>
       <el-row :gutter="1" :span="12" type="flex" justify="start">
         <el-form-item>
-          <el-button type="primary" style="font-size:16px;" @click="search_onSubmit">{{ $t('confirm_button_search_title') }}</el-button>
-          <el-button type="warning" style="font-size:16px;" @click="user_onCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
-          <el-button type="success" style="font-size:16px;" @click="add_user">{{ $t('directive_new_title') }}</el-button>
+          <el-button type="primary" style="font-size:16px;" @click="search_onSubmit">{{
+            $t('confirm_button_search_title') }}
+          </el-button>
+          <el-button type="warning" style="font-size:16px;" @click="user_onCancel">{{ $t('confirm_button_cancel_title')
+            }}
+          </el-button>
+          <el-button type="success" style="font-size:16px;" @click="add_user">{{ $t('directive_new_title') }}
+          </el-button>
         </el-form-item>
       </el-row>
     </el-form>
@@ -112,7 +117,7 @@
     <div v-if="isShowTable" style="width: max-content">
       <el-table
         v-loading="listLoading"
-        :row-class-name = "user_tableRowClassName"
+        :row-class-name="user_tableRowClassName"
         :data="list"
         :header-cell-style="user_setHeadStyle"
         :row-style="user_setRowStyle"
@@ -204,28 +209,30 @@
         </el-table-column-->
         <el-table-column align="center" label="操 作" width="180">
           <template slot-scope="scope">
-            <el-button type="text" @click="edit_user(scope.$index, scope.row)">{{ $t('confirm_button_edit_title') }}</el-button>
-            <el-button type="text" @click="delete_user(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}</el-button>
+            <el-button type="text" @click="edit_user(scope.$index, scope.row)">{{ $t('confirm_button_edit_title') }}
+            </el-button>
+            <el-button type="text" @click="delete_user(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-pagination
-        :page-sizes = "pageSizeList"
-        :page-size = "pageSize"
+        :page-sizes="pageSizeList"
+        :page-size="pageSize"
         :current-page="userForm.pageIndex"
-        :total = "totalNum"
-        :background= "true"
+        :total="totalNum"
+        :background="true"
         layout="total, sizes, prev, pager, next, jumper"
-        @prev-click= "user_handle_prev_click"
-        @next-click= "user_handle_next_click"
-        @size-change = "user_handleSizeChange"
-        @current-change="user_handleCurrentChange"/>
+        @prev-click="user_handle_prev_click"
+        @next-click="user_handle_next_click"
+        @size-change="user_handleSizeChange"
+        @current-change="user_handleCurrentChange" />
     </div>
     <user-update v-if="editorVisible"
                  :user="currentUser"
                  :is-new-user="isNewUser"
                  @fresh="user_fresh"
-                 @close="user_handleUserUpdateClose"/>
+                 @close="user_handleUserUpdateClose" />
   </div>
 </template>
 
@@ -371,7 +378,7 @@
         return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       user_sortByKey(a, k) {
-        return a.sort(function(c, d) {
+        return a.sort(function (c, d) {
           var x = c[k]
           var y = d[k]
           return ((x < y) ? -1 : ((x > y) ? 1 : 0))
@@ -384,26 +391,26 @@
         // console.log('try get list')
 
         if (this.userForm.loginName !== null) {
-          this.userForm.loginName = String.trim(this.userForm.loginName)
+          this.userForm.loginName = this.userForm.loginName.trim()
         }
         if (this.userForm.zhName !== null) {
-          this.userForm.zhName = String.trim(this.userForm.zhName)
+          this.userForm.zhName = this.userForm.zhName.trim()
         }
         if (this.userForm.enName !== null) {
-          this.userForm.enName = String.trim(this.userForm.enName)
+          this.userForm.enName = this.userForm.enName.trim()
         }
         if (this.userForm.phone !== null) {
-          this.userForm.phone = String.trim(this.userForm.phone)
+          this.userForm.phone = this.userForm.phone.trim()
         }
         userSearch(this.userForm).then(response => {
-          // console.log('got list')
-          this.list = response.data.rows
-          this.listLoading = false
-          this.pageSize = response.data.pageSize
-          this.totalNum = response.data.total
-          this.pageCount = this.totalNum / this.userForm.pageSize + 1
-          this.user_sortByKey(this.list, 'id')
-        }, error => {
+            // console.log('got list')
+            this.list = response.data.rows
+            this.listLoading = false
+            this.pageSize = response.data.pageSize
+            this.totalNum = response.data.total
+            this.pageCount = this.totalNum / this.userForm.pageSize + 1
+            this.user_sortByKey(this.list, 'id')
+          }, error => {
             this.listLoading = false
             alert(error)
           }
@@ -459,6 +466,7 @@
     width: 90px;
     color: #99a9bf;
   }
+
   .user-table-expand {
     margin-right: 0;
     margin-bottom: 0;

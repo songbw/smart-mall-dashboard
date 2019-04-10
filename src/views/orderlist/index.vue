@@ -1,86 +1,89 @@
 <template>
   <div class="app-container">
     <el-form ref="form" :model="form" :rules="formRules" :class="$style.order_form">
-      <el-row :gutter="0" class="form_row" >
+      <el-row :gutter="0" class="form_row">
         <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="订单编号:"/>
+          <el-form-item :class="$style.order_form_label" label="订单编号:" />
         </el-col>
         <el-col :span="3" prop="mainId" class="form_col">
           <el-form-item prop="mainId">
-            <el-input :class="$style.order_form_input" v-model="form.mainId" name="mainId"/>
+            <el-input :class="$style.order_form_input" v-model="form.mainId" name="mainId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="快递单号:"/>
+          <el-form-item :class="$style.order_form_label" label="快递单号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="deliveryId">
-            <el-input :class="$style.order_form_input" v-model="form.deliveryId" name="deliveryId"/>
+            <el-input :class="$style.order_form_input" v-model="form.deliveryId" name="deliveryId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="用户编号:"/>
+          <el-form-item :class="$style.order_form_label" label="用户编号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="userId">
-            <el-input :class="$style.order_form_input" v-model="form.userId" name="userId"/>
+            <el-input :class="$style.order_form_input" v-model="form.userId" name="userId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="子订单号:"/>
+          <el-form-item :class="$style.order_form_label" label="子订单号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="subId">
-            <el-input :class="$style.order_form_input" v-model="form.subId" name="subId"/>
+            <el-input :class="$style.order_form_input" v-model="form.subId" name="subId" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row :gutter="0" class="form_row" type="flex">
         <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="支付日期:"/>
+          <el-form-item :class="$style.order_form_label" label="支付日期:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.payDateBegin" type="date" placeholder="请选择日期"/>
+          <el-date-picker :class="$style.order_form_input" v-model="form.payDateBegin" type="date"
+                          placeholder="请选择日期" />
         </el-col>
         <el-col :span="1" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="至:"/>
+          <el-form-item :class="$style.order_form_label" label="至:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.payDateEnd" type="date" placeholder="请选择日期"/>
+          <el-date-picker :class="$style.order_form_input" v-model="form.payDateEnd" type="date" placeholder="请选择日期" />
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="配送日期:"/>
+          <el-form-item :class="$style.order_form_label" label="配送日期:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateBegin" type="date" placeholder="请选择日期"/>
+          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateBegin" type="date"
+                          placeholder="请选择日期" />
         </el-col>
         <el-col :span="1" :offset="1" class="form_col">
-          <el-form-item label="至:" class="form_label"/>
+          <el-form-item label="至:" class="form_label" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateEnd" type="date" placeholder="请选择日期"/>
+          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateEnd" type="date"
+                          placeholder="请选择日期" />
         </el-col>
       </el-row>
-      <el-row :gutter="0" class="form_row" >
+      <el-row :gutter="0" class="form_row">
         <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="配送状态:"/>
+          <el-form-item :class="$style.order_form_label" label="配送状态:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-select :class="$style.order_form_input" v-model="form.deliveryStat" placeholder="请选择配送状态">
-            <el-option label="全部" value="0"/>
-            <el-option label="待配送" value="1"/>
-            <el-option label="配送成功" value="2"/>
-            <el-option label="配送失败" value="3"/>
-            <el-option label="配送取消" value="4"/>
-            <el-option label="已发货" value="5"/>
+            <el-option label="全部" value="0" />
+            <el-option label="待配送" value="1" />
+            <el-option label="配送成功" value="2" />
+            <el-option label="配送失败" value="3" />
+            <el-option label="配送取消" value="4" />
+            <el-option label="已发货" value="5" />
           </el-select>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="手机号码:"/>
+          <el-form-item :class="$style.order_form_label" label="手机号码:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="phoneNum">
-            <el-input :class="$style.order_form_input" v-model="form.phoneNum"/>
+            <el-input :class="$style.order_form_input" v-model="form.phoneNum" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
@@ -94,7 +97,7 @@
     <div v-if="isShowTable">
       <el-table
         v-loading="listLoading"
-        :row-class-name = "order_tableRowClassName"
+        :row-class-name="order_tableRowClassName"
         :data="list"
         :span-method="order_getSpan"
         :header-cell-style="order_setHeadStyle"
@@ -107,7 +110,7 @@
         fit
         style="width:97%"
         highlight-current-row
-        @row-click = "order_rowClick">
+      >
         <el-table-column label="大订单编号" width="180" align="center">
           <template slot-scope="scope">
             {{ scope.row.id }}
@@ -133,20 +136,20 @@
             <span>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="购买数量" width="80" >
+        <el-table-column align="center" label="购买数量" width="80">
           <template slot-scope="scope">
             <span>{{ scope.row.num }}</span>
           </template>
         </el-table-column>
         <el-table-column align="center" label="支付时间" width="120">
           <template slot-scope="scope">
-            <i class="el-icon-time"/>
+            <i class="el-icon-time" />
             <span>{{ scope.row.payDate }}</span>
           </template>
         </el-table-column>
         <el-table-column align="center" label="配送完成时间" width="120">
           <template slot-scope="scope">
-            <i class="el-icon-time"/>
+            <i class="el-icon-time" />
             <span>{{ scope.row.deliveryDate }}</span>
           </template>
         </el-table-column>
@@ -161,36 +164,36 @@
           </template>
         </el-table-column>
         <el-table-column align="center" label="操 作" width="150">
-          <template>
+          <template slot-scope="scope">
             <!--a target="_self" href="##" onmouseover="style='color:blue'" onmouseleave="style='color:black'">查看详情</a-->
-            <el-button type="text" @click="detailVisible=true ">查看详情</el-button>
-            <span style="margin-left: 20px"/>
-            <el-button type="text" @click="dialogVisible=true ">备注</el-button>
+            <el-button type="text" @click="order_rowClick(scope.row, true)">查看详情</el-button>
+            <span style="margin-left: 20px" />
+            <el-button type="text" @click="order_rowClick(scope.row, false)">备注</el-button>
             <!--a target="_self" href="##" onclick="alert('add notes')" onmouseover="style='color:blue'" onmouseleave="style='color:black'" >备注</a-->
           </template>
         </el-table-column>
       </el-table>
       <el-pagination
-        :page-sizes = "pageSizeList"
-        :page-size = "pageSize"
+        :page-sizes="pageSizeList"
+        :page-size="pageSize"
         :current-page="pageNo"
-        :total = "totalNum"
-        :background= "true"
+        :total="totalNum"
+        :background="true"
         layout="prev, pager, next, jumper, ->, total"
-        @size-change = "order_handleSizeChange"
-        @current-change="order_handleCurrentChange"/>
+        @size-change="order_handleSizeChange"
+        @current-change="order_handleCurrentChange" />
     </div>
     <order-dialog v-if="dialogVisible"
                   :id="currentMainId"
-                  :can-change-address ="mayChangeAddress"
-                  :remark = "notes"
-                  title = "备注:"
+                  :can-change-address="mayChangeAddress"
+                  :remark="notes"
+                  title="备注:"
                   @apply="order_handleAddNotes"
-                  @close="order_handleDialogClose"/>
+                  @close="order_handleDialogClose" />
     <order-detail v-if="detailVisible"
                   :id="currentMainId"
                   :can-change-address="mayChangeAddress"
-                  @close="order_handleDetailClose"/>
+                  @close="order_handleDetailClose" />
   </div>
 </template>
 
@@ -233,7 +236,7 @@
           callback(new Error('不能小于1位'))
         } else {
           callback()
-         }
+        }
       }
       const validateSubId = (rule, value, callback) => {
         // console.log('sub id')
@@ -293,7 +296,7 @@
           payDateEnd: '',
           deliveryDateStart: '',
           deliveryDateEnd: ''
-         },
+        },
         formRules: {
           mainId: [{ required: false, trigger: 'blur', validator: ruleValidateMainId }],
           subId: [{ required: false, trigger: 'blur', validator: validateSubId }],
@@ -356,7 +359,7 @@
         return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       order_sortByKey(a, k) {
-        return a.sort(function(c, d) {
+        return a.sort(function (c, d) {
           var x = c[k]
           var y = d[k]
           return ((x > y) ? -1 : ((x < y) ? 1 : 0))
@@ -410,37 +413,37 @@
         this.postData.pageIndex = pageIndex
         this.postData.pageSize = pageSize
         if (this.form.userId !== null) {
-          this.postData.openId = String.trim(this.form.userId)
+          this.postData.openId = this.form.userId.trim()
         }
         if (this.form.mainId !== null) {
-          this.postData.tradeNo = String.trim(this.form.mainId)
+          this.postData.tradeNo = this.form.mainId.trim()
         }
         if (this.form.subId !== null) {
           this.postData.detailId = Number(this.form.subId)
         }
         if (this.form.deliveryId !== null) {
-          this.postData.deliveryId = String.trim(this.form.deliveryId)
+          this.postData.deliveryId = this.form.deliveryId.trim()
         }
         if (this.form.deliveryStat !== null) {
-          this.postData.deliveryStatus = String.trim(this.form.deliveryStat)
+          this.postData.deliveryStatus = this.form.deliveryStat.trim()
         }
         if (this.form.phoneNum !== null) {
-          this.postData.telephone = String.trim(this.form.phoneNum)
+          this.postData.telephone = this.form.phoneNum.trim()
         }
         if (this.form.payDateBegin !== null) {
-          this.postData.payDateStart = String.trim(this.form.payDateBegin)
+          this.postData.payDateStart = this.form.payDateBegin.trim()
         }
         if (this.form.payDateEnd !== null) {
-          this.postData.payDateEnd = String.trim(this.form.payDateEnd)
+          this.postData.payDateEnd = this.form.payDateEnd.trim()
         }
         if (this.form.deliveryDateBegin !== null) {
-          this.postData.deliveryDateStart = String.trim(this.form.deliveryDateBegin)
+          this.postData.deliveryDateStart = this.form.deliveryDateBegin.trim()
         }
         if (this.form.deliveryDateEnd !== null) {
-          this.postData.deliveryDateEnd = String.trim(this.form.deliveryDateEnd)
+          this.postData.deliveryDateEnd = this.form.deliveryDateEnd.trim()
         }
         getOrderList(this.postData).then(response => {
-        // console.log('got list')
+          // console.log('got list')
           this.list = response.result.list
           this.listLoading = false
           this.pageNo = pageIndex
@@ -453,7 +456,7 @@
       order_tableRowClassName({ row, rowIndex }) {
         row.index = rowIndex
       },
-      order_rowClick(row, event, column) {
+      order_rowClick(row, isDetail) {
         this.currRow = row.index
         this.notes = row.remark
         this.currentMainId = row.id
@@ -461,6 +464,11 @@
           this.mayChangeAddress = true
         } else {
           this.mayChangeAddress = false
+        }
+        if (isDetail) {
+          this.detailVisible = true
+        } else {
+          this.dialogVisible = true
         }
         // console.log('row click at :' + row.id)
       },
@@ -509,6 +517,7 @@
     color: #000000;
     align: right;
   }
+
   .order_form_input {
     font-size: 12px;
     color: #000000;

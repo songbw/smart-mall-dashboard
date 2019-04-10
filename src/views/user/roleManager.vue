@@ -231,10 +231,10 @@
       searchSubmit() {
         this.$message('submit!')
         if (this.form.name !== null) {
-          this.form.name = String.trim(this.form.name)
+          this.form.name = this.form.name.trim()
         }
         if (this.form.description !== null) {
-          this.form.description = String.trim(this.form.description)
+          this.form.description = this.form.description.trim()
         }
 
         this.form.permissionGroups = this.selectedGroupId

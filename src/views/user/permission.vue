@@ -260,13 +260,13 @@
         // console.log('try get list')
 
         if (this.form.name !== null) {
-          this.form.name = String.trim(this.form.name)
+          this.form.name = this.form.name.trim()
         }
         if (this.form.description !== null) {
-          this.form.description = String.trim(this.form.description)
+          this.form.description = this.form.description.trim()
         }
         if (this.form.code !== null) {
-          this.form.code = String.trim(this.form.code)
+          this.form.code = this.form.code.trim()
         }
         // if (this.selectGroupId !== null) {
          // this.form.groupId = this.selectGroupId

@@ -9,13 +9,13 @@
              class="form">
       <el-row :span="24" type="flex" justify="center">
         <el-col :span="10">
-          <el-form-item label="  "/>
+          <el-form-item label="  " />
         </el-col>
       </el-row>
       <el-row :span="24" type="flex" justify="start">
         <el-col :span="8" prop="orderId">
           <el-form-item label="订单编号" prop="orderId">
-            <el-input v-model="form.orderId" name="orderId" class="form_input"/>
+            <el-input v-model="form.orderId" name="orderId" class="form_input" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -41,20 +41,23 @@
               v-model="form.notes"
               type="textarea"
               placeholder="请输入内容"
-              class="form_input"/>
+              class="form_input" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row :gutter="1" :span="12" type="flex" justify="start">
         <el-form-item>
-          <el-button type="primary" style="font-size:16px;" @click="formSubmit">{{ $t('confirm_button_ok_title') }}</el-button>
-          <el-button type="warning" style="font-size:16px;" @click="formCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
+          <el-button type="primary" style="font-size:16px;" @click="formSubmit">{{ $t('confirm_button_ok_title') }}
+          </el-button>
+          <el-button type="warning" style="font-size:16px;" @click="formCancel">{{ $t('confirm_button_cancel_title')
+            }}
+          </el-button>
           <el-button type="success" style="font-size:16px;" @click="deliveryImportExcel">导入EXCEL</el-button>
         </el-form-item>
       </el-row>
     </el-form>
     <import-excel v-if="isVisibleDialog"
-                  @close="deliveryCloseImport"/>
+                  @close="deliveryCloseImport" />
   </div>
 </template>
 
@@ -72,7 +75,7 @@
         if (value.length < 1 || !reg.test(value)) {
           callback(new Error('请输入正确的单号'))
         } else {
-            callback()
+          callback()
         }
       }
       const ruleValidateName = (rule, value, callback) => {
@@ -142,13 +145,13 @@
       deliveryUploading() {
         this.loading = true
         if (this.form.orderId !== null) {
-          this.form.orderId = String.trim(this.form.orderId)
+          this.form.orderId = this.form.orderId.trim()
         }
         if (this.form.skuId !== null) {
-          this.form.skuId = String.trim(this.form.skuId)
+          this.form.skuId = this.form.skuId.trim()
         }
         if (this.form.deliveryId !== null) {
-          this.form.deliveryid = String.trim(this.form.deliveryId)
+          this.form.deliveryid = this.form.deliveryId.trim()
         }
         this.$refs.form.validate(valid => {
           if (valid) {
@@ -181,6 +184,7 @@
     background-color: lightcyan;
     text-content: center;
   }
+
   .form {
 
   }
@@ -188,10 +192,12 @@
   .delivery-table-expand {
     font-size: 0;
   }
+
   .delivery-table-expand label {
     width: 90px;
     color: #99a9bf;
   }
+
   .delivery-table-expand .el-form-item {
     margin-right: 0;
     margin-bottom: 0;

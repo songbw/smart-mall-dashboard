@@ -8,13 +8,13 @@
              class="log_form">
       <el-row :span="24" type="flex" justify="center">
         <el-col :span="10">
-          <el-form-item label="  "/>
+          <el-form-item label="  " />
         </el-col>
       </el-row>
       <el-row :span="24" type="flex" justify="start">
         <el-col :span="6" prop="user">
           <el-form-item :label="$t('user_login_name_label')" prop="user">
-            <el-input v-model="logForm.user" name="user" class="log_form_input"/>
+            <el-input v-model="logForm.user" name="user" class="log_form_input" />
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -31,7 +31,7 @@
       <el-row :gutter="0" :span="24" type="flex" justify="start">
         <el-col :span="6">
           <el-form-item label="参数" prop="param">
-            <el-input v-model="logForm.param" class="log_form_input" name="param"/>
+            <el-input v-model="logForm.param" class="log_form_input" name="param" />
           </el-form-item>
         </el-col>
         <el-form-item :label="$t('create_date_title')">
@@ -43,7 +43,7 @@
                 placeholder="请选择日期"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 format="yyyy-MM-dd HH:mm:ss"
-                class="log_form_input"/>
+                class="log_form_input" />
             </el-form-item>
           </el-col>
           <el-col :span="2" :push="1">
@@ -64,9 +64,14 @@
       </el-row>
       <el-row :gutter="1" :span="12" type="flex" justify="start">
         <el-form-item>
-          <el-button type="primary" style="font-size:16px;" @click="search_onSubmit">{{ $t('confirm_button_search_title') }}</el-button>
-          <el-button type="warning" style="font-size:16px;" @click="log_onCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
-          <el-button type="danger" style="font-size:16px;" @click="shrink_log">{{ $t('confirm_button_shrink_title') }}</el-button>
+          <el-button type="primary" style="font-size:16px;" @click="search_onSubmit">{{
+            $t('confirm_button_search_title') }}
+          </el-button>
+          <el-button type="warning" style="font-size:16px;" @click="log_onCancel">{{ $t('confirm_button_cancel_title')
+            }}
+          </el-button>
+          <el-button type="danger" style="font-size:16px;" @click="shrink_log">{{ $t('confirm_button_shrink_title') }}
+          </el-button>
         </el-form-item>
       </el-row>
     </el-form>
@@ -74,7 +79,7 @@
     <div v-if="isShowTable" style="width: max-content">
       <el-table
         v-loading="listLoading"
-        :row-class-name = "log_tableRowClassName"
+        :row-class-name="log_tableRowClassName"
         :data="list"
         :header-cell-style="log_setHeadStyle"
         :row-style="log_setRowStyle"
@@ -123,29 +128,32 @@
             {{ scope.row.url }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('create_date_title')" align="center" width="180" >
+        <el-table-column :label="$t('create_date_title')" align="center" width="180">
           <template slot-scope="scope">
             <span>{{ scope.row.createTimeStart }}</span>
           </template>
         </el-table-column>
         <el-table-column align="center" label="操 作" width="80">
           <template slot-scope="scope">
-            <el-button type="text" @click="delete_log(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}</el-button>
+            <el-button type="text" @click="delete_log(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
-      <el-button type="warning" style="font-size:16px;" @click="delete_all_rows">{{ $t('confirm_button_delete_all_title') }}</el-button>
+      <el-button type="warning" style="font-size:16px;" @click="delete_all_rows">{{
+        $t('confirm_button_delete_all_title') }}
+      </el-button>
       <el-pagination
-        :page-sizes = "pageSizeList"
-        :page-size = "pageSize"
+        :page-sizes="pageSizeList"
+        :page-size="pageSize"
         :current-page="logForm.pageIndex"
-        :total = "totalNum"
-        :background= "true"
+        :total="totalNum"
+        :background="true"
         layout="total, sizes, prev, pager, next, jumper"
-        @prev-click= "log_handle_prev_click"
-        @next-click= "log_handle_next_click"
-        @size-change = "log_handleSizeChange"
-        @current-change="log_handleCurrentChange"/>
+        @prev-click="log_handle_prev_click"
+        @next-click="log_handle_next_click"
+        @size-change="log_handleSizeChange"
+        @current-change="log_handleCurrentChange" />
     </div>
   </div>
 </template>
@@ -206,9 +214,9 @@
           var r = confirm(confirmTitle)
           if (r === true) {
             deleteLog(row.id).then(response => {
-              this.$message('成功')
-              this.list.splice(index, 1)
-            }, error => {
+                this.$message('成功')
+                this.list.splice(index, 1)
+              }, error => {
                 alert(error)
               }
             )
@@ -238,7 +246,7 @@
                 this.list.splice(0, 1)
               }
               this.log_fetchData()
-          }, error => {
+            }, error => {
               this.loading = false
               alert(error)
             }
@@ -269,23 +277,23 @@
         // console.log('fetchData')
 
         if (this.logForm.user !== null) {
-          this.logForm.user = String.trim(this.logForm.user)
+          this.logForm.user = this.logForm.user.trim()
         }
         if (this.logForm.method !== null) {
-          this.logForm.method = String.trim(this.logForm.method)
+          this.logForm.method = this.logForm.method.trim()
         }
         if (this.logForm.param !== null) {
-          this.logForm.param = String.trim(this.logForm.param)
+          this.logForm.param = this.logForm.param.trim()
         }
         searchLog(this.logForm).then(response => {
-          // console.log('got list')
-          this.list = response.data.rows
-          this.listLoading = false
-          this.pageSize = response.data.pageSize
-          this.totalNum = response.data.total
-          this.pageCount = this.totalNum / this.logForm.pageSize + 1
-          this.isShowTable = true
-        }, error => {
+            // console.log('got list')
+            this.list = response.data.rows
+            this.listLoading = false
+            this.pageSize = response.data.pageSize
+            this.totalNum = response.data.total
+            this.pageCount = this.totalNum / this.logForm.pageSize + 1
+            this.isShowTable = true
+          }, error => {
             this.listLoading = false
             alert(error)
           }
@@ -333,6 +341,7 @@
     background-color: lightcyan;
     text-content: center;
   }
+
   .log_form {
 
   }
@@ -340,10 +349,12 @@
   .log-table-expand {
     font-size: 0;
   }
+
   .log-table-expand label {
     width: 90px;
     color: #99a9bf;
   }
+
   .log-table-expand .el-form-item {
     margin-right: 0;
     margin-bottom: 0;

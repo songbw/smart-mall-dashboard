@@ -9,13 +9,13 @@
              class="organization_form">
       <el-row :span="24" type="flex" justify="center">
         <el-col :span="10">
-          <el-form-item label="  "/>
+          <el-form-item label="  " />
         </el-col>
       </el-row>
       <el-row :span="24" type="flex" justify="start">
         <el-col :span="6" prop="name">
           <el-form-item :label="$t('name_label')" prop="name">
-            <el-input v-model="form.name" name="name" class="organization_form_input"/>
+            <el-input v-model="form.name" name="name" class="organization_form_input" />
           </el-form-item>
         </el-col>
         <el-col :span="7">
@@ -51,8 +51,12 @@
       </el-row>
       <el-row :gutter="1" :span="12" type="flex" justify="start">
         <el-form-item>
-          <el-button type="primary" style="font-size:16px;" @click="searchSubmit">{{ $t('confirm_button_search_title') }}</el-button>
-          <el-button type="warning" style="font-size:16px;" @click="organizationCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
+          <el-button type="primary" style="font-size:16px;" @click="searchSubmit">{{ $t('confirm_button_search_title')
+            }}
+          </el-button>
+          <el-button type="warning" style="font-size:16px;" @click="organizationCancel">{{
+            $t('confirm_button_cancel_title') }}
+          </el-button>
           <el-button type="success" style="font-size:16px;" @click="addItem">{{ $t('directive_new_title') }}</el-button>
         </el-form-item>
       </el-row>
@@ -105,22 +109,24 @@
         </el-table-column>
         <el-table-column align="center" label="操 作" width="200">
           <template slot-scope="scope">
-            <el-button type="text" @click="edit_item(scope.$index, scope.row)">{{ $t('confirm_button_edit_title') }}</el-button>
-            <el-button type="text" @click="delete_item(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}</el-button>
+            <el-button type="text" @click="edit_item(scope.$index, scope.row)">{{ $t('confirm_button_edit_title') }}
+            </el-button>
+            <el-button type="text" @click="delete_item(scope.$index, scope.row)">{{ $t('confirm_button_del_title') }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-pagination
-        :page-sizes = "pageSizeList"
-        :page-size = "pageSize"
+        :page-sizes="pageSizeList"
+        :page-size="pageSize"
         :current-page="form.pageIndex"
-        :total = "totalNum"
-        :background= "true"
+        :total="totalNum"
+        :background="true"
         layout="total, sizes, prev, pager, next, jumper"
-        @prev-click= "org_handle_prev_click"
-        @next-click= "org_handle_next_click"
-        @size-change = "org_handleSizeChange"
-        @current-change="org_handleCurrentChange"/>
+        @prev-click="org_handle_prev_click"
+        @next-click="org_handle_next_click"
+        @size-change="org_handleSizeChange"
+        @current-change="org_handleCurrentChange" />
     </div>
     <organization-update
       v-if="editorVisible"
@@ -128,7 +134,7 @@
       :roles="roles"
       :is-new-org="isNewItem"
       @fresh="organization_fresh"
-      @close="organization_handleClose"/>
+      @close="organization_handleClose" />
   </div>
 </template>
 
@@ -189,23 +195,23 @@
     },
     created() {
       getOrgTree().then(response => {
-        // console.log('got list')
-        this.orgTree = response.data
-        this.loading = false
-        this.isVisibleOptions = true
-      }, error => {
+          // console.log('got list')
+          this.orgTree = response.data
+          this.loading = false
+          this.isVisibleOptions = true
+        }, error => {
           this.loading = false
           alert(error)
         }
       )
       getRoles().then(response => {
-        this.roles = response.data
-        for (let i = 0; i < this.roles.length; i++) {
-          this.allRoleId.push(this.roles[i].id)
-        }
-        this.loading = false
-        this.organization_fetchData()
-      }, error => {
+          this.roles = response.data
+          for (let i = 0; i < this.roles.length; i++) {
+            this.allRoleId.push(this.roles[i].id)
+          }
+          this.loading = false
+          this.organization_fetchData()
+        }, error => {
           this.loading = false
           alert(error)
         }
@@ -225,10 +231,10 @@
       searchSubmit() {
         // this.$message('submit!')
         if (this.form.name !== null) {
-          this.form.name = String.trim(this.form.name)
+          this.form.name = this.form.name.trim()
         }
         if (this.form.description !== null) {
-          this.form.description = String.trim(this.form.description)
+          this.form.description = this.form.description.trim()
         }
 
         this.form.roleIds = this.selectedRole
@@ -249,10 +255,10 @@
           const r = confirm(confirmTitle)
           if (r === true) {
             deleteOrganization(this.form).then(response => {
-              this.$message('成功')
-              // this.list.splice(index, 1)
-              this.organization_fetchData()
-            }, error => {
+                this.$message('成功')
+                // this.list.splice(index, 1)
+                this.organization_fetchData()
+              }, error => {
                 alert(error)
               }
             )
@@ -293,7 +299,7 @@
         return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       organization_sortByKey(a, k) {
-        return a.sort(function(c, d) {
+        return a.sort(function (c, d) {
           var x = c[k]
           var y = d[k]
           return ((x < y) ? -1 : ((x > y) ? 1 : 0))
@@ -304,12 +310,12 @@
         this.isShowTable = true
         this.listLoading = true
         searchOrganization(this.form).then(response => {
-          // console.log('got list')
-          this.list = response.data.rows
-          this.listLoading = false
-          this.totalNum = response.data.total
-          this.pageCount = this.totalNum / this.form.pageSize + 1
-        }, error => {
+            // console.log('got list')
+            this.list = response.data.rows
+            this.listLoading = false
+            this.totalNum = response.data.total
+            this.pageCount = this.totalNum / this.form.pageSize + 1
+          }, error => {
             this.listLoading = false
             alert(error)
           }
@@ -355,6 +361,7 @@
     background-color: lightcyan;
     text-content: center;
   }
+
   .organization_form {
 
   }
@@ -362,10 +369,12 @@
   .organization-table-expand {
     font-size: 0;
   }
+
   .organization-table-expand label {
     width: 90px;
     color: #99a9bf;
   }
+
   .organization-table-expand .el-form-item {
     margin-right: 0;
     margin-bottom: 0;
