@@ -165,7 +165,7 @@
         this.$store.dispatch('saveAggregationPageContent').then(() => {
           this.$emit('nextStep', this.pageTemplateList)
         }).catch(error => {
-          this.$message(error)
+          this.$message.warning(error)
         })
       },
       handleSortUpTemplateType(index) {

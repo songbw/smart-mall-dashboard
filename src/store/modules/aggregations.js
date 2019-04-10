@@ -10,8 +10,6 @@ import {
 
 import { bannerType, serviceType, gridType, promotionType, goodsType } from '@/utils/templateType'
 
-const pako = require('pako')
-
 const emptyAggregationPage = {
   id: -1,
   name: '',
@@ -209,8 +207,7 @@ const aggregations = {
             if (item.content === null) {
               item.content = []
             } else {
-              const jsonString = pako.inflate(item.content, { to: 'string' })
-              item.content = JSON.parse(jsonString)
+              item.content = JSON.parse(item.content)
             }
           })
           commit('setAggregationList', data)
@@ -230,8 +227,7 @@ const aggregations = {
         } else {
           getAggregationPageByIdApi(params).then(response => {
             const data = response.result
-            const jsonString = pako.inflate(data.content, { to: 'string' })
-            data.content = JSON.parse(jsonString)
+            data.content = JSON.parse(data.content)
             if (data.id === state.aggregation.id) {
               commit('setTemplateAggregation', data)
             }
@@ -281,8 +277,7 @@ const aggregations = {
             if (item.content === null) {
               item.content = []
             } else {
-              const jsonString = pako.inflate(item.content, { to: 'string' })
-              item.content = JSON.parse(jsonString)
+              item.content = JSON.parse(item.content)
             }
           })
           commit('setAggregationList', data)
@@ -295,16 +290,17 @@ const aggregations = {
     saveAggregationPageContent({ commit, state }, params) {
       return new Promise((resolve, reject) => {
         if (state.aggregation.id !== -1) {
-          const binString = pako.deflate(JSON.stringify(state.aggregation.content), { to: 'string' })
           updateAggregationPageContentApi({
             id: state.aggregation.id,
-            content: binString
+            content: JSON.stringify(state.aggregation.content)
           }).then(() => {
             commit('resetTemplatePage')
             resolve()
           }).catch(error => {
             reject(error)
           })
+        } else {
+          resolve()
         }
       })
     },

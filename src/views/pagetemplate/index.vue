@@ -184,7 +184,11 @@
       },
       queryAllData() {
         this.listLoading = true
-        this.$store.dispatch('getAggregationPages', this.listQuery).then(() => {
+        const params = {
+          offset: this.listQuery.offset,
+          limit: this.listQuery.limit
+        }
+        this.$store.dispatch('getAggregationPages', params).then(() => {
           this.listLoading = false
         }).catch(err => {
           this.$message.error(err)
