@@ -50,6 +50,7 @@
 
 <script>
   import XLSX from 'xlsx'
+  import isEmpty from 'lodash/isEmpty'
   import { searchProductInfo } from '@/api/products'
 
   export default {
@@ -139,6 +140,11 @@
         }
         return headers
       },
+      isProductValid(product) {
+        const price = Number.parseFloat(product.price)
+        const image = product.image || product.imageExtend
+        return !(Number.isNaN(price) || isEmpty(image))
+      },
       async generateData({ header, results }) {
         this.excelData.header = header
         const fetchedSkus = []
@@ -149,12 +155,11 @@
             const data = response.result
             if (data.total > 0) {
               const product = data.list[0]
-              const price = Number.parseFloat(product.price)
-              if (Number.isNaN(price) === false) {
+              if (this.isProductValid(product)) {
                 const item = {
                   skuid: product.skuid,
                   price: product.price,
-                  image: product.image,
+                  imagePath: product.image,
                   intro: product.brand + ` ` + product.name
                 }
                 fetchedSkus.push(item)

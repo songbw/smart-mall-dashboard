@@ -81,6 +81,7 @@
 </template>
 
 <script>
+  import isEmpty from 'lodash/isEmpty'
   import Pagination from '@/components/Pagination'
   import { searchProductInfo } from '@/api/products'
   import { getPromotionByIdApi } from '@/api/promotions'
@@ -130,6 +131,11 @@
       getContentData() {
         this.handleDialogFilterSearch()
       },
+      isProductValid(product) {
+        const price = Number.parseFloat(product.price)
+        const image = product.image || product.imageExtend
+        return !(Number.isNaN(price) || isEmpty(image))
+      },
       handleDialogPromotionQuery() {
         getPromotionByIdApi({ id: this.promotionId }).then(res => {
           const data = res.result
@@ -157,8 +163,7 @@
               const data = response.result
               if (data.total > 0) {
                 const product = data.list[0]
-                const price = Number.parseFloat(product.price)
-                if (Number.isNaN(price) === false) {
+                if (this.isProductValid(product)) {
                   this.dialogSkuData.push(product)
                 }
               }
@@ -177,8 +182,7 @@
             const data = response.result
             if (data.total > 0) {
               this.dialogSkuData = data.list.filter(item => {
-                const price = Number.parseFloat(item.price)
-                return Number.isNaN(price) === false
+                return this.isProductValid(item)
               })
             }
             this.total = data.total
