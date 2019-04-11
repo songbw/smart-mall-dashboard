@@ -298,7 +298,6 @@
           this.delivery_fee = this.response.servFee
           this.payment_detail = this.response.invoiceContent
           this.seller_notes = this.response.remark
-          this.listLoading = false
           this.pageNo = pageIndex
           this.pageSize = this.response.pageSize
           this.totalNum = this.response.total
@@ -308,6 +307,8 @@
               this.list[k].status = this.status
             }
           }
+        }).catch(error => {
+          this.listLoading = false
         })
       },
       order_handleChange() {

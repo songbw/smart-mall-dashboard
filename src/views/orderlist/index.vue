@@ -455,6 +455,8 @@
           this.totalNum = response.result.total
           this.order_sortByKey(this.list, 'id')
           this.order_countRowSpan(this.list, 'id')
+        }).catch(error => {
+          this.listLoading = false
         })
       },
       order_tableRowClassName({ row, rowIndex }) {
