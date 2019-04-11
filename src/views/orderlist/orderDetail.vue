@@ -279,7 +279,7 @@
           this.order_date = this.response.createdAt
           this.create_date = this.response.createdAt
           this.user = this.response.receiverName
-          this.phone = this.response.telephone
+          this.phone = this.response.mobile
           this.zip_code = this.response.zip
           this.status = this.response.status
           this.day_delay = 0
