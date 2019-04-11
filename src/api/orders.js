@@ -11,7 +11,7 @@ export function getOrderList(data) {
       openId: data.userId,
       id: data.orderId,
       subOrderId: data.detailId,
-      telephone: data.telephone,
+      mobile: data.mobile,
       payDateStart: data.payDateStart,
       payDateEnd: data.payDateEnd
     }

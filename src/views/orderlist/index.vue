@@ -304,7 +304,7 @@
           orderId: '',
           deliveryId: '',
           deliveryStatus: '',
-          telephone: '',
+          mobile: '',
           payDateStart: '',
           payDateEnd: ''
         },
@@ -437,7 +437,7 @@
         }
 
         if (this.form.phoneNum !== null) {
-          this.postData.telephone = this.form.phoneNum
+          this.postData.mobile = this.form.phoneNum
         }
         if (this.form.payDateBegin !== null) {
           this.postData.payDateStart = this.form.payDateBegin
