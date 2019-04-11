@@ -8,14 +8,10 @@ export function getOrderList(data) {
     data: {
       pageIndex: data.pageIndex,
       pageSize: data.pageSize,
-      openId: data.openId,
-      tradeNo: data.tradeNo,
-      detailId: data.detailId,
-      deliveryId: data.deliveryId,
+      openId: data.userId,
+      id: data.orderId,
+      subOrderId: data.detailId,
       telephone: data.telephone,
-      deliveryStatus: data.deliveryStatus,
-      deliveryDateStart: data.deliveryDateStart,
-      deliveryDateEnd: data.deliveryDateEnd,
       payDateStart: data.payDateStart,
       payDateEnd: data.payDateEnd
     }

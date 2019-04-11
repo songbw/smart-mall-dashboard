@@ -1,75 +1,78 @@
 <template>
   <div class="app-container">
-    <el-form ref="form" :model="form" :rules="formRules" :class="$style.order_form">
+    <el-form ref="form" :model="form" :rules="formRules" class="order_form">
       <el-row :gutter="0" class="form_row">
         <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="订单编号:" />
+          <el-form-item class="order_form_label" label="订单编号:" />
         </el-col>
         <el-col :span="3" prop="mainId" class="form_col">
           <el-form-item prop="mainId">
-            <el-input :class="$style.order_form_input" v-model="form.mainId" name="mainId" />
+            <el-input class="order_form_input" v-model="form.mainId" name="mainId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="快递单号:" />
+          <el-form-item class="order_form_label" label="快递单号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="deliveryId">
-            <el-input :class="$style.order_form_input" v-model="form.deliveryId" name="deliveryId" />
+            <el-input class="order_form_input" v-model="form.deliveryId" name="deliveryId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="用户编号:" />
+          <el-form-item class="order_form_label" label="用户编号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="userId">
-            <el-input :class="$style.order_form_input" v-model="form.userId" name="userId" />
+            <el-input class="order_form_input" v-model="form.userId" name="userId" />
           </el-form-item>
         </el-col>
         <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="子订单号:" />
+          <el-form-item class="order_form_label" label="子订单号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="subId">
-            <el-input :class="$style.order_form_input" v-model="form.subId" name="subId" />
+            <el-input class="order_form_input" v-model="form.subId" name="subId" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row :gutter="0" class="form_row" type="flex">
         <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="支付日期:" />
+          <el-form-item class="order_form_label" label="支付日期:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.payDateBegin" type="date"
+          <el-date-picker class="order_form_input"
+                          v-model="form.payDateBegin"
+                          type="date"
+                          value-format="yyyy-MM-dd"
+                          format="yyyy-MM-dd"
                           placeholder="请选择日期" />
         </el-col>
-        <el-col :span="1" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="至:" />
+        <el-col :span="1.5" :offset="2" class="form_col">
+          <el-form-item class="order_form_label" label="至:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.payDateEnd" type="date" placeholder="请选择日期" />
-        </el-col>
-        <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="配送日期:" />
-        </el-col>
-        <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateBegin" type="date"
+          <el-date-picker class="order_form_input"
+                          v-model="form.payDateEnd"
+                          type="date"
+                          value-format="yyyy-MM-dd"
+                          format="yyyy-MM-dd"
                           placeholder="请选择日期" />
         </el-col>
-        <el-col :span="1" :offset="1" class="form_col">
-          <el-form-item label="至:" class="form_label" />
+        <el-col :span="2" :offset="3" class="form_col">
+          <el-form-item class="order_form_label" label="手机号码:" />
         </el-col>
         <el-col :span="3" class="form_col">
-          <el-date-picker :class="$style.order_form_input" v-model="form.deliveryDateEnd" type="date"
-                          placeholder="请选择日期" />
+          <el-form-item prop="phoneNum">
+            <el-input class="order_form_input" v-model="form.phoneNum" />
+          </el-form-item>
         </el-col>
       </el-row>
       <el-row :gutter="0" class="form_row">
-        <el-col :span="1.5" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="配送状态:" />
-        </el-col>
-        <el-col :span="3" class="form_col">
-          <el-select :class="$style.order_form_input" v-model="form.deliveryStat" placeholder="请选择配送状态">
+        <!--el-col :span="1.5" class="form_col">
+          <el-form-item :class="order_form_label" label="配送状态:" />
+        </el-col-->
+        <!--el-col :span="3" class="form_col">
+          <el-select :class="order_form_input" v-model="form.deliveryStat" placeholder="请选择配送状态">
             <el-option label="全部" value="0" />
             <el-option label="待配送" value="1" />
             <el-option label="配送成功" value="2" />
@@ -77,15 +80,7 @@
             <el-option label="配送取消" value="4" />
             <el-option label="已发货" value="5" />
           </el-select>
-        </el-col>
-        <el-col :span="1.5" :offset="1" class="form_col">
-          <el-form-item :class="$style.order_form_label" label="手机号码:" />
-        </el-col>
-        <el-col :span="3" class="form_col">
-          <el-form-item prop="phoneNum">
-            <el-input :class="$style.order_form_input" v-model="form.phoneNum" />
-          </el-form-item>
-        </el-col>
+        </el-col-->
         <el-col :span="1.5" :offset="1" class="form_col">
           <el-form-item>
             <el-button type="primary" @click="order_onSubmit">查询</el-button>
@@ -111,7 +106,7 @@
         style="width:97%"
         highlight-current-row
       >
-        <el-table-column label="大订单编号" width="180" align="center">
+        <el-table-column label="大订单编号" width="100" align="center">
           <template slot-scope="scope">
             {{ scope.row.id }}
           </template>
@@ -121,7 +116,7 @@
             {{ scope.row.subOrderId }}
           </template>
         </el-table-column>
-        <el-table-column label="商品编号" width="80" align="center">
+        <el-table-column label="商品编号" width="100" align="center">
           <template slot-scope="scope">
             <span>{{ scope.row.skuId }}</span>
           </template>
@@ -131,12 +126,12 @@
             <img :src="scope.row.image" width="80" height="80">
           </template>
         </el-table-column>
-        <el-table-column class-name="status-col" label="商品名称" width="380" align="center">
+        <el-table-column class-name="status-col" label="商品名称" width="300" align="center">
           <template slot-scope="scope">
             <span>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="购买数量" width="80">
+        <el-table-column align="center" label="购买数量" width="60">
           <template slot-scope="scope">
             <span>{{ scope.row.num }}</span>
           </template>
@@ -144,25 +139,30 @@
         <el-table-column align="center" label="支付时间" width="120">
           <template slot-scope="scope">
             <i class="el-icon-time" />
-            <span>{{ scope.row.payDate }}</span>
+            <span>{{ scope.row.paymentAt | formatDateTime }}</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="配送完成时间" width="120">
+        <!--el-table-column align="center" label="配送完成时间" width="120">
           <template slot-scope="scope">
             <i class="el-icon-time" />
             <span>{{ scope.row.deliveryDate }}</span>
           </template>
-        </el-table-column>
-        <el-table-column align="center" label="配送状态" width="80">
+        </el-table-column-->
+        <el-table-column align="center" label="订单状态" width="80">
           <template slot-scope="scope">
             <span>{{ scope.row.status | formatDeliveryStat }}</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="操作类型" width="80">
+        <!--el-table-column align="center" label="操作类型" width="80">
           <template slot-scope="scope">
             <span>{{ scope.row.deliveryType | formatDeliveryType }}</span>
           </template>
-        </el-table-column>
+        </el-table-column-->
+        <!--el-table-column align="center" label="支付编号" width="140">
+          <template slot-scope="scope">
+            <span>{{ scope.row.payNo }}</span>
+          </template>
+        </el-table-column-->
         <el-table-column align="center" label="操 作" width="150">
           <template slot-scope="scope">
             <!--a target="_self" href="##" onmouseover="style='color:blue'" onmouseleave="style='color:black'">查看详情</a-->
@@ -209,6 +209,17 @@
       OrderDialog
     },
     filters: {
+      formatDateTime(val){
+        if (null === val) {
+          return ' '
+        } else {
+          var origStr = val + ' '
+          var dateStr = origStr.slice(0, 10)
+          var timeStr = origStr.slice(11, 19)
+          var resultStr = dateStr.concat(' ', timeStr)
+          return resultStr
+        }
+      },
       formatDeliveryStat(val) {
         switch (val) {
           case 0:
@@ -216,9 +227,11 @@
           case 1:
             return '待收货'
           case 2:
-            return '配送成功'
+            return '已完成'
+          case 3:
+            return '已取消'
           default:
-            return '配送进行中'
+            return '删除'
         }
       },
       formatDeliveryType(val) {
@@ -248,16 +261,16 @@
       }
       const validateUserId = (rule, value, callback) => {
         // console.log('user id')
-        if (value.length > 0 && value.length < 9) {
-          callback(new Error('不能小于9位'))
+        if (value.length > 0 && value.length < 2) {
+          callback(new Error('不能小于2位'))
         } else {
           callback()
         }
       }
       const validateDeliveryId = (rule, value, callback) => {
         // console.log('delivery id')
-        if (value.length > 0 && value.length < 9) {
-          callback(new Error('不能小于9位'))
+        if (value.length > 0 && value.length < 2) {
+          callback(new Error('不能小于2位'))
         } else {
           callback()
         }
@@ -286,16 +299,14 @@
         postData: {
           pageIndex: 1,
           pageSize: 10,
-          openId: '',
+          userId: '',
           detailId: 0,
-          tradeNo: '',
+          orderId: '',
           deliveryId: '',
           deliveryStatus: '',
           telephone: '',
           payDateStart: '',
-          payDateEnd: '',
-          deliveryDateStart: '',
-          deliveryDateEnd: ''
+          payDateEnd: ''
         },
         formRules: {
           mainId: [{ required: false, trigger: 'blur', validator: ruleValidateMainId }],
@@ -413,35 +424,28 @@
         this.postData.pageIndex = pageIndex
         this.postData.pageSize = pageSize
         if (this.form.userId !== null) {
-          this.postData.openId = this.form.userId.trim()
+          this.postData.userId = this.form.userId
         }
         if (this.form.mainId !== null) {
-          this.postData.tradeNo = this.form.mainId.trim()
+          this.postData.orderId = this.form.mainId
         }
         if (this.form.subId !== null) {
-          this.postData.detailId = Number(this.form.subId)
+          this.postData.detailId = (this.form.subId)
         }
         if (this.form.deliveryId !== null) {
-          this.postData.deliveryId = this.form.deliveryId.trim()
+          this.postData.deliveryId = this.form.deliveryId
         }
-        if (this.form.deliveryStat !== null) {
-          this.postData.deliveryStatus = this.form.deliveryStat.trim()
-        }
+
         if (this.form.phoneNum !== null) {
-          this.postData.telephone = this.form.phoneNum.trim()
+          this.postData.telephone = this.form.phoneNum
         }
         if (this.form.payDateBegin !== null) {
-          this.postData.payDateStart = this.form.payDateBegin.trim()
+          this.postData.payDateStart = this.form.payDateBegin
         }
         if (this.form.payDateEnd !== null) {
-          this.postData.payDateEnd = this.form.payDateEnd.trim()
+          this.postData.payDateEnd = this.form.payDateEnd
         }
-        if (this.form.deliveryDateBegin !== null) {
-          this.postData.deliveryDateStart = this.form.deliveryDateBegin.trim()
-        }
-        if (this.form.deliveryDateEnd !== null) {
-          this.postData.deliveryDateEnd = this.form.deliveryDateEnd.trim()
-        }
+
         getOrderList(this.postData).then(response => {
           // console.log('got list')
           this.list = response.result.list
@@ -504,10 +508,10 @@
   }
 </script>
 
-<style module>
+<style scope>
 
   .order_form {
-    margin-left: 10%;
+    margin-left: 5px;
     align: right;
   }
 

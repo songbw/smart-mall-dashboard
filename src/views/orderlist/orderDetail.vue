@@ -11,9 +11,9 @@
           <td :class="$style.order_detail_table" width="100px" align="center">创建者</td>
           <td :class="$style.order_detail_table" width="100px">{{ owner_name }}</td>
           <td :class="$style.order_detail_table" width="100px" align="center">创建时间</td>
-          <td :class="$style.order_detail_table" width="400px">{{ create_date }}</td>
+          <td :class="$style.order_detail_table" width="400px">{{ create_date | formatDateTime }}</td>
           <td :class="$style.order_detail_table" width="100px" align="center">下单时间</td>
-          <td :class="$style.order_detail_table" width="260px">{{ order_date }}</td>
+          <td :class="$style.order_detail_table" width="260px">{{ order_date | formatDateTime }}</td>
         </tr>
         <tr :class="$style.order_detail_table">
           <td :class="$style.order_detail_table" align="center">收件人</td>
@@ -119,7 +119,7 @@
           </el-table-column>
           <el-table-column align="center" label="订单状态" width="100">
             <template slot-scope="scope">
-              <span>{{ scope.row.status }}</span>
+              <span>{{ scope.row.status | formatOrderStatus}}</span>
             </template>
           </el-table-column>
           <el-table-column align="center" label="支付类型" width="140">
@@ -173,6 +173,31 @@
   export default {
     name: 'OrderDetail',
     filters: {
+      formatDateTime(val){
+        if (null === val) {
+          return ' '
+        } else {
+          var origStr = val + ' '
+          var dateStr = origStr.slice(0, 10)
+          var timeStr = origStr.slice(11, 19)
+          var resultStr = dateStr.concat(' ', timeStr)
+          return resultStr
+        }
+      },
+      formatOrderStatus(val) {
+        switch (val) {
+          case 0:
+            return '待付款'
+          case 1:
+            return '待收货'
+          case 2:
+            return '已完成'
+          case 3:
+            return '已取消'
+          default:
+            return '删除'
+        }
+      },
       formatDeliveryStat(val) {
         switch (val) {
           case 0:
@@ -229,6 +254,7 @@
         totalNum: 5,
         pageSizeList: [10, 20, 100, 200],
         newAddress: '',
+        status: '',
         list: null,
         response: null,
         listLoading: false,
@@ -255,6 +281,7 @@
           this.user = this.response.receiverName
           this.phone = this.response.telephone
           this.zip_code = this.response.zip
+          this.status = this.response.status
           this.day_delay = 0
           if (this.response.invoiceState !== null) {
             if (this.response.invoiceState === '1') {
@@ -275,6 +302,12 @@
           this.pageNo = pageIndex
           this.pageSize = this.response.pageSize
           this.totalNum = this.response.total
+          if (null !== this.list) {
+            var k = 0
+            for (k = 0; k < this.list.length; k++) {
+              this.list[k].status = this.status
+            }
+          }
         })
       },
       order_handleChange() {
