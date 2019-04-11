@@ -154,7 +154,7 @@
                 const item = {
                   skuid: product.skuid,
                   price: product.price,
-                  image: product.image,
+                  imagePath: product.image,
                   intro: product.brand + ` ` + product.name
                 }
                 fetchedSkus.push(item)
