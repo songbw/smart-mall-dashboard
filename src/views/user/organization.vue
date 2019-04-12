@@ -229,7 +229,6 @@
         this.selectedOption = []
       },
       searchSubmit() {
-        // this.$message('submit!')
         if (this.form.name !== null) {
           this.form.name = this.form.name.trim()
         }
@@ -255,7 +254,6 @@
           const r = confirm(confirmTitle)
           if (r === true) {
             deleteOrganization(this.form).then(response => {
-                this.$message('成功')
                 // this.list.splice(index, 1)
                 this.organization_fetchData()
               }, error => {
@@ -282,10 +280,6 @@
         this.isIndeterminate = checkedCount > 0 && checkedCount < this.roles.length
       },
       organizationCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
         this.isShowTable = false
         this.organization_clearUpForm()
       },

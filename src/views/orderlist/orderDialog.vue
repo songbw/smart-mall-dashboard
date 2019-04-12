@@ -3,7 +3,7 @@
     <el-dialog
       :before-close="order_handleDialogClose"
       :visible.sync="dialogVisible"
-      width="24%">
+      width="30%">
       <span v-if="title.length > 1" :class="$style.order_input_title">{{ title }}</span>
       <textarea v-model="inputValues" cols="25" rows="6" maxlength="200" placeholder="最多可输入200字" width="24%"/>
       <br><br>

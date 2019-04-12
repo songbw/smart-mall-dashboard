@@ -10,14 +10,14 @@
             <el-input class="order_form_input" v-model="form.mainId" name="mainId" />
           </el-form-item>
         </el-col>
-        <el-col :span="1.5" :offset="1" class="form_col">
+        <!--el-col :span="1.5" :offset="1" class="form_col">
           <el-form-item class="order_form_label" label="快递单号:" />
         </el-col>
         <el-col :span="3" class="form_col">
           <el-form-item prop="deliveryId">
             <el-input class="order_form_input" v-model="form.deliveryId" name="deliveryId" />
           </el-form-item>
-        </el-col>
+        </el-col-->
         <el-col :span="1.5" :offset="1" class="form_col">
           <el-form-item class="order_form_label" label="用户编号:" />
         </el-col>
@@ -29,7 +29,7 @@
         <el-col :span="1.5" :offset="1" class="form_col">
           <el-form-item class="order_form_label" label="子订单号:" />
         </el-col>
-        <el-col :span="3" class="form_col">
+        <el-col :span="6" class="form_col">
           <el-form-item prop="subId">
             <el-input class="order_form_input" v-model="form.subId" name="subId" />
           </el-form-item>
@@ -68,20 +68,19 @@
         </el-col>
       </el-row>
       <el-row :gutter="0" class="form_row">
-        <!--el-col :span="1.5" class="form_col">
-          <el-form-item :class="order_form_label" label="配送状态:" />
-        </el-col-->
-        <!--el-col :span="3" class="form_col">
-          <el-select :class="order_form_input" v-model="form.deliveryStat" placeholder="请选择配送状态">
-            <el-option label="全部" value="0" />
-            <el-option label="待配送" value="1" />
-            <el-option label="配送成功" value="2" />
-            <el-option label="配送失败" value="3" />
-            <el-option label="配送取消" value="4" />
-            <el-option label="已发货" value="5" />
+        <el-col :span="1.5" class="form_col">
+          <el-form-item class="order_form_label" label="订单状态:" />
+        </el-col>
+        <el-col :span="2" class="form_col">
+          <el-select class="order_form_input" v-model="form.orderStatus" placeholder="请选择配送状态">
+            <el-option label='待付款' value="0" />
+            <el-option label='待收货' value="1" />
+            <el-option label='已完成' value="2" />
+            <el-option label='已取消' value="3" />
+            <el-option label='已删除' value="-1" />
           </el-select>
-        </el-col-->
-        <el-col :span="1.5" :offset="1" class="form_col">
+        </el-col>
+        <el-col :span="1.5" :offset="2" class="form_col">
           <el-form-item>
             <el-button type="primary" @click="order_onSubmit">查询</el-button>
             <el-button @click="order_onCancel">重置</el-button>
@@ -95,12 +94,8 @@
         :row-class-name="order_tableRowClassName"
         :data="list"
         :span-method="order_getSpan"
-        :header-cell-style="order_setHeadStyle"
-        :row-style="order_setRowStyle"
-        :cell-style="order_setCellStyle"
         element-loading-text="Loading"
         show-header
-        border
         stripe
         fit
         style="width:97%"
@@ -111,7 +106,7 @@
             {{ scope.row.id }}
           </template>
         </el-table-column>
-        <el-table-column label="子订单编号" width="200" align="center">
+        <el-table-column label="子订单编号" width="180" align="center">
           <template slot-scope="scope">
             {{ scope.row.subOrderId }}
           </template>
@@ -123,10 +118,10 @@
         </el-table-column>
         <el-table-column label="商品图片" width="100" align="center">
           <template slot-scope="scope">
-            <img :src="scope.row.image" width="80" height="80">
+            <img :src="scope.row.image" width="60" height="60">
           </template>
         </el-table-column>
-        <el-table-column class-name="status-col" label="商品名称" width="300" align="center">
+        <el-table-column class-name="status-col" label="商品名称" width="260" align="center">
           <template slot-scope="scope">
             <span>{{ scope.row.name }}</span>
           </template>
@@ -136,7 +131,7 @@
             <span>{{ scope.row.num }}</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="支付时间" width="120">
+        <el-table-column align="center" label="支付时间" width="110">
           <template slot-scope="scope">
             <i class="el-icon-time" />
             <span>{{ scope.row.paymentAt | formatDateTime }}</span>
@@ -150,7 +145,12 @@
         </el-table-column-->
         <el-table-column align="center" label="订单状态" width="80">
           <template slot-scope="scope">
-            <span>{{ scope.row.status | formatDeliveryStat }}</span>
+            <span>{{ scope.row.status | formatOrderStat }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="物流单号" width="110">
+          <template slot-scope="scope">
+            <span>{{ scope.row.logisticsId }}</span>
           </template>
         </el-table-column>
         <!--el-table-column align="center" label="操作类型" width="80">
@@ -220,7 +220,7 @@
           return resultStr
         }
       },
-      formatDeliveryStat(val) {
+      formatOrderStat(val) {
         switch (val) {
           case 0:
             return '待付款'
@@ -293,7 +293,7 @@
           payDateEnd: '',
           deliveryDateBegin: '',
           deliveryDateEnd: '',
-          deliveryStat: '',
+          orderStat: '',
           phoneNum: ''
         },
         postData: {
@@ -303,7 +303,7 @@
           detailId: 0,
           orderId: '',
           deliveryId: '',
-          deliveryStatus: '',
+          orderStatus: '',
           mobile: '',
           payDateStart: '',
           payDateEnd: ''
@@ -343,20 +343,15 @@
         this.form.payDateEnd = ''
         this.form.deliveryDateBegin = ''
         this.form.deliveryDateEnd = ''
-        this.form.deliveryStat = ''
+        this.form.orderStatus = ''
         this.form.phoneNum = ''
       },
       order_onSubmit() {
-        // this.$message('submit!')
         this.pageNo = 1
         this.pageSize = 10
         this.order_fetchData(this.pageNo, this.pageSize)
       },
       order_onCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
         this.isShowTable = false
         this.order_clearUpForm()
       },
@@ -432,8 +427,8 @@
         if (this.form.subId !== null) {
           this.postData.detailId = (this.form.subId)
         }
-        if (this.form.deliveryId !== null) {
-          this.postData.deliveryId = this.form.deliveryId
+        if (this.form.orderStatus !== null) {
+          this.postData.orderStatus = this.form.orderStatus
         }
 
         if (this.form.phoneNum !== null) {

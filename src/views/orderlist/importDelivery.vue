@@ -53,6 +53,8 @@
             }}
           </el-button>
           <el-button type="success" style="font-size:16px;" @click="deliveryImportExcel">导入EXCEL</el-button>
+          <el-button type="primary" style="font-size:16px;" @click="downTemplate">下载模板文件
+          </el-button>
         </el-form-item>
       </el-row>
     </el-form>
@@ -116,15 +118,10 @@
         this.form.pageSize = 10
       },
       formSubmit() {
-        this.$message('submit!')
         this.form.pageIndex = 1
         this.deliveryUploading()
       },
       formCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
         this.clearForm()
       },
       deliveryImportExcel() {
@@ -141,6 +138,17 @@
       },
       delivery_setHeadStyle(row, column, rowIndex, columnIndex) {
         return 'background-color:#b0c4de; color:#565552;border-style:outset;'
+      },
+      downTemplate() {
+        import('@/utils/exportToExcel').then(excel => {
+          const tHeader = ['orderId', 'subOrderId', 'logisticsId', 'logisticsContent']
+          const data = []
+          excel.export_json_to_excel({
+            header: tHeader,
+            data,
+            filename: 'deliveryTemplate'
+          })
+        })
       },
       deliveryUploading() {
         this.loading = true
@@ -163,11 +171,23 @@
             }]
             deliveryUpload(this.totalNum, this.list).then(response => {
                 this.loading = false
-              }, error => {
+                this.$alert('添加成功', {
+                  confirmButtonText: '确定',
+                  type:'success',
+                  title: '物流信息添加',
+                  callback: action => {
+                    this.clearForm()
+                  }
+                })
+            }).catch(err=>{
                 this.loading = false
-                alert(error)
-              }
-            )
+                // alert(err)
+                this.$alert('添加失败', {
+                  confirmButtonText: '确定',
+                  type:'warn',
+                  title: '物流信息添加'
+                })
+            })
           } else {
             // console.log('error submit!!')
             this.loading = false
@@ -181,12 +201,10 @@
 
 <style scoped>
   .delivery-import-container {
-    background-color: lightcyan;
     text-content: center;
   }
 
   .form {
-
   }
 
   .delivery-table-expand {

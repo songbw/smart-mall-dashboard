@@ -72,9 +72,6 @@
       <div>
         <el-table
           :data="list"
-          :header-cell-style="order_setHeadStyle"
-          :row-style="order_setRowStyle"
-          :cell-style="order_setCellStyle"
           element-loading-text="Loading"
           show-header
           border
@@ -82,17 +79,17 @@
           fit
           style="width:100%"
           highlight-current-row>
-          <el-table-column label="子订单编号" width="160" align="center">
+          <el-table-column label="子订单编号" width="140" align="center">
             <template slot-scope="scope">
               {{ scope.row.id }}
             </template>
           </el-table-column>
-          <el-table-column label="渠道编号" width="150" align="center">
+          <el-table-column label="渠道编号" width="140" align="center">
             <template slot-scope="scope">
               {{ scope.row.aoyiProdIndex.id }}
             </template>
           </el-table-column>
-          <el-table-column label="兑换品编号" width="160" align="center">
+          <el-table-column label="兑换品编号" width="140" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.aoyiProdIndex.skuid }}</span>
             </template>
@@ -102,51 +99,61 @@
               <img :src="scope.row.aoyiProdIndex.image" width="60" height="60">
             </template>
           </el-table-column>
-          <el-table-column class-name="status-col" label="兑换品名称" width="330" align="center">
+          <el-table-column class-name="status-col" label="兑换品名称" width="340" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.aoyiProdIndex.name }}</span>
             </template>
           </el-table-column>
-          <el-table-column align="center" label="商品供应商" width="130">
+          <el-table-column align="center" label="商品供应商" width="140">
             <template slot-scope="scope">
               <span>{{ scope.row.aoyiProdIndex.brand }}</span>
             </template>
           </el-table-column>
-          <el-table-column align="center" label="配送供应商" width="130">
+          <el-table-column align="center" label="物流单号" width="140">
             <template slot-scope="scope">
-              <span>{{ scope.row.brand }}</span>
+              <span>{{ scope.row.logisticsId }}</span>
             </template>
           </el-table-column>
-          <el-table-column align="center" label="订单状态" width="100">
+          <el-table-column align="center" label="物流说明" width="140">
+            <template slot-scope="scope">
+              <span>{{ scope.row.logisticsContent }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column align="center" label="订单状态" width="80">
             <template slot-scope="scope">
               <span>{{ scope.row.status | formatOrderStatus}}</span>
             </template>
           </el-table-column>
-          <el-table-column align="center" label="支付类型" width="140">
+          <el-table-column align="center" label="单价" width="65">
+            <template slot-scope="scope">
+              <span>{{ scope.row.unitPrice }}</span>
+            </template>
+          </el-table-column>
+          <!--el-table-column align="center" label="支付类型" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.paymentType | formatPaymentType }}</span>
             </template>
-          </el-table-column>
-          <el-table-column align="center" label="积分/元" width="80">
+          </el-table-column-->
+          <!--el-table-column align="center" label="积分/元" width="70">
             <template slot-scope="scope">
               <span>{{ scope.row.virtualCoin }}</span>
             </template>
-          </el-table-column>
-          <el-table-column align="center" label="兑换数量" width="80">
+          </el-table-column-->
+          <!--el-table-column align="center" label="兑换数量" width="60">
             <template slot-scope="scope">
               <span>{{ scope.row.exchangeAmount }}</span>
             </template>
-          </el-table-column>
-          <el-table-column align="center" label="退货次数" width="80">
+          </el-table-column-->
+          <!--el-table-column align="center" label="退货次数" width="60">
             <template slot-scope="scope">
               <span>{{ scope.row.returnTimes }}</span>
             </template>
-          </el-table-column>
-          <el-table-column align="center" label="换货次数" width="80">
+          </el-table-column-->
+          <!--el-table-column align="center" label="换货次数" width="60">
             <template slot-scope="scope">
               <span>{{ scope.row.exchangeTimes }}</span>
             </template>
-          </el-table-column>
+          </el-table-column-->
         </el-table>
         <el-pagination
           :page-sizes="pageSizeList"

@@ -4,8 +4,8 @@
       v-loading="loading"
       :before-close="excel_handleDialogClose"
       :visible.sync="dialogVisible"
-      width="24%">
-      <el-input id="upload"
+      width="30%">
+      <input id="upload"
                 type="file"
                 accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                 @change="importfxx"/>
@@ -37,10 +37,21 @@
     },
     methods: {
       excelImportSub() {
-        console.log('apply it ')
+        // console.log('apply it ')
         this.addLoading = true
-        console.log(this.inputValues)
         deliveryUpload(this.inputValues.length, this.inputValues).then(response => {
+            this.$alert(' 记录导入成功', {
+              confirmButtonText: '确定',
+              type:'success',
+              title: '物流信息文件记录导入',
+              callback: action => {
+                this.loading = false
+                this.addLoading = false
+                this.dialogVisible = false
+                this.$emit('close')
+              }
+            })
+            this.loading = false
             this.addLoading = false
             this.dialogVisible = false
           }, error => {
@@ -60,6 +71,7 @@
         this.file = event.currentTarget.files[0]
         var isReadBinary = false
         var f = this.file
+
         var readerOuter = new FileReader()
 
         FileReader.prototype.readAsBinaryString = function(f) {
@@ -97,10 +109,6 @@
             }
             outdata = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])
 
-            _this.$message({
-              message: '请耐心等待导入成功',
-              type: 'success'
-            })
             _this.inputValues = outdata.concat([])
             _this.loading = false
           }

@@ -332,7 +332,6 @@
         this.userForm.pageSize = 10
       },
       search_onSubmit() {
-        this.$message('submit!')
         this.userForm.pageIndex = 1
         this.user_fetchData()
       },
@@ -349,22 +348,16 @@
           var r = confirm(confirmTitle)
           if (r === true) {
             deleteByName(row.loginName).then(response => {
-              this.$message('成功')
               this.list.splice(index, 1)
             })
           }
         }
       },
       add_user() {
-        this.$message('add user')
         this.isNewUser = true
         this.editorVisible = true
       },
       user_onCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
         this.isShowTable = false
         this.user_clearUpForm()
       },
