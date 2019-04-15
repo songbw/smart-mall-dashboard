@@ -10,6 +10,7 @@ export function getOrderList(data) {
       pageSize: data.pageSize,
       openId: data.userId,
       id: data.orderId,
+      tradeNo: data.tradeNo,
       subOrderId: data.detailId,
       mobile: data.mobile,
       status: data.orderStatus,

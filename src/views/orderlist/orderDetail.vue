@@ -8,7 +8,7 @@
         <tr :class="$style.order_detail_table">
           <td :class="$style.order_detail_table" width="100px" align="center">订单编号</td>
           <td :class="$style.order_detail_table" width="500px">{{ trade_no }}</td>
-          <td :class="$style.order_detail_table" width="100px" align="center">创建者</td>
+          <td :class="$style.order_detail_table" width="100px" align="center">用户编码</td>
           <td :class="$style.order_detail_table" width="100px">{{ owner_name }}</td>
           <td :class="$style.order_detail_table" width="100px" align="center">创建时间</td>
           <td :class="$style.order_detail_table" width="400px">{{ create_date | formatDateTime }}</td>
@@ -202,7 +202,7 @@
           case 3:
             return '已取消'
           default:
-            return '删除'
+            return '已删除'
         }
       },
       formatDeliveryStat(val) {

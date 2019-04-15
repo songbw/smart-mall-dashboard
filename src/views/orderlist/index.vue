@@ -2,12 +2,20 @@
   <div class="app-container">
     <el-form ref="form" :model="form" :rules="formRules" class="order_form">
       <el-row :gutter="0" class="form_row">
-        <el-col :span="1.5" class="form_col">
+        <!--el-col :span="1.5" class="form_col">
           <el-form-item class="order_form_label" label="订单编号:" />
         </el-col>
         <el-col :span="3" prop="mainId" class="form_col">
           <el-form-item prop="mainId">
             <el-input class="order_form_input" v-model="form.mainId" name="mainId" />
+          </el-form-item>
+        </el-col-->
+        <el-col :span="1.5" :offset="0" class="form_col">
+          <el-form-item class="order_form_label" label="订单流水编号:" />
+        </el-col>
+        <el-col :span="3" class="form_col">
+          <el-form-item prop="tradeSeq">
+            <el-input class="order_form_input" v-model="form.tradeSeq" name="tradeSeq" />
           </el-form-item>
         </el-col>
         <!--el-col :span="1.5" :offset="1" class="form_col">
@@ -231,7 +239,7 @@
           case 3:
             return '已取消'
           default:
-            return '删除'
+            return '已删除'
         }
       },
       formatDeliveryType(val) {
@@ -286,6 +294,7 @@
       return {
         form: {
           mainId: '',
+          tradeSeq: '',
           deliveryId: '',
           userId: '',
           subId: '',
@@ -302,6 +311,7 @@
           userId: '',
           detailId: 0,
           orderId: '',
+          tradeNo: '',
           deliveryId: '',
           orderStatus: '',
           mobile: '',
@@ -336,6 +346,7 @@
     methods: {
       order_clearUpForm() {
         this.form.mainId = ''
+        this.form.tradeSeq = ''
         this.form.deliveryId = ''
         this.form.userId = ''
         this.form.subId = ''
@@ -423,6 +434,9 @@
         }
         if (this.form.mainId !== null) {
           this.postData.orderId = this.form.mainId
+        }
+        if (this.form.tradeSeq!== null) {
+          this.postData.tradeNo = this.form.tradeSeq
         }
         if (this.form.subId !== null) {
           this.postData.detailId = (this.form.subId)
