@@ -106,7 +106,13 @@ export const constantRouterMap = [
         component: () => import('@/views/promotionactivity/promotionCreate'),
         meta: { header: 'Promotion Create', title_key: 'promotion_create_title' },
         hidden: true
-      }
+      },
+      {
+        path: 'couponIndex',
+        name: 'couponIndex',
+        component: () => import('@/views/coupon/index'),
+        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_title' }
+      },
     ]
   },
   {
