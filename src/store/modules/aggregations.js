@@ -24,7 +24,14 @@ const aggregations = {
     aggregationTemplateIndex: -1,
     aggregationTotalNum: 0,
     aggregation: emptyAggregationPage,
-    aggregationList: []
+    aggregationList: [],
+    aggregationQuery: {
+      name: '',
+      status: -1,
+      homePage: false,
+      offset: 1,
+      limit: 20
+    }
   },
   mutations: {
     setAggregationList(state, data) {
@@ -195,6 +202,23 @@ const aggregations = {
         params.forEach(item => {
           template.data.list.push(Object.assign({}, item))
         })
+      }
+    },
+    setAggregationQuery(state, data) {
+      if (data.hasOwnProperty('name')) {
+        state.aggregationQuery.name = data.name
+      }
+      if (data.hasOwnProperty('status')) {
+        state.aggregationQuery.status = data.status
+      }
+      if (data.hasOwnProperty('homePage')) {
+        state.aggregationQuery.homePage = data.homePage
+      }
+      if (data.hasOwnProperty('offset')) {
+        state.aggregationQuery.offset = data.offset
+      }
+      if (data.hasOwnProperty('limit')) {
+        state.aggregationQuery.limit = data.limit
       }
     }
   },

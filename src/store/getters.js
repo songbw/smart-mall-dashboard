@@ -14,6 +14,7 @@ const getters = {
   allCategoriesInLoading: state => state.categories.allClassesDataInLoading,
   productsNum: state => state.products.productsTotal,
   productsData: state => state.products.productsData,
+  aggregationQuery: state => state.aggregations.aggregationQuery,
   allAggregationList: state => state.aggregations.aggregationList,
   aggregationTotal: state => state.aggregations.aggregationTotalNum,
   currentAggregationInfo: state => state.aggregations.aggregation,

@@ -36,11 +36,14 @@
     <div v-if="showDetail">
       <div class="header-container">
         <div class="header-ops-container">
-          <el-button size="mini" @click="dialogImportVisible = true">
-            {{ $t('aggregation_customization_goods_import_title') }}
-          </el-button>
           <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
             {{ $t('aggregation_customization_goods_select_title') }}
+          </el-button>
+          <el-button size="mini" type="info" @click="dialogImportVisible = true">
+            {{ $t('aggregation_customization_goods_import_title') }}
+          </el-button>
+          <el-button size="mini" @click="handleExportGoods">
+            导出商品
           </el-button>
         </div>
         <div class="header-ops-container">
@@ -142,7 +145,7 @@
         pageTemplateList: 'currentAggregationContent',
         currentTemplateIndex: 'currentAggregationContentIndex'
       }),
-      goodsInfo: function() {
+      goodsInfo: function () {
         if (this.pageTemplateList[this.currentTemplateIndex].type === goodsType) {
           return this.pageTemplateList[this.currentTemplateIndex].data
         } else {
@@ -246,6 +249,32 @@
       },
       onGoodsImportCancelled() {
         this.dialogImportVisible = false
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map(v => filterVal.map(j => {
+          if (j !== 'state') {
+            return v[j]
+          } else {
+            if (v[j] === '1') {
+              return '销售中'
+            } else {
+              return '已下架'
+            }
+          }
+        }))
+      },
+      handleExportGoods() {
+        import('@/utils/exportToExcel').then(excel => {
+          const tHeader = ['skuID']
+          const filterVal = ['skuid']
+          const list = this.skuData
+          const data = this.formatJson(filterVal, list)
+          excel.export_json_to_excel({
+            header: tHeader,
+            data,
+            filename: `${this.floorTitle}-商品列表`
+          })
+        })
       }
     }
   }

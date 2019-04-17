@@ -21,8 +21,14 @@
           下载模板
         </el-button>
       </el-form-item>
+      <el-form-item>
+        <el-progress v-if="loading" text-inside :stroke-width="18" :percentage="percentage"
+                     style="width: 80%" />
+      </el-form-item>
     </el-form>
-    <el-table :loading="loading" :data="excelData.results" border highlight-current-row
+
+    <el-table v-loading="loading" element-loading-text="正在导入..."
+              :data="excelData.results" border highlight-current-row
               style="width: 100%;margin-top:20px;"
               max-height="250">
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
@@ -43,7 +49,8 @@
     </el-table>
     <span slot="footer">
       <el-button @click="handleDialogCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
-      <el-button type="primary" @click="handleDialogConfirm">{{ $t('confirm_button_ok_title') }}</el-button>
+      <el-button type="primary" :disabled="loading"
+                 @click="handleDialogConfirm">{{ $t('confirm_button_ok_title') }}</el-button>
     </span>
   </el-dialog>
 </template>
@@ -65,6 +72,7 @@
       return {
         loading: false,
         fileName: '',
+        percentage: 0,
         excelData: {
           header: [],
           results: []
@@ -104,6 +112,7 @@
         this.clearDialogData()
       },
       clearDialogData() {
+        this.percentage = 0
         this.fileName = ''
         this.excelData.header = []
         this.excelData.results = []
@@ -148,10 +157,13 @@
       async generateData({ header, results }) {
         this.excelData.header = header
         const fetchedSkus = []
+        let fetchedNum = 0
         for (let i = 0; i < results.length; i++) {
           const skuID = results[i].skuID
           try {
             const response = await searchProductInfo({ offset: 1, limit: 10, skuid: skuID })
+            fetchedNum++
+            this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
             const data = response.result
             if (data.total > 0) {
               const product = data.list[0]
@@ -171,6 +183,7 @@
         }
         this.excelData.results = fetchedSkus
         this.loading = false
+        this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
       }
     }
   }

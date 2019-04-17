@@ -2,10 +2,10 @@
   <div class="app-container">
     <el-form :inline="true" :model="listQuery">
       <el-form-item label="聚合页名称">
-        <el-input v-model="listQuery.name" placeholder="输入名称关键字" clearable />
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
       <el-form-item label="聚合页状态">
-        <el-select v-model="listQuery.status">
+        <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -14,7 +14,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="是否主页">
-        <el-switch v-model="listQuery.homePage" />
+        <el-switch v-model="queryHomePage" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
@@ -81,7 +81,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <pagination v-show="total>0" :total="total" :page.sync="listQuery.offset" :limit.sync="listQuery.limit"
+      <pagination v-show="total>0" :total="total" :page.sync="queryOffset" :limit.sync="queryLimit"
                   @pagination="getListData" />
     </div>
     <el-dialog :visible.sync="viewDialogVisible" :show-close="false" center width="380px" custom-class="custom-phone">
@@ -154,24 +154,70 @@
         displayPageId: 0,
         viewDialogVisible: false,
         qrCodeDialogVisible: false,
-        listLoading: false,
-        listQuery: {
+        listLoading: false
+      }
+    },
+    computed: {
+      ...mapGetters({
+        listQuery: 'aggregationQuery',
+        aggregationList: 'allAggregationList',
+        total: 'aggregationTotal'
+      }),
+      queryName: {
+        get() {
+          return this.listQuery.name
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { name: value })
+        }
+      },
+      queryStatus: {
+        get() {
+          return this.listQuery.status
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { status: value })
+        }
+      },
+      queryHomePage: {
+        get() {
+          return this.listQuery.homePage
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { homePage: value })
+        }
+      },
+      queryOffset: {
+        get() {
+          return this.listQuery.offset
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { offset: value })
+        }
+      },
+      queryLimit: {
+        get() {
+          return this.listQuery.limit
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { limit: value })
+        }
+      }
+    },
+    created() {
+      this.getListData()
+    },
+    beforeRouteLeave(to, from, next) {
+      if (to.name !== 'pageCreate') {
+        this.$store.commit('setAggregationQuery', {
           name: '',
           status: -1,
           homePage: false,
           offset: 1,
           limit: 20
-        }
+        })
       }
-    },
-    computed: {
-      ...mapGetters({
-        aggregationList: 'allAggregationList',
-        total: 'aggregationTotal'
-      })
-    },
-    created() {
-      this.getListData()
+      next()
     },
     methods: {
       getListData() {
