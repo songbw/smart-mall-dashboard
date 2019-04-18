@@ -22,6 +22,9 @@ const getters = {
   currentAggregationContentIndex: state => state.aggregations.aggregationTemplateIndex,
   currentPromotionInfo: state => state.promotions.promotion,
   allPromotionList: state => state.promotions.promotionList,
-  promotionTotalNum: state => state.promotions.totalNum
+  promotionTotalNum: state => state.promotions.totalNum,
+  allCouponList: state => state.coupons.couponList,
+  couponTotalNum: state => state.coupons.totalNum,
+  couponQuery: state => state.coupons.query
 }
 export default getters
