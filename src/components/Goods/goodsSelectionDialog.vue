@@ -200,7 +200,7 @@
               skuid: item.skuid,
               price: item.price,
               imagePath: item.image,
-              intro: item.brand + ' ' + item.name
+              intro: item.name
             }
             if (this.hasPromotion) {
               selectItem.discount = item.discount

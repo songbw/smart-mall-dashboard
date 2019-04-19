@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
       <el-form-item label="名称">
-        <el-input v-model="queryName" placeholder="输入名称关键字" clearable/>
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="queryStatus" style="width: 90px">
@@ -10,25 +10,25 @@
             v-for="item in statusOptions"
             :key="item.value"
             :label="item.label"
-            :value="item.value"/>
+            :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="类型">
-        <el-select v-model="queryType" style="width: 90px">
+        <el-select v-model="queryType" style="width: 120px">
           <el-option
             v-for="item in typeOptions"
             :key="item.value"
             :label="item.label"
-            :value="item.value"/>
+            :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="开始时间">
         <el-date-picker v-model="queryStartDate" type="date" value-format="yyyy-MM-dd"
-                        placeholder="选择开始日期" style="width: 140px"/>
+                        placeholder="选择开始日期" style="width: 150px" />
       </el-form-item>
       <el-form-item label="结束时间">
         <el-date-picker v-model="queryEndDate" type="date" value-format="yyyy-MM-dd"
-                        placeholder="选择结束日期" style="width: 140px"/>
+                        placeholder="选择结束日期" style="width: 150px" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getCouponData">
@@ -89,29 +89,53 @@
           <span>{{ scope.row.releaseEndDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('aggregation_table_ops_title')" align="center" width="250">
+      <el-table-column :label="$t('aggregation_table_ops_title')" align="center" width="120">
         <template slot-scope="scope">
-          <el-button size="mini" type="primary" @click="handleEditCoupon(scope.row.id)">编辑</el-button>
-          <el-button size="mini" type="danger">下线</el-button>
-          <el-button size="mini" type="info">立即发布</el-button>
+          <el-dropdown placement="bottom" trigger="click" @command="handleOpsAction">
+            <el-button type="primary" icon="el-icon-arrow-down">
+              操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item :command="`start:${scope.$index}`" :disabled="scope.row.status !== 1"
+                                icon="el-icon-time">
+                发布
+              </el-dropdown-item>
+              <el-dropdown-item :command="`view:${scope.$index}`"
+                                icon="el-icon-view" divided>
+                查看
+              </el-dropdown-item>
+              <el-dropdown-item :command="`edit:${scope.$index}`" :disabled="scope.row.status !== 1"
+                                icon="el-icon-edit">
+                修改
+              </el-dropdown-item>
+              <el-dropdown-item :command="`stop:${scope.$index}`" :disabled="scope.row.status !== 2"
+                                icon="el-icon-sold-out" divided>
+                下线
+              </el-dropdown-item>
+              <el-dropdown-item :command="`delete:${scope.$index}`" :disabled="scope.row.status === 2"
+                                icon="el-icon-delete">
+                删除
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
     <pagination :total="total"
                 :page.sync="queryOffset" :limit.sync="queryLimit"
                 :page-sizes="[20, 40, 80, 100]"
-                @pagination="getCouponData"/>
+                @pagination="getCouponData" />
   </div>
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+  import { mapGetters } from 'vuex'
   import moment from 'moment'
   import pagination from '@/components/Pagination'
 
   export default {
     name: "Coupon",
-    components: {pagination},
+    components: { pagination },
     filters: {
       couponType: type => {
         switch (type) {
@@ -149,7 +173,7 @@
           value: 3,
           label: '已下线'
         }],
-        typeOptions:[{
+        typeOptions: [{
           value: 0,
           label: '全部'
         }, {
@@ -177,7 +201,7 @@
           return this.queryData.name
         },
         set(value) {
-          this.$store.commit('setQueryData', {name: value})
+          this.$store.commit('setQueryData', { name: value })
         }
       },
       queryStatus: {
@@ -185,7 +209,7 @@
           return this.queryData.status
         },
         set(value) {
-          this.$store.commit('setQueryData', {status: value})
+          this.$store.commit('setQueryData', { status: value })
         }
       },
       queryType: {
@@ -193,7 +217,7 @@
           return this.queryData.type
         },
         set(value) {
-          this.$store.commit('setQueryData', {type: value})
+          this.$store.commit('setQueryData', { type: value })
         }
       },
       queryStartDate: {
@@ -201,14 +225,14 @@
           return this.queryData.startDate
         },
         set(value) {
-          const start = moment(value).set({'hour': 0, 'minute': 0, 'second': 0})
+          const start = moment(value).set({ 'hour': 0, 'minute': 0, 'second': 0 })
           if (start.isValid() && (this.queryEndDate === null || start.isBefore(this.queryEndDate))) {
-            this.$store.commit('setQueryData', {startDate: start.format('YYYY-MM-DD HH:mm:ss')})
+            this.$store.commit('setQueryData', { startDate: start.format('YYYY-MM-DD HH:mm:ss') })
           } else {
             if (value) {
               this.$message.warning('开始日前必须早于结束日期')
             }
-            this.$store.commit('setQueryData', {startDate: null})
+            this.$store.commit('setQueryData', { startDate: null })
           }
 
         }
@@ -218,14 +242,14 @@
           return this.queryData.endDate
         },
         set(value) {
-          const end = moment(value).set({'hour': 23, 'minute': 59, 'second': 59})
+          const end = moment(value).set({ 'hour': 23, 'minute': 59, 'second': 59 })
           if (end.isValid() && (this.queryStartDate === null || end.isAfter(this.queryStartDate))) {
-            this.$store.commit('setQueryData', {endDate: end.format('YYYY-MM-DD HH:mm:ss')})
+            this.$store.commit('setQueryData', { endDate: end.format('YYYY-MM-DD HH:mm:ss') })
           } else {
-           if (value) {
-             this.$message.warning('结束日期必须晚于开始日期')
-           }
-            this.$store.commit('setQueryData', {endDate: null})
+            if (value) {
+              this.$message.warning('结束日期必须晚于开始日期')
+            }
+            this.$store.commit('setQueryData', { endDate: null })
           }
         }
       },
@@ -234,7 +258,7 @@
           return this.queryData.offset
         },
         set(value) {
-          this.$store.commit('setQueryData', {offset: value})
+          this.$store.commit('setQueryData', { offset: value })
         }
       },
       queryLimit: {
@@ -242,7 +266,7 @@
           return this.queryData.limit
         },
         set(value) {
-          this.$store.commit('setQueryData', {limit: value})
+          this.$store.commit('setQueryData', { limit: value })
         }
       }
     },
@@ -261,7 +285,7 @@
       async queryAllCouponData() {
         this.dataLoading = true
         try {
-          await this.$store.dispatch('getCoupons', {offset: this.queryOffset, limit: this.queryLimit})
+          await this.$store.dispatch('getCoupons', { offset: this.queryOffset, limit: this.queryLimit })
         } catch (err) {
           console.log('Get Coupons:' + err)
         } finally {
@@ -314,8 +338,46 @@
         this.getCouponData()
       },
       handleCreateCoupon() {
+        this.$router.push({ name: 'CreateCoupon' })
       },
-      handleEditCoupon(couponId) {
+      handleEditCoupon(index) {
+        this.$router.push({
+          name: 'CouponDetail',
+          params: { id: this.couponData[index].id, readOnly: false }
+        })
+      },
+      handleStartCoupon(index) {
+      },
+      handleViewCoupon(index) {
+        this.$router.push({
+          name: 'CouponDetail',
+          params: { id: this.couponData[index].id, readOnly: true }
+        })
+      },
+      handleStopCoupon(index) {
+      },
+      handleDeleteCoupon(index) {
+      },
+      handleOpsAction(action) {
+        const cmd = action.split(':')[0]
+        const index = Number.parseInt(action.split(':')[1])
+        switch (cmd) {
+          case 'start':
+            this.handleStartCoupon(index)
+            break
+          case 'view':
+            this.handleViewCoupon(index)
+            break
+          case 'edit':
+            this.handleEditCoupon(index)
+            break
+          case 'stop':
+            this.handleStopCoupon(index)
+            break
+          case 'delete':
+            this.handleDeleteCoupon(index)
+            break
+        }
       }
     }
   }

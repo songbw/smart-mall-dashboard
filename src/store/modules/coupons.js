@@ -5,7 +5,7 @@ import {
 } from '@/api/coupons'
 
 const couponTemplate = {
-  id: 1111,
+  id: -1,
   name: '',
   type: 0,
   releaseTotal: 0,
