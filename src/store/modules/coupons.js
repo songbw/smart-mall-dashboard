@@ -1,18 +1,28 @@
 import {
   getCouponsApi,
   searchCouponsApi,
-  createCouponApi
+  createCouponApi,
+  getCouponByIdApi
 } from '@/api/coupons'
 
 const couponTemplate = {
   id: -1,
   name: '',
-  type: 0,
-  releaseTotal: 0,
-  releaseNum: 0,
-  status: 0,
   releaseStartDate: null,
-  releaseEndDate: null
+  releaseEndDate: null,
+  releaseTotal: 0,
+  limitPerUser: 0,
+  priceBreak: 0,
+  discount: 0,
+  description: '',
+  effectiveStartDate: null,
+  effectiveEndDate: null,
+  excludeDates: [],
+  type: 1,
+  couponSkus: [],
+  excludeSkus: [],
+  categories: [],
+  rulesDescription: ''
 }
 
 const coupons = {
@@ -79,6 +89,26 @@ const coupons = {
         })
       })
     },
+    getCouponById({commit}, params) {
+      return new Promise((resolve, reject) => {
+        getCouponByIdApi(params).then(response => {
+          const data = response.result
+          if (data.couponSkus === null) {
+            data.couponSkus = []
+          }
+          if (data.excludeSkus === null) {
+            data.excludeSkus = []
+          }
+          if (data.categories === null) {
+            data.categories = []
+          }
+          commit('setCouponData', data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    }
   }
 }
 

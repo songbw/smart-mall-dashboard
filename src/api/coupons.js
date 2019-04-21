@@ -16,6 +16,14 @@ export function searchCouponsApi(params) {
   })
 }
 
+export function getCouponByIdApi(params) {
+  return request({
+    url: '/coupon/findById',
+    method: 'get',
+    params
+  })
+}
+
 export function createCouponApi(params) {
   return request({
     url: '/coupon/create',
