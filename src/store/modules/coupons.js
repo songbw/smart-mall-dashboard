@@ -2,7 +2,9 @@ import {
   getCouponsApi,
   searchCouponsApi,
   createCouponApi,
-  getCouponByIdApi
+  getCouponByIdApi,
+  deleteCouponApi,
+  updateCouponApi
 } from '@/api/coupons'
 
 const couponTemplate = {
@@ -47,6 +49,12 @@ const coupons = {
     setCouponList(state, data) {
       state.couponList = data.list
       state.totalNum = data.total
+    },
+    updateCouponInList(state, params) {
+      const index = state.couponList.findIndex(item => item.id === params.id)
+      if (index >= 0) {
+        state.couponList[index] = Object.assign(state.couponList[index], params)
+      }
     },
     setCouponData(state, params) {
       state.coupon = Object.assign(state.coupon, params)
@@ -103,6 +111,25 @@ const coupons = {
             data.categories = []
           }
           commit('setCouponData', data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    deleteCouponById({commit}, params) {
+      return new Promise((resolve, reject) => {
+        deleteCouponApi(params).then(() => {
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    updateCoupon({commit}, params) {
+      return new Promise((resolve, reject) => {
+        updateCouponApi(params).then(response => {
+          commit('updateCouponInList', params)
           resolve()
         }).catch(error => {
           reject(error)

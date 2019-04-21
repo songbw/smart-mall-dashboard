@@ -31,3 +31,19 @@ export function createCouponApi(params) {
     data: { ...params }
   })
 }
+
+export function updateCouponApi(params) {
+  return request({
+    url: '/coupon/update',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function deleteCouponApi(params) {
+  return request({
+    url: '/coupon/delete',
+    method: 'delete',
+    params
+  })
+}
