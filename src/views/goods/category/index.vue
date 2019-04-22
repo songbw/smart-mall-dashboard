@@ -131,8 +131,8 @@
           parentId: 0,
           grandId: 0,
           categoryClass: '0',
-          categoryName: undefined,
-          categoryIcon: undefined,
+          categoryName: null,
+          categoryIcon: null,
           sortOrder: 0
         },
         updateValue: {
@@ -140,7 +140,7 @@
           parentId: 0,
           grandId: 0,
           categoryClass: '0',
-          categoryIcon: undefined
+          categoryIcon: null
         },
         filterName: null,
         columnProps: {
