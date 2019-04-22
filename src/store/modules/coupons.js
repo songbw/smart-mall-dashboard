@@ -6,6 +6,7 @@ import {
   deleteCouponApi,
   updateCouponApi
 } from '@/api/coupons'
+import moment from 'moment'
 
 const couponTemplate = {
   id: -1,
@@ -25,6 +26,38 @@ const couponTemplate = {
   excludeSkus: [],
   categories: [],
   rulesDescription: ''
+}
+
+const parseDates = coupon => {
+  const format = 'YYYY-MM-DD HH:mm:ss'
+  let momentDate = moment(coupon.releaseStartDate)
+  if (momentDate.isValid()) {
+    coupon.releaseStartDate = momentDate.format(format)
+  }
+  momentDate = moment(coupon.releaseEndDate)
+  if (momentDate.isValid()) {
+    coupon.releaseEndDate = momentDate.format(format)
+  }
+  momentDate = moment(coupon.effectiveStartDate)
+  if (momentDate.isValid()) {
+    coupon.effectiveStartDate = momentDate.format(format)
+  }
+  momentDate = moment(coupon.effectiveEndDate)
+  if (momentDate.isValid()) {
+    coupon.effectiveEndDate = momentDate.format(format)
+  }
+  if (coupon.excludeDates && Array.isArray(coupon.excludeDates)) {
+    coupon.excludeDates.forEach(exclude => {
+      const start = moment(exclude.start)
+      if (start.isValid()) {
+        exclude.start = start.format(format)
+      }
+      const end = moment(exclude.end)
+      if (end.isValid()) {
+        exclude.end = end.format(format)
+      }
+    })
+  }
 }
 
 const coupons = {
@@ -48,6 +81,7 @@ const coupons = {
     },
     setCouponList(state, data) {
       state.couponList = data.list
+      state.couponList.forEach(coupon => parseDates(coupon))
       state.totalNum = data.total
     },
     updateCouponInList(state, params) {
@@ -57,6 +91,7 @@ const coupons = {
       }
     },
     setCouponData(state, params) {
+      parseDates(params)
       state.coupon = Object.assign(state.coupon, params)
     },
     setQueryData(state, params) {
@@ -64,7 +99,7 @@ const coupons = {
     }
   },
   actions: {
-    getCoupons({commit}, params) {
+    getCoupons({ commit }, params) {
       return new Promise((resolve, reject) => {
         getCouponsApi(params).then(response => {
           const data = response.result
@@ -75,7 +110,7 @@ const coupons = {
         })
       })
     },
-    searchCoupons({commit}, params) {
+    searchCoupons({ commit }, params) {
       return new Promise((resolve, reject) => {
         searchCouponsApi(params).then(response => {
           const data = response.result
@@ -86,18 +121,18 @@ const coupons = {
         })
       })
     },
-    createCoupon({commit}, params) {
+    createCoupon({ commit }, params) {
       return new Promise((resolve, reject) => {
         createCouponApi(params).then(response => {
           const id = response.id
-          commit('setCouponData', {id})
+          commit('setCouponData', { id })
           resolve(id)
         }).catch(error => {
           reject(error)
         })
       })
     },
-    getCouponById({commit}, params) {
+    getCouponById({ commit }, params) {
       return new Promise((resolve, reject) => {
         getCouponByIdApi(params).then(response => {
           const data = response.result
@@ -117,7 +152,7 @@ const coupons = {
         })
       })
     },
-    deleteCouponById({commit}, params) {
+    deleteCouponById({ commit }, params) {
       return new Promise((resolve, reject) => {
         deleteCouponApi(params).then(() => {
           resolve()
@@ -126,7 +161,7 @@ const coupons = {
         })
       })
     },
-    updateCoupon({commit}, params) {
+    updateCoupon({ commit }, params) {
       return new Promise((resolve, reject) => {
         updateCouponApi(params).then(response => {
           commit('updateCouponInList', params)

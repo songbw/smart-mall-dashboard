@@ -77,7 +77,7 @@ export const constantRouterMap = [
   {
     path: '/marketing',
     component: Layout,
-    redirect: '/pageIndex',
+    redirect: '/marketing/pageIndex',
     name: 'Marketing',
     meta: { header: 'Marketing', icon: 'marketing', title_key: 'marketing_title' },
     children: [

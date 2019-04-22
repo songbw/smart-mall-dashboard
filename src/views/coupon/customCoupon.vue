@@ -3,7 +3,7 @@
     <el-form ref="couponForm" :model="formData" :rules="formRules" label-width="120px">
       <el-form-item label="优惠券名称" prop="name">
         <div style="display: flex; justify-content: start; align-items: center">
-          <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px"/>
+          <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
           <span style="font-size: small;">
             请按规范描述商家名、券面额、券类型这三种关键信息,如“A商户10元美妆券”、“B商户50元通用券”、“XX商户20元定向券”等，限15字
           </span>
@@ -14,49 +14,49 @@
           <el-form-item prop="releaseStartDate">
             <el-date-picker type="datetime" v-model="formData.releaseStartDate" :readonly="viewOnly"
                             placeholder="选择开始日期和时间"
-                            value-format="yyyy-MM-dd HH:mm:ss"/>
+                            value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
           <el-form-item prop="releaseEndDate">
             <el-date-picker type="datetime" v-model="formData.releaseEndDate" :readonly="viewOnly"
                             placeholder="选择结束日期和时间"
-                            value-format="yyyy-MM-dd HH:mm:ss"/>
+                            value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
         </div>
       </el-form-item>
       <el-form-item label="发放总数" required>
-        <el-input-number v-model="formData.releaseTotal" :min="0" :disabled="viewOnly"/>
+        <el-input-number v-model="formData.releaseTotal" :min="0" :disabled="viewOnly" />
       </el-form-item>
       <el-form-item label="每人限领数量" required>
-        <el-input-number v-model="formData.limitPerUser" :min="0" :disabled="viewOnly"/>
+        <el-input-number v-model="formData.limitPerUser" :min="0" :disabled="viewOnly" />
       </el-form-item>
       <el-form-item label="优惠方式" required>
         <div style="display: flex; justify-content: start">
           <span style="margin-right: 10px">满</span>
           <el-form-item prop="priceBreak">
-            <el-input-number v-model="formData.priceBreak" :min="0" :disabled="viewOnly"/>
+            <el-input-number v-model="formData.priceBreak" :min="0" :disabled="viewOnly" />
           </el-form-item>
           <span style="margin: 0 10px">减</span>
           <el-form-item prop="discount">
-            <el-input-number v-model="formData.discount" :min="0" :disabled="viewOnly"/>
+            <el-input-number v-model="formData.discount" :min="0" :disabled="viewOnly" />
           </el-form-item>
         </div>
       </el-form-item>
       <el-form-item label="优惠券描述" prop="description" class="form-item">
-        <el-input type="textarea" resize="none" v-model="formData.description" :rows="4" :readonly="viewOnly"/>
+        <el-input type="textarea" resize="none" v-model="formData.description" :rows="4" :readonly="viewOnly" />
       </el-form-item>
       <el-form-item label="有效日期" required>
         <div style="display: flex; justify-content: start">
           <el-form-item prop="effectiveStartDate">
             <el-date-picker type="datetime" v-model="formData.effectiveStartDate" :readonly="viewOnly"
                             placeholder="选择开始日期和时间"
-                            value-format="yyyy-MM-dd HH:mm:ss"/>
+                            value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
           <el-form-item prop="effectiveEndDate">
             <el-date-picker type="datetime" v-model="formData.effectiveEndDate" :readonly="viewOnly"
                             placeholder="选择结束日期和时间"
-                            value-format="yyyy-MM-dd HH:mm:ss"/>
+                            value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
         </div>
       </el-form-item>
@@ -67,13 +67,13 @@
             <el-form-item>
               <el-date-picker type="datetime" v-model="exclude.start" :readonly="viewOnly"
                               placeholder="选择开始日期和时间"
-                              value-format="yyyy-MM-dd HH:mm:ss"/>
+                              value-format="yyyy-MM-dd HH:mm:ss" />
             </el-form-item>
             <span style="margin: 0 10px">至</span>
             <el-form-item>
               <el-date-picker type="datetime" v-model="exclude.end" :readonly="viewOnly"
                               placeholder="选择结束日期和时间"
-                              value-format="yyyy-MM-dd HH:mm:ss"/>
+                              value-format="yyyy-MM-dd HH:mm:ss" />
             </el-form-item>
             <el-button type="danger" icon="el-icon-delete" style="margin-left: 10px" :disabled="viewOnly"
                        @click="handleDeleteExcludeDate(index)">
@@ -93,21 +93,21 @@
             v-for="item in typeOptions"
             :key="item.value"
             :label="item.label"
-            :value="item.value"/>
+            :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item v-if="formData.type === 1" label="活动商品" required>
         <span>已关联{{ formData.couponSkus.length }}个商品(至多关联400个商品)</span>
         <coupon-goods key="include" :sku-list="formData.couponSkus" :view-only="viewOnly"
                       @contentAdd="handleAddCouponSkus"
-                      @contentDelete="handleDeleteCouponSkus"/>
+                      @contentDelete="handleDeleteCouponSkus" />
       </el-form-item>
       <el-form-item v-else-if="formData.type === 2" label="排除商品" required>
         <p>请确认是否要创建全场通用券,该券创建后可用于您发布的任何商品(排除商品除外)</p>
         <p>已排除{{ formData.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
         <coupon-goods key="exclude" :sku-list="formData.excludeSkus" :view-only="viewOnly"
                       @contentAdd="handleAddExcludeSkus"
-                      @contentDelete="handleDeleteExcludeSkus"/>
+                      @contentDelete="handleDeleteExcludeSkus" />
       </el-form-item>
       <el-form-item v-else>
         <div v-if="allCategoriesLoaded">
@@ -115,7 +115,7 @@
                            :category-value="category"
                            :index="index"
                            @categorySet="handleSetCategory"
-                           @categoryDelete="handleDeleteCategory"/>
+                           @categoryDelete="handleDeleteCategory" />
           <el-button type="primary" icon="el-icon-edit"
                      @click="handleNewCategory">
             添加类别
@@ -123,7 +123,7 @@
           <p>已排除{{ formData.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods key="exclude" :sku-list="formData.excludeSkus" :view-only="viewOnly"
                         @contentAdd="handleAddExcludeSkus"
-                        @contentDelete="handleDeleteExcludeSkus"/>
+                        @contentDelete="handleDeleteExcludeSkus" />
         </div>
         <div v-else-if="allCategoriesInLoading">
           <span>正在加载类别...</span>
@@ -151,13 +151,13 @@
           <li>优惠券使用范围:
             <el-form-item prop="rulesDescription">
               <el-input type="textarea" resize="none" v-model="formData.rulesDescription" :rows="4"
-                        :readonly="viewOnly"/>
+                        :readonly="viewOnly" />
             </el-form-item>
           </li>
         </ul>
       </el-form-item>
       <el-form-item>
-        <el-button v-loading="summiting" v-if="!viewOnly" type="primary" @click="handleSubmit">
+        <el-button v-loading="inSubmitting" v-if="!viewOnly" type="primary" @click="handleSubmit">
           {{ createCoupon ? '创建' : '保存' }}
         </el-button>
         <el-button @click="handleCancel">
@@ -169,7 +169,7 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+  import { mapGetters } from 'vuex'
   import isEqual from 'lodash/isEqual'
   import concat from 'lodash/concat'
   import difference from 'lodash/difference'
@@ -180,7 +180,7 @@
 
   export default {
     name: 'CustomCoupon',
-    components: {CouponGoods, CouponCategory},
+    components: { CouponGoods, CouponCategory },
     filters: {
       couponType: type => {
         switch (type) {
@@ -209,7 +209,7 @@
         createCoupon: false,
         viewOnly: true,
         couponId: -1,
-        summiting: false,
+        inSubmitting: false,
         formData: {
           name: '',
           releaseStartDate: null,
@@ -256,9 +256,12 @@
           }],
           releaseEndDate: [{
             required: true, trigger: 'blur', validator: (rule, value, callback) => {
+              const now = moment()
               if (value && this.formData.releaseStartDate &&
                 moment(value).isBefore(this.formData.releaseStartDate)) {
                 callback(new Error('结束时间必须晚于开始时间'))
+              } else if (value && moment(value).isBefore(now)) {
+                callback(new Error('结束时间必须晚于当前时间'))
               } else {
                 if (value) {
                   callback()
@@ -284,9 +287,12 @@
           }],
           effectiveEndDate: [{
             required: true, trigger: 'blur', validator: (rule, value, callback) => {
+              const now = moment()
               if (value && this.formData.effectiveStartDate &&
                 moment(value).isBefore(this.formData.effectiveStartDate)) {
                 callback(new Error('结束时间必须晚于开始时间'))
+              } else if (value && moment(value).isBefore(now)) {
+                callback(new Error('结束时间必须晚于当前时间'))
               } else {
                 if (value) {
                   callback()
@@ -322,7 +328,9 @@
         this.$store.commit('resetCoupon')
       } else {
         this.couponId = this.$route.params.id
-        this.viewOnly = this.$route.params.readOnly
+        if (this.$route.params.hasOwnProperty('readOnly')) {
+          this.viewOnly = this.$route.params.readOnly
+        }
         this.getCouponData()
       }
       if (!this.viewOnly) {
@@ -332,7 +340,7 @@
     methods: {
       async getCouponData() {
         try {
-          await this.$store.dispatch('getCouponById', {id: this.couponId})
+          await this.$store.dispatch('getCouponById', { id: this.couponId })
           this.formData = Object.assign({}, this.couponData)
         } catch (e) {
           console.log('Get coupon error :' + e)
@@ -340,7 +348,7 @@
       },
       getAllCategories() {
         if (this.allCategoriesLoaded === false && this.allCategoriesInLoading === false) {
-          this.$store.dispatch('getAllCategoryData', {offset: 1, limit: 100}).then((total) => {
+          this.$store.dispatch('getAllCategoryData', { offset: 1, limit: 100 }).then((total) => {
             console.log(('Get Main Category ') + total)
           }).catch((error) => {
             console.log(('Get Main Category failed: ' + error))
@@ -348,7 +356,7 @@
         }
       },
       handleAddExcludeDate() {
-        this.formData.excludeDates.push({start: null, end: null})
+        this.formData.excludeDates.push({ start: null, end: null })
       },
       handleDeleteExcludeDate(index) {
         this.formData.excludeDates.splice(index, 1)
@@ -398,17 +406,39 @@
         } else {
           data.couponSkus = []
         }
-        this.summiting = true
+        const now = moment()
+        const startDate = moment(data.releaseStartDate)
+        if (moment(startDate.isBefore(now))) {
+          data.status = 1
+        } else if (startDate.isAfter(now)) {
+          data.status = 2
+        }
+        this.inSubmitting = true
         try {
           await this.$store.dispatch('createCoupon', data)
           this.$router.go(-1)
         } catch (e) {
           console.log(e)
         } finally {
-          this.summiting = false
+          this.inSubmitting = false
         }
       },
-      handleUpdateCoupon() {
+      async handleUpdateCoupon() {
+        const diff = {}
+        let hasDiff = false
+        Object.keys(this.formData).forEach(key => {
+          if (isEqual(this.formData[key], this.couponData[key] === false)) {
+            diff[key] = this.formData[key]
+            hasDiff = true
+          }
+        })
+        if (hasDiff) {
+          try {
+            await this.$store.dispatch('updateCoupon', diff)
+          } catch (e) {
+            console.log('Update coupon ' + e)
+          }
+        }
       },
       handleSubmit() {
         this.$refs['couponForm'].validate((valid) => {

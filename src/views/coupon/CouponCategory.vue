@@ -7,7 +7,7 @@
           v-for="item in firstCategoryOptions"
           :key="item.categoryId"
           :label="item.categoryName"
-          :value="item.categoryId"/>
+          :value="item.categoryId" />
       </el-select>
     </el-form-item>
     <el-form-item>
@@ -17,7 +17,7 @@
           v-for="item in secondCategoryOptions"
           :key="item.categoryId"
           :label="item.categoryName"
-          :value="item.categoryId"/>
+          :value="item.categoryId" />
       </el-select>
     </el-form-item>
     <el-form-item>
@@ -27,7 +27,7 @@
           v-for="item in thirdCategoryOptions"
           :key="item.categoryId"
           :label="item.categoryName"
-          :value="item.categoryId"/>
+          :value="item.categoryId" />
       </el-select>
     </el-form-item>
     <el-form-item>
@@ -37,7 +37,7 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'CouponCategory',
@@ -70,7 +70,7 @@
         get() {
           if (this.allCategoriesLoaded) {
             return this.allCategoriesOption.map(item => {
-              return {categoryId: item.categoryId, categoryName: item.categoryName}
+              return { categoryId: item.categoryId, categoryName: item.categoryName }
             })
           } else {
             return [{
@@ -85,7 +85,7 @@
           if (this.allCategoriesLoaded &&
             this.rootCategorySelected !== null) {
             return this.rootCategorySelected.subs.map(item => {
-              return {categoryId: item.categoryId, categoryName: item.categoryName}
+              return { categoryId: item.categoryId, categoryName: item.categoryName }
             })
           } else {
             return []
@@ -97,7 +97,7 @@
           if (this.allCategoriesLoaded &&
             this.secondCategorySelected !== null) {
             return this.secondCategorySelected.subs.map(item => {
-              return {categoryId: item.categoryId, categoryName: item.categoryName}
+              return { categoryId: item.categoryId, categoryName: item.categoryName }
             })
           } else {
             return []
