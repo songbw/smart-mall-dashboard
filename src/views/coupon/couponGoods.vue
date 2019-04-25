@@ -152,7 +152,7 @@
                 }
               }
             } catch (err) {
-              console.log('Coupon Goods: search error ' + skuID)
+              this.$log.warning('Coupon Goods: search error:' + skuID)
             }
           }
           this.dataLoading = false

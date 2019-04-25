@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form ref="couponForm" :model="formData" :rules="formRules" label-width="120px">
+    <el-form ref="couponForm" :model="formData" :rules="viewOnly ? {} : formRules" label-width="120px">
       <el-form-item label="优惠券名称" prop="name">
         <div style="display: flex; justify-content: start; align-items: center">
           <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
@@ -8,6 +8,9 @@
             请按规范描述商家名、券面额、券类型这三种关键信息,如“A商户10元美妆券”、“B商户50元通用券”、“XX商户20元定向券”等，限15字
           </span>
         </div>
+      </el-form-item>
+      <el-form-item v-if="!createCoupon" label="优惠券编码">
+        <span>{{ formData.code }}</span>
       </el-form-item>
       <el-form-item label="发布日期" required>
         <div style="display: flex; justify-content: start">
@@ -25,20 +28,24 @@
         </div>
       </el-form-item>
       <el-form-item label="发放总数" required>
-        <el-input-number v-model="formData.releaseTotal" :min="0" :disabled="viewOnly" />
+        <span v-if="viewOnly">{{ formData.releaseTotal }}</span>
+        <el-input-number v-else v-model="formData.releaseTotal" :min="0" />
       </el-form-item>
       <el-form-item label="每人限领数量" required>
-        <el-input-number v-model="formData.limitPerUser" :min="0" :disabled="viewOnly" />
+        <span v-if="viewOnly">{{ formData.limitPerUser }}</span>
+        <el-input-number v-else v-model="formData.limitPerUser" :min="0" />
       </el-form-item>
       <el-form-item label="优惠方式" required>
         <div style="display: flex; justify-content: start">
           <span style="margin-right: 10px">满</span>
           <el-form-item prop="priceBreak">
-            <el-input-number v-model="formData.priceBreak" :min="0" :disabled="viewOnly" />
+            <span v-if="viewOnly">{{ formData.priceBreak }}</span>
+            <el-input-number v-else v-model="formData.priceBreak" :min="0" />
           </el-form-item>
           <span style="margin: 0 10px">减</span>
           <el-form-item prop="discount">
-            <el-input-number v-model="formData.discount" :min="0" :disabled="viewOnly" />
+            <span v-if="viewOnly">{{ formData.discount }}</span>
+            <el-input-number v-else v-model="formData.discount" :min="0" />
           </el-form-item>
         </div>
       </el-form-item>
@@ -112,11 +119,12 @@
       <el-form-item v-else>
         <div v-if="allCategoriesLoaded">
           <coupon-category v-for="(category, index) in formData.categories" :key="'category-' + index"
+                           :view-only="viewOnly"
                            :category-value="category"
                            :index="index"
                            @categorySet="handleSetCategory"
                            @categoryDelete="handleDeleteCategory" />
-          <el-button type="primary" icon="el-icon-edit"
+          <el-button type="primary" icon="el-icon-edit" :disabled="viewOnly"
                      @click="handleNewCategory">
             添加类别
           </el-button>
@@ -129,7 +137,11 @@
           <span>正在加载类别...</span>
         </div>
       </el-form-item>
-      <el-form-item label="使用规则" class="form-item">
+      <el-form-item label="使用规则" class="form-item" prop="rulesDescription">
+        <el-input type="textarea" resize="none" v-model="formData.rulesDescription" :rows="4"
+                  :readonly="viewOnly" />
+      </el-form-item>
+      <el-form-item label="优惠券概述" class="form-item">
         <ul style="list-style-type: decimal">
           <li>本券有效期为
             <span class="data-text">
@@ -139,20 +151,11 @@
               {{ formData.effectiveEndDate || 'xxxx-xx-xx xx:xx:xx'}}
             </span>
           </li>
-          <li>本券每人限领
-            <span class="data-text">{{ formData.limitPerUser || 0 }}</span>
-            张，单笔订单限用1张，不可叠加使用、不找零、不兑现
+          <li>
+            本券发送总数为<span class="data-text">{{ formData.releaseTotal || 0 }}</span>张
           </li>
-          <li>如用券订单交易取消，券退回账号；如部分交易取消，券优惠按商品金额拆分</li>
-          <li>商品固定积分部分不参与优惠</li>
-          <li>若发现多笔订单中用户ID、收货人姓名、详细地址、联系方式及与用户身份相关的其他信息，任意一项或数项存在相同相似，或其他非真实有效等情形的，
-            视为黄牛订单，商家有权取消订单并不予发货
-          </li>
-          <li>优惠券使用范围:
-            <el-form-item prop="rulesDescription">
-              <el-input type="textarea" resize="none" v-model="formData.rulesDescription" :rows="4"
-                        :readonly="viewOnly" />
-            </el-form-item>
+          <li>
+            本券每人限领<span class="data-text">{{ formData.limitPerUser || 0 }}</span>张
           </li>
         </ul>
       </el-form-item>
@@ -160,7 +163,7 @@
         <el-button v-loading="inSubmitting" v-if="!viewOnly" type="primary" @click="handleSubmit">
           {{ createCoupon ? '创建' : '保存' }}
         </el-button>
-        <el-button @click="handleCancel">
+        <el-button @click="handleCancel" :type="viewOnly ? 'primary' : 'default'">
           {{ viewOnly ? '确定' : '取消' }}
         </el-button>
       </el-form-item>
@@ -170,13 +173,16 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import isEmpty from 'lodash/isEmpty'
   import isEqual from 'lodash/isEqual'
   import concat from 'lodash/concat'
   import difference from 'lodash/difference'
   import includes from 'lodash/includes'
   import moment from 'moment'
-  import CouponGoods from './CouponGoods'
-  import CouponCategory from './CouponCategory'
+  import CouponGoods from './couponGoods'
+  import CouponCategory from './couponCategory'
+
+  const generate = require('nanoid/generate')
 
   export default {
     name: 'CustomCoupon',
@@ -212,6 +218,7 @@
         inSubmitting: false,
         formData: {
           name: '',
+          code: '',
           releaseStartDate: null,
           releaseEndDate: null,
           releaseTotal: 0,
@@ -342,16 +349,38 @@
         try {
           await this.$store.dispatch('getCouponById', { id: this.couponId })
           this.formData = Object.assign({}, this.couponData)
+          this.formData.excludeDates = []
+          if (!isEmpty(this.couponData.excludeDates)) {
+            this.couponData.excludeDates.forEach(exclude => {
+              const item = { ...exclude }
+              this.formData.excludeDates.push(item)
+            })
+          }
+          if (!isEmpty(this.couponData.couponSkus)) {
+            this.formData.couponSkus = this.couponData.couponSkus.map(sku => sku)
+          } else {
+            this.formData.couponSkus = []
+          }
+          if (!isEmpty(this.couponData.excludeSkus)) {
+            this.formData.excludeSkus = this.couponData.excludeSkus.map(sku => sku)
+          } else {
+            this.formData.excludeSkus = []
+          }
+          if (!isEmpty(this.couponData.categories)) {
+            this.formData.categories = this.couponData.categories.map(category => Number.parseInt(category))
+          } else {
+            this.formData.categories = []
+          }
         } catch (e) {
-          console.log('Get coupon error :' + e)
+          this.$log.warn('Get coupon error:' + e)
         }
       },
       getAllCategories() {
         if (this.allCategoriesLoaded === false && this.allCategoriesInLoading === false) {
           this.$store.dispatch('getAllCategoryData', { offset: 1, limit: 100 }).then((total) => {
-            console.log(('Get Main Category ') + total)
+            this.$log.info(('Get Main Category ') + total)
           }).catch((error) => {
-            console.log(('Get Main Category failed: ' + error))
+            this.$log.warn(('Get Main Category failed: ' + error))
           })
         }
       },
@@ -365,7 +394,7 @@
         if (this.formData.couponSkus.length + skus.length <= 400) {
           this.formData.couponSkus = concat(this.formData.couponSkus, skus)
         } else {
-          this.$message.warning('请重新选择活动商品，最多支持400个')
+          this.$message.warn('请重新选择活动商品，最多支持400个')
         }
       },
       handleDeleteCouponSkus(skus) {
@@ -375,7 +404,7 @@
         if (this.formData.excludeSkus.length + skus.length <= 100) {
           this.formData.excludeSkus = concat(this.formData.excludeSkus, skus)
         } else {
-          this.$message.warning('请重新选择活动排除商品，最多支持100个')
+          this.$message.warn('请重新选择活动排除商品，最多支持100个')
         }
       },
       handleDeleteExcludeSkus(skus) {
@@ -383,14 +412,14 @@
       },
       handleNewCategory() {
         if (this.formData.categories.length >= 5) {
-          this.$message.warning('最多增加5条类别信息')
+          this.$message.warn('最多增加5条类别信息')
         } else {
           this.formData.categories.push(-1)
         }
       },
       handleSetCategory(index, value) {
         if (includes(this.formData.categories, value)) {
-          this.$message.warning('此类别已添加，请选择其它类别')
+          this.$message.warn('此类别已添加，请选择其它类别')
         } else {
           this.formData.categories[index] = value
         }
@@ -406,37 +435,48 @@
         } else {
           data.couponSkus = []
         }
-        const now = moment()
+        const now = moment(Date.now())
         const startDate = moment(data.releaseStartDate)
         if (moment(startDate.isBefore(now))) {
           data.status = 1
         } else if (startDate.isAfter(now)) {
           data.status = 2
         }
+        const nolookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+        data.code = generate(nolookalikes, 21)
         this.inSubmitting = true
         try {
           await this.$store.dispatch('createCoupon', data)
           this.$router.go(-1)
         } catch (e) {
-          console.log(e)
+          this.$log.warn('Create coupon:' + e)
         } finally {
           this.inSubmitting = false
         }
       },
       async handleUpdateCoupon() {
-        const diff = {}
+        const diff = { id: this.formData.id }
         let hasDiff = false
         Object.keys(this.formData).forEach(key => {
-          if (isEqual(this.formData[key], this.couponData[key] === false)) {
+          if (isEqual(this.formData[key], this.couponData[key]) === false) {
             diff[key] = this.formData[key]
             hasDiff = true
           }
         })
         if (hasDiff) {
+          if (diff.hasOwnProperty('type')) {
+            if (diff.type === 1) {
+              diff.excludeSkus = []
+              diff.categories = []
+            } else {
+              diff.couponSkus = []
+            }
+          }
           try {
             await this.$store.dispatch('updateCoupon', diff)
+            this.$router.go(-1)
           } catch (e) {
-            console.log('Update coupon ' + e)
+            this.$log.warn('Update coupon:' + e)
           }
         }
       },

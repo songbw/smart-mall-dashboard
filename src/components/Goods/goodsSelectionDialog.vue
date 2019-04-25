@@ -32,6 +32,7 @@
       <span>{{ $t('aggregation_customization_goods_selected_text', {count: dialogSelectedItems.length}) }}</span>
     </div>
     <el-table
+      v-loading="dataLoading"
       ref="dialogSkuTable"
       :data="dialogSkuData"
       style="width: 100%"
@@ -108,6 +109,7 @@
         total: 0,
         offset: 1,
         limit: 50,
+        dataLoading: false,
         dialogSkuData: [],
         dialogSelectedItems: []
       }
@@ -159,6 +161,7 @@
               state: 1,
               skuid: skuID
             }
+            this.dataLoading = true
             searchProductInfo(params).then(response => {
               const data = response.result
               if (data.total > 0) {
@@ -169,6 +172,8 @@
               }
             }).catch(error => {
               console.log('getProductInfo:' + error)
+            }).finally(() => {
+              this.dataLoading = false
             })
           })
         } else if (this.dialogFilterForm.query !== '') {
@@ -178,6 +183,7 @@
             state: 1,
             query: this.dialogFilterForm.query
           }
+          this.dataLoading = true
           searchProductInfo(params).then(response => {
             const data = response.result
             if (data.total > 0) {
@@ -188,6 +194,8 @@
             this.total = data.total
           }).catch(error => {
             console.log('getProductInfo:' + error)
+          }).finally(() => {
+            this.dataLoading = false
           })
         } else {
           this.dialogSkuData = []

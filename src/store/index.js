@@ -12,8 +12,10 @@ import getters from './getters'
 
 Vue.use(Vuex)
 
+const debug = process.env.NODE_ENV !== 'production';
+
 const store = new Vuex.Store({
-  strict: false,
+  strict: debug,
   modules: {
     app,
     user,

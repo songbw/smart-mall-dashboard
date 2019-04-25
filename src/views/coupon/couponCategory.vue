@@ -1,7 +1,7 @@
 <template>
   <el-form v-loading="allCategoriesInLoading" :inline="true" style="margin-bottom: 10px">
     <el-form-item :label="$t('product_table_category_title')">
-      <el-select v-model="firstCategoryValue" clearable placeholder="选择一级类别"
+      <el-select v-model="firstCategoryValue" clearable placeholder="选择一级类别" :disabled="viewOnly"
                  @change="handleFirstCategoryChanged">
         <el-option
           v-for="item in firstCategoryOptions"
@@ -11,7 +11,7 @@
       </el-select>
     </el-form-item>
     <el-form-item>
-      <el-select v-model="secondCategoryValue" clearable placeholder="选择二级类别"
+      <el-select v-model="secondCategoryValue" clearable placeholder="选择二级类别" :disabled="viewOnly"
                  @change="handleSecondCategoryChanged">
         <el-option
           v-for="item in secondCategoryOptions"
@@ -21,7 +21,7 @@
       </el-select>
     </el-form-item>
     <el-form-item>
-      <el-select v-model="thirdCategoryValue" clearable placeholder="选择三级类别"
+      <el-select v-model="thirdCategoryValue" clearable placeholder="选择三级类别" :disabled="viewOnly"
                  @change="handleThirdCategoryChanged">
         <el-option
           v-for="item in thirdCategoryOptions"
@@ -31,7 +31,7 @@
       </el-select>
     </el-form-item>
     <el-form-item>
-      <el-button type="danger" icon="el-icon-delete" @click="handleDeleteCategory">删除</el-button>
+      <el-button :disabled="viewOnly" type="danger" icon="el-icon-delete" @click="handleDeleteCategory">删除</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -42,6 +42,10 @@
   export default {
     name: 'CouponCategory',
     props: {
+      viewOnly: {
+        type: Boolean,
+        default: true
+      },
       categoryValue: {
         type: Number,
         default: -1

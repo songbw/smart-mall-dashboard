@@ -13,7 +13,21 @@ import '@/icons' // icon
 import '@/permission' // permission control
 import i18n from './i18n'
 import VueQriously from 'vue-qriously'
+import VueLogger from 'vuejs-logger'
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const options = {
+  isEnabled: true,
+  logLevel: isProduction ? 'error' : 'debug',
+  stringifyArguments: true,
+  showLogLevel: true,
+  showMethodName: false,
+  separator: '|',
+  showConsoleColors: true
+}
+
+Vue.use(VueLogger, options)
 Vue.use(VueQriously)
 Vue.use(VueScrollTo)
 Vue.use(ElementUI, { locale })

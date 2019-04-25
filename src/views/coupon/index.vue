@@ -49,22 +49,22 @@
       border fit stripe highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="优惠券编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优惠券名称" align="center">
+      <el-table-column label="名称" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优惠券类型" align="center" width="100">
+      <el-table-column label="类型" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.type | couponType }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优惠券总量" align="center" width="100">
+      <el-table-column label="总量" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseTotal }}</span>
         </template>
@@ -74,7 +74,7 @@
           <span>{{ scope.row.releaseNum }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优惠券状态" align="center" width="100">
+      <el-table-column label="状态" align="center" width="100">
         <template slot-scope="scope">
           <el-tag>{{ scope.row.status | couponStatus }}</el-tag>
         </template>
@@ -230,7 +230,7 @@
             this.$store.commit('setQueryData', { startDate: start.format('YYYY-MM-DD HH:mm:ss') })
           } else {
             if (value) {
-              this.$message.warning('开始日前必须早于结束日期')
+              this.$message.warn('开始日前必须早于结束日期')
             }
             this.$store.commit('setQueryData', { startDate: null })
           }
@@ -247,7 +247,7 @@
             this.$store.commit('setQueryData', { endDate: end.format('YYYY-MM-DD HH:mm:ss') })
           } else {
             if (value) {
-              this.$message.warning('结束日期必须晚于开始日期')
+              this.$message.warn('结束日期必须晚于开始日期')
             }
             this.$store.commit('setQueryData', { endDate: null })
           }
@@ -287,7 +287,7 @@
         try {
           await this.$store.dispatch('getCoupons', { offset: this.queryOffset, limit: this.queryLimit })
         } catch (err) {
-          console.log('Get Coupons:' + err)
+          this.$log.warn('Get Coupons:' + err)
         } finally {
           this.dataLoading = false
         }
@@ -328,7 +328,7 @@
         try {
           await this.$store.dispatch('searchCoupons', params)
         } catch (err) {
-          console.log('Search Coupons:' + err)
+          this.$log.warn('Search Coupons:' + err)
         } finally {
           this.dataLoading = false
         }
@@ -351,12 +351,12 @@
           await this.$confirm('上线此优惠券将导致活动立即开始，请确认是否要继续？', '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
-            type: 'warning',
+            type: 'warn',
             center: true
           })
           await this.$store.dispatch('updateCoupon', { id: this.couponData[index].id, status: 2 })
         } catch (e) {
-          console.log('Update coupon ' + e)
+          this.$log.warn('Update coupon ' + e)
         }
       },
       handleViewCoupon(index) {
@@ -370,12 +370,12 @@
           await this.$confirm('下线此优惠券将导致活动停止，请确认是否要继续？', '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
-            type: 'warning',
+            type: 'warn',
             center: true
           })
           await this.$store.dispatch('updateCoupon', { id: this.couponData[index].id, status: 3 })
         } catch (e) {
-          console.log('Delete coupon :' + e)
+          this.$log.warn('Stop coupon:' + e)
         }
       },
       async handleDeleteCoupon(index) {
@@ -383,13 +383,13 @@
           await this.$confirm('删除此优惠券将不会再恢复，请确认是否要继续？', '警告', {
             confirmButtonText: '删除',
             cancelButtonText: '取消',
-            type: 'warning',
+            type: 'warn',
             center: true
           })
           await this.$store.dispatch('deleteCouponById', { id: this.couponData[index].id })
           this.getCouponData()
         } catch (e) {
-          console.log('Delete coupon :' + e)
+          this.$log.warn('Delete coupon:' + e)
         }
       },
       handleOpsAction(action) {

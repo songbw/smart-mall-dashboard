@@ -19,7 +19,6 @@ userService.interceptors.request.use(
   },
   error => {
     // Do something with request error
-    console.log(error) // for debug
     return Promise.reject(error)
   }
 )
@@ -31,7 +30,6 @@ userService.interceptors.response.use(
     if (res.code !== 200) {
       switch (res.code) {
         case 5000 :
-          console.log('=== remove expired token')
           this.$store.dispatch('DelToken')
           window.location.href = '#/user/login'
           break
@@ -46,7 +44,6 @@ userService.interceptors.response.use(
     } else {
       const headToken = response.headers.authorization
       if (headToken) {
-        console.log('=== refresh token : ')
         store.dispatch('RefreshToken', headToken)
       }
       return response.data
@@ -55,11 +52,11 @@ userService.interceptors.response.use(
   error => {
     switch (error.response.status) {
       case 403:
-         Message({
+        Message({
           message: ' 无此权限 ! ',
           type: 'error',
           duration: 5 * 1000
-         })
+        })
         break
       default:
         Message({
