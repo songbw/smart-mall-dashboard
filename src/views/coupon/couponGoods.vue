@@ -27,7 +27,7 @@
       v-loading="dataLoading"
       :data="skuPageList"
       style="width: 100%"
-      max-height="350"
+      height="450"
       border
       @selection-change="handleSelectionChange">
       <el-table-column type="selection" align="center" width="55" />
@@ -55,7 +55,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination :total="skuList.length" :autoScroll="false"
+    <pagination v-if="skuList.length > limit" :total="skuList.length" :autoScroll="false"
                 :page.sync="offset" :limit.sync="limit"
                 :page-sizes="[20, 40, 80, 100]" />
     <goods-selection :dialog-visible="dialogSelectionVisible"

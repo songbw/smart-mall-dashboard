@@ -32,7 +32,7 @@
     <el-table v-loading="listLoading"
               ref="dialogAggregationTable"
               :data="aggregationList" style="width: 100%;"
-              max-height="250"
+              height="250"
               row-key="id" border fit
               highlight-current-row
               @current-change="handleDialogSelectionChange">

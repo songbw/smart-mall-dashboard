@@ -36,9 +36,11 @@
       ref="dialogSkuTable"
       :data="dialogSkuData"
       style="width: 100%"
-      max-height="250"
+      height="250"
+      border
       @selection-change="handleDialogSelectionChange">
       <el-table-column
+        align="center"
         type="selection"
         width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
@@ -51,7 +53,7 @@
           <span>{{ scope.row.brand + ' ' + scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('product_table_price_title')" align="center" width="100">
+      <el-table-column :label="$t('product_table_price_title')" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
         </template>
