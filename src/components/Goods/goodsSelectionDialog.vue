@@ -70,6 +70,7 @@
       </el-table-column>
     </el-table>
     <pagination v-if="total > limit"
+                :auto-scroll="false"
                 :total="total"
                 :page.sync="offset" :limit.sync="limit"
                 :page-sizes="[20, 50, 80, 100]"
@@ -120,7 +121,11 @@
           return this.dialogFilterForm.skus.join(',')
         },
         set(newValue) {
-          this.dialogFilterForm.skus = Array.from(newValue.split(','))
+          if (newValue.trim()) {
+            this.dialogFilterForm.skus = Array.from(newValue.split(','))
+          } else {
+            this.dialogFilterForm.skus = []
+          }
         }
       },
       hasPromotion: {
@@ -155,26 +160,29 @@
         if (this.dialogFilterForm.skus.length > 0) {
           this.dialogSkuData = []
           this.dialogFilterForm.skus.forEach(skuID => {
-            const params = {
-              offset: 1,
-              limit: 1,
-              state: 1,
-              skuid: skuID
-            }
-            this.dataLoading = true
-            searchProductInfo(params).then(response => {
-              const data = response.result
-              if (data.total > 0) {
-                const product = data.list[0]
-                if (this.isProductValid(product)) {
-                  this.dialogSkuData.push(product)
-                }
+            if (skuID.trim()) {
+              const params = {
+                offset: 1,
+                limit: 1,
+                state: 1,
+                skuid: skuID
               }
-            }).catch(error => {
-              console.log('getProductInfo:' + error)
-            }).finally(() => {
-              this.dataLoading = false
-            })
+              this.dataLoading = true
+              searchProductInfo(params).then(response => {
+                const data = response.result
+                if (data.total > 0) {
+                  const product = data.list[0]
+                  if (this.isProductValid(product)) {
+                    this.dialogSkuData.push(product)
+                  }
+                }
+                this.total = this.dialogSkuData.length
+              }).catch(error => {
+                console.log('getProductInfo:' + error)
+              }).finally(() => {
+                this.dataLoading = false
+              })
+            }
           })
         } else if (this.dialogFilterForm.query !== '') {
           const params = {
@@ -199,6 +207,7 @@
           })
         } else {
           this.dialogSkuData = []
+          this.total = 0
         }
       },
       handleDialogSelectionChange(val) {
