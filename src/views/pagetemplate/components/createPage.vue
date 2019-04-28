@@ -29,6 +29,9 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import {
+    searchAggregationPagesApi
+  } from '@/api/aggregations'
 
   export default {
     name: 'CreationForm',
@@ -81,13 +84,25 @@
       }
     },
     methods: {
-      onSubmit() {
+      createPage() {
+        this.creatingPage = true
+        this.$store.dispatch('createAggregationPage', this.pageForm).then((id) => {
+          this.$emit('createPage', id)
+        }).catch(err => {
+          this.$message(err)
+        }).finally(() => {
+          this.creatingPage = false
+        })
+      },
+      getChangedParams() {
         let changed = false
+        const params = {}
         if (this.pageForm.name === null) {
           this.pageForm.name = this.pageInfo.name
         } else {
           if (this.pageForm.name !== this.pageInfo.name) {
             changed = true
+            params.name = this.pageForm.name
           }
         }
         if (this.pageForm.homePage == null) {
@@ -95,6 +110,7 @@
         } else {
           if (this.pageForm.homePage !== this.pageInfo.homePage) {
             changed = true
+            params.homePage = this.pageForm.homePage
           }
         }
         if (this.pageForm.effectiveDate === null) {
@@ -102,6 +118,7 @@
         } else {
           if (this.pageForm.effectiveDate !== this.pageInfo.effectiveDate) {
             changed = true
+            params.effectiveDate = this.pageForm.effectiveDate
           }
         }
         if (this.pageForm.backgroundColor === null) {
@@ -109,34 +126,65 @@
         } else {
           if (this.pageForm.backgroundColor !== this.pageInfo.backgroundColor) {
             changed = true
+            params.backgroundColor = this.pageForm.backgroundColor
           }
         }
+        if (changed) {
+          return params
+        } else {
+          return null
+        }
+      },
+      async checkHomePage(params) {
+        if (params.hasOwnProperty('homePage') && params.homePage === false) {
+          try {
+            const res = await searchAggregationPagesApi({ homePage: true, offset: 1, limit: 1 })
+            const data = res.result
+            if (data.total <= 1) {
+              await this.$alert('此聚合页模板为唯一主页模板，请先选择打开其它聚合页的主页选择。', '警告', {
+                confirmButtonText: '确定'
+              })
+              return false
+            } else {
+              return true
+            }
+          } catch (e) {
+            this.$log.warn('checkHomePage:' + e)
+            return false
+          }
+        } else {
+          return true
+        }
+      },
+      async updatePage() {
+        const pageID = this.pageInfo.id
+        const updatedParams = this.getChangedParams()
+        if (updatedParams !== null) {
+          const pass = await this.checkHomePage(updatedParams)
+          if (pass) {
+            this.creatingPage = true
+            const params = { id: pageID, ...updatedParams }
+            this.$store.dispatch('updateAggregationPage', params).then(() => {
+              this.$emit('createPage', pageID)
+            }).catch(err => {
+              this.$message(err)
+            }).finally(() => {
+              this.creatingPage = false
+            })
+          }
+        } else {
+          this.$emit('createPage', pageID)
+          this.creatingPage = false
+        }
+      },
+      onSubmit() {
         const pageID = this.pageInfo.id
         this.$refs.ruleForm.validate((valid) => {
           if (valid) {
-            this.creatingPage = true
             if (pageID === -1) {
-              this.$store.dispatch('createAggregationPage', this.pageForm).then((id) => {
-                this.$emit('createPage', id)
-              }).catch(err => {
-                this.$message(err)
-              }).finally(() => {
-                this.creatingPage = false
-              })
+              this.createPage()
             } else {
-              if (changed) {
-                const params = { id: pageID, ...this.pageForm }
-                this.$store.dispatch('updateAggregationPage', params).then(() => {
-                  this.$emit('createPage', pageID)
-                }).catch(err => {
-                  this.$message(err)
-                }).finally(() => {
-                  this.creatingPage = false
-                })
-              } else {
-                this.$emit('createPage', pageID)
-                this.creatingPage = false
-              }
+              this.updatePage()
             }
           }
         })

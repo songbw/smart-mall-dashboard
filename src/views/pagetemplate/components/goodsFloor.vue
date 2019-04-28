@@ -57,7 +57,7 @@
         ref="skuTable"
         :data="skuData"
         style="width: 100%"
-        max-height="250"
+        height="350"
         @selection-change="handleSelectionChange">
         <el-table-column
           type="selection"
