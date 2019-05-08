@@ -9,7 +9,7 @@
           :value="item.type">
           <el-popover :title="item.name" placement="right" trigger="hover">
             <el-card :body-style="{ padding: '0px' }">
-              <img :src="item.image" class="image">
+              <el-image :src="item.image" style="width: 128px;height: 128px" fit="contain" />
             </el-card>
             <div slot="reference">
               <span>{{ item.name }}</span>
@@ -64,6 +64,8 @@
               v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === promotionType" />
             <custom-goods
               v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === goodsType" />
+            <custom-hot-zone
+              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === hotZoneType" />
           </el-main>
         </el-container>
       </el-container>
@@ -84,23 +86,27 @@
   import CustomGrid from './customGrid'
   import CustomPromotion from './customPromotion'
   import CustomGoods from './customGoods'
+  import CustomHotZone from './customHotZone'
   import {
     bannerType,
     serviceType,
     gridType,
     promotionType,
-    goodsType
+    goodsType,
+    hotZoneType
   } from '@/utils/templateType'
 
   const bannerImage = require('@/assets/images/banner.png')
+  const serviceImage = require('@/assets/images/icon-grid.png')
   const goodsImage = require('@/assets/images/goods.png')
   const gridImage = require('@/assets/images/grid.png')
   const couponImage = require('@/assets/images/coupon.png')
+  const hotZoneImage = require('@/assets/images/image.png')
 
   export default {
     name: 'CustomPage',
     components: {
-      CustomBanner, CustomService, CustomGrid, CustomPromotion, CustomGoods
+      CustomBanner, CustomService, CustomGrid, CustomPromotion, CustomGoods, CustomHotZone
     },
     data() {
       return {
@@ -110,6 +116,7 @@
         gridType: gridType,
         promotionType: promotionType,
         goodsType: goodsType,
+        hotZoneType: hotZoneType,
         options: [
           {
             type: bannerType,
@@ -123,7 +130,7 @@
             name: this.$t('aggregation_customization_service_name'),
             tipTitle: this.$t('aggregation_customization_service_name') +
               this.$t('aggregation_customization_tip_title'),
-            image: couponImage
+            image: serviceImage
           },
           {
             type: gridType,
@@ -145,6 +152,13 @@
             tipTitle: this.$t('aggregation_customization_goods_name') +
               this.$t('aggregation_customization_tip_title'),
             image: goodsImage
+          },
+          {
+            type: hotZoneType,
+            name: this.$t('aggregation_customization_hotzone_name'),
+            tipTitle: this.$t('aggregation_customization_hotzone_name') +
+              this.$t('aggregation_customization_tip_title'),
+            image: hotZoneImage
           }
         ],
         currentTemplateTipTitle: ''
@@ -191,18 +205,22 @@
         this.setEditTemplateTypeIndex(index)
       },
       handleDelTemplateType(index) {
-        this.$store.dispatch('deleteAggregationTemplate', index).then((length) => {
-          if (index === this.currentTemplateIndex) {
-            if (length > 0) {
-              if (index > 0) {
-                this.setEditTemplateTypeIndex(index - 1)
-              } else {
-                this.setEditTemplateTypeIndex(0)
-              }
+        const length = this.pageTemplateList.length - 1
+        if (index === this.currentTemplateIndex) {
+          if (length > 0) {
+            if (index > 0) {
+              this.setEditTemplateTypeIndex(index - 1)
             } else {
-              this.setEditTemplateTypeIndex(-1)
+              this.setEditTemplateTypeIndex(0)
             }
+          } else {
+            this.setEditTemplateTypeIndex(-1)
           }
+        }
+        this.$store.dispatch('deleteAggregationTemplate', index).then((len) => {
+          this.$log.debug(`handleDelTemplateType:${index} len:${len}`)
+        }).catch(e => {
+          this.$log.warn('handleDelTemplateType:' + e)
         })
       },
       setEditTemplateTypeIndex(index) {
@@ -270,6 +288,11 @@
                 targetName: ''
               },
               marginBottom: '0'
+            }
+            break
+          case hotZoneType:
+            template.data.settings = {
+              imageUrl: ''
             }
             break
         }

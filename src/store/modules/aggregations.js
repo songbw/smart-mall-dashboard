@@ -12,7 +12,7 @@ import {
   deleteAggregationGroupApi
 } from '@/api/aggregations'
 
-import { bannerType, serviceType, gridType, promotionType, goodsType } from '@/utils/templateType'
+import { bannerType, serviceType, gridType, promotionType, goodsType, hotZoneType } from '@/utils/templateType'
 
 const emptyAggregationPage = {
   id: -1,
@@ -119,9 +119,11 @@ const aggregations = {
     setListInTemplateContent(state, params) {
       const template = state.aggregation.content[state.aggregationTemplateIndex]
       if (params.index >= 0) {
-        template.data.list.splice(params.index, 1)
-        const item = Object.assign({}, params.value)
-        template.data.list.splice(params.index, 0, item)
+        if (params.index < template.data.list.length) {
+          template.data.list.splice(params.index, 1)
+          const item = Object.assign({}, params.value)
+          template.data.list.splice(params.index, 0, item)
+        }
       } else {
         const item = Object.assign({}, params.value)
         template.data.list.push(item)
@@ -213,6 +215,12 @@ const aggregations = {
         params.forEach(item => {
           template.data.list.push(Object.assign({}, item))
         })
+      }
+    },
+    setTemplateHotZoneSettings(state, params) {
+      const template = state.aggregation.content[state.aggregationTemplateIndex]
+      if (template.type === hotZoneType) {
+        template.data.settings = { ...params }
       }
     },
     setAggregationQuery(state, data) {

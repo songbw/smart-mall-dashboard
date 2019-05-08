@@ -97,7 +97,10 @@
         },
         set(value) {
           this.imageType = value
-          const newTarget = { type: this.imageType }
+          const newTarget = {
+            index: this.targetIndex,
+            type: this.imageType
+          }
           if (value === 'category') {
             newTarget.name = '商品分类'
             newTarget.url = 'route://category'
@@ -139,6 +142,7 @@
         set(value) {
           this.imageUrl = value
           this.$emit('targetChanges', {
+              index: this.targetIndex,
               url: this.imageUrl
             }
           )
@@ -146,7 +150,7 @@
       }
     },
     watch: {
-      targetIndex: function(newValue, oldValue) {
+      targetIndex: function (newValue, oldValue) {
         this.originalProp = {
           type: this.targetType,
           name: this.targetName,
@@ -161,6 +165,7 @@
       onAggregationSelectionConfirmed(aggregation) {
         this.dialogAggregationVisible = false
         this.$emit('targetChanges', {
+            index: this.targetIndex,
             type: this.imageType,
             name: aggregation.name,
             url: 'aggregation://' + aggregation.id
@@ -171,6 +176,7 @@
         this.dialogPromotionVisible = false
         if (promotion) {
           this.$emit('targetChanges', {
+              index: this.targetIndex,
               type: this.imageType,
               name: promotion.name,
               url: 'route://promotion/' + promotion.id
@@ -185,6 +191,7 @@
         this.dialogSelectionVisible = false
         if (skus.length > 0) {
           this.$emit('targetChanges', {
+              index: this.targetIndex,
               type: this.imageType,
               name: skus[0].intro,
               url: 'route://commodity/' + skus[0].skuid
