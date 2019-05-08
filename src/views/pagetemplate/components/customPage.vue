@@ -54,18 +54,20 @@
             <el-button type="text" style="float: right;margin: auto">{{ currentTemplateTipTitle }}</el-button>
           </el-header>
           <el-main class="show-border">
-            <custom-banner
-              v-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === bannerType" />
-            <custom-service
-              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === serviceType" />
-            <custom-grid
-              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === gridType" />
-            <custom-promotion
-              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === promotionType" />
-            <custom-goods
-              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === goodsType" />
-            <custom-hot-zone
-              v-else-if="currentTemplateIndex >= 0 && pageTemplateList[currentTemplateIndex].type === hotZoneType" />
+            <div v-for="(pageTemplate, index) in pageTemplateList" :key="'page-template-' + index">
+              <custom-banner
+                v-if="currentTemplateIndex === index && pageTemplate.type === bannerType" />
+              <custom-service
+                v-if="currentTemplateIndex === index && pageTemplate.type === serviceType" />
+              <custom-grid
+                v-if="currentTemplateIndex === index && pageTemplate.type === gridType" />
+              <custom-promotion
+                v-if="currentTemplateIndex === index && pageTemplate.type === promotionType" />
+              <custom-goods
+                v-if="currentTemplateIndex === index && pageTemplate.type === goodsType" />
+              <custom-hot-zone
+                v-if="currentTemplateIndex === index && pageTemplate.type === hotZoneType" />
+            </div>
           </el-main>
         </el-container>
       </el-container>
