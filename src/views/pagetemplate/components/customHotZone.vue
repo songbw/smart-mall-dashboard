@@ -50,6 +50,8 @@
   import { hotZoneType } from '@/utils/templateType'
   import ImageTargetLink from './imageTargetLink'
 
+  const generate = require('nanoid/generate')
+
   export default {
     name: 'CustomHotZone',
     components: { hotzone, ImageTargetLink },
@@ -79,6 +81,7 @@
               list: [],
               settings: {
                 imageUrl: '',
+                imageKey: ''
               }
             }
           }
@@ -91,7 +94,7 @@
       },
       hotZonesInit: {
         get() {
-          return this.hotZoneInfo.list.map(zone => zone.area)
+          return this.hotZoneInfo.list.map(zone => Object.assign({}, zone.area))
         }
       },
       hotZoneList: {
@@ -144,8 +147,10 @@
       },
       handleUploadImageSuccess(res) {
         const imageUrl = this.$store.getters.cosUrl + res.data.url
+        const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+        const imageKey = generate(noLookalikes, 21)
         this.$refs.upload.clearFiles()
-        this.$store.commit('setTemplateHotZoneSettings', { imageUrl })
+        this.$store.commit('setTemplateHotZoneSettings', { imageUrl, imageKey })
       },
       handleUploadImageError(res) {
         this.$refs.upload.clearFiles()

@@ -442,8 +442,8 @@
         } else if (startDate.isAfter(now)) {
           data.status = 2
         }
-        const nolookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-        data.code = generate(nolookalikes, 21)
+        const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+        data.code = generate(noLookalikes, 21)
         this.inSubmitting = true
         try {
           await this.$store.dispatch('createCoupon', data)

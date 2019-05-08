@@ -294,7 +294,8 @@
             break
           case hotZoneType:
             template.data.settings = {
-              imageUrl: ''
+              imageUrl: '',
+              imageKey: ''
             }
             break
         }
