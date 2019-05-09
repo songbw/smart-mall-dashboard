@@ -1,16 +1,12 @@
 <template>
   <div class="app-container">
     <el-form ref="couponForm" :model="formData" :rules="viewOnly ? {} : formRules" label-width="120px">
+      <el-divider content-position="left"><span class="divider-text">基础信息</span></el-divider>
       <el-form-item label="优惠券名称" prop="name">
-        <div style="display: flex; justify-content: start; align-items: center">
-          <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
-          <span style="font-size: small;">
-            请按规范描述商家名、券面额、券类型这三种关键信息,如“A商户10元美妆券”、“B商户50元通用券”、“XX商户20元定向券”等，限15字
-          </span>
-        </div>
+        <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
       </el-form-item>
       <el-form-item v-if="!createCoupon" label="优惠券编码">
-        <span>{{ formData.code }}</span>
+        <span>{{ formData.rules.code }}</span>
       </el-form-item>
       <el-form-item label="发布日期" required>
         <div style="display: flex; justify-content: start">
@@ -30,27 +26,6 @@
       <el-form-item label="发放总数" required>
         <span v-if="viewOnly">{{ formData.releaseTotal }}</span>
         <el-input-number v-else v-model="formData.releaseTotal" :min="0" />
-      </el-form-item>
-      <el-form-item label="每人限领数量" required>
-        <span v-if="viewOnly">{{ formData.limitPerUser }}</span>
-        <el-input-number v-else v-model="formData.limitPerUser" :min="0" />
-      </el-form-item>
-      <el-form-item label="优惠方式" required>
-        <div style="display: flex; justify-content: start">
-          <span style="margin-right: 10px">满</span>
-          <el-form-item prop="priceBreak">
-            <span v-if="viewOnly">{{ formData.priceBreak }}</span>
-            <el-input-number v-else v-model="formData.priceBreak" :min="0" />
-          </el-form-item>
-          <span style="margin: 0 10px">减</span>
-          <el-form-item prop="discount">
-            <span v-if="viewOnly">{{ formData.discount }}</span>
-            <el-input-number v-else v-model="formData.discount" :min="0" />
-          </el-form-item>
-        </div>
-      </el-form-item>
-      <el-form-item label="优惠券描述" prop="description" class="form-item">
-        <el-input type="textarea" resize="none" v-model="formData.description" :rows="4" :readonly="viewOnly" />
       </el-form-item>
       <el-form-item label="有效日期" required>
         <div style="display: flex; justify-content: start">
@@ -93,9 +68,33 @@
           </el-button>
         </div>
       </el-form-item>
-      <el-form-item label="优惠券类型" required>
-        <span v-if="viewOnly">{{ formData.type | couponType }}</span>
-        <el-select v-else v-model="formData.type">
+      <el-form-item label="优惠券链接" class="form-item" prop="url">
+        <el-input v-model="formData.url" :readonly="viewOnly" />
+      </el-form-item>
+      <el-form-item label="优惠券描述" prop="description" class="form-item">
+        <el-input type="textarea" resize="none" v-model="formData.description" :rows="4" :readonly="viewOnly" />
+      </el-form-item>
+      <el-divider content-position="left"><span class="divider-text">规则设置</span></el-divider>
+      <el-form-item label="每人限领数量" required>
+        <span v-if="viewOnly">{{ formData.rules.perLimited }}</span>
+        <el-input-number v-else v-model="formData.rules.perLimited" :min="0" />
+      </el-form-item>
+      <el-form-item label="推广区域">
+        <div>
+          <el-checkbox v-model="checkAllScopes" :indeterminate="isScopesIndeterminate"
+                       @change="handleCheckAllScopesChange">
+            选择全部
+          </el-checkbox>
+          <el-checkbox-group v-model="formData.rules.scopes" @change="handleCheckedScopesChange">
+            <el-checkbox v-for="app in appScopes" :label="app.id" :key="app.id">
+              {{ app.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+      </el-form-item>
+      <el-form-item label="优惠券类型">
+        <span v-if="viewOnly">{{ formData.rules.couponRules.type | couponTypeFilter }}</span>
+        <el-select v-else v-model="formData.rules.couponRules.type">
           <el-option
             v-for="item in typeOptions"
             :key="item.value"
@@ -103,22 +102,70 @@
             :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="formData.type === 1" label="活动商品" required>
-        <span>已关联{{ formData.couponSkus.length }}个商品(至多关联400个商品)</span>
-        <coupon-goods key="include" :sku-list="formData.couponSkus" :view-only="viewOnly"
+      <el-form-item v-if="formData.rules.couponRules.type === 0" label="满减方式" required>
+        <div style="display: flex; justify-content: start">
+          <span style="margin-right: 10px">满</span>
+          <el-form-item>
+            <span v-if="viewOnly">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>
+            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice" :min="0" />
+          </el-form-item>
+          <span style="margin: 0 10px">元 减</span>
+          <el-form-item>
+            <span v-if="viewOnly">{{ formData.rules.couponRules.fullReduceCoupon.reducePrice }}</span>
+            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.reducePrice" :min="0" />
+          </el-form-item>
+          <span style="margin: 0 10px">元</span>
+        </div>
+      </el-form-item>
+      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值" required>
+        <span v-if="viewOnly">{{ formData.rules.couponRules.casherCoupon.amount }}</span>
+        <el-input-number v-else v-model="formData.rules.couponRules.casherCoupon.amount" :min="0" />
+      </el-form-item>
+      <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣" required>
+        <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
+        <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.discountRatio"
+                         :precision="2" :step="0.05" :max="1" />
+      </el-form-item>
+      <el-form-item label="领取方式">
+        <span v-if="viewOnly">{{ formData.rules.collect.type | couponCollectFilter }}</span>
+        <el-select v-else v-model="formData.rules.collect.type">
+          <el-option
+            v-for="item in collectOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item v-if="formData.rules.collect.type === 3" label="所需积分">
+        <span v-if="viewOnly">{{ formData.rules.collect.points }}</span>
+        <el-input-number v-else v-model="formData.rules.collect.points" :min="0" />
+      </el-form-item>
+      <el-form-item label="可用商品范围" required>
+        <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
+        <el-select v-else v-model="formData.rules.scenario.type">
+          <el-option
+            v-for="item in scenarioOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" required>
+        <span>已关联{{ formData.rules.scenario.couponSkus.length }}个商品(至多关联400个商品)</span>
+        <coupon-goods key="include" :sku-list="formData.rules.scenario.couponSkus" :view-only="viewOnly"
                       @contentAdd="handleAddCouponSkus"
                       @contentDelete="handleDeleteCouponSkus" />
       </el-form-item>
-      <el-form-item v-else-if="formData.type === 2" label="排除商品" required>
+      <el-form-item v-else-if="formData.rules.scenario.type === 2" label="排除商品" required>
         <p>请确认是否要创建全场通用券,该券创建后可用于您发布的任何商品(排除商品除外)</p>
-        <p>已排除{{ formData.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
-        <coupon-goods key="exclude" :sku-list="formData.excludeSkus" :view-only="viewOnly"
+        <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
+        <coupon-goods key="exclude" :sku-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
                       @contentAdd="handleAddExcludeSkus"
                       @contentDelete="handleDeleteExcludeSkus" />
       </el-form-item>
       <el-form-item v-else>
         <div v-if="allCategoriesLoaded">
-          <coupon-category v-for="(category, index) in formData.categories" :key="'category-' + index"
+          <coupon-category v-for="(category, index) in formData.rules.scenario.categories" :key="'category-' + index"
                            :view-only="viewOnly"
                            :category-value="category"
                            :index="index"
@@ -128,8 +175,8 @@
                      @click="handleNewCategory">
             添加类别
           </el-button>
-          <p>已排除{{ formData.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
-          <coupon-goods key="exclude" :sku-list="formData.excludeSkus" :view-only="viewOnly"
+          <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
+          <coupon-goods key="exclude" :sku-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
                         @contentAdd="handleAddExcludeSkus"
                         @contentDelete="handleDeleteExcludeSkus" />
         </div>
@@ -137,7 +184,7 @@
           <span>正在加载类别...</span>
         </div>
       </el-form-item>
-      <el-form-item label="使用规则" class="form-item" prop="rulesDescription">
+      <el-form-item label="使用规则" class="form-item">
         <el-input type="textarea" resize="none" v-model="formData.rulesDescription" :rows="4"
                   :readonly="viewOnly" />
       </el-form-item>
@@ -155,7 +202,24 @@
             本券发送总数为<span class="data-text">{{ formData.releaseTotal || 0 }}</span>张
           </li>
           <li>
-            本券每人限领<span class="data-text">{{ formData.limitPerUser || 0 }}</span>张
+            本券每人限领<span class="data-text">{{ formData.rules.perLimited || 0 }}</span>张
+          </li>
+          <li>
+            本券为<span class="data-text">{{ formData.rules.couponRules.type | couponTypeFilter }}</span>，
+            <span v-if="formData.rules.couponRules.type === 0">
+              <span>满<span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>元减
+                <span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.reducePrice }}</span>元</span>
+            </span>
+            <span v-else-if="formData.rules.couponRules.type === 1">
+              <span>面值为
+                <span class="data-text">{{ formData.rules.couponRules.casherCoupon.amount }}</span>
+              </span>
+            </span>
+            <span v-else-if="formData.rules.couponRules.type === 2">
+              <span>折扣为
+                <span class="data-text">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
+              </span>
+            </span>
           </li>
         </ul>
       </el-form-item>
@@ -179,6 +243,7 @@
   import difference from 'lodash/difference'
   import includes from 'lodash/includes'
   import moment from 'moment'
+  import { validateURL } from '@/utils/validate'
   import CouponGoods from './couponGoods'
   import CouponCategory from './couponCategory'
 
@@ -188,10 +253,30 @@
     name: 'CustomCoupon',
     components: { CouponGoods, CouponCategory },
     filters: {
-      couponType: type => {
+      couponTypeFilter: type => {
+        switch (type) {
+          case 0:
+            return '满减券'
+          case 1:
+            return '代金券'
+          case 2:
+            return '折扣券'
+        }
+      },
+      couponCollectFilter: type => {
         switch (type) {
           case 1:
-            return 'SKU类'
+            return '主动领取'
+          case 2:
+            return '主动发放'
+          case 3:
+            return '积分兑换'
+        }
+      },
+      couponScenarioFilter: type => {
+        switch (type) {
+          case 1:
+            return '指定商品类'
           case 2:
             return '全场类'
           case 3:
@@ -201,9 +286,36 @@
     },
     data() {
       return {
+        appScopes: [{
+          id: '20190001',
+          name: '无锡智慧城市',
+        }, {
+          id: '20190002',
+          name: '北部湾智慧城市'
+        }],
         typeOptions: [{
+          value: 0,
+          label: '满减券'
+        }, {
           value: 1,
-          label: 'SKU类'
+          label: '代金券'
+        }, {
+          value: 2,
+          label: '折扣券'
+        }],
+        collectOptions: [{
+          value: 1,
+          label: '主动领取'
+        }, {
+          value: 2,
+          label: '主动发放'
+        }, {
+          value: 3,
+          label: '积分兑换'
+        }],
+        scenarioOptions: [{
+          value: 1,
+          label: '指定商品类'
         }, {
           value: 2,
           label: '全场类'
@@ -216,23 +328,46 @@
         viewOnly: true,
         couponId: -1,
         inSubmitting: false,
+        checkAllScopes: false,
+        isScopesIndeterminate: true,
         formData: {
           name: '',
-          code: '',
           releaseStartDate: null,
           releaseEndDate: null,
           releaseTotal: 0,
-          limitPerUser: 0,
-          priceBreak: 0,
-          discount: 0,
-          description: '',
           effectiveStartDate: null,
           effectiveEndDate: null,
           excludeDates: [],
-          type: 1,
-          couponSkus: [],
-          excludeSkus: [],
-          categories: [],
+          url: '',
+          description: '',
+          rules: {
+            code: '',
+            perLimited: 0,
+            scopes: [],
+            couponRules: {
+              type: 0,
+              fullReduceCoupon: {
+                fullPrice: 0,
+                reducePrice: 0
+              },
+              discountCoupon: {
+                discountRatio: 1
+              },
+              casherCoupon: {
+                amount: 0
+              }
+            },
+            collect: {
+              type: 1,
+              points: 0
+            },
+            scenario: {
+              type: 2,
+              couponSkus: [],
+              excludeSkus: [],
+              categories: [],
+            },
+          },
           rulesDescription: ''
         },
         formRules: {
@@ -309,12 +444,12 @@
               }
             }
           }],
-          rulesDescription: [{
+          url: [{
             required: true, trigger: 'blur', validator: (rule, value, callback) => {
-              if (value && value.length > 0) {
+              if (validateURL(value)) {
                 callback()
               } else {
-                callback(new Error('请输入使用范围描述'))
+                callback(new Error('请输入有效的链接地址'))
               }
             }
           }]
@@ -356,20 +491,21 @@
               this.formData.excludeDates.push(item)
             })
           }
-          if (!isEmpty(this.couponData.couponSkus)) {
-            this.formData.couponSkus = this.couponData.couponSkus.map(sku => sku)
+          if (!isEmpty(this.couponData.rules.scenario.couponSkus)) {
+            this.formData.rules.scenario.couponSkus = this.couponData.rules.scenario.couponSkus.map(sku => sku)
           } else {
-            this.formData.couponSkus = []
+            this.formData.rules.scenario.couponSkus = []
           }
-          if (!isEmpty(this.couponData.excludeSkus)) {
-            this.formData.excludeSkus = this.couponData.excludeSkus.map(sku => sku)
+          if (!isEmpty(this.couponData.rules.scenario.excludeSkus)) {
+            this.formData.rules.scenario.excludeSkus = this.couponData.rules.scenario.excludeSkus.map(sku => sku)
           } else {
-            this.formData.excludeSkus = []
+            this.formData.rules.scenario.excludeSkus = []
           }
           if (!isEmpty(this.couponData.categories)) {
-            this.formData.categories = this.couponData.categories.map(category => Number.parseInt(category))
+            this.formData.rules.scenario.categories =
+              this.couponData.rules.scenario.categories.map(category => Number.parseInt(category))
           } else {
-            this.formData.categories = []
+            this.formData.rules.scenario.categories = []
           }
         } catch (e) {
           this.$log.warn('Get coupon error:' + e)
@@ -391,49 +527,51 @@
         this.formData.excludeDates.splice(index, 1)
       },
       handleAddCouponSkus(skus) {
-        if (this.formData.couponSkus.length + skus.length <= 400) {
-          this.formData.couponSkus = concat(this.formData.couponSkus, skus)
+        if (this.formData.rules.scenario.couponSkus.length + skus.length <= 400) {
+          this.formData.rules.scenario.couponSkus = concat(this.formData.rules.scenario.couponSkus, skus)
         } else {
           this.$message.warn('请重新选择活动商品，最多支持400个')
         }
       },
       handleDeleteCouponSkus(skus) {
-        this.formData.couponSkus = difference(this.formData.couponSkus, skus)
+        this.formData.rules.scenario.couponSkus = difference(this.formData.rules.scenario.couponSkus, skus)
       },
       handleAddExcludeSkus(skus) {
-        if (this.formData.excludeSkus.length + skus.length <= 100) {
-          this.formData.excludeSkus = concat(this.formData.excludeSkus, skus)
+        if (this.formData.rules.scenario.excludeSkus.length + skus.length <= 100) {
+          this.formData.rules.scenario.excludeSkus = concat(this.formData.rules.scenario.excludeSkus, skus)
         } else {
           this.$message.warn('请重新选择活动排除商品，最多支持100个')
         }
       },
       handleDeleteExcludeSkus(skus) {
-        this.formData.excludeSkus = difference(this.formData.excludeSkus, skus)
+        this.formData.rules.scenario.excludeSkus = difference(this.formData.rules.scenario.excludeSkus, skus)
       },
       handleNewCategory() {
-        if (this.formData.categories.length >= 5) {
-          this.$message.warn('最多增加5条类别信息')
+        if (this.formData.rules.scenario.categories.length >= 5) {
+          this.$message.warning('最多增加5条类别信息')
         } else {
-          this.formData.categories.push(-1)
+          this.formData.rules.scenario.categories.push(-1)
         }
       },
       handleSetCategory(index, value) {
-        if (includes(this.formData.categories, value)) {
+        if (includes(this.formData.rules.scenario.categories, value)) {
           this.$message.warn('此类别已添加，请选择其它类别')
         } else {
-          this.formData.categories[index] = value
+          this.formData.rules.scenario.categories[index] = value
         }
       },
       handleDeleteCategory(index) {
-        this.formData.categories.splice(index, 1)
+        this.formData.rules.scenario.categories.splice(index, 1)
       },
       async handleCreateCoupon() {
         const data = Object.assign({}, this.formData)
+        data.supplierMerchantId = 0
+        data.supplierMerchantName = ''
         if (data.type === 1) {
-          data.excludeSkus = []
-          data.categories = []
+          data.rules.scenario.excludeSkus = []
+          data.rules.scenario.categories = []
         } else {
-          data.couponSkus = []
+          data.rules.scenario.couponSkus = []
         }
         const now = moment(Date.now())
         const startDate = moment(data.releaseStartDate)
@@ -443,7 +581,7 @@
           data.status = 2
         }
         const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-        data.code = generate(noLookalikes, 21)
+        data.rules.code = generate(noLookalikes, 21)
         this.inSubmitting = true
         try {
           await this.$store.dispatch('createCoupon', data)
@@ -466,10 +604,10 @@
         if (hasDiff) {
           if (diff.hasOwnProperty('type')) {
             if (diff.type === 1) {
-              diff.excludeSkus = []
-              diff.categories = []
+              diff.rules.scenario.excludeSkus = []
+              diff.rules.scenario.categories = []
             } else {
-              diff.couponSkus = []
+              diff.rules.scenario.couponSkus = []
             }
           }
           try {
@@ -493,6 +631,15 @@
       },
       handleCancel() {
         this.$router.go(-1)
+      },
+      handleCheckAllScopesChange(value) {
+        this.isScopesIndeterminate = false
+        this.formData.rules.scopes = value ? this.appScopes.map(app => app.id) : []
+      },
+      handleCheckedScopesChange(scopes) {
+        const checkedCount = scopes.length
+        this.checkAllScopes = checkedCount === this.appScopes.length
+        this.isScopesIndeterminate = checkedCount > 0 && checkedCount < this.appScopes.length
       }
     }
   }
@@ -501,6 +648,11 @@
 <style scoped>
   .form-item {
     width: 80%;
+  }
+
+  .divider-text {
+    font-weight: bold;
+    font-size: 18px;
   }
 
   .data-text {

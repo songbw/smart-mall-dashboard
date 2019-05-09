@@ -13,15 +13,6 @@
             :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="queryType" style="width: 120px">
-          <el-option
-            v-for="item in typeOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="开始时间">
         <el-date-picker v-model="queryStartDate" type="date" value-format="yyyy-MM-dd"
                         placeholder="选择开始日期" style="width: 150px" />
@@ -57,11 +48,6 @@
       <el-table-column label="名称" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="类型" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.type | couponType }}</span>
         </template>
       </el-table-column>
       <el-table-column label="总量" align="center" width="100">
@@ -137,16 +123,6 @@
     name: "Coupon",
     components: { pagination },
     filters: {
-      couponType: type => {
-        switch (type) {
-          case 1:
-            return 'SKU类'
-          case 2:
-            return '全场类'
-          case 3:
-            return '类目品牌类'
-        }
-      },
       couponStatus: (status) => {
         switch (status) {
           case 1:
@@ -173,20 +149,6 @@
           value: 3,
           label: '已下线'
         }],
-        typeOptions: [{
-          value: 0,
-          label: '全部'
-        }, {
-          value: 1,
-          label: 'SKU类'
-        }, {
-          value: 2,
-          label: '全场类'
-        }, {
-          value: 3,
-          label: '类目品牌类'
-
-        }],
         dataLoading: false,
       }
     },
@@ -210,14 +172,6 @@
         },
         set(value) {
           this.$store.commit('setQueryData', { status: value })
-        }
-      },
-      queryType: {
-        get() {
-          return this.queryData.type
-        },
-        set(value) {
-          this.$store.commit('setQueryData', { type: value })
         }
       },
       queryStartDate: {
@@ -301,10 +255,6 @@
         }
         if (this.queryStatus !== 0) {
           params.status = this.queryStatus
-          needFilter = true
-        }
-        if (this.queryType !== 0) {
-          params.type = this.queryType
           needFilter = true
         }
         if (this.queryStartDate && this.queryStartDate.trim()) {

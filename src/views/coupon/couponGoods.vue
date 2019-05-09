@@ -14,7 +14,7 @@
           导出商品
         </el-button>
       </div>
-      <div class="header-ops-container">
+      <div v-if="skuList.length > 0" class="header-ops-container">
         <span>{{ $t('aggregation_customization_goods_selected_text', {count: selectedItems.length}) }}</span>
         <el-button type="text" style="margin-left: 10px" :disabled="viewOnly"
                    @click="handleDeleteSelection">
@@ -24,6 +24,7 @@
     </div>
     <el-table
       ref="skuTable"
+      v-if="skuList.length > 0"
       v-loading="dataLoading"
       :data="skuPageList"
       style="width: 100%"
