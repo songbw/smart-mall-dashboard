@@ -71,6 +71,26 @@ export const constantRouterMap = [
         name: 'Brand',
         component: () => import('@/views/goods/brand/index'),
         meta: { header: 'Brand', icon: 'brand', title_key: 'brand_title' }
+      },
+      {
+        path: 'couponIndex',
+        name: 'couponIndex',
+        component: () => import('@/views/coupon/index'),
+        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_title' }
+      },
+      {
+        path: 'couponDetail/:id',
+        name: 'CouponDetail',
+        component: () => import('@/views/coupon/customCoupon'),
+        meta: { header: 'Coupon Detail', title_key: 'coupon_detail_title' },
+        hidden: true
+      },
+      {
+        path: 'createCoupon',
+        name: 'CreateCoupon',
+        component: () => import('@/views/coupon/customCoupon'),
+        meta: { header: 'Create Coupon', title_key: 'coupon_create_title' },
+        hidden: true
       }
     ]
   },
@@ -105,26 +125,6 @@ export const constantRouterMap = [
         name: 'promotionCreate',
         component: () => import('@/views/promotionactivity/promotionCreate'),
         meta: { header: 'Promotion Create', title_key: 'promotion_create_title' },
-        hidden: true
-      },
-      {
-        path: 'couponIndex',
-        name: 'couponIndex',
-        component: () => import('@/views/coupon/index'),
-        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_title' }
-      },
-      {
-        path: 'couponDetail/:id',
-        name: 'CouponDetail',
-        component: () => import('@/views/coupon/customCoupon'),
-        meta: { header: 'Coupon Detail', title_key: 'coupon_detail_title' },
-        hidden: true
-      },
-      {
-        path: 'createCoupon',
-        name: 'CreateCoupon',
-        component: () => import('@/views/coupon/customCoupon'),
-        meta: { header: 'Create Coupon', title_key: 'coupon_create_title' },
         hidden: true
       }
     ]

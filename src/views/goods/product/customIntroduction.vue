@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="20" style="border: 1px solid #99a9bf;">
     <el-col :span="14">
-      <img :src="imageUrl" width="100%" style="margin: 10px">
+      <el-image :src="imageUrl" width="100%" style="margin: 10px" fit="contain" lazy />
     </el-col>
     <el-col :span="10">
       <div style="padding: 14px;">

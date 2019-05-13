@@ -93,9 +93,8 @@
       </el-table-column>
       <el-table-column :label="$t('product_table_image_title')" align="center" width="200">
         <template slot-scope="scope">
-          <img v-if="scope.row.image"
-               :src="getProductImage(scope.row)"
-               class="image-container">
+          <el-image v-if="scope.row.image" :src="getProductImage(scope.row)" fit="contain" lazy
+                    class="image-container" />
         </template>
       </el-table-column>
       <el-table-column :label="$t('product_table_name_title')" align="center">
@@ -511,6 +510,6 @@
 
 <style scoped>
   .image-container {
-    width: 50%;
+    width: 70%;
   }
 </style>

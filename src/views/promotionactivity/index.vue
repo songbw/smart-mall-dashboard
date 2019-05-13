@@ -13,15 +13,6 @@
             :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="优惠方式">
-        <el-select v-model="query.type">
-          <el-option
-            v-for="item in typeOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value" />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
           {{ $t('product_search_title') }}
@@ -64,11 +55,6 @@
       <el-table-column label="活动标签" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.tag }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="优惠类型" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.promotionType | promotionTypeLabel }}</span>
         </template>
       </el-table-column>
       <el-table-column label="活动状态" align="center" width="100">
@@ -134,13 +120,6 @@
     name: 'PromotionActivity',
     components: { pagination },
     filters: {
-      promotionTypeLabel: (type) => {
-        if (type === 0) {
-          return '减价'
-        } else if (type === 1) {
-          return '折扣'
-        }
-      },
       promotionStatus: (status) => {
         switch (status) {
           case 1:
@@ -167,20 +146,9 @@
           value: 3,
           label: '已结束'
         }],
-        scenarioOptions: [{
-          value: -1,
-          label: '全部'
-        }, {
-          value: 0,
-          label: '减价'
-        }, {
-          value: 1,
-          label: '折扣'
-        }],
         query: {
           name: '',
           status: 0,
-          type: -1,
           offset: 1,
           limit: 20
         },
@@ -224,10 +192,6 @@
         }
         if (this.query.status !== 0) {
           params.status = this.query.status
-          needFilter = true
-        }
-        if (this.query.type !== -1) {
-          params.promotionType = this.query.type
           needFilter = true
         }
         if (needFilter) {

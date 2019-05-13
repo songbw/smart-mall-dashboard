@@ -12,21 +12,45 @@ import isEmpty from 'lodash/isEmpty'
 const couponTemplate = {
   id: -1,
   name: '',
-  code: '',
   releaseStartDate: null,
   releaseEndDate: null,
   releaseTotal: 0,
-  limitPerUser: 0,
-  priceBreak: 0,
-  discount: 0,
-  description: '',
   effectiveStartDate: null,
   effectiveEndDate: null,
   excludeDates: [],
-  type: 1,
-  couponSkus: [],
-  excludeSkus: [],
-  categories: [],
+  category: null,
+  tags: [],
+  imageUrl: '',
+  url: '',
+  description: '',
+  rules: {
+    code: '',
+    perLimited: 0,
+    scopes: [],
+    couponRules: {
+      type: 0,
+      fullReduceCoupon: {
+        fullPrice: 0,
+        reducePrice: 0
+      },
+      discountCoupon: {
+        discountRatio: 1
+      },
+      cashCoupon: {
+        amount: 0
+      }
+    },
+    collect: {
+      type: 1,
+      points: 0
+    },
+    scenario: {
+      type: 2,
+      couponSkus: [],
+      excludeSkus: [],
+      categories: [],
+    },
+  },
   rulesDescription: ''
 }
 
@@ -63,21 +87,29 @@ const parseCoupon = coupon => {
         }
         return item
       })
+  } else {
+    coupon.excludeDates = []
   }
-  if (Array.isArray(coupon.couponSkus) && coupon.couponSkus.length > 0) {
-    coupon.couponSkus = coupon.couponSkus
+  if (Array.isArray(coupon.rules.scenario.couponSkus) && coupon.rules.scenario.couponSkus.length > 0) {
+    coupon.rules.scenario.couponSkus = coupon.rules.scenario.couponSkus
       .filter(skuId => !isEmpty(skuId))
       .map(skuId => skuId.trim())
+  } else {
+    coupon.rules.scenario.couponSkus = []
   }
-  if (Array.isArray(coupon.excludeSkus) && coupon.excludeSkus.length > 0) {
-    coupon.excludeSkus = coupon.excludeSkus
+  if (Array.isArray(coupon.rules.scenario.excludeSkus) && coupon.rules.scenario.excludeSkus.length > 0) {
+    coupon.rules.scenario.excludeSkus = coupon.rules.scenario.excludeSkus
       .filter(skuId => !isEmpty(skuId))
       .map(skuId => skuId.trim())
+  } else {
+    coupon.rules.scenario.excludeSkus = []
   }
-  if (Array.isArray(coupon.brands) && coupon.brands.length > 0) {
-    coupon.brands = coupon.brands
+  if (Array.isArray(coupon.rules.scenario.brands) && coupon.rules.scenario.brands.length > 0) {
+    coupon.rules.scenario.brands = coupon.rules.scenario.brands
       .filter(brand => !isEmpty(brand))
       .map(brand => brand.trim())
+  } else {
+    coupon.rules.scenario.brands = []
   }
 }
 
@@ -157,15 +189,6 @@ const coupons = {
       return new Promise((resolve, reject) => {
         getCouponByIdApi(params).then(response => {
           const data = response.result
-          if (data.couponSkus === null) {
-            data.couponSkus = []
-          }
-          if (data.excludeSkus === null) {
-            data.excludeSkus = []
-          }
-          if (data.categories === null) {
-            data.categories = []
-          }
           commit('setCouponData', data)
           resolve()
         }).catch(error => {

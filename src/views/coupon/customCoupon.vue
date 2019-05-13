@@ -5,8 +5,12 @@
       <el-form-item label="优惠券名称" prop="name">
         <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
       </el-form-item>
-      <el-form-item v-if="!createCoupon" label="优惠券编码">
-        <span>{{ formData.rules.code }}</span>
+      <el-form-item label="优惠券编码" prop="code">
+        <div v-if="createCoupon">
+          <el-checkbox v-model="autoCode">自动生成券码</el-checkbox>
+          <el-input v-if="!autoCode" v-model="formData.rules.code" style="width: 350px" />
+        </div>
+        <span v-else>{{ formData.rules.code }}</span>
       </el-form-item>
       <el-form-item label="发布日期" required>
         <div style="display: flex; justify-content: start">
@@ -68,6 +72,35 @@
           </el-button>
         </div>
       </el-form-item>
+      <el-form-item label="优惠券类别" prop="category">
+        <el-select v-model="formData.category" clearable placeholder="选择类别" :disabled="viewOnly">
+          <el-option
+            v-for="item in firstCategoryOptions"
+            :key="item.categoryId"
+            :label="item.categoryName"
+            :value="item.categoryId" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="优惠券标签">
+        <el-tag v-for="tag in formData.tags" :key="tag" :disable-transitions="false" :closable="!viewOnly"
+                @close="handleCloseTag(tag)">
+          {{tag}}
+        </el-tag>
+        <el-input
+          class="input-new-tag"
+          v-if="tagInputVisible && !viewOnly"
+          v-model="tagInputValue"
+          ref="saveTagInput"
+          @keyup.enter.native="handleTagInputConfirm"
+          @blur="handleTagInputConfirm"
+        >
+        </el-input>
+        <el-button v-else-if="!viewOnly" class="button-new-tag" @click="showTagInput">+ 新标签</el-button>
+      </el-form-item>
+      <el-form-item label="优惠券图片">
+        <image-upload path-name="coupons" image-width="300px" :image-url="formData.imageUrl" :view-only="viewOnly"
+                      @urlChanged="handleImageUrlChanged" />
+      </el-form-item>
       <el-form-item label="优惠券链接" class="form-item" prop="url">
         <el-input v-model="formData.url" :readonly="viewOnly" />
       </el-form-item>
@@ -118,13 +151,13 @@
         </div>
       </el-form-item>
       <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值" required>
-        <span v-if="viewOnly">{{ formData.rules.couponRules.casherCoupon.amount }}</span>
-        <el-input-number v-else v-model="formData.rules.couponRules.casherCoupon.amount" :min="0" />
+        <span v-if="viewOnly">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
+        <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣" required>
         <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
         <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.discountRatio"
-                         :precision="2" :step="0.05" :max="1" />
+                         :precision="2" :min="0" :step="0.05" :max="1" />
       </el-form-item>
       <el-form-item label="领取方式">
         <span v-if="viewOnly">{{ formData.rules.collect.type | couponCollectFilter }}</span>
@@ -212,7 +245,7 @@
             </span>
             <span v-else-if="formData.rules.couponRules.type === 1">
               <span>面值为
-                <span class="data-text">{{ formData.rules.couponRules.casherCoupon.amount }}</span>
+                <span class="data-text">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
               </span>
             </span>
             <span v-else-if="formData.rules.couponRules.type === 2">
@@ -246,12 +279,11 @@
   import { validateURL } from '@/utils/validate'
   import CouponGoods from './couponGoods'
   import CouponCategory from './couponCategory'
-
-  const generate = require('nanoid/generate')
+  import ImageUpload from '@/components/Goods/ImageUpload'
 
   export default {
     name: 'CustomCoupon',
-    components: { CouponGoods, CouponCategory },
+    components: { CouponGoods, CouponCategory, ImageUpload },
     filters: {
       couponTypeFilter: type => {
         switch (type) {
@@ -330,6 +362,9 @@
         inSubmitting: false,
         checkAllScopes: false,
         isScopesIndeterminate: true,
+        autoCode: true,
+        tagInputVisible: false,
+        tagInputValue: '',
         formData: {
           name: '',
           releaseStartDate: null,
@@ -338,6 +373,9 @@
           effectiveStartDate: null,
           effectiveEndDate: null,
           excludeDates: [],
+          category: null,
+          tags: [],
+          imageUrl: '',
           url: '',
           description: '',
           rules: {
@@ -353,7 +391,7 @@
               discountCoupon: {
                 discountRatio: 1
               },
-              casherCoupon: {
+              cashCoupon: {
                 amount: 0
               }
             },
@@ -372,13 +410,26 @@
         },
         formRules: {
           name: [{
-            required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            required: true, trigger: 'change', validator: (rule, value, callback) => {
               if (value.length > 15) {
                 callback(new Error('最多输入15个描述字符'))
               } else if (value.length < 3) {
                 callback(new Error('最少输入3个描述字符'))
               } else {
                 callback()
+              }
+            }
+          }],
+          code: [{
+            required: true, trigger: 'change', validator: (rule, value, callback) => {
+              if (this.autoCode) {
+                callback()
+              } else {
+                if (isEmpty(value)) {
+                  callback(new Error('请输入有效优惠券码'))
+                } else {
+                  callback()
+                }
               }
             }
           }],
@@ -444,6 +495,15 @@
               }
             }
           }],
+          category: [{
+            required: true, trigger: 'blur', validator: (rule, value, callback) => {
+              if (value > 0) {
+                callback()
+              } else {
+                callback(new Error('请选择此优惠券的类别'))
+              }
+            }
+          }],
           url: [{
             required: true, trigger: 'blur', validator: (rule, value, callback) => {
               if (validateURL(value)) {
@@ -459,9 +519,24 @@
     computed: {
       ...mapGetters({
         couponData: 'currentCoupon',
+        allCategoriesOption: 'allCategoriesData',
         allCategoriesLoaded: 'allCategoriesLoaded',
         allCategoriesInLoading: 'allCategoriesInLoading'
       }),
+      firstCategoryOptions: {
+        get() {
+          if (this.allCategoriesLoaded) {
+            return this.allCategoriesOption.map(item => {
+              return { categoryId: item.categoryId, categoryName: item.categoryName }
+            })
+          } else {
+            return [{
+              categoryId: -1,
+              categoryName: '正在加载类别...'
+            }]
+          }
+        }
+      }
     },
     created() {
       if (isEqual(this.$route.name, 'CreateCoupon')) {
@@ -580,8 +655,9 @@
         } else if (startDate.isAfter(now)) {
           data.status = 2
         }
-        const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-        data.rules.code = generate(noLookalikes, 21)
+        if (this.autoCode) {
+          data.rules.code = ''
+        }
         this.inSubmitting = true
         try {
           await this.$store.dispatch('createCoupon', data)
@@ -626,6 +702,8 @@
             } else {
               this.handleUpdateCoupon()
             }
+          } else {
+            this.$message.warning('请检查输入错误的优惠券信息')
           }
         })
       },
@@ -640,12 +718,37 @@
         const checkedCount = scopes.length
         this.checkAllScopes = checkedCount === this.appScopes.length
         this.isScopesIndeterminate = checkedCount > 0 && checkedCount < this.appScopes.length
+      },
+      handleCloseTag(tag) {
+        const index = this.formData.tags.indexOf(tag)
+        this.formData.tags.splice(index, 1);
+      },
+      handleTagInputConfirm() {
+        const inputValue = this.tagInputValue;
+        if (inputValue) {
+          this.formData.tags.push(inputValue);
+        }
+        this.tagInputVisible = false;
+        this.tagInputValue = '';
+      },
+      showTagInput() {
+        this.tagInputVisible = true;
+        this.$nextTick(_ => {
+          this.$refs.saveTagInput.$refs.input.focus();
+        });
+      },
+      handleImageUrlChanged(url) {
+        this.formData.imageUrl = url
       }
     }
   }
 </script>
 
 <style scoped>
+  .el-tag + .el-tag {
+    margin-left: 10px;
+  }
+
   .form-item {
     width: 80%;
   }
@@ -658,5 +761,19 @@
   .data-text {
     font-weight: bold;
     background: lightgray;
+  }
+
+  .button-new-tag {
+    margin-left: 10px;
+    height: 32px;
+    line-height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .input-new-tag {
+    width: 90px;
+    margin-left: 10px;
+    vertical-align: bottom;
   }
 </style>
