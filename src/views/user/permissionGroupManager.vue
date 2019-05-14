@@ -23,16 +23,12 @@
         v-loading="listLoading"
         :row-class-name = "group_tableRowClassName"
         :data="list"
-        :header-cell-style="permission_setHeadStyle"
-        :row-style="permission_setRowStyle"
-        :cell-style="permission_setCellStyle"
         element-loading-text="Loading"
         show-header
         resizable="true"
         show-overflow-tooltip="true"
         stripe
         fit
-        style="background-color: lightcyan"
         highlight-current-row>
         <el-table-column :label="$t('permission_title_label')" width="180" align="center">
           <template slot-scope="scope">
@@ -123,7 +119,7 @@
           var r = confirm(confirmTitle)
           if (r === true) {
             deletePermissionGroup(row).then(response => {
-                this.$message('成功')
+                // this.$message('成功')
                 this.list.splice(index, 1)
               }, error => {
                 alert(error)
@@ -135,15 +131,6 @@
       addItem() {
         this.isNewItem = true
         this.editorVisible = true
-      },
-      permission_setCellStyle(row, column, rowIndex, columnIndex) {
-        return 'border-style:outset;'
-      },
-      permission_setRowStyle(row, rowIndex) {
-        return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
-      },
-      permission_setHeadStyle(row, column, rowIndex, columnIndex) {
-        return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       group_tableRowClassName({ row, rowIndex }) {
         row.index = rowIndex
@@ -170,7 +157,7 @@
 
 <style scoped>
   .permission-group-container {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     text-content: center;
   }
   .permission_form {

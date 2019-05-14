@@ -2,50 +2,52 @@
   <div>
     <el-dialog
       v-loading="loading"
-      :before-close="group_update_handleClose"
+      :before-close="group_update_beforeClose"
       :visible.sync="isVisible"
-      :fullscreen="true"
+      :fullscreen="false"
+      width="22%"
+      top="5vh"
       custom-class="permission_group_update_dialog_style">
       <el-form ref="form" :model="form" :rules="formRules" class="permission-group-update-form" label-position="right">
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="4">
             <span class="permission_update_label">{{ $t('name_label') }}</span>
           </el-col>
-          <el-col :span="16">
+          <el-col :span="18">
             <el-form-item prop="name">
               <el-input :disabled="!isNewGroup" v-model="form.name" name="name" type="text" auto-complete="on"/>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="4">
             <span class="permission_update_label">{{ $t('code_label') }}</span>
           </el-col>
-          <el-col :span="16">
+          <el-col :span="18">
             <el-form-item prop="code">
               <el-input :disabled="!isNewGroup" v-model="form.code" name="code" type="text" auto-complete="on"/>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="4">
             <span class="permission_update_label">{{ $t('description_label') }}</span>
           </el-col>
-          <el-col :span="16">
+          <el-col :span="18">
             <el-form-item prop="description">
               <el-input v-model="form.description" name="description" type="text" auto-complete="on"/>
             </el-form-item>
           </el-col>
         </el-row>
         <br>
-        <div align="left" >
-          <el-button :span="20" type="primary" style="width:100%; font-size:18px;" @click.native.prevent="group_update_handleSubmit">
+        <div align="center" >
+          <el-button type="primary" style="width:30%; font-size:18px;" @click.native.prevent="group_update_handleSubmit">
             {{ $t('confirm_button_ok_title') }}
           </el-button>
         </div>
         <br>
-        <div align="left" >
-          <el-button type="cancel" style="width:100%; font-size:18px;" @click="group_update_handleClose">
+        <div align="center" >
+          <el-button type="cancel" style="width:30%; font-size:18px;" @click="group_update_handleClose">
             {{ $t('confirm_button_cancel_title') }}
           </el-button>
         </div>
@@ -106,6 +108,18 @@
       }
     },
     methods: {
+      group_update_beforeClose() {
+        this.$confirm('确认关闭？')
+          .then(_ => {
+            this.$emit('close')
+            this.closed = true
+            this.isVisible = false
+          })
+          .catch(_ => {
+            this.isVisible = true
+            this.closed = false
+          })
+      },
       group_update_handleClose() {
         this.$emit('close')
         this.closed = true
@@ -157,14 +171,11 @@
     position: fixed;
     height: 100%;
     width: 100%;
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
   }
   .permission-group-update-form {
-    position: absolute;
     left: 0;
     right: 0;
-    width: 620px;
-    padding: 35px 35px 15px 35px;
     margin: 0px auto;
     font-size: 20px;
   }
@@ -181,7 +192,7 @@
     padding: 12px 12px 0px 0px;
   }
   .permission_group_update_dialog_style {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     font-size: 18px;
     justify: left;
   }

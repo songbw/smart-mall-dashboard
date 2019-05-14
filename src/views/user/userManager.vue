@@ -119,9 +119,6 @@
         v-loading="listLoading"
         :row-class-name="user_tableRowClassName"
         :data="list"
-        :header-cell-style="user_setHeadStyle"
-        :row-style="user_setRowStyle"
-        :cell-style="user_setCellStyle"
         element-loading-text="Loading"
         show-header
         resizable="true"
@@ -129,7 +126,6 @@
         stripe
         fit
         height="500"
-        style="background-color: lightcyan"
         highlight-current-row>
         <el-table-column type="expand">
           <template slot-scope="scope">
@@ -451,7 +447,6 @@
 
 <style scoped>
   .user-manager-container {
-    background-color: lightcyan;
     text-content: center;
   }
 
