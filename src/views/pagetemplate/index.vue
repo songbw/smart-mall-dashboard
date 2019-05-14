@@ -2,10 +2,10 @@
   <div class="app-container">
     <el-form :inline="true" :model="listQuery">
       <el-form-item label="聚合页名称">
-        <el-input v-model="listQuery.name" placeholder="输入名称关键字" clearable />
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
       <el-form-item label="聚合页状态">
-        <el-select v-model="listQuery.status">
+        <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -14,7 +14,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="是否主页">
-        <el-switch v-model="listQuery.homePage" />
+        <el-switch v-model="queryHomePage" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
@@ -23,9 +23,34 @@
       </el-form-item>
     </el-form>
     <div>
-      <el-button type="primary" @click="createPage">{{ $t('aggregation_create_new_btn_title') }}</el-button>
+      <el-tabs v-model="currentTab" type="card" @tab-click="onGroupChanged">
+        <el-tab-pane
+          v-for="item in groupTabs"
+          :key="item.label"
+          :label="item.label"
+          :name="item.name"
+        >
+          <el-button-group>
+            <el-button type="primary" icon="el-icon-document-add" @click="createPage">
+              {{ $t('aggregation_create_new_btn_title') }}
+            </el-button>
+            <el-button v-if="item.name === '-1' || item.name === '0'" type="info" icon="el-icon-folder"
+                       @click="handleCreateGroup">
+              创建组
+            </el-button>
+            <el-button v-if="item.name !== '-1' && item.name !== '0'" type="warning" icon="el-icon-edit"
+                       @click="handleUpdateGroup">
+              修改组名
+            </el-button>
+            <el-button v-if="item.name !== '-1' && item.name !== '0'" type="danger" icon="el-icon-delete"
+                       @click="handleDeleteGroup">
+              删除组
+            </el-button>
+          </el-button-group>
+        </el-tab-pane>
+      </el-tabs>
     </div>
-    <div class="components-container">
+    <div style="margin-top: 20px">
       <el-table v-loading="listLoading" :data="aggregationList" row-key="id" border fit highlight-current-row
                 style="width: 100%;">
         <el-table-column label="ID" align="center" width="100px">
@@ -81,7 +106,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <pagination v-show="total>0" :total="total" :page.sync="listQuery.offset" :limit.sync="listQuery.limit"
+      <pagination v-show="total>0" :total="total" :page.sync="queryOffset" :limit.sync="queryLimit"
                   @pagination="getListData" />
     </div>
     <el-dialog :visible.sync="viewDialogVisible" :show-close="false" center width="380px" custom-class="custom-phone">
@@ -155,25 +180,101 @@
         viewDialogVisible: false,
         qrCodeDialogVisible: false,
         listLoading: false,
-        listQuery: {
+        queryGroupId: '-1'
+      }
+    },
+    computed: {
+      ...mapGetters({
+        listQuery: 'aggregationQuery',
+        aggregationList: 'allAggregationList',
+        total: 'aggregationTotal',
+        groups: 'aggregationGroups',
+        groupId: 'aggregationGroupId'
+      }),
+      queryName: {
+        get() {
+          return this.listQuery.name
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { name: value })
+        }
+      },
+      queryStatus: {
+        get() {
+          return this.listQuery.status
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { status: value })
+        }
+      },
+      queryHomePage: {
+        get() {
+          return this.listQuery.homePage
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { homePage: value })
+        }
+      },
+      queryOffset: {
+        get() {
+          return this.listQuery.offset
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { offset: value })
+        }
+      },
+      queryLimit: {
+        get() {
+          return this.listQuery.limit
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { limit: value })
+        }
+      },
+      groupTabs: {
+        get() {
+          return [{
+            name: '-1',
+            label: '全部'
+          }, {
+            name: '0',
+            label: '未分组'
+          }].concat(this.groups.map(group => ({ name: group.id.toString(), label: group.name })))
+        }
+      },
+      currentTab: {
+        get() {
+          return this.groupId.toString()
+        },
+        set(value) {
+          this.$store.commit('setAggregationGroupID', Number.parseInt(value))
+        }
+      }
+    },
+    created() {
+      this.getAggregationGroups()
+      this.getListData()
+    },
+    beforeRouteLeave(to, from, next) {
+      if (to.name !== 'pageCreate') {
+        this.$store.commit('setAggregationQuery', {
           name: '',
           status: -1,
           homePage: false,
           offset: 1,
           limit: 20
-        }
+        })
       }
-    },
-    computed: {
-      ...mapGetters({
-        aggregationList: 'allAggregationList',
-        total: 'aggregationTotal'
-      })
-    },
-    created() {
-      this.getListData()
+      next()
     },
     methods: {
+      async getAggregationGroups() {
+        try {
+          await this.$store.dispatch('getAggregationGroups', { offset: 1, limit: 100 })
+        } catch (e) {
+          this.$log.warn('getAggregationGroups:' + e)
+        }
+      },
       getListData() {
         const params = this.getFilterParams()
         if (params) {
@@ -212,6 +313,13 @@
         if (this.listQuery.homePage) {
           params.homePage = true
           filter = true
+        }
+        if (this.groupId !== -1) {
+          params.groupId = this.groupId
+          this.queryGroupId = this.groupId.toString()
+          filter = true
+        } else {
+          this.queryGroupId = '-1'
         }
         if (filter) {
           return params
@@ -318,6 +426,55 @@
           })
         }).catch(() => {
         })
+      },
+      async handleCreateGroup() {
+        try {
+          const action = await this.$prompt('请输入聚合页组的名称', '创建聚合页组', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+          })
+          await this.$store.dispatch('createAggregationGroup', { name: action.value })
+        } catch (e) {
+          this.$log.warn('Crete aggregation group: ' + e)
+        }
+      },
+      async handleUpdateGroup() {
+        try {
+          const action = await this.$prompt('请输入聚合页组的名称', '更改聚合页组', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+          })
+          await this.$store.dispatch('updateAggregationGroup', { id: this.groupId, name: action.value })
+        } catch (e) {
+          this.$log.warn('Crete aggregation group: ' + e)
+        }
+      },
+      async handleDeleteGroup() {
+        if (this.listLoading) {
+          this.$message.warning('正在加载聚合页列表，请稍后操作！')
+          return
+        }
+        if (this.total > 0) {
+          this.$message.warning('请删除此组内所有聚合页！')
+          return
+        }
+        try {
+          await this.$confirm('是否要删除此聚合页组？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          await this.$store.dispatch('deleteAggregationGroup', { id: this.groupId })
+          this.getListData()
+        } catch (e) {
+          this.$log.warn('Delete aggregation group:' + e)
+        }
+      },
+      onGroupChanged(group) {
+        this.$log.debug('Aggregation group changed:' + group.name)
+        if (this.queryGroupId !== group.name) {
+          this.getListData()
+        }
       }
     }
   }

@@ -30,7 +30,7 @@
       </el-form-item>
       <el-form-item :label="$t('product_table_image_title')">
         <template>
-          <img :src="coverUrl" width="200px">
+          <el-image :src="coverUrl" fit="contain" lazy style="width: 200px" />
           <el-upload
             ref="coverUpload"
             :action="uploadUrl"

@@ -36,11 +36,7 @@ const promotions = {
         if (item.promotionSkus === null) {
           item.promotionSkus = []
         }
-        if (item.promotionType === null) {
-          item.hasPromotionType = false
-        } else {
-          item.hasPromotionType = true
-        }
+        item.hasPromotionType = item.promotionType !== null;
       })
 
       state.promotionList = data.list

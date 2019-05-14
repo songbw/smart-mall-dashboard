@@ -64,7 +64,7 @@
         <el-form-item :label="$t('aggregation_customization_service_table_image_title')" prop="imageUrl">
           <img v-if="dialogValue.imageUrl" :src="dialogValue.imageUrl" width="100px">
           <el-upload
-            ref="upload"
+            ref="uploadServiceIcon"
             :action="uploadUrl"
             :data="uploadData"
             :auto-upload="false"
@@ -93,7 +93,7 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">{{ $t('confirm_button_cancel_title') }}</el-button>
+        <el-button @click="handleCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
         <el-button type="primary" @click="handleSubmit">
           {{ $t('confirm_button_ok_title') }}
         </el-button>
@@ -193,11 +193,17 @@
         this.imageUploadPercent = 0
         this.dialogFormVisible = true
       },
+      handleCancel() {
+        if (this.dialogImageFileList.length > 0) {
+          this.$refs.uploadServiceIcon.clearFiles()
+        }
+        this.dialogFormVisible = false
+      },
       handleSubmit() {
         this.$refs.ruleForm.validate((valid) => {
           if (valid) {
             if (this.dialogImageFileList.length > 0) {
-              this.$refs.upload.submit()
+              this.$refs.uploadServiceIcon.submit()
             } else {
               this.dialogFormVisible = false
               this.saveServiceContent()
@@ -236,11 +242,11 @@
       },
       handleUploadImageSuccess(res) {
         this.dialogValue.imageUrl = this.$store.getters.cosUrl + res.data.url
+        this.$refs.uploadServiceIcon.clearFiles()
         if (this.dialogFormVisible) {
           setTimeout(() => {
             this.dialogFormVisible = false
           }, 500)
-          this.$refs.upload.clearFiles()
         }
         this.saveServiceContent()
       },
@@ -252,11 +258,11 @@
         }
       },
       handleUploadImageError(res) {
+        this.$refs.uploadServiceIcon.clearFiles()
         if (this.dialogFormVisible) {
           setTimeout(() => {
             this.dialogFormVisible = false
           }, 500)
-          this.$refs.upload.clearFiles()
         }
         this.uploadingImage = false
       },

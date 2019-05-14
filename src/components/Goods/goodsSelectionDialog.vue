@@ -32,12 +32,15 @@
       <span>{{ $t('aggregation_customization_goods_selected_text', {count: dialogSelectedItems.length}) }}</span>
     </div>
     <el-table
+      v-loading="dataLoading"
       ref="dialogSkuTable"
       :data="dialogSkuData"
       style="width: 100%"
-      max-height="250"
+      height="250"
+      border
       @selection-change="handleDialogSelectionChange">
       <el-table-column
+        align="center"
         type="selection"
         width="55" />
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
@@ -50,7 +53,7 @@
           <span>{{ scope.row.brand + ' ' + scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('product_table_price_title')" align="center" width="100">
+      <el-table-column :label="$t('product_table_price_title')" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
         </template>
@@ -69,6 +72,7 @@
       </el-table-column>
     </el-table>
     <pagination v-if="total > limit"
+                :auto-scroll="false"
                 :total="total"
                 :page.sync="offset" :limit.sync="limit"
                 :page-sizes="[20, 50, 80, 100]"
@@ -108,6 +112,7 @@
         total: 0,
         offset: 1,
         limit: 50,
+        dataLoading: false,
         dialogSkuData: [],
         dialogSelectedItems: []
       }
@@ -118,7 +123,11 @@
           return this.dialogFilterForm.skus.join(',')
         },
         set(newValue) {
-          this.dialogFilterForm.skus = Array.from(newValue.split(','))
+          if (newValue.trim()) {
+            this.dialogFilterForm.skus = Array.from(newValue.split(','))
+          } else {
+            this.dialogFilterForm.skus = []
+          }
         }
       },
       hasPromotion: {
@@ -153,23 +162,29 @@
         if (this.dialogFilterForm.skus.length > 0) {
           this.dialogSkuData = []
           this.dialogFilterForm.skus.forEach(skuID => {
-            const params = {
-              offset: 1,
-              limit: 1,
-              state: 1,
-              skuid: skuID
-            }
-            searchProductInfo(params).then(response => {
-              const data = response.result
-              if (data.total > 0) {
-                const product = data.list[0]
-                if (this.isProductValid(product)) {
-                  this.dialogSkuData.push(product)
-                }
+            if (skuID.trim()) {
+              const params = {
+                offset: 1,
+                limit: 1,
+                state: 1,
+                skuid: skuID
               }
-            }).catch(error => {
-              console.log('getProductInfo:' + error)
-            })
+              this.dataLoading = true
+              searchProductInfo(params).then(response => {
+                const data = response.result
+                if (data.total > 0) {
+                  const product = data.list[0]
+                  if (this.isProductValid(product)) {
+                    this.dialogSkuData.push(product)
+                  }
+                }
+                this.total = this.dialogSkuData.length
+              }).catch(error => {
+                console.log('getProductInfo:' + error)
+              }).finally(() => {
+                this.dataLoading = false
+              })
+            }
           })
         } else if (this.dialogFilterForm.query !== '') {
           const params = {
@@ -178,6 +193,7 @@
             state: 1,
             query: this.dialogFilterForm.query
           }
+          this.dataLoading = true
           searchProductInfo(params).then(response => {
             const data = response.result
             if (data.total > 0) {
@@ -188,9 +204,12 @@
             this.total = data.total
           }).catch(error => {
             console.log('getProductInfo:' + error)
+          }).finally(() => {
+            this.dataLoading = false
           })
         } else {
           this.dialogSkuData = []
+          this.total = 0
         }
       },
       handleDialogSelectionChange(val) {
@@ -200,7 +219,7 @@
               skuid: item.skuid,
               price: item.price,
               imagePath: item.image,
-              intro: item.brand + ' ' + item.name
+              intro: item.name
             }
             if (this.hasPromotion) {
               selectItem.discount = item.discount

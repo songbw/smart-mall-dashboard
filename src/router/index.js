@@ -71,13 +71,33 @@ export const constantRouterMap = [
         name: 'Brand',
         component: () => import('@/views/goods/brand/index'),
         meta: { header: 'Brand', icon: 'brand', title_key: 'brand_title' }
+      },
+      {
+        path: 'couponIndex',
+        name: 'couponIndex',
+        component: () => import('@/views/coupon/index'),
+        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_title' }
+      },
+      {
+        path: 'couponDetail/:id',
+        name: 'CouponDetail',
+        component: () => import('@/views/coupon/customCoupon'),
+        meta: { header: 'Coupon Detail', title_key: 'coupon_detail_title' },
+        hidden: true
+      },
+      {
+        path: 'createCoupon',
+        name: 'CreateCoupon',
+        component: () => import('@/views/coupon/customCoupon'),
+        meta: { header: 'Create Coupon', title_key: 'coupon_create_title' },
+        hidden: true
       }
     ]
   },
   {
     path: '/marketing',
     component: Layout,
-    redirect: '/pageIndex',
+    redirect: '/marketing/pageIndex',
     name: 'Marketing',
     meta: { header: 'Marketing', icon: 'marketing', title_key: 'marketing_title' },
     children: [
@@ -178,7 +198,7 @@ export const constantRouterMap = [
 ]
 
 export default new Router({
-  // mode: 'history', //后端支持可开
-  scrollBehavior: () => ({ y: 0 }),
+  mode: 'history',
+  scrollBehavior: (to, from, savedPosition) => (savedPosition ? savedPosition : { x: 0, y: 0 }),
   routes: constantRouterMap
 })

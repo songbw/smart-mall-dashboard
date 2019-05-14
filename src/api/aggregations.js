@@ -55,3 +55,35 @@ export function updateAggregationPageContentApi(params) {
     data: { ...params }
   })
 }
+
+export function getAggregationGroupsApi(params) {
+  return request({
+    url: '/aggregation/findGroup',
+    method: 'get',
+    params
+  })
+}
+
+export function createAggregationGroupApi(params) {
+  return request({
+    url: '/aggregation/createGroup',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function updateAggregationGroupApi(params) {
+  return request({
+    url: '/aggregation/updateGroup',
+    method: 'put',
+    data: { ...params }
+  })
+}
+
+export function deleteAggregationGroupApi(params) {
+  return request({
+    url: '/aggregation/deleteGroup',
+    method: 'delete',
+    params
+  })
+}

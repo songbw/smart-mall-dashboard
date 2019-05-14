@@ -21,10 +21,16 @@
           下载模板
         </el-button>
       </el-form-item>
+      <el-form-item>
+        <el-progress v-if="loading" text-inside :stroke-width="18" :percentage="percentage"
+                     style="width: 80%" />
+      </el-form-item>
     </el-form>
-    <el-table :loading="loading" :data="excelData.results" border highlight-current-row
+
+    <el-table v-loading="loading" element-loading-text="正在导入..."
+              :data="excelData.results" border
               style="width: 100%;margin-top:20px;"
-              max-height="250">
+              height="250">
       <el-table-column :label="$t('product_table_skuid_title')" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
@@ -43,14 +49,14 @@
     </el-table>
     <span slot="footer">
       <el-button @click="handleDialogCancel">{{ $t('confirm_button_cancel_title') }}</el-button>
-      <el-button type="primary" @click="handleDialogConfirm">{{ $t('confirm_button_ok_title') }}</el-button>
+      <el-button type="primary" :disabled="loading"
+                 @click="handleDialogConfirm">{{ $t('confirm_button_ok_title') }}</el-button>
     </span>
   </el-dialog>
 </template>
 
 <script>
   import XLSX from 'xlsx'
-  import isEmpty from 'lodash/isEmpty'
   import { searchProductInfo } from '@/api/products'
 
   export default {
@@ -65,6 +71,7 @@
       return {
         loading: false,
         fileName: '',
+        percentage: 0,
         excelData: {
           header: [],
           results: []
@@ -104,6 +111,7 @@
         this.clearDialogData()
       },
       clearDialogData() {
+        this.percentage = 0
         this.fileName = ''
         this.excelData.header = []
         this.excelData.results = []
@@ -143,15 +151,18 @@
       isProductValid(product) {
         const price = Number.parseFloat(product.price)
         const image = product.image || product.imageExtend
-        return !(Number.isNaN(price) || isEmpty(image))
+        return !(Number.isNaN(price) || image === null)
       },
       async generateData({ header, results }) {
         this.excelData.header = header
         const fetchedSkus = []
+        let fetchedNum = 0
         for (let i = 0; i < results.length; i++) {
           const skuID = results[i].skuID
           try {
             const response = await searchProductInfo({ offset: 1, limit: 10, skuid: skuID })
+            fetchedNum++
+            this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
             const data = response.result
             if (data.total > 0) {
               const product = data.list[0]
@@ -160,7 +171,7 @@
                   skuid: product.skuid,
                   price: product.price,
                   imagePath: product.image,
-                  intro: product.brand + ` ` + product.name
+                  intro: product.name
                 }
                 fetchedSkus.push(item)
               }
@@ -171,6 +182,7 @@
         }
         this.excelData.results = fetchedSkus
         this.loading = false
+        this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
       }
     }
   }

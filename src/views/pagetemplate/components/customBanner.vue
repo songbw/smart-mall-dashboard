@@ -268,9 +268,15 @@
         this.dialogImageFileList = fileList
       },
       handleImageTargetChanges(target) {
-        this.dialogValue.targetType = target.type
-        this.dialogValue.targetName = target.name
-        this.dialogValue.targetUrl = target.url
+        if (target.hasOwnProperty('type')) {
+          this.dialogValue.targetType = target.type
+        }
+        if (target.hasOwnProperty('name')) {
+          this.dialogValue.targetName = target.name
+        }
+        if (target.hasOwnProperty('url')) {
+          this.dialogValue.targetUrl = target.url
+        }
       }
     }
   }

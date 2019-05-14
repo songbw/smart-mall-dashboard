@@ -5,10 +5,14 @@ import {
   deleteAggregationPageApi,
   searchAggregationPagesApi,
   getAggregationPageByIdApi,
-  updateAggregationPageContentApi
+  updateAggregationPageContentApi,
+  getAggregationGroupsApi,
+  createAggregationGroupApi,
+  updateAggregationGroupApi,
+  deleteAggregationGroupApi
 } from '@/api/aggregations'
 
-import { bannerType, serviceType, gridType, promotionType, goodsType } from '@/utils/templateType'
+import { bannerType, serviceType, gridType, promotionType, goodsType, hotZoneType } from '@/utils/templateType'
 
 const emptyAggregationPage = {
   id: -1,
@@ -16,6 +20,7 @@ const emptyAggregationPage = {
   homePage: false,
   effectiveDate: '',
   backgroundColor: '#FFFFFF',
+  groupId: -1,
   content: []
 }
 
@@ -24,7 +29,17 @@ const aggregations = {
     aggregationTemplateIndex: -1,
     aggregationTotalNum: 0,
     aggregation: emptyAggregationPage,
-    aggregationList: []
+    aggregationList: [],
+    aggregationQuery: {
+      name: '',
+      status: -1,
+      homePage: false,
+      offset: 1,
+      limit: 20
+    },
+    aggregationGroups: [],
+    aggregationGroupTotalNum: 0,
+    aggregationGroupId: -1
   },
   mutations: {
     setAggregationList(state, data) {
@@ -33,6 +48,9 @@ const aggregations = {
     },
     resetTemplatePage(state) {
       state.aggregation = Object.assign({}, emptyAggregationPage, { content: [] })
+      if (state.aggregationGroupId !== -1) {
+        state.aggregation.groupId = state.aggregationGroupId
+      }
       state.aggregationTemplateIndex = -1
     },
     setCurrentAggregation(state, index) {
@@ -101,9 +119,11 @@ const aggregations = {
     setListInTemplateContent(state, params) {
       const template = state.aggregation.content[state.aggregationTemplateIndex]
       if (params.index >= 0) {
-        template.data.list.splice(params.index, 1)
-        const item = Object.assign({}, params.value)
-        template.data.list.splice(params.index, 0, item)
+        if (params.index < template.data.list.length) {
+          template.data.list.splice(params.index, 1)
+          const item = Object.assign({}, params.value)
+          template.data.list.splice(params.index, 0, item)
+        }
       } else {
         const item = Object.assign({}, params.value)
         template.data.list.push(item)
@@ -196,6 +216,36 @@ const aggregations = {
           template.data.list.push(Object.assign({}, item))
         })
       }
+    },
+    setTemplateHotZoneSettings(state, params) {
+      const template = state.aggregation.content[state.aggregationTemplateIndex]
+      if (template.type === hotZoneType) {
+        template.data.settings = { ...params }
+      }
+    },
+    setAggregationQuery(state, data) {
+      if (data.hasOwnProperty('name')) {
+        state.aggregationQuery.name = data.name
+      }
+      if (data.hasOwnProperty('status')) {
+        state.aggregationQuery.status = data.status
+      }
+      if (data.hasOwnProperty('homePage')) {
+        state.aggregationQuery.homePage = data.homePage
+      }
+      if (data.hasOwnProperty('offset')) {
+        state.aggregationQuery.offset = data.offset
+      }
+      if (data.hasOwnProperty('limit')) {
+        state.aggregationQuery.limit = data.limit
+      }
+    },
+    setAggregationGroups(state, data) {
+      state.aggregationGroups = data.list
+      state.aggregationGroupTotalNum = data.total
+    },
+    setAggregationGroupID(state, id) {
+      state.aggregationGroupId = id
     }
   },
   actions: {
@@ -343,7 +393,69 @@ const aggregations = {
           reject()
         }
       })
-    }
+    },
+    getAggregationGroups({ commit }, params) {
+      return new Promise((resolve, reject) => {
+        getAggregationGroupsApi(params).then(response => {
+          const data = response.result
+          commit('setAggregationGroups', data)
+          resolve(data.list.length)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    createAggregationGroup({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        createAggregationGroupApi(params).then(response => {
+          const id = response.id
+          const data = {
+            total: state.aggregationGroupTotalNum + 1,
+            list: state.aggregationGroups.concat([{ id: id, name: params.name }])
+          }
+          commit('setAggregationGroupID', id)
+          commit('setAggregationGroups', data)
+          commit('setAggregationList', { list: [], total: 0 })
+          resolve(id)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    updateAggregationGroup({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        updateAggregationGroupApi(params).then(() => {
+          const data = {
+            total: state.aggregationGroupTotalNum,
+            list: state.aggregationGroups.map(group => group.id === params.id ? params : group)
+          }
+          commit('setAggregationGroups', data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    deleteAggregationGroup({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        deleteAggregationGroupApi(params).then(() => {
+          const index = state.aggregationGroups.findIndex(group => group.id === params.id)
+          if (index > 0) {
+            commit('setAggregationGroupID', state.aggregationGroups[index - 1].id)
+          } else {
+            commit('setAggregationGroupID', -1)
+          }
+          const data = {
+            total: state.aggregationGroupTotalNum - 1,
+            list: state.aggregationGroups.filter(group => group.id !== params.id)
+          }
+          commit('setAggregationGroups', data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
   }
 }
 

@@ -5,7 +5,7 @@ import 'nprogress/nprogress.css' // Progress 进度条样式
 import { getToken } from '@/utils/cookie'
 
 const whiteList = ['/user/login', '/pageDisplay'] // 不重定向白名单
-const goThrough = false
+const goThrough = true
 
 router.beforeEach((to, from, next) => {
   if (goThrough) {
@@ -36,7 +36,6 @@ router.beforeEach((to, from, next) => {
         store.dispatch('GetUserInfo').then(res => { // 拉取用户信息
           next()
         }).catch((err) => {
-          console.log('Router:beforeEach ' + err)
           store.dispatch('FedLogOut').then(() => {
             next({ path: '/' })
           })

@@ -14,13 +14,20 @@ const getters = {
   allCategoriesInLoading: state => state.categories.allClassesDataInLoading,
   productsNum: state => state.products.productsTotal,
   productsData: state => state.products.productsData,
+  aggregationQuery: state => state.aggregations.aggregationQuery,
   allAggregationList: state => state.aggregations.aggregationList,
   aggregationTotal: state => state.aggregations.aggregationTotalNum,
+  aggregationGroups: state => state.aggregations.aggregationGroups,
+  aggregationGroupId: state => state.aggregations.aggregationGroupId,
   currentAggregationInfo: state => state.aggregations.aggregation,
   currentAggregationContent: state => state.aggregations.aggregation.content,
   currentAggregationContentIndex: state => state.aggregations.aggregationTemplateIndex,
   currentPromotionInfo: state => state.promotions.promotion,
   allPromotionList: state => state.promotions.promotionList,
-  promotionTotalNum: state => state.promotions.totalNum
+  promotionTotalNum: state => state.promotions.totalNum,
+  allCouponList: state => state.coupons.couponList,
+  couponTotalNum: state => state.coupons.totalNum,
+  couponQuery: state => state.coupons.query,
+  currentCoupon: state => state.coupons.coupon
 }
 export default getters

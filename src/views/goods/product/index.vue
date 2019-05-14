@@ -65,6 +65,13 @@
             导出已选{{ productSelection.length }}个商品
           </el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button :disabled="total === 0" :loading="productExporting"
+                     class="filter-item" type="primary" icon="el-icon-download"
+                     @click="handleExportAllProducts">
+            导出全部商品
+          </el-button>
+        </el-form-item>
       </el-form>
     </div>
     <el-table
@@ -86,9 +93,8 @@
       </el-table-column>
       <el-table-column :label="$t('product_table_image_title')" align="center" width="200">
         <template slot-scope="scope">
-          <img v-if="scope.row.image"
-               :src="getProductImage(scope.row)"
-               class="image-container">
+          <el-image v-if="scope.row.image" :src="getProductImage(scope.row)" fit="contain" lazy
+                    class="image-container" />
         </template>
       </el-table-column>
       <el-table-column :label="$t('product_table_name_title')" align="center">
@@ -131,13 +137,28 @@
                 :page.sync="listQuery.offset" :limit.sync="listQuery.limit"
                 :page-sizes="[10, 20, 40, 80]"
                 @pagination="getListData" />
+    <el-dialog
+      title="导出商品"
+      :visible.sync="exportDialogVisible"
+      :show-close="false"
+      :close-on-press-escape="false"
+      :close-on-click-modal="false"
+      width="200px"
+      center>
+      <div>
+        <el-progress type="circle" :percentage="allExportProgress"></el-progress>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleCancelExportAll">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
   import { mapGetters } from 'vuex'
   import { validateURL } from '@/utils/validate'
-  import { updateProductInfo } from '@/api/products'
+  import { updateProductInfo, searchProductInfo } from '@/api/products'
   import pagination from '@/components/Pagination'
 
   export default {
@@ -177,7 +198,10 @@
         rootCategorySelected: null,
         secondCategorySelected: null,
         productExporting: false,
-        productSelection: []
+        productSelection: [],
+        exportDialogVisible: false,
+        allExportCancelled: false,
+        allExportProgress: 0
       }
     },
     computed: {
@@ -305,7 +329,7 @@
           this.listLoading = false
         })
       },
-      getFilterProducts() {
+      getFilterParams() {
         const params = {}
         params.offset = this.listQuery.offset
         params.limit = this.listQuery.limit
@@ -329,6 +353,10 @@
         if (this.listQuery.state !== -1) {
           params.state = this.listQuery.state
         }
+        return params
+      },
+      getFilterProducts() {
+        const params = this.getFilterParams()
         this.listLoading = true
         this.$store.dispatch('SearchProductsData', params).then(() => {
           // Just to simulate the time of the request
@@ -400,11 +428,52 @@
         this.productSelection = selection
       },
       handleExportSelection() {
+        this.exportToFile(this.productSelection)
+      },
+      handleCancelExportAll() {
+        this.allExportCancelled = true
+        this.exportDialogVisible = false
+      },
+      async handleExportAllProducts() {
+        this.allExportProgress = 0
+        this.allExportCancelled = false
+        this.exportDialogVisible = true
+        const allProducts = []
+        const params = this.getFilterParams()
+        params.offset = 1
+        params.limit = 100
+
+        let pageTotal = 0
+        let suc = true
+        let res = null
+        let data = null
+        do {
+          try {
+            res = await searchProductInfo(params)
+            data = res.result
+            data.list.forEach(item => allProducts.push({ skuid: item.skuid }))
+            pageTotal = data.pages
+            this.allExportProgress = parseInt(params.offset * 100 / pageTotal, 10)
+            params.offset = params.offset + 1
+          } catch (e) {
+            suc = false
+            this.$log.warn('handleExportAllProducts:' + e)
+            break
+          }
+        } while (params.offset <= pageTotal && !this.allExportCancelled)
+        if (suc && allProducts.length > 0 && !this.allExportCancelled) {
+          this.exportToFile(allProducts)
+        }
+        this.allExportProgress = 0
+        this.allExportCancelled = false
+        this.exportDialogVisible = false
+      },
+      exportToFile(dataList) {
         this.productExporting = true
         import('@/utils/exportToExcel').then(excel => {
-          const tHeader = ['skuID', '商品型号', '商品类别', '商品名称', '商品品牌', '商品状态', '销售价', '市场价']
-          const filterVal = ['skuid', 'model', 'categoryName', 'name', 'brand', 'state', 'price', 'sprice']
-          const list = this.productSelection
+          const tHeader = ['skuID']
+          const filterVal = ['skuid']
+          const list = dataList
           const data = this.formatJson(filterVal, list)
           excel.export_json_to_excel({
             header: tHeader,
@@ -441,6 +510,6 @@
 
 <style scoped>
   .image-container {
-    width: 50%;
+    width: 70%;
   }
 </style>
