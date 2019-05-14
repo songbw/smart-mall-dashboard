@@ -1,13 +1,15 @@
 <template class="permission-update-container">
   <div>
     <el-dialog
-      :before-close="permission_update_handleClose"
+      :before-close="permission_update_beforeClose"
       :visible.sync="isVisible"
-      :fullscreen="true"
+      :fullscreen="false"
+      width="30%"
+      top="5vh"
       custom-class="permission_update_dialog_style">
       <el-form ref="form" :model="form" :rules="formRules" class="permission-update-form" label-position="right">
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="permission_update_label">{{ $t('name_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -17,7 +19,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="permission_update_label">{{ $t('description_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -28,7 +30,7 @@
         </el-row>
 
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="permission_update_label">{{ $t('permission_group_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -44,7 +46,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="permission_update_label">{{ $t('permission_title_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -60,14 +62,14 @@
           </el-col>
         </el-row>
         <br>
-        <div align="left" >
-          <el-button :span="20" type="primary" style="width:100%; font-size:18px;" @click.native.prevent="permission_update_handleSubmit">
+        <div align="center" >
+          <el-button type="primary" style="width:30%; font-size:18px;" @click.native.prevent="permission_update_handleSubmit">
             {{ $t('confirm_button_ok_title') }}
           </el-button>
         </div>
         <br>
-        <div align="left" >
-          <el-button type="cancel" style="width:100%; font-size:18px;" @click="permission_update_handleClose">
+        <div align="center" >
+          <el-button type="cancel" style="width:30%; font-size:18px;" @click="permission_update_handleClose">
             {{ $t('confirm_button_cancel_title') }}
           </el-button>
         </div>
@@ -149,6 +151,18 @@
       }
     },
     methods: {
+      permission_update_beforeClose() {
+        this.$confirm('确认关闭？')
+          .then(_ => {
+            this.$emit('close')
+            this.closed = true
+            this.isVisible = false
+          })
+          .catch(_ => {
+            this.isVisible = true
+            this.closed = false
+          })
+      },
       permission_update_handleClose() {
         this.$emit('close')
         this.closed = true
@@ -206,14 +220,11 @@
     position: fixed;
     height: 100%;
     width: 100%;
-    background-color: lightcyan;
+    /* ackground-color: lightcyan; */
   }
   .permission-update-form {
-    position: absolute;
     left: 0;
     right: 0;
-    width: 620px;
-    padding: 35px 35px 15px 35px;
     margin: 0px auto;
     font-size: 20px;
   }
@@ -248,7 +259,7 @@
     padding: 12px 12px 0px 0px;
   }
   .permission_update_dialog_style {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     font-size: 18px;
     justify: left;
   }

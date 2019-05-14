@@ -70,12 +70,10 @@
         :row-style="organization_setRowStyle"
         :cell-style="organization_setCellStyle"
         element-loading-text="Loading"
-        show-header
         resizable="true"
         show-overflow-tooltip="true"
         stripe
         fit
-        style="background-color: lightcyan"
         highlight-current-row>
         <el-table-column type="expand">
           <template slot-scope="scope">
@@ -185,6 +183,7 @@
         isNewItem: false,
         isShowTable: false,
         editorVisible: false,
+        isCleanTree: false,
         totalNum: 5,
         pageSize: 10,
         pageCount: 1,
@@ -194,6 +193,7 @@
       }
     },
     created() {
+      this.isCleanTree = false
       getOrgTree().then(response => {
           // console.log('got list')
           this.orgTree = response.data
@@ -218,6 +218,16 @@
       )
     },
     methods: {
+      getTreeData(data){
+        for(var i=0;i<data.length;i++){
+          if(data[i].children.length<1){
+            data[i].children=undefined;
+          }else {
+            this.getTreeData(data[i].children);
+          }
+        }
+        return data;
+      },
       organization_clearUpForm() {
         this.form.name = ''
         this.form.description = ''
@@ -268,6 +278,10 @@
         this.editorVisible = true
       },
       handleChange(value) {
+        if (this.isCleanTree === false) {
+          this.orgTree = this.getTreeData(this.orgTree)
+          this.isCleanTree = true
+        }
         this.form.parentId = this.selectedOption[this.selectedOption.length - 1]
       },
       handleCheckAllChange(val) {
@@ -284,13 +298,16 @@
         this.organization_clearUpForm()
       },
       organization_setCellStyle(row, column, rowIndex, columnIndex) {
-        return 'border-style:outset;'
+        return ''
+        // return 'border-style:outset;'
       },
       organization_setRowStyle(row, rowIndex) {
-        return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
+        return ''
+        // return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
       },
       organization_setHeadStyle(row, column, rowIndex, columnIndex) {
-        return 'background-color:#b0c4de; color:#565552;border-style:outset;'
+        return ' '
+        // return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       organization_sortByKey(a, k) {
         return a.sort(function (c, d) {
@@ -352,7 +369,7 @@
 
 <style scoped>
   .organization-manager-container {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     text-content: center;
   }
 

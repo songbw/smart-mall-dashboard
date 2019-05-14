@@ -1,16 +1,19 @@
 <template>
   <div>
     <el-dialog
-      :before-close="user_register_handleClose"
+      :before-close="user_register_beforeClose"
       :visible.sync="isVisible"
-      :fullscreen="isFullScreen"
+      title="用户注册"
+      center
+      :fullscreen="false"
       :modal="false"
+      :modal-append-to-body="false"
+      width="30%"
       custom-class="user_custom_class_style">
       <el-form ref="registryForm" :model="registryForm" :rules="registryRules" class="registry-form" label-position="right">
-        <h3 class="title">{{ $t('register_label') }}</h3>
         <el-row :span="30">
           <el-col :span="8">
-            <span class="user_register_label">{{ $t('login_username_tips') }}</span>
+            <span class="user_register_label">{{ $t('user_login_name_label') }}</span>
           </el-col>
           <el-col :span="16">
             <el-form-item prop="username">
@@ -20,7 +23,7 @@
         </el-row>
         <el-row :span="30">
           <el-col :span="8">
-            <span class="user_register_label">{{ $t('login_password_tips') }}</span>
+            <span class="user_register_label">{{ $t('user_password_label') }}</span>
           </el-col>
           <el-col :span="16">
             <el-form-item prop="password">
@@ -105,7 +108,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item prop="verifyCode">
-              <el-button type="primary" style="width:100%; font-size:22px" @click.native.prevent="handleVerifyCode">
+              <el-button type="primary" style="font-size:22px" @click.native.prevent="handleVerifyCode">
                 {{ verifyCodeGet }}
               </el-button>
             </el-form-item>
@@ -113,13 +116,13 @@
         </el-row>
         <br>
         <div align="center" >
-          <el-button :span="20" type="primary" style="width:100%; color:red; font-size:20px;" @click.native.prevent="user_register_handleSubmit">
+          <el-button :span="20" type="primary" style="color:snow; font-size:20px;" @click.native.prevent="user_register_handleSubmit">
             {{ $t('confirm_button_ok_title') }}
           </el-button>
         </div>
         <br>
         <div align="center" >
-          <el-button type="primary" style="width:100%; color:snow; font-size:20px;" @click="user_register_handleClose">
+          <el-button type="primary" style="color:lightgrey; font-size:20px;" @click="user_register_handleClose">
             {{ $t('confirm_button_cancel_title') }}
           </el-button>
         </div>
@@ -184,7 +187,6 @@
           password: [{ required: true, trigger: 'blur', validator: validatePass }],
           code: [{ required: true, trigger: 'blur', validator: validateVerifyCode }]
         },
-        isFullScreen: true,
         pwdType: 'password',
         isShowGetCode: false,
         verifyCodeGet: '获取验证码'
@@ -194,6 +196,18 @@
       this.isVisible = true
     },
     methods: {
+      user_register_beforeClose() {
+        this.$confirm('确认关闭？')
+          .then(_ => {
+            this.$emit('close')
+            this.closed = true
+            this.isVisible = false
+          })
+          .catch(_ => {
+            this.isVisible = true
+            this.closed = false
+          })
+      },
       user_register_handleClose() {
         this.$emit('close')
         this.closed = true
@@ -244,23 +258,19 @@
   }
 </script>
 
-<style rel="stylesheet/scss" lang="scss" module>
-  $bg: #2c394a;
+<style scoped rel="stylesheet/scss" lang="scss">
   $dark_gray: #809084;
   $light_gray: #eee;
   .login-container {
     position: fixed;
     height: 100%;
-    width: 100%;
-    background-color: $bg;
+    width: 60%;
   .registry-form {
-    position: absolute;
     left: 0;
     right: 0;
-    width: 620px;
     padding: 35px 35px 15px 35px;
     margin: 0px auto;
-    font-size: 20px;
+    font-size: 18px;
   }
   .tips {
     font-size: 16px;
@@ -287,7 +297,6 @@
   .title {
     font-size: 26px;
     font-weight: 400;
-    color: $light_gray;
     margin: 0px auto 40px auto;
     text-align: center;
     font-weight: bold;
@@ -304,12 +313,11 @@
   }
   .user_register_label {
     font-size: 18px;
-    color: aqua;
     float: right;
-    padding: 12px 12px 0px 0px;
+    padding: 1px 20px 0px 0px;
   }
   .user_custom_class_style {
     background-color: #2c394a;
-    font-size: 18px;
+    font-size: 20px;
   }
 </style>

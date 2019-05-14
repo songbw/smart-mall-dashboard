@@ -2,13 +2,15 @@
   <div>
     <el-dialog
       v-loading="loading"
-      :before-close="user_update_handleClose"
+      :before-close="user_update_beforeClose"
       :visible.sync="isVisible"
-      :fullscreen="isFullScreen"
+      :fullscreen="false"
+      width="34%"
+      top="1vh"
       custom-class="user_update_dialog_style">
       <el-form ref="form" :model="form" :rules="formRules" class="user-update-form" label-position="right">
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_login_name_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -18,7 +20,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_password_label') }}</span>
           </el-col>
           <el-col v-if="isNewUser" :span="16">
@@ -39,7 +41,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('brand_table_cname_title') }}</span>
           </el-col>
           <el-col :span="16">
@@ -49,7 +51,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('brand_table_ename_title') }}</span>
           </el-col>
           <el-col :span="16">
@@ -59,7 +61,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_birthday_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -75,7 +77,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_phone_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -85,7 +87,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_sex_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -98,7 +100,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_email_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -108,7 +110,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('user_address_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -118,7 +120,7 @@
           </el-col>
         </el-row>
         <el-row :span="30">
-          <el-col :span="8">
+          <el-col :span="6">
             <span class="user_update_label">{{ $t('organization_manager_label') }}</span>
           </el-col>
           <el-col :span="16">
@@ -136,14 +138,14 @@
           </el-col>
         </el-row>
         <br>
-        <div align="left" >
-          <el-button :span="20" type="primary" style="width:100%; font-size:18px;" @click.native.prevent="user_update_handleSubmit">
+        <div align="center" >
+          <el-button :span="20" type="primary" style="width:32%; font-size:18px;" @click.native.prevent="user_update_handleSubmit">
             {{ $t('confirm_button_ok_title') }}
           </el-button>
         </div>
         <br>
-        <div align="left" >
-          <el-button type="cancel" style="width:100%; font-size:18px;" @click="user_update_handleClose">
+        <div align="center" >
+          <el-button type="cancel" style="width:32%; font-size:18px;" @click="user_update_handleClose">
             {{ $t('confirm_button_cancel_title') }}
           </el-button>
         </div>
@@ -213,11 +215,11 @@
         orgTree: null,
         orgOptions: null,
         userId: 0,
-        isFullScreen: true,
         selectedOption: [],
         loading: false,
         isVisiblePassword: false,
         isVisibleOptions: false,
+        isCleanTree: false,
         props: {
           value: 'id',
           label: 'fullName',
@@ -240,7 +242,7 @@
     created() {
       this.isVisible = true
       this.loading = true
-
+      this.isCleanTree = false
       getOrgTree().then(response => {
         // console.log('got list')
         this.orgTree = response.data
@@ -283,6 +285,28 @@
       }
     },
     methods: {
+      getTreeData(data){
+        for(var i=0;i<data.length;i++){
+          if(data[i].children.length<1){
+            data[i].children=undefined;
+          }else {
+            this.getTreeData(data[i].children);
+          }
+        }
+        return data;
+      },
+      user_update_beforeClose() {
+        this.$confirm('确认关闭？')
+          .then(_ => {
+            this.$emit('close')
+            this.closed = true
+            this.isVisible = false
+          })
+          .catch(_ => {
+            this.isVisible = true
+            this.closed = false
+          })
+      },
       user_update_handleClose() {
         this.$emit('close')
         this.closed = true
@@ -331,6 +355,10 @@
         })
       },
       handleChange(value) {
+        if (this.isCleanTree === false) {
+          this.orgTree = this.getTreeData(this.orgTree)
+          this.isCleanTree = true
+        }
         this.form.organization = this.selectedOption[this.selectedOption.length - 1]
       },
       user_update_setCellStyle(row, column, rowIndex, columnIndex) {
@@ -351,14 +379,11 @@
     position: fixed;
     height: 100%;
     width: 100%;
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
   }
   .user-update-form {
-    position: absolute;
     left: 0;
     right: 0;
-    width: 620px;
-    padding: 35px 35px 15px 35px;
     margin: 0px auto;
     font-size: 20px;
   }
@@ -400,7 +425,7 @@
     padding: 12px 12px 0px 0px;
   }
   .user_update_dialog_style {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     font-size: 18px;
     justify: left;
   }

@@ -65,7 +65,6 @@
         show-overflow-tooltip="true"
         stripe
         fit
-        style="background-color: lightcyan"
         highlight-current-row>
         <el-table-column type="expand">
           <template slot-scope="scope">
@@ -201,7 +200,7 @@
         this.form.pageSize = 10
       },
       searchSubmit() {
-        this.$message('submit!')
+        // this.$message('submit!')
         this.form.pageIndex = 1
         this.permission_fetchData()
       },
@@ -216,7 +215,7 @@
           var r = confirm(confirmTitle)
           if (r === true) {
             permissionDelete(row.id).then(response => {
-              this.$message('成功')
+              // this.$message('成功')
               this.list.splice(index, 1)
             }, error => {
                 alert(error)
@@ -230,21 +229,24 @@
         this.editorVisible = true
       },
       permissionCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
+        // this.$message({
+        //  message: 'cancel!',
+         // type: 'warning'
+       // })
         this.isShowTable = false
         this.permission_clearUpForm()
       },
       permission_setCellStyle(row, column, rowIndex, columnIndex) {
-        return 'border-style:outset;'
+        return ''
+        // return 'border-style:outset;'
       },
       permission_setRowStyle(row, rowIndex) {
-        return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
+        return ''
+        // return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
       },
       permission_setHeadStyle(row, column, rowIndex, columnIndex) {
-        return 'background-color:#b0c4de; color:#565552;border-style:outset;'
+        return ''
+        // return 'background-color:#b0c4de; color:#565552;border-style:outset;'
       },
       permission_sortByKey(a, k) {
         return a.sort(function(c, d) {
@@ -327,7 +329,7 @@
 
 <style scoped>
   .permission-manager-container {
-    background-color: lightcyan;
+    /* background-color: lightcyan; */
     text-content: center;
   }
 

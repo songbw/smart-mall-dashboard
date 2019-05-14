@@ -18,29 +18,24 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="method" prop="phone">
+          <el-form-item label="方法关键字" prop="phone">
             <el-input v-model="logForm.method" name="method" class="log_form_input" />
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="url" prop="url">
-            <el-input v-model="logForm.url" name="url" class="log_form_input" />
+          <el-form-item label="请求参数" prop="param">
+            <el-input v-model="logForm.param" class="log_form_input" name="param" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row :gutter="0" :span="24" type="flex" justify="start">
-        <el-col :span="6">
-          <el-form-item label="参数" prop="param">
-            <el-input v-model="logForm.param" class="log_form_input" name="param" />
-          </el-form-item>
-        </el-col>
         <el-form-item :label="$t('create_date_title')">
           <el-col :span="11">
             <el-form-item>
               <el-date-picker
                 v-model="logForm.createTimeStart"
                 type="datetime"
-                placeholder="请选择日期"
+                placeholder="请选择日期时间"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 format="yyyy-MM-dd HH:mm:ss"
                 class="log_form_input" />
@@ -54,7 +49,7 @@
               <el-date-picker
                 v-model="logForm.createTimeEnd"
                 type="datetime"
-                placeholder="请选择日期"
+                placeholder="请选择日期时间"
                 value-format="yyyy-MM-dd HH:mm:ss"
                 format="yyyy-MM-dd HH:mm:ss"
                 class="log_form_input" />
@@ -81,16 +76,13 @@
         v-loading="listLoading"
         :row-class-name="log_tableRowClassName"
         :data="list"
-        :header-cell-style="log_setHeadStyle"
         :row-style="log_setRowStyle"
-        :cell-style="log_setCellStyle"
         element-loading-text="Loading"
         show-header
         resizable="true"
         show-overflow-tooltip="true"
         stripe
         fit
-        style="background-color: lightcyan"
         highlight-current-row>
         <el-table-column type="expand">
           <template slot-scope="scope">
@@ -200,7 +192,7 @@
         this.logForm.pageSize = 10
       },
       search_onSubmit() {
-        this.$message('submit!')
+        // this.$message('submit!')
         this.logForm.pageIndex = 1
         this.log_fetchData()
       },
@@ -214,7 +206,7 @@
           var r = confirm(confirmTitle)
           if (r === true) {
             deleteLog(row.id).then(response => {
-                this.$message('成功')
+                // this.$message('成功')
                 this.list.splice(index, 1)
               }, error => {
                 alert(error)
@@ -224,10 +216,10 @@
         }
       },
       log_onCancel() {
-        this.$message({
-          message: 'cancel!',
-          type: 'warning'
-        })
+       // this.$message({
+        //  message: 'cancel!',
+         // type: 'warning'
+       // })
         this.isShowTable = false
         this.log_clearUpForm()
       },
@@ -268,7 +260,8 @@
         return 'border-style:outset;'
       },
       log_setRowStyle(row, rowIndex) {
-        return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
+        return ''
+        // return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
       },
       log_setHeadStyle(row, column, rowIndex, columnIndex) {
         return 'background-color:#b0c4de; color:#565552;border-style:outset;'
@@ -338,7 +331,6 @@
 
 <style scoped>
   .log-manager-container {
-    background-color: lightcyan;
     text-content: center;
   }
 
