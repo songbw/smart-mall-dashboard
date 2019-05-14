@@ -61,12 +61,12 @@
                               placeholder="选择结束日期和时间"
                               value-format="yyyy-MM-dd HH:mm:ss" />
             </el-form-item>
-            <el-button type="danger" icon="el-icon-delete" style="margin-left: 10px" :disabled="viewOnly"
+            <el-button v-if="!viewOnly" type="danger" icon="el-icon-delete" style="margin-left: 10px"
                        @click="handleDeleteExcludeDate(index)">
               删除
             </el-button>
           </div>
-          <el-button type="primary" icon="el-icon-edit" :disabled="viewOnly"
+          <el-button v-if="!viewOnly" type="primary" icon="el-icon-edit"
                      @click="handleAddExcludeDate">
             添加
           </el-button>
@@ -113,7 +113,14 @@
         <el-input-number v-else v-model="formData.rules.perLimited" :min="0" />
       </el-form-item>
       <el-form-item label="推广区域">
-        <div>
+        <div v-if="viewOnly">
+          <el-checkbox-group :value="formData.rules.scopes">
+            <el-checkbox v-for="app in appScopes" :label="app.id" :key="app.id">
+              {{ app.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+        <div v-else>
           <el-checkbox v-model="checkAllScopes" :indeterminate="isScopesIndeterminate"
                        @change="handleCheckAllScopesChange">
             选择全部
@@ -185,14 +192,14 @@
       </el-form-item>
       <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" required>
         <span>已关联{{ formData.rules.scenario.couponSkus.length }}个商品(至多关联400个商品)</span>
-        <coupon-goods key="include" :sku-list="formData.rules.scenario.couponSkus" :view-only="viewOnly"
+        <coupon-goods key="include" :sku-id-list="formData.rules.scenario.couponSkus" :view-only="viewOnly"
                       @contentAdd="handleAddCouponSkus"
                       @contentDelete="handleDeleteCouponSkus" />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.scenario.type === 2" label="排除商品" required>
         <p>请确认是否要创建全场通用券,该券创建后可用于您发布的任何商品(排除商品除外)</p>
         <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
-        <coupon-goods key="exclude" :sku-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
+        <coupon-goods key="exclude" :sku-id-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
                       @contentAdd="handleAddExcludeSkus"
                       @contentDelete="handleDeleteExcludeSkus" />
       </el-form-item>
@@ -209,7 +216,7 @@
             添加类别
           </el-button>
           <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
-          <coupon-goods key="exclude" :sku-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
+          <coupon-goods key="exclude" :sku-id-list="formData.rules.scenario.excludeSkus" :view-only="viewOnly"
                         @contentAdd="handleAddExcludeSkus"
                         @contentDelete="handleDeleteExcludeSkus" />
         </div>
@@ -218,7 +225,7 @@
         </div>
       </el-form-item>
       <el-form-item label="使用规则" class="form-item">
-        <el-input type="textarea" resize="none" v-model="formData.rulesDescription" :rows="4"
+        <el-input type="textarea" resize="none" v-model="formData.rules.rulesDescription" :rows="4"
                   :readonly="viewOnly" />
       </el-form-item>
       <el-form-item label="优惠券概述" class="form-item">
@@ -270,6 +277,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import merge from 'lodash/merge'
   import isEmpty from 'lodash/isEmpty'
   import isEqual from 'lodash/isEqual'
   import concat from 'lodash/concat'
@@ -366,6 +374,7 @@
         tagInputVisible: false,
         tagInputValue: '',
         formData: {
+          id: -1,
           name: '',
           releaseStartDate: null,
           releaseEndDate: null,
@@ -404,9 +413,10 @@
               couponSkus: [],
               excludeSkus: [],
               categories: [],
+              brands: []
             },
-          },
-          rulesDescription: ''
+            rulesDescription: ''
+          }
         },
         formRules: {
           name: [{
@@ -550,38 +560,80 @@
         }
         this.getCouponData()
       }
-      if (!this.viewOnly) {
-        this.getAllCategories()
-      }
+      this.getAllCategories()
     },
     methods: {
+      backupCouponData() {
+        this.formData.id = this.couponData.id
+        this.formData.name = this.couponData.name.trim()
+        this.formData.releaseStartDate = this.couponData.releaseStartDate.trim()
+        this.formData.releaseEndDate = this.couponData.releaseEndDate.trim()
+        this.formData.releaseTotal = this.couponData.releaseTotal
+        this.formData.effectiveStartDate = this.couponData.effectiveStartDate.trim()
+        this.formData.effectiveEndDate = this.couponData.effectiveEndDate.trim()
+        if (!isEmpty(this.couponData.excludeDates)) {
+          this.couponData.excludeDates.forEach(date => {
+            const exclude = Object.assign({}, date)
+            this.formData.excludeDates.push(exclude)
+          })
+        }
+        this.formData.category = this.couponData.category
+        if (!isEmpty(this.couponData.tags)) {
+          this.couponData.tags.forEach(tag => this.formData.tags.push(tag.trim()))
+        }
+        if (this.couponData.imageUrl) {
+          this.formData.imageUrl = this.couponData.imageUrl.trim()
+        }
+        if (this.couponData.url) {
+          this.formData.url = this.couponData.url.trim()
+        }
+        if (this.couponData.description) {
+          this.formData.description = this.couponData.description.trim()
+        }
+        this.formData.rules.code = this.couponData.rules.code.trim()
+        this.formData.rules.perLimited = this.couponData.rules.perLimited
+        if (!isEmpty(this.couponData.rules.scopes)) {
+          this.couponData.rules.scopes.forEach(scope => this.formData.rules.scopes.push(scope.trim()))
+          this.handleCheckedScopesChange(this.couponData.rules.scopes)
+        }
+        this.formData.rules.couponRules.type = this.couponData.rules.couponRules.type
+        if (this.couponData.rules.couponRules.hasOwnProperty('fullReduceCoupon')) {
+          this.formData.rules.couponRules.fullReduceCoupon.fullPrice =
+            this.couponData.rules.couponRules.fullReduceCoupon.fullPrice
+          this.formData.rules.couponRules.fullReduceCoupon.reducePrice =
+            this.couponData.rules.couponRules.fullReduceCoupon.reducePrice
+        }
+        if (this.couponData.rules.couponRules.hasOwnProperty('discountCoupon')) {
+          this.formData.rules.couponRules.discountCoupon.discountRatio =
+            this.couponData.rules.couponRules.discountCoupon.discountRatio
+        }
+        if (this.couponData.rules.couponRules.hasOwnProperty('cashCoupon')) {
+          this.formData.rules.couponRules.cashCoupon.amount =
+            this.couponData.rules.couponRules.cashCoupon.amount
+        }
+        this.formData.rules.collect.type = this.couponData.rules.collect.type
+        this.formData.rules.collect.points = this.couponData.rules.collect.points
+        this.formData.rules.scenario.type = this.couponData.rules.scenario.type
+        if (!isEmpty(this.couponData.rules.scenario.couponSkus)) {
+          this.couponData.rules.scenario.couponSkus.forEach(sku =>
+            this.formData.rules.scenario.couponSkus.push(sku.trim()))
+        }
+        if (!isEmpty(this.couponData.rules.scenario.excludeSkus)) {
+          this.couponData.rules.scenario.excludeSkus.forEach(sku =>
+            this.formData.rules.scenario.excludeSkus.push(sku.trim()))
+        }
+        if (!isEmpty(this.couponData.categories)) {
+          this.couponData.rules.scenario.categories.forEach(category =>
+            this.formData.rules.scenario.categories.push(category))
+        }
+        if (this.couponData.rules.rulesDescription) {
+          this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription.trim()
+        }
+      },
       async getCouponData() {
         try {
           await this.$store.dispatch('getCouponById', { id: this.couponId })
-          this.formData = Object.assign({}, this.couponData)
-          this.formData.excludeDates = []
-          if (!isEmpty(this.couponData.excludeDates)) {
-            this.couponData.excludeDates.forEach(exclude => {
-              const item = { ...exclude }
-              this.formData.excludeDates.push(item)
-            })
-          }
-          if (!isEmpty(this.couponData.rules.scenario.couponSkus)) {
-            this.formData.rules.scenario.couponSkus = this.couponData.rules.scenario.couponSkus.map(sku => sku)
-          } else {
-            this.formData.rules.scenario.couponSkus = []
-          }
-          if (!isEmpty(this.couponData.rules.scenario.excludeSkus)) {
-            this.formData.rules.scenario.excludeSkus = this.couponData.rules.scenario.excludeSkus.map(sku => sku)
-          } else {
-            this.formData.rules.scenario.excludeSkus = []
-          }
-          if (!isEmpty(this.couponData.categories)) {
-            this.formData.rules.scenario.categories =
-              this.couponData.rules.scenario.categories.map(category => Number.parseInt(category))
-          } else {
-            this.formData.rules.scenario.categories = []
-          }
+          this.backupCouponData()
         } catch (e) {
           this.$log.warn('Get coupon error:' + e)
         }
@@ -639,18 +691,19 @@
         this.formData.rules.scenario.categories.splice(index, 1)
       },
       async handleCreateCoupon() {
-        const data = Object.assign({}, this.formData)
+        const data = {}
+        merge(data, this.formData)
         data.supplierMerchantId = 0
         data.supplierMerchantName = ''
-        if (data.type === 1) {
+        if (data.rules.scenario.type === 1) {
           data.rules.scenario.excludeSkus = []
           data.rules.scenario.categories = []
         } else {
           data.rules.scenario.couponSkus = []
         }
-        const now = moment(Date.now())
+        const now = moment()
         const startDate = moment(data.releaseStartDate)
-        if (moment(startDate.isBefore(now))) {
+        if (startDate.isBefore(now)) {
           data.status = 1
         } else if (startDate.isAfter(now)) {
           data.status = 2
@@ -673,13 +726,22 @@
         let hasDiff = false
         Object.keys(this.formData).forEach(key => {
           if (isEqual(this.formData[key], this.couponData[key]) === false) {
-            diff[key] = this.formData[key]
+            if (key !== 'rules') {
+              diff[key] = this.formData[key]
+            } else {
+              diff.rules = {}
+              Object.keys(this.formData.rules).forEach(ruleKey => {
+                if (!isEqual(this.formData.rules[ruleKey], this.couponData.rules[ruleKey])) {
+                  diff.rules[ruleKey] = this.formData.rules[ruleKey]
+                }
+              })
+            }
             hasDiff = true
           }
         })
         if (hasDiff) {
-          if (diff.hasOwnProperty('type')) {
-            if (diff.type === 1) {
+          if (diff.hasOwnProperty('rules') && diff.rules.hasOwnProperty('scenario')) {
+            if (diff.rules.scenario.type === 1) {
               diff.rules.scenario.excludeSkus = []
               diff.rules.scenario.categories = []
             } else {

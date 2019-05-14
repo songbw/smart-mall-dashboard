@@ -8,6 +8,7 @@ import {
 } from '@/api/coupons'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import isString from 'lodash/isString'
 
 const couponTemplate = {
   id: -1,
@@ -56,6 +57,11 @@ const couponTemplate = {
 
 const parseCoupon = coupon => {
   const format = 'YYYY-MM-DD HH:mm:ss'
+  if (isString(coupon.category)) {
+    const cat = coupon.category
+    delete coupon.category
+    coupon.category = Number.parseInt(cat)
+  }
   let momentDate = moment(coupon.releaseStartDate)
   if (momentDate.isValid()) {
     coupon.releaseStartDate = momentDate.format(format)
@@ -90,26 +96,50 @@ const parseCoupon = coupon => {
   } else {
     coupon.excludeDates = []
   }
-  if (Array.isArray(coupon.rules.scenario.couponSkus) && coupon.rules.scenario.couponSkus.length > 0) {
-    coupon.rules.scenario.couponSkus = coupon.rules.scenario.couponSkus
-      .filter(skuId => !isEmpty(skuId))
-      .map(skuId => skuId.trim())
+  if (!isEmpty(coupon.tags)) {
+    coupon.tags = coupon.tags.filter(tag => !isEmpty(tag)).map(tag => tag.trim())
   } else {
-    coupon.rules.scenario.couponSkus = []
+    coupon.tags = []
   }
-  if (Array.isArray(coupon.rules.scenario.excludeSkus) && coupon.rules.scenario.excludeSkus.length > 0) {
-    coupon.rules.scenario.excludeSkus = coupon.rules.scenario.excludeSkus
-      .filter(skuId => !isEmpty(skuId))
-      .map(skuId => skuId.trim())
+  if (coupon.hasOwnProperty('rules')) {
+    if (!isEmpty(coupon.rules.scopes)) {
+      coupon.rules.scopes = coupon.rules.scopes.filter(scope => !isEmpty(scope)).map(scope => scope.trim())
+    } else {
+      coupon.rules.scopes = []
+    }
+    if (coupon.rules.hasOwnProperty('scenario')) {
+      if (Array.isArray(coupon.rules.scenario.couponSkus) && coupon.rules.scenario.couponSkus.length > 0) {
+        coupon.rules.scenario.couponSkus = coupon.rules.scenario.couponSkus
+          .filter(skuId => !isEmpty(skuId))
+          .map(skuId => skuId.trim())
+      } else {
+        coupon.rules.scenario.couponSkus = []
+      }
+      if (Array.isArray(coupon.rules.scenario.excludeSkus) && coupon.rules.scenario.excludeSkus.length > 0) {
+        coupon.rules.scenario.excludeSkus = coupon.rules.scenario.excludeSkus
+          .filter(skuId => !isEmpty(skuId))
+          .map(skuId => skuId.trim())
+      } else {
+        coupon.rules.scenario.excludeSkus = []
+      }
+      if (Array.isArray(coupon.rules.scenario.brands) && coupon.rules.scenario.brands.length > 0) {
+        coupon.rules.scenario.brands = coupon.rules.scenario.brands
+          .filter(brand => !isEmpty(brand))
+          .map(brand => brand.trim())
+      } else {
+        coupon.rules.scenario.brands = []
+      }
+      if (Array.isArray(coupon.rules.scenario.categories) && coupon.rules.scenario.categories.length > 0) {
+        coupon.rules.scenario.categories = coupon.rules.scenario.categories
+          .filter(category => !isEmpty(category))
+          .map(category => category.trim())
+          .map(category => isString(category) ? Number.parseInt(category) : category)
+      }
+    } else {
+      coupon.rules.scenario = {}
+    }
   } else {
-    coupon.rules.scenario.excludeSkus = []
-  }
-  if (Array.isArray(coupon.rules.scenario.brands) && coupon.rules.scenario.brands.length > 0) {
-    coupon.rules.scenario.brands = coupon.rules.scenario.brands
-      .filter(brand => !isEmpty(brand))
-      .map(brand => brand.trim())
-  } else {
-    coupon.rules.scenario.brands = []
+    coupon.rules = {}
   }
 }
 

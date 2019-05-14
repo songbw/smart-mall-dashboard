@@ -14,7 +14,7 @@
           导出商品
         </el-button>
       </div>
-      <div v-if="skuList.length > 0" class="header-ops-container">
+      <div v-if="skuIdList.length > 0" class="header-ops-container">
         <span>{{ $t('aggregation_customization_goods_selected_text', {count: selectedItems.length}) }}</span>
         <el-button type="text" style="margin-left: 10px" :disabled="viewOnly"
                    @click="handleDeleteSelection">
@@ -24,7 +24,7 @@
     </div>
     <el-table
       ref="skuTable"
-      v-if="skuList.length > 0"
+      v-if="skuIdList.length > 0"
       v-loading="dataLoading"
       :data="skuPageList"
       style="width: 100%"
@@ -56,9 +56,10 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-if="skuList.length > limit" :total="skuList.length" :autoScroll="false"
+    <pagination v-if="skuIdList.length > limit" :total="skuIdList.length" :autoScroll="false"
                 :page.sync="offset" :limit.sync="limit"
-                :page-sizes="[20, 40, 80, 100]" />
+                :page-sizes="[20, 40, 80, 100]"
+                @pagination="updatePageList" />
     <goods-selection :dialog-visible="dialogSelectionVisible"
                      @onSelectionCancelled="onGoodsSelectionCancelled"
                      @onSelectionConfirmed="onGoodsSelectionConfirmed" />
@@ -83,7 +84,7 @@
     name: 'CouponGoods',
     components: { GoodsSelection, GoodsImport, Pagination },
     props: {
-      skuList: {
+      skuIdList: {
         type: Array,
         default: function () {
           return []
@@ -101,30 +102,18 @@
         dataLoading: false,
         skuInfoList: [],
         selectedItems: [],
+        skuPageList: [],
         offset: 1,
         limit: 20
       }
     },
     watch: {
-      skuList: function (newList, oldList) {
-        if (newList.length < oldList.length) {
-          const deletedList = difference(oldList, newList)
-          this.skuInfoList = filter(this.skuInfoList, item => includes(deletedList, item.skuid) === false)
-        } else {
-          const addedList = difference(newList, oldList)
-          this.handleFetchSkuInfo(addedList)
-        }
-      }
-    },
-    computed: {
-      skuPageList() {
-        const begin = (this.offset - 1) * this.limit
-        const end = begin + this.limit
-        return this.skuInfoList.slice(begin, end)
+      skuIdList: function (newList, oldList) {
+        this.handleFetchSkuInfo(newList)
       }
     },
     mounted() {
-      this.handleFetchSkuInfo(this.skuList)
+      this.handleFetchSkuInfo(this.skuIdList)
     },
     methods: {
       isProductValid(product) {
@@ -132,8 +121,14 @@
         const image = product.image || product.imageExtend
         return !(Number.isNaN(price) || image === null)
       },
+      updatePageList() {
+        const begin = (this.offset - 1) * this.limit
+        const end = begin + this.limit
+        this.skuPageList = this.skuInfoList.slice(begin, end)
+      },
       async handleFetchSkuInfo(skuIdList) {
-        const fetchList = filter(skuIdList, skuid => findIndex(this.skuInfoList, item => item.skuid === skuid) < 0)
+        this.skuInfoList = filter(this.skuInfoList, item => includes(skuIdList, item.skuid))
+        const fetchList = filter(skuIdList, skuId => findIndex(this.skuInfoList, item => item.skuid === skuId) < 0)
         if (fetchList.length > 0) {
           this.dataLoading = true
           for (let skuID of fetchList) {
@@ -153,11 +148,12 @@
                 }
               }
             } catch (err) {
-              this.$log.warning('Coupon Goods: search error:' + skuID)
+              this.$log.warn('Coupon Goods: search error:' + skuID)
             }
           }
           this.dataLoading = false
         }
+        this.updatePageList()
       },
       handleSelectionChange(val) {
         this.selectedItems = val
@@ -187,7 +183,7 @@
       },
       addContentSkus(skus) {
         const skuids = skus.map(item => item.skuid)
-        const filterSkuids = difference(skuids, this.skuList)
+        const filterSkuids = difference(skuids, this.skuIdList)
         if (filterSkuids.length > 0) {
           if (skuids.length === filterSkuids.length) {
             this.skuInfoList = concat(this.skuInfoList, skus)
