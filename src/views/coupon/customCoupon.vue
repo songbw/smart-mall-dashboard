@@ -16,13 +16,13 @@
         <div style="display: flex; justify-content: start">
           <el-form-item prop="releaseStartDate">
             <el-date-picker type="datetime" v-model="formData.releaseStartDate" :readonly="viewOnly"
-                            placeholder="选择开始日期和时间"
+                            placeholder="选择开始日期和时间" default-time="00:00:00"
                             value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
           <el-form-item prop="releaseEndDate">
             <el-date-picker type="datetime" v-model="formData.releaseEndDate" :readonly="viewOnly"
-                            placeholder="选择结束日期和时间"
+                            placeholder="选择结束日期和时间" default-time="23:59:59"
                             value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
         </div>
@@ -35,13 +35,13 @@
         <div style="display: flex; justify-content: start">
           <el-form-item prop="effectiveStartDate">
             <el-date-picker type="datetime" v-model="formData.effectiveStartDate" :readonly="viewOnly"
-                            placeholder="选择开始日期和时间"
+                            placeholder="选择开始日期和时间" default-time="00:00:00"
                             value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
           <el-form-item prop="effectiveEndDate">
             <el-date-picker type="datetime" v-model="formData.effectiveEndDate" :readonly="viewOnly"
-                            placeholder="选择结束日期和时间"
+                            placeholder="选择结束日期和时间" default-time="23:59:59"
                             value-format="yyyy-MM-dd HH:mm:ss" />
           </el-form-item>
         </div>
@@ -52,13 +52,13 @@
                style="display: flex; justify-content: start;margin-bottom: 10px">
             <el-form-item>
               <el-date-picker type="datetime" v-model="exclude.start" :readonly="viewOnly"
-                              placeholder="选择开始日期和时间"
+                              placeholder="选择开始日期和时间" default-time="00:00:00"
                               value-format="yyyy-MM-dd HH:mm:ss" />
             </el-form-item>
             <span style="margin: 0 10px">至</span>
             <el-form-item>
               <el-date-picker type="datetime" v-model="exclude.end" :readonly="viewOnly"
-                              placeholder="选择结束日期和时间"
+                              placeholder="选择结束日期和时间" default-time="23:59:59"
                               value-format="yyyy-MM-dd HH:mm:ss" />
             </el-form-item>
             <el-button v-if="!viewOnly" type="danger" icon="el-icon-delete" style="margin-left: 10px"
@@ -280,9 +280,10 @@
   import merge from 'lodash/merge'
   import isEmpty from 'lodash/isEmpty'
   import isEqual from 'lodash/isEqual'
-  import concat from 'lodash/concat'
   import difference from 'lodash/difference'
   import includes from 'lodash/includes'
+  import filter from 'lodash/filter'
+  import concat from 'lodash/concat'
   import moment from 'moment'
   import { validateURL } from '@/utils/validate'
   import CouponGoods from './couponGoods'
@@ -374,7 +375,6 @@
         tagInputVisible: false,
         tagInputValue: '',
         formData: {
-          id: -1,
           name: '',
           releaseStartDate: null,
           releaseEndDate: null,
@@ -421,10 +421,8 @@
         formRules: {
           name: [{
             required: true, trigger: 'change', validator: (rule, value, callback) => {
-              if (value.length > 15) {
-                callback(new Error('最多输入15个描述字符'))
-              } else if (value.length < 3) {
-                callback(new Error('最少输入3个描述字符'))
+              if (isEmpty(value)) {
+                callback(new Error('请输入有效的优惠券名称'))
               } else {
                 callback()
               }
@@ -564,7 +562,6 @@
     },
     methods: {
       backupCouponData() {
-        this.formData.id = this.couponData.id
         this.formData.name = this.couponData.name.trim()
         this.formData.releaseStartDate = this.couponData.releaseStartDate.trim()
         this.formData.releaseEndDate = this.couponData.releaseEndDate.trim()
@@ -654,8 +651,9 @@
         this.formData.excludeDates.splice(index, 1)
       },
       handleAddCouponSkus(skus) {
-        if (this.formData.rules.scenario.couponSkus.length + skus.length <= 400) {
-          this.formData.rules.scenario.couponSkus = concat(this.formData.rules.scenario.couponSkus, skus)
+        const filterSkus = filter(skus, sku => !includes(this.formData.rules.scenario.couponSkus, sku))
+        if (this.formData.rules.scenario.couponSkus.length + filterSkus.length <= 400) {
+          this.formData.rules.scenario.couponSkus = concat(this.formData.rules.scenario.couponSkus, filterSkus)
         } else {
           this.$message.warn('请重新选择活动商品，最多支持400个')
         }
@@ -664,8 +662,9 @@
         this.formData.rules.scenario.couponSkus = difference(this.formData.rules.scenario.couponSkus, skus)
       },
       handleAddExcludeSkus(skus) {
-        if (this.formData.rules.scenario.excludeSkus.length + skus.length <= 100) {
-          this.formData.rules.scenario.excludeSkus = concat(this.formData.rules.scenario.excludeSkus, skus)
+        const filterSkus = filter(skus, sku => !includes(this.formData.rules.scenario.excludeSkus, sku))
+        if (this.formData.rules.scenario.excludeSkus.length + filterSkus.length <= 100) {
+          this.formData.rules.scenario.excludeSkus = concat(this.formData.rules.scenario.excludeSkus, filterSkus)
         } else {
           this.$message.warn('请重新选择活动排除商品，最多支持100个')
         }
@@ -722,7 +721,7 @@
         }
       },
       async handleUpdateCoupon() {
-        const diff = { id: this.formData.id }
+        const diff = { id: this.couponData.id }
         let hasDiff = false
         Object.keys(this.formData).forEach(key => {
           if (isEqual(this.formData[key], this.couponData[key]) === false) {

@@ -4,7 +4,8 @@ import {
   createCouponApi,
   getCouponByIdApi,
   deleteCouponApi,
-  updateCouponApi
+  updateCouponApi,
+  getCouponUsageByIdApi
 } from '@/api/coupons'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
@@ -157,6 +158,8 @@ const coupons = {
       offset: 1,
       limit: 20
     },
+    couponUsage: [],
+    couponUsageTotal: 0
   },
   mutations: {
     resetCoupon(state) {
@@ -179,6 +182,10 @@ const coupons = {
     },
     setQueryData(state, params) {
       state.query = Object.assign(state.query, params)
+    },
+    setCouponUsage(state, data) {
+      state.couponUsage = data.list
+      state.couponUsageTotal = data.total
     }
   },
   actions: {
@@ -189,6 +196,7 @@ const coupons = {
           commit('setCouponList', data)
           resolve(data.list.length)
         }).catch(error => {
+          commit('setCouponList', { list: [], total: 0 })
           reject(error)
         })
       })
@@ -200,6 +208,7 @@ const coupons = {
           commit('setCouponList', data)
           resolve(data.list.length)
         }).catch(error => {
+          commit('setCouponList', { list: [], total: 0 })
           reject(error)
         })
       })
@@ -241,6 +250,18 @@ const coupons = {
           commit('updateCouponInList', params)
           resolve()
         }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    getCouponUsageById({ commit }, params) {
+      return new Promise((resolve, reject) => {
+        getCouponUsageByIdApi(params).then(response => {
+          const data = response.result
+          commit('setCouponUsage', data)
+          resolve(data.list.length)
+        }).catch(error => {
+          commit('setCouponUsage', { list: [], total: 0 })
           reject(error)
         })
       })

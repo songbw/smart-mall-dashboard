@@ -47,3 +47,11 @@ export function deleteCouponApi(params) {
     params
   })
 }
+
+export function getCouponUsageByIdApi(params) {
+  return request({
+    url: '/coupon/usageById',
+    method: 'get',
+    params
+  })
+}

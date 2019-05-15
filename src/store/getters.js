@@ -28,6 +28,8 @@ const getters = {
   allCouponList: state => state.coupons.couponList,
   couponTotalNum: state => state.coupons.totalNum,
   couponQuery: state => state.coupons.query,
-  currentCoupon: state => state.coupons.coupon
+  currentCoupon: state => state.coupons.coupon,
+  couponUsage: state => state.coupons.couponUsage,
+  couponUsageTotal: state => state.coupons.couponUsageTotal
 }
 export default getters

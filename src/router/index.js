@@ -91,7 +91,14 @@ export const constantRouterMap = [
         component: () => import('@/views/coupon/customCoupon'),
         meta: { header: 'Create Coupon', title_key: 'coupon_create_title' },
         hidden: true
-      }
+      },
+      {
+        path: 'couponUsages/:id',
+        name: 'CouponUsages',
+        component: () => import('@/views/coupon/couponUsages'),
+        meta: { header: 'Coupon Usages', title_key: 'coupon_usages_title' },
+        hidden: true
+      },
     ]
   },
   {

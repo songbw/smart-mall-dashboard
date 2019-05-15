@@ -94,6 +94,10 @@
                                 icon="el-icon-edit">
                 修改
               </el-dropdown-item>
+              <el-dropdown-item :command="`usage:${scope.$index}`" :disabled="scope.row.status === 1"
+                                icon="el-icon-collection">
+                记录
+              </el-dropdown-item>
               <el-dropdown-item :command="`stop:${scope.$index}`" :disabled="scope.row.status !== 2"
                                 icon="el-icon-sold-out" divided>
                 下线
@@ -315,6 +319,12 @@
           params: { id: this.couponData[index].id, readOnly: true }
         })
       },
+      handleViewUsageCoupon(index) {
+        this.$router.push({
+          name: 'CouponUsages',
+          params: { id: this.couponData[index].id }
+        })
+      },
       async handleStopCoupon(index) {
         try {
           await this.$confirm('下线此优惠券将导致活动停止，请确认是否要继续？', '警告', {
@@ -354,6 +364,9 @@
             break
           case 'edit':
             this.handleEditCoupon(index)
+            break
+          case 'usage':
+            this.handleViewUsageCoupon(index)
             break
           case 'stop':
             this.handleStopCoupon(index)
