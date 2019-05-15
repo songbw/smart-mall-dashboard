@@ -703,9 +703,9 @@
         const now = moment()
         const startDate = moment(data.releaseStartDate)
         if (startDate.isBefore(now)) {
-          data.status = 1
-        } else if (startDate.isAfter(now)) {
           data.status = 2
+        } else if (startDate.isAfter(now)) {
+          data.status = 1
         }
         if (this.autoCode) {
           data.rules.code = ''
