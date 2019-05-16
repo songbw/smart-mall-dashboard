@@ -61,12 +61,12 @@
       </el-table-column>
       <el-table-column label="领取时间" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.collectedTime }}</span>
+          <span>{{ scope.row.collectedTime | timeFormat }}</span>
         </template>
       </el-table-column>
       <el-table-column label="消费时间" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.consumedTime }}</span>
+          <span>{{ scope.row.consumedTime | timeFormat }}</span>
         </template>
       </el-table-column>
       <el-table-column label="消费订单" align="center">
@@ -84,6 +84,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import moment from 'moment'
   import isEmpty from 'lodash/isEmpty'
   import isString from 'lodash/isString'
   import isNumber from 'lodash/isNumber'
@@ -106,11 +107,20 @@
   export default {
     name: 'CouponUsages',
     components: { pagination },
-    filter: {
+    filters: {
       usageStatus: status => {
         const usage = statusOptions.find(option => status === option.value)
         if (usage) {
           return usage.label
+        } else {
+          return ''
+        }
+      },
+      timeFormat: time => {
+        const format = 'YYYY-MM-DD HH:mm:ss'
+        let momentDate = moment(time)
+        if (momentDate.isValid()) {
+          return momentDate.format(format)
         } else {
           return ''
         }

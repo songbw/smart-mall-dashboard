@@ -1,6 +1,6 @@
 <template>
   <el-form v-loading="allCategoriesInLoading" :inline="true" style="margin-bottom: 10px">
-    <el-form-item :label="$t('product_table_category_title')">
+    <el-form-item>
       <el-select v-model="firstCategoryValue" clearable placeholder="选择一级类别" :disabled="viewOnly"
                  @change="handleFirstCategoryChanged">
         <el-option

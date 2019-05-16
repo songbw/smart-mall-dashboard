@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getCouponsApi(params) {
   return request({
-    url: '/coupon/find',
+    url: '/adminCoupon/find',
     method: 'get',
     params
   })
@@ -10,7 +10,7 @@ export function getCouponsApi(params) {
 
 export function searchCouponsApi(params) {
   return request({
-    url: '/coupon/search',
+    url: '/adminCoupon/search',
     method: 'post',
     data: { ...params }
   })
@@ -18,7 +18,7 @@ export function searchCouponsApi(params) {
 
 export function getCouponByIdApi(params) {
   return request({
-    url: '/coupon/findById',
+    url: '/adminCoupon/findById',
     method: 'get',
     params
   })
@@ -26,7 +26,7 @@ export function getCouponByIdApi(params) {
 
 export function createCouponApi(params) {
   return request({
-    url: '/coupon/create',
+    url: '/adminCoupon/create',
     method: 'post',
     data: { ...params }
   })
@@ -34,7 +34,7 @@ export function createCouponApi(params) {
 
 export function updateCouponApi(params) {
   return request({
-    url: '/coupon/update',
+    url: '/adminCoupon/update',
     method: 'post',
     data: { ...params }
   })
@@ -42,7 +42,7 @@ export function updateCouponApi(params) {
 
 export function deleteCouponApi(params) {
   return request({
-    url: '/coupon/delete',
+    url: '/adminCoupon/delete',
     method: 'delete',
     params
   })
@@ -50,8 +50,16 @@ export function deleteCouponApi(params) {
 
 export function getCouponUsageByIdApi(params) {
   return request({
-    url: '/coupon/usageById',
+    url: '/adminCoupon/usageById',
     method: 'get',
     params
+  })
+}
+
+export function batchUserCodeByIdApi(params) {
+  return request({
+    url: '/adminCoupon/batchCode',
+    method: 'post',
+    data: { ...params }
   })
 }

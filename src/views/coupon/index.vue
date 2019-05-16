@@ -1,11 +1,11 @@
 <template>
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="名称">
+      <el-form-item label="名称" class="form-item">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="queryStatus" style="width: 90px">
+      <el-form-item label="状态" class="form-item">
+        <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -13,13 +13,15 @@
             :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="开始时间">
+    </el-form>
+    <el-form :inline="true" :model="queryData">
+      <el-form-item label="开始时间" class="form-item">
         <el-date-picker v-model="queryStartDate" type="date" value-format="yyyy-MM-dd"
-                        placeholder="选择开始日期" style="width: 150px" />
+                        placeholder="选择开始日期" />
       </el-form-item>
-      <el-form-item label="结束时间">
+      <el-form-item label="结束时间" class="form-item">
         <el-date-picker v-model="queryEndDate" type="date" value-format="yyyy-MM-dd"
-                        placeholder="选择结束日期" style="width: 150px" />
+                        placeholder="选择结束日期" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getCouponData">
@@ -48,6 +50,11 @@
       <el-table-column label="名称" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="供应商" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.supplierMerchantName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="总量" align="center" width="100">
@@ -381,6 +388,10 @@
 </script>
 
 <style scoped>
+  .form-item {
+    width: 300px;
+  }
+
   .ops-button-group {
     margin: 10px 0;
   }

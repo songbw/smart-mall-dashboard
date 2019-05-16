@@ -5,7 +5,8 @@ import {
   getCouponByIdApi,
   deleteCouponApi,
   updateCouponApi,
-  getCouponUsageByIdApi
+  getCouponUsageByIdApi,
+  batchUserCodeByIdApi
 } from '@/api/coupons'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
@@ -262,6 +263,15 @@ const coupons = {
           resolve(data.list.length)
         }).catch(error => {
           commit('setCouponUsage', { list: [], total: 0 })
+          reject(error)
+        })
+      })
+    },
+    batchUserCodeById({ commit }, params) {
+      return new Promise((resolve, reject) => {
+        batchUserCodeByIdApi(params).then(response => {
+          resolve()
+        }).catch(error => {
           reject(error)
         })
       })
