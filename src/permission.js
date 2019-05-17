@@ -2,7 +2,7 @@ import router from './router'
 import store from './store'
 import NProgress from 'nprogress' // Progress 进度条
 import 'nprogress/nprogress.css' // Progress 进度条样式
-import { getToken } from '@/utils/cookie'
+import { getToken, getUserName } from '@/utils/cookie'
 
 const whiteList = ['/user/login', '/pageDisplay'] // 不重定向白名单
 const goThrough = false
@@ -24,7 +24,7 @@ router.beforeEach((to, from, next) => {
 
   NProgress.start()
 
-  const username = store.getters.username
+  const username = getUserName() || store.getters.username
   if (getToken() && username) {
     if (to.path === '/user/login') {
       next({ path: '/' })

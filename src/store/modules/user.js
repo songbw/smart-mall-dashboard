@@ -1,12 +1,15 @@
 import { getInfo, login } from '@/api/login'
-import { getToken, removeToken, setToken } from '@/utils/cookie'
 import { userLogin } from '@/api/userLogin'
 import { getUserInfo, userLogout } from '@/api/users'
+import {
+  getToken, removeToken, setToken,
+  getUserName, setUserName, removeUserName
+} from '@/utils/cookie'
 
 const user = {
   state: {
     token: getToken(),
-    username: '',
+    username: getUserName(),
     name: '',
     avatar: '',
     roles: []
@@ -38,6 +41,7 @@ const user = {
         login(username, userInfo.password).then(response => {
           const data = response.data
           setToken(data.token)
+          setUserName(username)
           commit('SET_USERNAME', username)
           commit('SET_TOKEN', data.token)
           resolve()
@@ -50,12 +54,14 @@ const user = {
     RefreshToken({ commit }, token) {
       return new Promise(resolve => {
         commit('SET_TOKEN', token)
+        setToken(token)
         resolve()
       })
     },
     DelToken({ commit }) {
       return new Promise(resolve => {
         commit('SET_TOKEN', '')
+        setToken('')
         resolve()
       })
     },
@@ -76,6 +82,7 @@ const user = {
           const username = userInfo.username.trim()
           const headToken = response.headers.authorization
           setToken(headToken)
+          setUserName(username)
           commit('SET_USERNAME', username)
           commit('SET_TOKEN', headToken)
           // console.log('=== UserLogin promise resolve ' + username + ' Token: ' + headToken)
@@ -106,6 +113,7 @@ const user = {
           commit('SET_USERNAME', '')
           commit('SET_TOKEN', '')
           removeToken()
+          removeUserName()
           resolve()
         }).catch(error => {
           reject(error)
@@ -118,6 +126,7 @@ const user = {
       return new Promise(resolve => {
         commit('SET_TOKEN', '')
         removeToken()
+        removeUserName()
         resolve()
       })
     }
