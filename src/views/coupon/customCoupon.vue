@@ -28,7 +28,7 @@
         </div>
       </el-form-item>
       <el-form-item label="发放总数" required>
-        <span v-if="viewOnly">{{ formData.releaseTotal }}</span>
+        <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
         <el-input-number v-else v-model="formData.releaseTotal" :min="1" :max="1000000" />
       </el-form-item>
       <el-form-item label="有效日期" required>
@@ -192,12 +192,6 @@
         <span v-if="viewOnly">{{ formData.rules.collect.points }}</span>
         <el-input-number v-else v-model="formData.rules.collect.points" :min="0" />
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.collect.type === 4" label="用户券码">
-        <div v-if="createCoupon">
-          <el-checkbox v-model="batchUserCode">自动批量生成用户券码</el-checkbox>
-          <el-button v-if="!batchUserCode" type="primary">导入用户券码</el-button>
-        </div>
-      </el-form-item>
       <el-form-item label="可用商品范围" required>
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
         <el-select v-else v-model="formData.rules.scenario.type">
@@ -307,108 +301,46 @@
   import CouponGoods from './couponGoods'
   import CouponCategory from './couponCategory'
   import ImageUpload from '@/components/Goods/ImageUpload'
+  import {
+    couponAppScopes,
+    couponTypeOptions,
+    couponCollectOptions,
+    couponScenarioOptions,
+    couponTagOptions
+  } from './couponConstants'
 
   export default {
     name: 'CustomCoupon',
     components: { CouponGoods, CouponCategory, ImageUpload },
     filters: {
       couponTypeFilter: type => {
-        switch (type) {
-          case 0:
-            return '满减券'
-          case 1:
-            return '代金券'
-          case 2:
-            return '折扣券'
-        }
+        const item = couponTypeOptions.find(coupon => coupon.value === type)
+        return item ? item.label : ''
       },
       couponCollectFilter: type => {
-        switch (type) {
-          case 1:
-            return '主动领取'
-          case 2:
-            return '主动发放'
-          case 3:
-            return '积分兑换'
-        }
+        const item = couponCollectOptions.find(coupon => coupon.value === type)
+        return item ? item.label : ''
       },
       couponScenarioFilter: type => {
-        switch (type) {
-          case 1:
-            return '特定商品类'
-          case 2:
-            return '全场类'
-          case 3:
-            return '特定类别类'
-        }
+        const item = couponScenarioOptions.find(coupon => coupon.value === type)
+        return item ? item.label : ''
       }
     },
     data() {
       return {
-        appScopes: [{
-          id: '20190001',
-          name: '无锡智慧城市',
-        }, {
-          id: '20190002',
-          name: '北部湾智慧城市'
-        }],
-        typeOptions: [{
-          value: 0,
-          label: '满减券'
-        }, {
-          value: 1,
-          label: '代金券'
-        }, {
-          value: 2,
-          label: '折扣券'
-        }, {
-          value: 3,
-          label: '服务券'
-        }],
-        collectOptions: [{
-          value: 1,
-          label: '主动领取'
-        }, {
-          value: 2,
-          label: '主动发放'
-        }, {
-          value: 3,
-          label: '积分兑换'
-        }, {
-          value: 4,
-          label: '人工分配'
-        }],
-        scenarioOptions: [{
-          value: 1,
-          label: '特定商品类'
-        }, {
-          value: 2,
-          label: '全场类'
-        }, {
-          value: 3,
-          label: '特定类别类'
-        }, {
-          value: 4,
-          label: '特定服务类'
-        }],
-        tagOptions: [{
-          value: 1,
-          label: '凤巢精选'
-        }, {
-          value: 2,
-          label: '凤巢推荐'
-        }, {
-          value: 3,
-          label: '会员专享'
-        }],
+        appScopes: couponAppScopes,
+        typeOptions: couponTypeOptions,
+        collectOptions: couponCollectOptions,
+        scenarioOptions: couponScenarioOptions,
+        tagOptions: couponTagOptions,
         createCoupon: false,
         viewOnly: true,
+        couponDataLoaded: false,
         couponId: -1,
         inSubmitting: false,
         checkAllScopes: false,
         isScopesIndeterminate: true,
         autoCode: true,
-        batchUserCode: true,
         tagInputVisible: false,
         tagInputValue: '',
         tagSelected: null,
@@ -582,6 +514,10 @@
             }]
           }
         }
+      },
+      isManualCollect() {
+        // 优惠券的领取方式为人工分配，需要批量生成或导入
+        return this.couponDataLoaded ? this.couponData.rules.collect.type === 4 : false
       }
     },
     created() {
@@ -669,6 +605,7 @@
         try {
           await this.$store.dispatch('getCouponById', { id: this.couponId })
           this.backupCouponData()
+          this.couponDataLoaded = true
         } catch (e) {
           this.$log.warn('Get coupon error:' + e)
         }
@@ -727,7 +664,7 @@
       handleDeleteCategory(index) {
         this.formData.rules.scenario.categories.splice(index, 1)
       },
-      amendScenarioRules(data) {
+      reviseScenarioRules(data) {
         if (data.hasOwnProperty('rules') && data.rules.hasOwnProperty('scenario')) {
           switch (data.rules.scenario.type) {
             case 1: //特定商品类
@@ -750,26 +687,47 @@
           }
         }
       },
+      reviseCouponStatus(data) {
+        if (data.hasOwnProperty('rules') &&
+          data.rules.hasOwnProperty('collect') &&
+          data.rules.collect.hasOwnProperty('type')) {
+          if (data.rules.collect.type === 4) { //领取方式为人工分配，状态应为‘待分配’
+            data.status = 4
+          }
+        }
+        if (data.hasOwnProperty('status') &&
+          data.status !== 4 &&
+          data.hasOwnProperty('releaseStartDate')) {
+          const now = moment()
+          const startDate = moment(data.releaseStartDate)
+          if (startDate.isBefore(now)) {
+            data.status = 2
+          } else if (startDate.isAfter(now)) {
+            data.status = 1
+          }
+        }
+      },
       async handleCreateCoupon() {
         const data = {}
         merge(data, this.formData)
-        data.supplierMerchantId = 0
-        data.supplierMerchantName = ''
-        const now = moment()
-        const startDate = moment(data.releaseStartDate)
-        if (startDate.isBefore(now)) {
-          data.status = 2
-        } else if (startDate.isAfter(now)) {
-          data.status = 1
-        }
+        data.supplierMerchantId = 8001
+        data.supplierMerchantName = '凤巢科技'
         if (this.autoCode) {
           data.rules.code = ''
         }
-        this.amendScenarioRules(data)
+        this.reviseCouponStatus(data)
+        this.reviseScenarioRules(data)
         this.inSubmitting = true
         try {
-          await this.$store.dispatch('createCoupon', data)
-          this.$router.go(-1)
+          const id = await this.$store.dispatch('createCoupon', data)
+          if (data.rules.collect.type === 4) {
+            this.$router.replace({
+              name: 'CouponUsages',
+              params: { id }
+            })
+          } else {
+            this.$router.go(-1)
+          }
         } catch (e) {
           this.$log.warn('Create coupon:' + e)
         } finally {
@@ -795,7 +753,8 @@
           }
         })
         if (hasDiff) {
-          this.amendScenarioRules(diff)
+          this.reviseCouponStatus(diff)
+          this.reviseScenarioRules(diff)
           try {
             await this.$store.dispatch('updateCoupon', diff)
             this.$router.go(-1)
@@ -816,16 +775,12 @@
           const valid = await this.$refs['couponForm'].validate()
           if (valid) {
             if (this.formData.rules.collect.type === 4) {
-              if (this.batchUserCode) {
-                await this.$confirm('此优惠券的领取方式为人工分配，需要提前批量生成用户券码。是否继续？', '提示', {
-                  confirmButtonText: '确定',
-                  cancelButtonText: '取消',
-                  type: 'info'
-                })
-                this.createOrUpdateCoupon()
-              } else {
-                this.$message.warning('需要导入用户券码，稍后提供支持！')
-              }
+              await this.$confirm('此优惠券的领取方式为人工分配，需要提前批量生成或导入用户券码。是否继续？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'info'
+              })
+              this.createOrUpdateCoupon()
             } else {
               this.createOrUpdateCoupon()
             }

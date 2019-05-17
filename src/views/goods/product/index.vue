@@ -473,8 +473,7 @@
         import('@/utils/exportToExcel').then(excel => {
           const tHeader = ['skuID']
           const filterVal = ['skuid']
-          const list = dataList
-          const data = this.formatJson(filterVal, list)
+          const data = this.formatJson(filterVal, dataList)
           excel.export_json_to_excel({
             header: tHeader,
             data,

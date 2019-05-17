@@ -217,7 +217,7 @@ const coupons = {
     createCoupon({ commit }, params) {
       return new Promise((resolve, reject) => {
         createCouponApi(params).then(response => {
-          const id = response.id
+          const id = response.couponId
           commit('setCouponData', { id })
           resolve(id)
         }).catch(error => {

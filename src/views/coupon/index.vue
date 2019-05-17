@@ -97,15 +97,17 @@
                                 icon="el-icon-view" divided>
                 查看
               </el-dropdown-item>
-              <el-dropdown-item :command="`edit:${scope.$index}`" :disabled="scope.row.status !== 1"
+              <el-dropdown-item :command="`edit:${scope.$index}`"
+                                :disabled="scope.row.status === 2 || scope.row.status === 3"
                                 icon="el-icon-edit">
                 修改
               </el-dropdown-item>
-              <el-dropdown-item :command="`usage:${scope.$index}`" :disabled="scope.row.status === 1"
+              <el-dropdown-item :command="`usage:${scope.$index}`"
                                 icon="el-icon-collection">
                 记录
               </el-dropdown-item>
-              <el-dropdown-item :command="`stop:${scope.$index}`" :disabled="scope.row.status !== 2"
+              <el-dropdown-item :command="`stop:${scope.$index}`"
+                                :disabled="scope.row.status === 1 || scope.row.status === 3"
                                 icon="el-icon-sold-out" divided>
                 下线
               </el-dropdown-item>
@@ -129,20 +131,15 @@
   import { mapGetters } from 'vuex'
   import moment from 'moment'
   import pagination from '@/components/Pagination'
+  import { couponStatus } from './couponConstants'
 
   export default {
     name: "Coupon",
     components: { pagination },
     filters: {
       couponStatus: (status) => {
-        switch (status) {
-          case 1:
-            return '未开始'
-          case 2:
-            return '已发布'
-          case 3:
-            return '已下线'
-        }
+        const item = couponStatus.find(coupon => coupon.value === status)
+        return item ? item.label : ''
       }
     },
     data() {
@@ -150,16 +147,7 @@
         statusOptions: [{
           value: 0,
           label: '全部'
-        }, {
-          value: 1,
-          label: '未开始'
-        }, {
-          value: 2,
-          label: '已发布'
-        }, {
-          value: 3,
-          label: '已下线'
-        }],
+        }].concat(couponStatus),
         dataLoading: false,
       }
     },

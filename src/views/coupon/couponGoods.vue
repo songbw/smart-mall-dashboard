@@ -104,7 +104,8 @@
         selectedItems: [],
         skuPageList: [],
         offset: 1,
-        limit: 20
+        limit: 20,
+        pageMounted: true,
       }
     },
     watch: {
@@ -113,7 +114,11 @@
       }
     },
     mounted() {
+      this.pageMounted = true
       this.handleFetchSkuInfo(this.skuIdList)
+    },
+    beforeDestroy() {
+      this.pageMounted = false
     },
     methods: {
       isProductValid(product) {
@@ -133,6 +138,9 @@
           this.dataLoading = true
           for (let skuID of fetchList) {
             try {
+              if (!this.pageMounted) {
+                return
+              }
               const response = await searchProductInfo({ offset: 1, limit: 10, skuid: skuID })
               const data = response.result
               if (data.total > 0) {
