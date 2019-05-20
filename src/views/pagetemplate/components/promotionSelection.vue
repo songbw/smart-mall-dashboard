@@ -20,15 +20,6 @@
             :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="优惠方式">
-        <el-select v-model="query.type" style="width: 100px">
-          <el-option
-            v-for="item in typeOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value" />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getFilterData">
           {{ $t('product_search_title') }}
@@ -39,7 +30,7 @@
       ref="dialogPromotionTable"
       :data="promotionsData"
       style="width: 100%"
-      max-height="250"
+      height="250"
       highlight-current-row
       @current-change="handleDialogSelectionChange">
       <el-table-column label="已选" align="center" width="100px">

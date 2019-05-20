@@ -14,18 +14,11 @@
           </el-button>
         </div>
         <div class="header-ops-container">
-          <span style="width: 100px;text-align: end">优惠类型：</span>
-          <el-select :disabled="canChangeType === false" v-model="promotionType" style="width: 90px">
-            <el-option
-              v-for="item in typeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value" />
-          </el-select>
+          <span style="width: 100px;text-align: end">优惠价格：</span>
           <el-input v-model="promotionValue" style="width: 100px" />
           <el-button :disabled="selectedItems.length === 0" type="primary" style="margin: 0 5px"
                      @click="handleSetDiscount">
-            批量设置
+            设置已选商品
           </el-button>
         </div>
         <div class="header-ops-container">
