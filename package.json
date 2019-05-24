@@ -16,7 +16,7 @@
     "js-cookie": "^2.2.0",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "nanoid": "^2.0.2",
+    "nanoid": "^2.0.3",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",
     "vue": "^2.6.10",
@@ -29,7 +29,7 @@
     "vue-scrollto": "^2.15.0",
     "vue-sticky-directive": "^0.0.8",
     "vuejs-logger": "^1.5.3",
-    "vueperslides": "^1.17.4",
+    "vueperslides": "^1.18.0",
     "vuex": "^3.1.1",
     "xlsx": "^0.14.3"
   },
