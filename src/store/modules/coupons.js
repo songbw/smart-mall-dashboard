@@ -6,7 +6,11 @@ import {
   deleteCouponApi,
   updateCouponApi,
   getCouponUsageByIdApi,
-  batchUserCodeByIdApi
+  batchUserCodeByIdApi,
+  createCouponTagApi,
+  getCouponTagsApi,
+  updateCouponTagApi,
+  deleteCouponTagApi
 } from '@/api/coupons'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
@@ -159,6 +163,7 @@ const coupons = {
       offset: 1,
       limit: 20
     },
+    couponTags: [],
     couponUsage: [],
     couponUsageTotal: 0
   },
@@ -167,8 +172,7 @@ const coupons = {
       state.coupon = Object.assign({}, couponTemplate)
     },
     setCouponList(state, data) {
-      state.couponList = data.list
-      state.couponList.forEach(coupon => parseCoupon(coupon))
+      state.couponList = data.list.map(coupon => parseCoupon(coupon))
       state.totalNum = data.total
     },
     updateCouponInList(state, params) {
@@ -187,6 +191,9 @@ const coupons = {
     setCouponUsage(state, data) {
       state.couponUsage = data.list
       state.couponUsageTotal = data.total
+    },
+    setCouponTags(state, data) {
+      state.couponTags = data.list
     }
   },
   actions: {
@@ -275,7 +282,54 @@ const coupons = {
           reject(error)
         })
       })
-    }
+    },
+    createCouponTag({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        createCouponTagApi(params).then(response => {
+          const id = response.tagId
+          const list = state.couponTags.concat([{ id, name: params.name }])
+          commit('setCouponTags', { list })
+          resolve(id)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    getCouponTags({ commit }, params) {
+      return new Promise((resolve, reject) => {
+        getCouponTagsApi(params).then(response => {
+          const data = response.result
+          commit('setCouponTags', data)
+          resolve(data.total)
+        }).catch(error => {
+          commit('setCouponList', { list: [], total: 0 })
+          reject(error)
+        })
+      })
+    },
+    deleteCouponTag({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        deleteCouponTagApi(params).then(() => {
+          const list = state.couponTags.filter(tag => tag.id !== params.id)
+          commit('setCouponTags', { list })
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    updateCouponTag({ commit, state }, params) {
+      return new Promise((resolve, reject) => {
+        updateCouponTagApi(params).then(response => {
+          const list = state.couponTags.map(tag =>
+            tag.id !== params.id ? tag : { id: tag.id, name: params.name })
+          commit('setCouponTags', { list })
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
   }
 }
 

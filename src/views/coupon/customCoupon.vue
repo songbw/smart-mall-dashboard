@@ -84,7 +84,7 @@
       <el-form-item label="优惠券标签">
         <el-tag v-for="tag in formData.tags" :key="tag" :disable-transitions="false" :closable="!viewOnly"
                 @close="handleCloseTag(tag)">
-          {{tag}}
+          {{getCouponTagName(tag)}}
         </el-tag>
         <!--
         <el-input
@@ -99,10 +99,10 @@
                    class="input-new-select"
                    @change="handleTagSelected">
           <el-option
-            v-for="item in tagOptions"
-            :key="item.label"
-            :label="item.label"
-            :value="item.label" />
+            v-for="item in couponTags"
+            :key="item.name"
+            :label="item.name"
+            :value="item.id" />
         </el-select>
         <el-button v-if="!viewOnly && tagInputVisible" class="button-tag" @click="tagInputVisible = false">
           取消
@@ -114,7 +114,7 @@
                       @urlChanged="handleImageUrlChanged" />
       </el-form-item>
       <el-form-item label="优惠券链接" class="form-item" prop="url">
-        <el-input v-model="formData.url" :readonly="viewOnly" />
+        <coupon-url :url="formData.url" :read-only="viewOnly" @urlChanged="handleCouponUrlChanged" />
       </el-form-item>
       <el-form-item label="优惠券描述" prop="description" class="form-item">
         <el-input type="textarea" resize="none" v-model="formData.description" :rows="4" :readonly="viewOnly" />
@@ -300,18 +300,18 @@
   import { validateURL } from '@/utils/validate'
   import CouponGoods from './couponGoods'
   import CouponCategory from './couponCategory'
+  import CouponUrl from './couponUrl'
   import ImageUpload from '@/components/Goods/ImageUpload'
   import {
     couponAppScopes,
     couponTypeOptions,
     couponCollectOptions,
-    couponScenarioOptions,
-    couponTagOptions
+    couponScenarioOptions
   } from './couponConstants'
 
   export default {
     name: 'CustomCoupon',
-    components: { CouponGoods, CouponCategory, ImageUpload },
+    components: { CouponGoods, CouponCategory, ImageUpload, CouponUrl },
     filters: {
       couponTypeFilter: type => {
         const item = couponTypeOptions.find(coupon => coupon.value === type)
@@ -332,7 +332,6 @@
         typeOptions: couponTypeOptions,
         collectOptions: couponCollectOptions,
         scenarioOptions: couponScenarioOptions,
-        tagOptions: couponTagOptions,
         createCoupon: false,
         viewOnly: true,
         couponDataLoaded: false,
@@ -484,7 +483,9 @@
           }],
           url: [{
             required: true, trigger: 'blur', validator: (rule, value, callback) => {
-              if (validateURL(value)) {
+              if (value.startsWith('aggregation://') ||
+                value.startsWith('route://') ||
+                validateURL(value)) {
                 callback()
               } else {
                 callback(new Error('请输入有效的链接地址'))
@@ -499,7 +500,8 @@
         couponData: 'currentCoupon',
         allCategoriesOption: 'allCategoriesData',
         allCategoriesLoaded: 'allCategoriesLoaded',
-        allCategoriesInLoading: 'allCategoriesInLoading'
+        allCategoriesInLoading: 'allCategoriesInLoading',
+        couponTags: 'couponTags'
       }),
       categoryOptions: {
         get() {
@@ -532,9 +534,24 @@
         }
         this.getCouponData()
       }
+      this.getCouponTags()
       this.getAllCategories()
     },
     methods: {
+      getCouponTags() {
+        if (this.couponTags.length === 0) {
+          this.$store.dispatch('getCouponTags', { offset: 1, limit: 100 }).then(count => {
+            this.$log.debug('getCouponTags: ' + count)
+          }).catch(e => {
+            this.$log.warn('getCouponTags: ' + e)
+          }).finally(() => {
+          })
+        }
+      },
+      getCouponTagName(tagId) {
+        const item = this.couponTags.find(tag => tag.id === tagId)
+        return item ? item.name : ''
+      },
       backupCouponData() {
         this.formData.name = this.couponData.name.trim()
         this.formData.releaseStartDate = this.couponData.releaseStartDate.trim()
@@ -833,6 +850,14 @@
         }
         this.tagSelected = null
         this.tagInputVisible = false
+      },
+      handleCouponUrlChanged(data) {
+        this.formData.url = data.url
+        if (data.url.startsWith('route://commodity')) {
+          const skuID = data.url.substring('route://commodity/'.length)
+          this.formData.rules.scenario.type = 1
+          this.formData.rules.scenario.couponSkus = [skuID]
+        }
       }
     }
   }

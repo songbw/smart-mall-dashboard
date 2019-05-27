@@ -30,6 +30,7 @@ const getters = {
   couponQuery: state => state.coupons.query,
   currentCoupon: state => state.coupons.coupon,
   couponUsage: state => state.coupons.couponUsage,
-  couponUsageTotal: state => state.coupons.couponUsageTotal
+  couponUsageTotal: state => state.coupons.couponUsageTotal,
+  couponTags: state => state.coupons.couponTags
 }
 export default getters

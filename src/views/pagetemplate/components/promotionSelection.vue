@@ -133,7 +133,7 @@
           value: 3,
           label: '已结束'
         }],
-        scenarioOptions: [{
+        typeOptions: [{
           value: -1,
           label: '全部'
         }, {

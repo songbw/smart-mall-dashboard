@@ -63,3 +63,34 @@ export function batchUserCodeByIdApi(params) {
     data: { ...params }
   })
 }
+
+export function createCouponTagApi(params) {
+  return request({
+    url: '/adminCouponTag/tags',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function getCouponTagsApi(params) {
+  return request({
+    url: '/adminCouponTag/tags',
+    method: 'get',
+    params
+  })
+}
+
+export function updateCouponTagApi(params) {
+  return request({
+    url: '/adminCouponTag/tags',
+    method: 'put',
+    data: { ...params }
+  })
+}
+
+export function deleteCouponTagApi(params) {
+  return request({
+    url: `/adminCouponTag/tags/${params.id}`,
+    method: 'delete'
+  })
+}

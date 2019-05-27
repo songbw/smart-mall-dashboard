@@ -72,11 +72,26 @@ export const constantRouterMap = [
         component: () => import('@/views/goods/brand/index'),
         meta: { header: 'Brand', icon: 'brand', title_key: 'brand_title' }
       },
+    ]
+  },
+  {
+    path: '/coupons',
+    component: Layout,
+    redirect: '/coupons/couponIndex',
+    name: 'Coupons',
+    meta: { header: 'Coupons', icon: 'coupon', title_key: 'coupon_title' },
+    children: [
       {
         path: 'couponIndex',
         name: 'couponIndex',
         component: () => import('@/views/coupon/index'),
-        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_title' }
+        meta: { header: 'Couon', icon: 'coupon', title_key: 'coupon_list_title' }
+      },
+      {
+        path: 'couponTags',
+        name: 'couponTags',
+        component: () => import('@/views/coupon/couponTags'),
+        meta: { header: 'Couon', icon: 'category', title_key: 'coupon_tag_title' }
       },
       {
         path: 'couponDetail/:id',

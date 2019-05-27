@@ -63,7 +63,7 @@
     },
     data() {
       return {
-        scenarioOptions: [{
+        typeOptions: [{
           value: 'blank',
           label: '无链接'
         }, {

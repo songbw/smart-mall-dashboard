@@ -119,7 +119,7 @@
     },
     data() {
       return {
-        scenarioOptions: [{
+        typeOptions: [{
           value: 0,
           label: '减价'
         }/*, {
