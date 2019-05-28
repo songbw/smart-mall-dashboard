@@ -147,6 +147,7 @@ const parseCoupon = coupon => {
   } else {
     coupon.rules = {}
   }
+  return coupon
 }
 
 const coupons = {
@@ -182,8 +183,8 @@ const coupons = {
       }
     },
     setCouponData(state, params) {
-      parseCoupon(params)
-      state.coupon = Object.assign(state.coupon, params)
+      const coupon = parseCoupon(params)
+      state.coupon = Object.assign(state.coupon, coupon)
     },
     setQueryData(state, params) {
       state.query = Object.assign(state.query, params)

@@ -40,7 +40,6 @@ const app = {
       commit('CLOSE_SIDEBAR', withoutAnimation)
     },
     ToggleDevice({ commit }, device) {
-      commit('TOGGLE_DEVICE', device)
     },
     GetCosUrl: ({ commit }) => {
       return new Promise((resolve, reject) => {
