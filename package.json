@@ -9,9 +9,9 @@
     "serve": "serve -n -d dist"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "echarts": "^4.2.1",
-    "element-ui": "^2.8.2",
+    "element-ui": "^2.9.1",
     "file-saver": "^2.0.2",
     "js-cookie": "^2.2.0",
     "lodash": "^4.17.11",
@@ -29,7 +29,7 @@
     "vue-scrollto": "^2.15.0",
     "vue-sticky-directive": "^0.0.8",
     "vuejs-logger": "^1.5.3",
-    "vueperslides": "^1.18.0",
+    "vueperslides": "^1.19.0",
     "vuex": "^3.1.1",
     "xlsx": "^0.14.3"
   },
@@ -41,9 +41,9 @@
     "babel-plugin-component": "^1.1.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
-    "sass": "^1.20.1",
+    "sass": "^1.20.3",
     "sass-loader": "^7.1.0",
-    "serve": "^11.0.0",
+    "serve": "^11.0.1",
     "svg-sprite-loader": "^4.1.6",
     "vue-template-compiler": "^2.6.10"
   }
