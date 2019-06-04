@@ -79,6 +79,8 @@
   "coupon_detail_title": "优惠券详情",
   "coupon_create_title": "创建优惠券",
   "coupon_usages_title": "领取详情",
+  "group_buying_title": "团购活动",
+  "group_buying_create_title": "创建团购活动",
   "brand_type_all_title": "全部",
   "brand_type_authorized_title": "已授权",
   "brand_type_renewal_title": "待续签",

@@ -31,6 +31,9 @@ const getters = {
   currentCoupon: state => state.coupons.coupon,
   couponUsage: state => state.coupons.couponUsage,
   couponUsageTotal: state => state.coupons.couponUsageTotal,
-  couponTags: state => state.coupons.couponTags
+  couponTags: state => state.coupons.couponTags,
+  groupBuyingCampaignList: state => state.groupBuyings.campaignList,
+  groupBuyingQuery: state => state.groupBuyings.query,
+  groupBuyingCampaignTotalNum: state => state.coupons.totalNum,
 }
 export default getters

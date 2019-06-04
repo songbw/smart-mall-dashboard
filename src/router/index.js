@@ -148,7 +148,20 @@ export const constantRouterMap = [
         component: () => import('@/views/promotionactivity/promotionCreate'),
         meta: { header: 'Promotion Create', title_key: 'promotion_create_title' },
         hidden: true
-      }
+      },
+      {
+        path: 'groupBuyingIndex',
+        name: 'groupBuyingIndex',
+        component: () => import('@/views/groupBuying/index'),
+        meta: { header: 'Group Buying', icon: 'groupbuying', title_key: 'group_buying_title' }
+      },
+      {
+        path: 'createGroupBuying',
+        name: 'CreateGroupBuying',
+        component: () => import('@/views/groupBuying/customCampaign'),
+        meta: { header: 'Create Group Buying', title_key: 'group_buying_create_title' },
+        hidden: true
+      },
     ]
   },
   {
