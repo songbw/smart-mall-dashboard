@@ -102,11 +102,7 @@ const parseCoupon = coupon => {
   } else {
     coupon.excludeDates = []
   }
-  if (!isEmpty(coupon.tags)) {
-    coupon.tags = coupon.tags.filter(tag => !isEmpty(tag)).map(tag => tag.trim())
-  } else {
-    coupon.tags = []
-  }
+
   if (coupon.hasOwnProperty('rules')) {
     if (!isEmpty(coupon.rules.scopes)) {
       coupon.rules.scopes = coupon.rules.scopes.filter(scope => !isEmpty(scope)).map(scope => scope.trim())
@@ -203,7 +199,7 @@ const coupons = {
         getCouponsApi(params).then(response => {
           const data = response.result
           commit('setCouponList', data)
-          resolve(data.list.length)
+          resolve(data)
         }).catch(error => {
           commit('setCouponList', { list: [], total: 0 })
           reject(error)
@@ -301,7 +297,7 @@ const coupons = {
         getCouponTagsApi(params).then(response => {
           const data = response.result
           commit('setCouponTags', data)
-          resolve(data.total)
+          resolve(data)
         }).catch(error => {
           commit('setCouponList', { list: [], total: 0 })
           reject(error)

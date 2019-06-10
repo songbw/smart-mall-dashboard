@@ -22,6 +22,17 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <el-form :inline="true">
+      <el-form-item label="按创建时间排序：">
+        <el-select v-model="queryOrder" @change="onOrderChanged">
+          <el-option
+            v-for="item in orderOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value" />
+        </el-select>
+      </el-form-item>
+    </el-form>
     <div>
       <el-tabs v-model="currentTab" type="card" @tab-click="onGroupChanged">
         <el-tab-pane
@@ -176,6 +187,13 @@
           value: 2,
           label: this.$t('aggregation_table_status_inactive')
         }],
+        orderOptions: [{
+          value: 'asc',
+          label: '升序'
+        }, {
+          value: 'desc',
+          label: '降序'
+        }],
         displayPageId: 0,
         viewDialogVisible: false,
         qrCodeDialogVisible: false,
@@ -229,6 +247,14 @@
         },
         set(value) {
           this.$store.commit('setAggregationQuery', { limit: value })
+        }
+      },
+      queryOrder: {
+        get() {
+          return this.listQuery.order
+        },
+        set(value) {
+          this.$store.commit('setAggregationQuery', { order: value })
         }
       },
       groupTabs: {
@@ -287,7 +313,8 @@
         this.listLoading = true
         const params = {
           offset: this.listQuery.offset,
-          limit: this.listQuery.limit
+          limit: this.listQuery.limit,
+          order: this.listQuery.order
         }
         this.$store.dispatch('getAggregationPages', params).then(() => {
           this.listLoading = false
@@ -299,7 +326,8 @@
       getFilterParams() {
         const params = {
           offset: this.listQuery.offset,
-          limit: this.listQuery.limit
+          limit: this.listQuery.limit,
+          order: this.listQuery.order
         }
         let filter = false
         if (this.listQuery.name && this.listQuery.name.trim()) {
@@ -475,6 +503,9 @@
         if (this.queryGroupId !== group.name) {
           this.getListData()
         }
+      },
+      onOrderChanged(order) {
+        this.getListData()
       }
     }
   }

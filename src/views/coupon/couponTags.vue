@@ -66,9 +66,8 @@
       getCouponTags() {
         if (this.couponTags.length === 0) {
           this.listLoading = true
-          this.$store.dispatch('getCouponTags', { offset: this.queryOffset, limit: this.queryLimit }).then(count => {
-            this.$log.debug('getCouponTags: ' + count)
-            this.total = count
+          this.$store.dispatch('getCouponTags', { offset: this.queryOffset, limit: this.queryLimit }).then(data => {
+            this.total = data.total
           }).catch(e => {
             this.$log.warn('getCouponTags: ' + e)
           }).finally(() => {

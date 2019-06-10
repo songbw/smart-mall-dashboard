@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form v-loading="creatingPage" ref="ruleForm" :model="pageForm"
+    <el-form v-loading="creatingPage" ref="ruleForm" :model="pageForm" :rules="formRules"
              label-position="right" label-width="120px" status-icon>
       <el-form-item :label="$t('aggregation_creation_form_name_title')" prop="name">
         <el-input v-model="pageName" />
@@ -53,6 +53,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import isEmpty from 'lodash/isEmpty'
   import {
     searchAggregationPagesApi
   } from '@/api/aggregations'
@@ -71,6 +72,26 @@
         },
         groupDialogVisible: false,
         groupSelectId: null,
+        formRules: {
+          name: [{
+            required: true, trigger: 'change', validator: (rule, value, callback) => {
+              if (isEmpty(this.pageName)) {
+                callback(new Error('请输入有效的名称'))
+              } else {
+                callback()
+              }
+            }
+          }],
+          effectiveDate: [{
+            required: true, trigger: 'blur', validator: (rule, value, callback) => {
+              if (isEmpty(this.pageDate)) {
+                callback(new Error('请选择生效日期'))
+              } else {
+                callback()
+              }
+            }
+          }]
+        }
       }
     },
     computed: {

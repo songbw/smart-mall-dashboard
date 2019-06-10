@@ -35,7 +35,8 @@ const aggregations = {
       status: -1,
       homePage: false,
       offset: 1,
-      limit: 20
+      limit: 20,
+      order: 'desc'
     },
     aggregationGroups: [],
     aggregationGroupTotalNum: 0,
@@ -238,6 +239,9 @@ const aggregations = {
       }
       if (data.hasOwnProperty('limit')) {
         state.aggregationQuery.limit = data.limit
+      }
+      if (data.hasOwnProperty('order')) {
+        state.aggregationQuery.order = data.order
       }
     },
     setAggregationGroups(state, data) {

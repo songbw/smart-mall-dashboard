@@ -5,7 +5,7 @@ import 'nprogress/nprogress.css' // Progress 进度条样式
 import { getToken, getUserName } from '@/utils/cookie'
 
 const whiteList = ['/user/login', '/pageDisplay'] // 不重定向白名单
-const goThrough = true
+const goThrough = false
 
 router.beforeEach((to, from, next) => {
   if (goThrough) {

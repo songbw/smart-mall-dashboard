@@ -82,19 +82,12 @@
         </el-select>
       </el-form-item>
       <el-form-item label="优惠券标签">
-        <el-tag v-for="tag in formData.tags" :key="tag" :disable-transitions="false" :closable="!viewOnly"
-                @close="handleCloseTag(tag)">
-          {{getCouponTagName(tag)}}
-        </el-tag>
-        <!--
-        <el-input
-          class="input-new-tag"
-          v-if="tagInputVisible && !viewOnly"
-          v-model="tagInputValue"
-          ref="saveTagInput"
-          @keyup.enter.native="handleTagInputConfirm"
-        />
-        -->
+        <div v-if="couponTags.length > 0">
+          <el-tag v-for="tag in formData.tags" :key="tag" :disable-transitions="false" :closable="!viewOnly"
+                  @close="handleCloseTag(tag)">
+            {{getCouponTagName(tag)}}
+          </el-tag>
+        </div>
         <el-select v-if="!viewOnly && tagInputVisible" v-model="tagSelected" placeholder="选择标签"
                    class="input-new-select"
                    @change="handleTagSelected">
@@ -174,9 +167,19 @@
         <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣" required>
-        <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
-        <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.discountRatio"
-                         :precision="2" :min="0" :step="0.05" :max="1" />
+        <div style="display: flex; justify-content: start">
+          <span style="margin-right: 10px">满</span>
+          <el-form-item>
+            <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.fullPrice }}</span>
+            <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.fullPrice" :min="0" />
+          </el-form-item>
+          <span style="margin: 0 10px">元 可用折扣：</span>
+          <el-form-item>
+            <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
+            <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.discountRatio"
+                             :precision="2" :min="0" :step="0.05" :max="1" />
+          </el-form-item>
+        </div>
       </el-form-item>
       <el-form-item label="领取方式">
         <span v-if="viewOnly">{{ formData.rules.collect.type | couponCollectFilter }}</span>
@@ -268,10 +271,13 @@
               </span>
             </span>
             <span v-else-if="formData.rules.couponRules.type === 2">
+              <span>满</span>
+              <span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>元
               <span>折扣为
                 <span class="data-text">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
               </span>
             </span>
+            <span style="margin-left: 10px; font-size: 12px">说明：满额数为0元表示不限制总额数</span>
           </li>
         </ul>
       </el-form-item>
@@ -340,6 +346,7 @@
         checkAllScopes: false,
         isScopesIndeterminate: true,
         autoCode: true,
+        couponTags: [],
         tagInputVisible: false,
         tagInputValue: '',
         tagSelected: null,
@@ -367,6 +374,7 @@
                 reducePrice: 0
               },
               discountCoupon: {
+                fullPrice: 0,
                 discountRatio: 1
               },
               cashCoupon: {
@@ -500,8 +508,7 @@
         couponData: 'currentCoupon',
         allCategoriesOption: 'allCategoriesData',
         allCategoriesLoaded: 'allCategoriesLoaded',
-        allCategoriesInLoading: 'allCategoriesInLoading',
-        couponTags: 'couponTags'
+        allCategoriesInLoading: 'allCategoriesInLoading'
       }),
       categoryOptions: {
         get() {
@@ -538,14 +545,14 @@
       this.getAllCategories()
     },
     methods: {
-      getCouponTags() {
+      async getCouponTags() {
         if (this.couponTags.length === 0) {
-          this.$store.dispatch('getCouponTags', { offset: 1, limit: 100 }).then(count => {
-            this.$log.debug('getCouponTags: ' + count)
-          }).catch(e => {
+          try {
+            const data = await this.$store.dispatch('getCouponTags', { offset: 1, limit: 100 })
+            this.couponTags = data.list
+          } catch (e) {
             this.$log.warn('getCouponTags: ' + e)
-          }).finally(() => {
-          })
+          }
         }
       },
       getCouponTagName(tagId) {
@@ -567,7 +574,7 @@
         }
         this.formData.category = this.couponData.category
         if (!isEmpty(this.couponData.tags)) {
-          this.couponData.tags.forEach(tag => this.formData.tags.push(tag.trim()))
+          this.couponData.tags.forEach(tag => this.formData.tags.push(tag))
         }
         if (this.couponData.imageUrl) {
           this.formData.imageUrl = this.couponData.imageUrl.trim()
@@ -594,6 +601,8 @@
         if (this.couponData.rules.couponRules.hasOwnProperty('discountCoupon')) {
           this.formData.rules.couponRules.discountCoupon.discountRatio =
             this.couponData.rules.couponRules.discountCoupon.discountRatio
+          this.formData.rules.couponRules.discountCoupon.fullPrice =
+            this.couponData.rules.couponRules.discountCoupon.fullPrice
         }
         if (this.couponData.rules.couponRules.hasOwnProperty('cashCoupon')) {
           this.formData.rules.couponRules.cashCoupon.amount =
