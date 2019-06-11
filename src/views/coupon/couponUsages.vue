@@ -56,7 +56,7 @@
       border fit stripe highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="用户券码" align="center">
+      <el-table-column label="用户券码" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.userCouponCode }}</span>
         </template>
