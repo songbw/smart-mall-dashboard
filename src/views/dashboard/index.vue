@@ -1,30 +1,30 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">name: {{ name }}</div>
+    <component :is="roleDashboard" />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
+import PageLoading from '@/components/PageLoading'
+import adminDashboard from './admin'
+import vendorDashboard from './vendor'
 
 export default {
   name: 'Dashboard',
+  components: { PageLoading, adminDashboard, vendorDashboard },
   computed: {
     ...mapGetters([
-      'name'
-    ])
+      'userRole'
+    ]),
+    roleDashboard() {
+      if (isEmpty(this.userRole)) {
+        return 'PageLoading'
+      } else {
+        return this.userRole === 'admin' ? 'adminDashboard' : 'vendorDashboard'
+      }
+    }
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.dashboard {
-  &-container {
-    margin: 30px;
-  }
-  &-text {
-    font-size: 30px;
-    line-height: 46px;
-  }
-}
-</style>

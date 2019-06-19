@@ -1,60 +1,56 @@
 import router from './router'
 import store from './store'
-import { Message } from 'element-ui'
-import NProgress from 'nprogress' // progress bar
-import 'nprogress/nprogress.css' // progress bar style
-import { getToken } from '@/utils/auth' // get token from cookie
-import getPageTitle from '@/utils/get-page-title'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+import localForage from 'localforage'
+import isEmpty from 'lodash/isEmpty'
+import {
+  storage_key_token,
+  storage_key_name,
+  storage_key_role
+} from '@/utils/constants'
 
-NProgress.configure({ showSpinner: false }) // NProgress Configuration
-
-const whiteList = ['/login'] // no redirect whitelist
+const goThrough = false
 
 router.beforeEach(async(to, from, next) => {
-  // start progress bar
-  NProgress.start()
+  if (goThrough) {
+    next()
+    return
+  }
 
-  // set page title
-  document.title = getPageTitle(to.meta.title)
-
-  // determine whether the user has logged in
-  const hasToken = getToken()
-
-  if (hasToken) {
-    if (to.path === '/login') {
-      // if is logged in, redirect to the home page
-      next({ path: '/' })
-      NProgress.done()
+  const pass = to.matched.some(record => {
+    if (record.meta.hasOwnProperty('requiresAuth')) {
+      return !record.meta.requiresAuth
     } else {
-      const hasGetUserInfo = store.getters.name
-      if (hasGetUserInfo) {
-        next()
-      } else {
-        try {
-          // get user info
-          await store.dispatch('user/getInfo')
-
-          next()
-        } catch (error) {
-          // remove token and go to login page to re-login
-          await store.dispatch('user/resetToken')
-          Message.error(error || 'Has Error')
-          next(`/login?redirect=${to.path}`)
-          NProgress.done()
-        }
-      }
+      return false
     }
-  } else {
-    /* has no token*/
+  })
 
-    if (whiteList.indexOf(to.path) !== -1) {
-      // in the free login whitelist, go directly
+  console.log(`Route: path=${to.path} with pass through ${pass}`)
+
+  NProgress.start()
+  try {
+    if (pass) {
       next()
     } else {
-      // other pages that do not have permission to access are redirected to the login page.
-      next(`/login?redirect=${to.path}`)
-      NProgress.done()
+      const username = await localForage.getItem(storage_key_name)
+      const token = await localForage.getItem(storage_key_token)
+      const role = await localForage.getItem(storage_key_role)
+      if (isEmpty(username) || isEmpty(token) || isEmpty(role)) {
+        next('/login')
+      } else {
+        next()
+      }
     }
+  } catch (e) {
+    console.warn(`router.beforeEach:${e}`)
+    store.dispatch('user/resetUser').then((_) => {
+      console.log('Reset user state')
+    }).catch(e => {
+      console.log('Reset user token with error:' + e)
+    }).finally(() => {
+      next('/login')
+    })
   }
 })
 

@@ -1,8 +1,8 @@
 {
-  "name": "vue-admin-template",
-  "version": "4.2.1",
-  "description": "A vue admin template with Element UI & axios & iconfont & permission control & lint",
-  "author": "Pan <panfree23@gmail.com>",
+  "name": "small-mall-dashboard",
+  "version": "2.0.1",
+  "description": "A vue admin project for smart mall.",
+  "author": "David",
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",
@@ -15,10 +15,15 @@
     "axios": "^0.19.0",
     "element-ui": "^2.9.1",
     "js-cookie": "^2.2.0",
+    "localforage": "^1.7.3",
+    "lodash": "^4.17.11",
+    "moment": "^2.24.0",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",
     "path-to-regexp": "^3.0.0",
     "vue": "^2.6.10",
+    "vue-axios": "^2.1.4",
+    "vue-count-to": "^1.0.13",
     "vue-router": "^3.0.6",
     "vuex": "^3.1.1"
   },

@@ -1,11 +1,23 @@
-import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import localForage from 'localforage'
+import {
+  loginApi,
+  registerApi,
+  getVerificationCodeApi,
+  getRoleApi,
+  logoutApi
+} from '@/api/auth'
+
+import {
+  storage_key_token,
+  storage_key_name,
+  storage_key_role
+} from '@/utils/constants'
 
 const state = {
-  token: getToken(),
+  token: '',
   name: '',
-  avatar: ''
+  phone: '',
+  role: ''
 }
 
 const mutations = {
@@ -15,69 +27,76 @@ const mutations = {
   SET_NAME: (state, name) => {
     state.name = name
   },
-  SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar
+  SET_PHONE: (state, phone) => {
+    state.phone = phone
+  },
+  SET_ROLE: (state, role) => {
+    state.role = role
   }
 }
 
 const actions = {
-  // user login
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
-    return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
-    })
+  async login({ commit }, userInfo) {
+    const username = userInfo.username.trim()
+    const password = userInfo.password.trim()
+    const data = await loginApi({ name: username, password: password })
+    commit('SET_NAME', username)
+    commit('SET_TOKEN', data.token)
+    commit('SET_PHONE', data.phone || '')
+    commit('SET_ROLE', '')
+
+    await localForage.setItem(storage_key_token, data.token)
+    await localForage.setItem(storage_key_name, username)
+    return data.token
   },
 
-  // get user info
-  getInfo({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
-        if (!data) {
-          reject('Verification failed, please Login again.')
-        }
-
-        const { name, avatar } = data
-
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        resolve(data)
-      }).catch(error => {
-        reject(error)
-      })
-    })
+  async register({ commit }, params) {
+    const name = params.username.trim()
+    const phone = params.phone
+    const code = params.code
+    const data = await registerApi({ name, phone, password: params.password.trim(), code })
+    return data.token
   },
 
-  // user logout
-  logout({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        removeToken()
-        resetRouter()
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
-    })
+  async getVerificationCode({ commit }, params) {
+    const data = await getVerificationCodeApi({ phone: params.phone })
+    return data.code
+  },
+
+  async getRole({ commit, state }) {
+    const data = await getRoleApi()
+    commit('SET_ROLE', data.role)
+    await localForage.setItem(storage_key_role, data.role)
+    return data.role
+  },
+
+  async logout({ commit, dispatch }) {
+    try {
+      await logoutApi()
+    } catch (e) {
+      console.warn('Store user logout:' + e)
+    } finally {
+      await dispatch('resetUser')
+    }
   },
 
   // remove token
-  resetToken({ commit }) {
-    return new Promise(resolve => {
-      commit('SET_TOKEN', '')
-      removeToken()
-      resolve()
-    })
+  async resetUser({ commit, dispatch }) {
+    commit('SET_TOKEN', '')
+    commit('SET_ROLE', '')
+    commit('SET_NAME', '')
+    commit('SET_PHONE', '')
+    await dispatch('resetStorage')
+  },
+
+  async resetStorage() {
+    try {
+      await localForage.removeItem(storage_key_token)
+      await localForage.removeItem(storage_key_name)
+      await localForage.removeItem(storage_key_role)
+    } catch (e) {
+      console.warn(`User reset storage error:${e}`)
+    }
   }
 }
 

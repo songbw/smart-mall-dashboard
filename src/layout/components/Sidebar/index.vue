@@ -1,6 +1,6 @@
 <template>
-  <div :class="{'has-logo':showLogo}">
-    <logo v-if="showLogo" :collapse="isCollapse" />
+  <div class="has-logo">
+    <logo :collapse="isCollapse" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
         :default-active="activeMenu"
@@ -20,18 +20,48 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
+
+import {
+  constantRoutes
+} from '@/router'
+
+function hasPermission(role, route) {
+  if (route.meta && route.meta.roles) {
+    return isEmpty(role) ? false : route.meta.roles.includes(role)
+  } else {
+    return true
+  }
+}
+
+function filterRoutes(role, routes) {
+  const res = []
+
+  routes.forEach(route => {
+    const tmp = { ...route }
+    if (hasPermission(role, tmp)) {
+      if (tmp.children) {
+        tmp.children = filterRoutes(role, tmp.children)
+      }
+      res.push(tmp)
+    }
+  })
+
+  return res
+}
 
 export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'userRole'
     ]),
     routes() {
-      return this.$router.options.routes
+      return filterRoutes(this.userRole, constantRoutes)
     },
     activeMenu() {
       const route = this.$route
@@ -41,9 +71,6 @@ export default {
         return meta.activeMenu
       }
       return path
-    },
-    showLogo() {
-      return this.$store.state.settings.sidebarLogo
     },
     variables() {
       return variables
