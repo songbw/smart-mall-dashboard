@@ -9,6 +9,9 @@
     center
   >
     <el-form label-position="right" label-width="100px">
+      <el-form-item v-if="company.status === 4" label="审核意见">
+        <el-input :value="company.comments" type="textarea" readonly class="item-input" />
+      </el-form-item>
       <el-form-item label="商户名">
         <el-input :value="company.name" readonly class="item-input" />
       </el-form-item>
@@ -16,7 +19,7 @@
         <el-input :value="company.address" readonly class="item-input" />
       </el-form-item>
       <el-form-item label="商户行业">
-        <el-tag v-for="tag in tags" :key="tag">
+        <el-tag v-for="tag in tags" :key="tag" style="margin-right: 10px">
           {{ tag }}
         </el-tag>
       </el-form-item>

@@ -20,7 +20,13 @@
             <el-input v-model="vendorAddress" :readonly="couldEdit === false" class="item-input" />
           </el-form-item>
           <el-form-item label="商户行业" prop="industry">
-            <el-select v-model="vendorIndustry" multiple placeholder="请选择行业类型" class="item-input">
+            <el-select
+              v-model="vendorIndustry"
+              :disabled="couldEdit === false"
+              multiple
+              placeholder="请选择行业类型"
+              class="item-input"
+            >
               <el-option
                 v-for="item in industryOptions"
                 :key="item.value"
@@ -29,8 +35,8 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="营业执照" prop="licenseUrl">
-            <img v-if="vendorLicenseUrl" :src="vendorLicenseUrl" width="50%" alt="">
+          <el-form-item label="营业执照" prop="licenceUrl">
+            <img v-if="vendorlicenceUrl" :src="vendorlicenceUrl" width="50%" alt="">
             <el-upload
               ref="uploadLicense"
               :action="uploadUrl"
@@ -45,9 +51,14 @@
               name="file"
               class="item-input"
             >
-              <el-button slot="trigger" size="small" type="primary">选择营业执照</el-button>
+              <el-button slot="trigger" :disabled="couldEdit === false" size="small" type="primary">
+                选择营业执照
+              </el-button>
               <div slot="tip" class="el-upload__tip">商户所提交的营业执照请确保清晰，并且真实有效</div>
             </el-upload>
+          </el-form-item>
+          <el-form-item v-if="vendorStatus === 4" label="审核意见">
+            <el-input v-model="vendorComment" type="textarea" readonly class="item-input" />
           </el-form-item>
           <el-form-item>
             <el-button-group>
@@ -96,7 +107,7 @@ export default {
       }
     }
     const validateLicense = (rule, value, callback) => {
-      if (this.vendorLicenseUrl && this.vendorLicenseUrl.length > 1) {
+      if (this.vendorlicenceUrl && this.vendorlicenceUrl.length > 1) {
         callback()
       } else {
         if (this.uploadFileList.length > 0) {
@@ -116,21 +127,21 @@ export default {
         name: null,
         address: null,
         industry: null,
-        licenseUrl: null
+        licenceUrl: null
       },
       loading: false,
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
         industry: [{ required: true, trigger: 'change', validator: validateIndustry }],
-        licenseUrl: [{ required: true, trigger: 'change', validator: validateLicense }]
+        licenceUrl: [{ required: true, trigger: 'change', validator: validateLicense }]
       },
       uploadFileList: []
     }
   },
   computed: {
     ...mapGetters([
-      'vendorStatus',
+      'cosUrl',
       'vendorProfile'
     ]),
     statusLabel() {
@@ -168,6 +179,14 @@ export default {
           return false
       }
     },
+    vendorStatus() {
+      return this.vendorProfile ? this.vendorProfile.status : 0
+    },
+    vendorComment: {
+      get() {
+        return this.vendorProfile ? this.vendorProfile.comments : ''
+      }
+    },
     vendorName: {
       get() {
         return this.profile.name != null ? this.profile.name : this.vendorProfile.name
@@ -197,8 +216,8 @@ export default {
         this.profile.industry = values.join(';')
       }
     },
-    vendorLicenseUrl() {
-      return this.profile.licenseUrl != null ? this.profile.licenseUrl : this.vendorProfile.licenseUrl
+    vendorlicenceUrl() {
+      return this.profile.licenceUrl != null ? this.profile.licenceUrl : this.vendorProfile.licenceUrl
     }
   },
   created() {
@@ -275,7 +294,7 @@ export default {
       })
     },
     async handleUploadImageSuccess(response) {
-      this.profile.licenseUrl = this.$store.getters.cosUrl + response.data.url
+      this.profile.licenceUrl = this.cosUrl + response.data.url
       this.$refs.uploadLicense.clearFiles()
       await this.createOrSaveProfile()
     },
@@ -296,6 +315,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
+        await this.updateVendorProfile()
         await this.$store.dispatch('vendor/submitProfile')
         this.$message.success('企业信息提交成功，正在审核！')
       } catch (e) {

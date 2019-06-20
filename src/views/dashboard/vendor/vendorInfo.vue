@@ -32,9 +32,11 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'vendorStatus',
       'vendorProfile'
     ]),
+    vendorStatus() {
+      return this.vendorProfile.status
+    },
     vendorName() {
       return this.vendorStatus === 0 ? '未登记企业信息' : this.vendorProfile.name
     },

@@ -6,54 +6,43 @@ import {
 } from '@/api/vendor'
 
 const state = {
-  status: 0, // 0:未创建 1:编辑中 2:神话中 3:审核通过 4:审核有问题
   profile: {
+    id: -1,
     name: '',
     address: '',
     industry: '', // 'FINANCE;GAME;TRAFFIC;LIFE;E_BUSINESS;SOCIAL;CATERERS;CAR;RECRUIT;OTHER'
-    licenseUrl: ''
+    licenceUrl: '',
+    status: 0, // 0:未创建 1:编辑中 2:神话中 3:审核通过 4:审核有问题
+    comments: ''
   }
 }
 
 const mutations = {
-  SET_VENDOR_STATUS(state, status) {
-    state.status = status
-  },
-  SET_VENDOR_PROFILE(state, data) {
-    if (data.hasOwnProperty('name')) {
-      state.profile.name = data.name
-    }
-    if (data.hasOwnProperty('address')) {
-      state.profile.address = data.address
-    }
-    if (data.hasOwnProperty('industry')) {
-      state.profile.industry = data.industry
-    }
-    if (data.hasOwnProperty('licenseUrl')) {
-      state.profile.licenseUrl = data.licenseUrl
-    }
+  SET_VENDOR_PROFILE: (state, data) => {
+    Object.keys(state.profile).forEach(key => {
+      if (data.hasOwnProperty(key)) {
+        state.profile[key] = data[key]
+      }
+    })
   }
 }
 
 const actions = {
   async getProfile({ commit, state }) {
-    const data = await getProfileApi()
-    commit('SET_VENDOR_STATUS', data.status)
-    commit('SET_VENDOR_PROFILE', data.profile)
+    const { company } = await getProfileApi()
+    commit('SET_VENDOR_PROFILE', company)
   },
   async createProfile({ commit, dispatch }, params) {
     const data = await createProfileApi(params)
-    commit('SET_VENDOR_STATUS', data.status)
-    commit('SET_VENDOR_PROFILE', params)
+    commit('SET_VENDOR_PROFILE', { ...params, status: data.status })
   },
   async updateProfile({ commit, dispatch }, params) {
     const data = await updateProfileApi(params)
-    commit('SET_VENDOR_STATUS', data.status)
-    commit('SET_VENDOR_PROFILE', params)
+    commit('SET_VENDOR_PROFILE', { ...params, status: data.status })
   },
   async submitProfile({ commit }) {
     const data = await submitProfileApi()
-    commit('SET_VENDOR_STATUS', data.status)
+    commit('SET_VENDOR_PROFILE', { status: data.status })
   }
 }
 

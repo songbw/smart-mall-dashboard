@@ -7,7 +7,7 @@ import vendor from './modules/vendor'
 
 Vue.use(Vuex)
 
-// const debug = process.env.NODE_ENV !== 'production'
+const debug = process.env.NODE_ENV !== 'production'
 
 const store = new Vuex.Store({
   modules: {
@@ -16,7 +16,7 @@ const store = new Vuex.Store({
     vendor
   },
   getters,
-  strict: false
+  strict: debug
 })
 
 export default store
