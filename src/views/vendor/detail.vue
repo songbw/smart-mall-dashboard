@@ -9,7 +9,7 @@
     center
   >
     <el-form label-position="right" label-width="100px">
-      <el-form-item v-if="company.status === 4" label="审核意见">
+      <el-form-item v-if="company.status === statusRejected" label="审核意见">
         <el-input :value="company.comments" type="textarea" readonly class="item-input" />
       </el-form-item>
       <el-form-item label="商户名">
@@ -66,6 +66,9 @@
 <script>
 import moment from 'moment'
 import { IndustryDefinitions } from './constants'
+import {
+  vendor_status_rejected
+} from '@/utils/constants'
 
 export default {
   name: 'VendorDetail',
@@ -85,6 +88,11 @@ export default {
       default() {
         return []
       }
+    }
+  },
+  data() {
+    return {
+      statusRejected: vendor_status_rejected
     }
   },
   computed: {

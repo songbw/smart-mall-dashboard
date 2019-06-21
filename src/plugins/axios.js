@@ -6,22 +6,27 @@ import localForage from 'localforage'
 import { Message } from 'element-ui'
 import store from '@/store'
 import {
-  storage_key_token
+  storage_key_token,
+  storage_merchant_id
 } from '@/utils/constants'
 
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_URL, // url = base url + request url
   withCredentials: false,
-  timeout: 5000 // request timeout
+  timeout: 10000 // request timeout
 })
 
 service.interceptors.request.use(
   async config => {
     try {
       const token = await localForage.getItem(storage_key_token)
+      const id = await localForage.getItem(storage_merchant_id)
       if (!isEmpty(token)) {
         config.headers['Authorization'] = `Bearer ${token}`
+      }
+      if (id !== null && id !== -1) {
+        config.headers['Merchant'] = id
       }
     } catch (e) {
       console.warn(`Axios request: ${e}`)
@@ -54,7 +59,7 @@ service.interceptors.response.use(
         } catch (e) {
           console.warn('Axios reset token error: ' + e)
         } finally {
-          // location.reload()
+          location.reload()
         }
       }
     }

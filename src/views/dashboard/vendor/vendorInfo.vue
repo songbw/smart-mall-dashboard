@@ -44,20 +44,7 @@ export default {
       return this.vendorStatus === 0 ? '去登记' : '查看'
     }
   },
-  created() {
-    this.getVendorProfile()
-  },
   methods: {
-    async getVendorProfile() {
-      this.loading = true
-      try {
-        await this.$store.dispatch('vendor/getProfile')
-      } catch (e) {
-        console.warn(`Get vendor profile error: ${e}`)
-      } finally {
-        this.loading = false
-      }
-    },
     handleViewVendor() {
       this.$router.push({ name: 'vendorProfile' })
     }

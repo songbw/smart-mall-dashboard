@@ -12,7 +12,7 @@
         :collapse-transition="false"
         mode="vertical"
       >
-        <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
+        <sidebar-item v-for="route in roleRoutes" :key="route.path" :item="route" :base-path="route.path" />
       </el-menu>
     </el-scrollbar>
   </div>
@@ -30,10 +30,14 @@ import {
 } from '@/router'
 
 function hasPermission(role, route) {
-  if (route.meta && route.meta.roles) {
-    return isEmpty(role) ? false : route.meta.roles.includes(role)
+  if (route.hidden) {
+    return false
   } else {
-    return true
+    if (route.meta && route.meta.roles) {
+      return isEmpty(role) ? false : route.meta.roles.includes(role)
+    } else {
+      return true
+    }
   }
 }
 
@@ -60,7 +64,7 @@ export default {
       'sidebar',
       'userRole'
     ]),
-    routes() {
+    roleRoutes() {
       return filterRoutes(this.userRole, constantRoutes)
     },
     activeMenu() {

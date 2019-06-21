@@ -8,46 +8,6 @@ import {
 
 Vue.use(Router)
 
-export const roleRoutes = [
-  {
-    path: '/vendor',
-    component: Layout,
-    redirect: '/vendor/profile',
-    name: 'VendorInfo',
-    meta: {
-      title: '商户',
-      icon: 'vendor',
-      roles: [role_vendor_name]
-    },
-    children: [
-      {
-        path: 'profile',
-        name: 'vendorProfile',
-        component: () => import('@/views/vendor/profile'),
-        meta: { title: '商户信息', icon: 'vendor', roles: [role_vendor_name] }
-      }
-    ]
-  },
-  {
-    path: '/vendor',
-    component: Layout,
-    redirect: '/vendor/manager',
-    name: 'VendorMain',
-    meta: {
-      title: '商户',
-      icon: 'vendor',
-      roles: [role_admin_name]
-    },
-    children: [
-      {
-        path: 'manager',
-        name: 'VendorManager',
-        component: () => import('@/views/vendor/manager'),
-        meta: { title: '商户管理', icon: 'vendor', roles: [role_admin_name] }
-      }
-    ]
-  }
-]
 /**
  * constantRoutes
  * a base page that does not have permission requirements
@@ -89,9 +49,43 @@ export const constantRoutes = [
     }]
   },
   {
+    path: '/goods',
+    component: Layout,
+    redirect: '/goods/product',
+    name: 'Goods',
+    meta: { title: '商品', icon: 'goods-manager' },
+    children: [
+      {
+        path: 'product',
+        name: 'Product',
+        component: () => import('@/views/product/index'),
+        meta: { title: '商品管理', icon: 'products' }
+      },
+      {
+        path: 'productDetail/:skuid',
+        name: 'ProductDetail',
+        component: () => import('@/views/product/detail'),
+        meta: { title: '商品详情', icon: 'products' },
+        hidden: true
+      },
+      {
+        path: 'category',
+        name: 'Category',
+        component: () => import('@/views/category/index'),
+        meta: { title: '类别管理', icon: 'categories' }
+      },
+      {
+        path: 'brand',
+        name: 'Brand',
+        component: () => import('@/views/brand/index'),
+        meta: { title: '品牌管理', icon: 'brands' }
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
-    redirect: '/vendor/profile',
+    redirect: '/vendorInfo/profile',
     name: 'VendorInfo',
     meta: {
       title: '商户',
@@ -110,7 +104,7 @@ export const constantRoutes = [
   {
     path: '/vendorManager',
     component: Layout,
-    redirect: '/vendor/manager',
+    redirect: '/vendorManager/manager',
     name: 'VendorMain',
     meta: {
       title: '商户',

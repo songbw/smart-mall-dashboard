@@ -54,7 +54,13 @@
 </template>
 
 <script>
+import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
+import {
+  role_admin_name,
+  storage_merchant_id,
+  vendor_status_approved
+} from '@/utils/constants'
 
 export default {
   name: 'Login',
@@ -97,7 +103,18 @@ export default {
               username,
               password
             })
-            await this.$store.dispatch('user/getRole')
+            const role = await this.$store.dispatch('user/getRole')
+
+            if (role_admin_name === role) {
+              await localForage.setItem(storage_merchant_id, 0)
+            } else {
+              const { status, id } = await this.$store.dispatch('vendor/getProfile')
+              if (status === vendor_status_approved) {
+                await localForage.setItem(storage_merchant_id, id)
+              } else {
+                await localForage.setItem(storage_merchant_id, -1)
+              }
+            }
             this.$router.push({ path: '/' })
           } catch (e) {
             console.warn('User Login:' + e)

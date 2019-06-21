@@ -41,7 +41,7 @@ export default {
         matched = [{
           path: '/dashboard',
           meta: {
-            title: 'Dashboard'
+            title: '首页'
           }
         }].concat(matched)
       }

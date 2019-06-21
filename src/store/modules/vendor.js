@@ -31,6 +31,7 @@ const actions = {
   async getProfile({ commit, state }) {
     const { company } = await getProfileApi()
     commit('SET_VENDOR_PROFILE', company)
+    return { status: company.status, id: company.id }
   },
   async createProfile({ commit, dispatch }, params) {
     const data = await createProfileApi(params)

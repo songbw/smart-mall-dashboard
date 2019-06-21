@@ -10,7 +10,10 @@ import isEmpty from 'lodash/isEmpty'
 import {
   storage_key_token,
   storage_key_name,
-  storage_key_role
+  storage_key_role,
+  storage_merchant_id,
+  role_admin_name,
+  vendor_status_approved
 } from '@/utils/constants'
 
 export default {
@@ -34,6 +37,16 @@ export default {
         const role = await localForage.getItem(storage_key_role)
         if (!isEmpty(role)) {
           this.$store.commit('user/SET_ROLE', role)
+        }
+        if (role_admin_name === role) {
+          await localForage.setItem(storage_merchant_id, 0)
+        } else if (!isEmpty(token)) {
+          const { status, id } = await this.$store.dispatch('vendor/getProfile')
+          if (status === vendor_status_approved) {
+            await localForage.setItem(storage_merchant_id, id)
+          } else {
+            await localForage.setItem(storage_merchant_id, -1)
+          }
         }
       } catch (e) {
         console.warn(`App init: ${e}`)

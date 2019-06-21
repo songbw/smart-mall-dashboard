@@ -57,7 +57,7 @@
               <div slot="tip" class="el-upload__tip">商户所提交的营业执照请确保清晰，并且真实有效</div>
             </el-upload>
           </el-form-item>
-          <el-form-item v-if="vendorStatus === 4" label="审核意见">
+          <el-form-item v-if="vendorStatus === statusRejected" label="审核意见">
             <el-input v-model="vendorComment" type="textarea" readonly class="item-input" />
           </el-form-item>
           <el-form-item>
@@ -81,6 +81,10 @@ import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import { IndustryDefinitions, VendorStatus } from './constants'
+import {
+  vendor_status_init,
+  vendor_status_rejected
+} from '@/utils/constants'
 
 export default {
   name: 'VendorProfile',
@@ -118,6 +122,7 @@ export default {
       }
     }
     return {
+      statusRejected: vendor_status_rejected,
       uploadUrl: process.env.VUE_APP_UPLOAD_URL,
       uploadData: {
         pathName: 'vendor/licenses'
@@ -180,7 +185,7 @@ export default {
       }
     },
     vendorStatus() {
-      return this.vendorProfile ? this.vendorProfile.status : 0
+      return this.vendorProfile ? this.vendorProfile.status : vendor_status_init
     },
     vendorComment: {
       get() {

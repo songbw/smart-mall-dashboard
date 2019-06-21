@@ -1,18 +1,18 @@
 <template>
-  <div v-if="!item.hidden" class="menu-wrapper">
-    <template
-      v-if="hasOneShowingChild(item.children,item)"
-    >
+  <div class="menu-wrapper">
+    <template v-if="onlyOneChild && (!onlyOneChild.children || onlyOneChild.noShowingChildren) ">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
-          <item :icon="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" :title="onlyOneChild.meta.title" />
+          <svg-icon :icon-class="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" />
+          <span>{{ onlyOneChild.meta.title }}</span>
         </el-menu-item>
       </app-link>
     </template>
 
     <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
       <template slot="title">
-        <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
+        <svg-icon :icon-class="item.meta && item.meta.icon" />
+        <span>{{ item.meta.title }}</span>
       </template>
       <sidebar-item
         v-for="child in item.children"
@@ -29,12 +29,11 @@
 <script>
 import path from 'path'
 import { isExternal } from '@/utils/validate'
-import Item from './Item'
 import AppLink from './Link'
 
 export default {
   name: 'SidebarItem',
-  components: { Item, AppLink },
+  components: { AppLink },
   props: {
     // route object
     item: {
@@ -55,26 +54,19 @@ export default {
       onlyOneChild: null
     }
   },
+  created() {
+    this.hasOneShowingChild()
+  },
   methods: {
-    hasOneShowingChild(children = [], parent) {
-      const showingChildren = children.filter(item => !item.hidden)
-
-      if (showingChildren.length > 1) {
-        return false
-      }
-
-      // When there is only one child router, the child router is displayed by default
+    hasOneShowingChild() {
+      const showingChildren = this.item.children || []
       if (showingChildren.length === 1) {
+        // When there is only one child router, the child router is displayed by default
         this.onlyOneChild = showingChildren[0]
-        return true
+      } else if (showingChildren.length === 0) {
+        // Show parent if there are no child router to display
+        this.onlyOneChild = { ...this.item, path: '', noShowingChildren: true }
       }
-
-      // Show parent if there are no child router to display
-      if (showingChildren.length === 0) {
-        this.onlyOneChild = { ...parent, path: '', noShowingChildren: true }
-      }
-
-      return !this.onlyOneChild.children || this.onlyOneChild.noShowingChildren
     },
     resolvePath(routePath) {
       if (isExternal(routePath)) {

@@ -1,3 +1,11 @@
+import {
+  vendor_status_init,
+  vendor_status_editing,
+  vendor_status_reviewing,
+  vendor_status_approved,
+  vendor_status_rejected
+} from '@/utils/constants'
+
 export const IndustryDefinitions = [
   {
     value: 'FINANCE',
@@ -43,23 +51,23 @@ export const IndustryDefinitions = [
 
 export const VendorStatus = [
   {
-    value: 0,
+    value: vendor_status_init,
     label: '未登记'
   },
   {
-    value: 1,
+    value: vendor_status_editing,
     label: '编辑中'
   },
   {
-    value: 2,
+    value: vendor_status_reviewing,
     label: '审核中'
   },
   {
-    value: 3,
+    value: vendor_status_approved,
     label: '审核通过'
   },
   {
-    value: 4,
+    value: vendor_status_rejected,
     label: '审核失败'
   }
 ]
