@@ -16,7 +16,7 @@ export const vendor_status_rejected = 4
 export const ProductStateOptions = [
   {
     value: 1,
-    label: '已上架'
+    label: '销售中'
   }, {
     value: 0,
     label: '已下架'

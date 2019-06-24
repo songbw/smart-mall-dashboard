@@ -10,6 +10,9 @@ import isEmpty from 'lodash/isEmpty'
 import PageLoading from '@/components/PageLoading'
 import adminDashboard from './admin'
 import vendorDashboard from './vendor'
+import {
+  role_admin_name
+} from '@/utils/constants'
 
 export default {
   name: 'Dashboard',
@@ -22,7 +25,7 @@ export default {
       if (isEmpty(this.userRole)) {
         return 'PageLoading'
       } else {
-        return this.userRole === 'admin' ? 'adminDashboard' : 'vendorDashboard'
+        return this.userRole === role_admin_name ? 'adminDashboard' : 'vendorDashboard'
       }
     }
   }

@@ -1,11 +1,31 @@
 import localForage from 'localforage'
 import {
   getCategoryInfoApi,
-  getMainCategoriesApi
+  getMainCategoriesApi,
+  updateCategoryInfoApi,
+  searchCategoryInfoApi
 } from '@/api/categories'
 import {
   storage_product_categories
 } from '@/utils/constants'
+
+const findCategoryByRelationID = allClassesData => relation => {
+  const grandCategory = allClassesData.find(item => item.categoryId === relation.grandID)
+  if (relation.parentID) {
+    if (grandCategory) {
+      const parentCategory = grandCategory.subs.find(item => item.categoryId === relation.parentID)
+      if (relation.childID) {
+        return parentCategory.subs.find(item => item.categoryId === relation.childID)
+      } else {
+        return parentCategory
+      }
+    } else {
+      return null
+    }
+  } else {
+    return grandCategory
+  }
+}
 
 const state = {
   dataLoaded: false,
@@ -22,6 +42,38 @@ const mutations = {
   },
   SET_ALL_DATA: (state, data) => {
     state.allData = data
+  },
+  UPDATE_CATEGORY_DATA: (state, params) => {
+    const categoryID = params.categoryId
+    const parentID = params.parentId
+    const grandID = params.grandId
+    const classID = params.categoryClass
+    let category = null
+    switch (classID) {
+      case '1': {
+        category = findCategoryByRelationID(state.allData, {
+          grandID: categoryID
+        })
+        break
+      }
+      case '2': {
+        category = findCategoryByRelationID(state.allData, {
+          grandID: parentID, parentID: categoryID
+        })
+        break
+      }
+      case '3': {
+        category = findCategoryByRelationID(state.allData, {
+          grandID: grandID,
+          parentID: parentID,
+          childID: categoryID
+        })
+        break
+      }
+    }
+    if (category) {
+      category.categoryIcon = params.categoryIcon
+    }
   }
 }
 
@@ -41,7 +93,7 @@ const actions = {
             id: item.categoryId,
             includeSub: true
           }
-          const category = await dispatch('getCategoryDataByID', categoryParams)
+          const category = await dispatch('getDataByID', categoryParams)
           if (category.length > 0) {
             const subCategory = category[0]
             subCategory.subs.forEach(sec => {
@@ -67,8 +119,16 @@ const actions = {
     }
     return total
   },
-  async getCategoryDataByID({ commit }, params) {
+  async getDataByID({ commit }, params) {
     const { data } = await getCategoryInfoApi(params)
+    return data.result
+  },
+  async updateCategoryInfo({ commit }, params) {
+    await updateCategoryInfoApi(params)
+    commit('UPDATE_CATEGORY_DATA', params)
+  },
+  async searchCategoryInfo({ commit }, params) {
+    const { data } = await searchCategoryInfoApi(params)
     return data.result
   }
 }

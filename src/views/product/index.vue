@@ -25,78 +25,49 @@
         </el-form-item>
       </el-form>
       <el-form :inline="true">
-        <el-form-item label="商品类别">
-          <el-select
-            v-model="firstCategoryValue"
-            clearable
-            placeholder="选择一级类别"
-            @change="handleFirstCategoryChanged"
-          >
-            <el-option
-              v-for="item in firstCategoryOptions"
-              :key="item.categoryId"
-              :label="item.categoryName"
-              :value="item.categoryId"
-            />
-          </el-select>
+        <el-form-item label="商品品牌">
+          <category-selection
+            :first-value="firstCategoryValue"
+            :second-value="secondCategoryValue"
+            :third-value="thirdCategoryValue"
+            @changed="handleCategorySelectionChanged"
+          />
         </el-form-item>
         <el-form-item>
-          <el-select
-            v-model="secondCategoryValue"
-            clearable
-            placeholder="选择二级类别"
-            @change="handleSecondCategoryChanged"
-          >
-            <el-option
-              v-for="item in secondCategoryOptions"
-              :key="item.categoryId"
-              :label="item.categoryName"
-              :value="item.categoryId"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="thirdCategoryValue" clearable placeholder="选择三级类别">
-            <el-option
-              v-for="item in thirdCategoryOptions"
-              :key="item.categoryId"
-              :label="item.categoryName"
-              :value="item.categoryId"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+          <el-button type="primary" icon="el-icon-search" @click="handleFilter">
             搜索
           </el-button>
         </el-form-item>
       </el-form>
-      <el-form :inline="true">
-        <el-form-item>
+      <div style="margin-bottom: 10px;display: flex;justify-content: space-between">
+        <el-button
+          type="primary"
+          icon="el-icon-goods"
+          @click="hanleCreateProduct"
+        >
+          新建商品
+        </el-button>
+        <div>
           <el-button
             :disabled="productSelection.length === 0"
             :loading="productExporting"
-            class="filter-item"
-            type="primary"
+            type="info"
             icon="el-icon-download"
             @click="handleExportSelection"
           >
             导出已选{{ productSelection.length }}个商品
           </el-button>
-        </el-form-item>
-        <el-form-item>
           <el-button
             :disabled="productsTotal === 0"
             :loading="productExporting"
-            class="filter-item"
-            type="primary"
+            type="warning"
             icon="el-icon-download"
             @click="handleExportAllProducts"
           >
             导出全部商品
           </el-button>
-        </el-form-item>
-      </el-form>
+        </div>
+      </div>
     </div>
     <el-table
       ref="productsTable"
@@ -187,14 +158,14 @@
           <el-button
             type="primary"
             size="mini"
-            @click="handleView(scope.row.skuid)"
+            @click="handleViewProduct(scope.row.skuid)"
           >
             查看
           </el-button>
           <el-button
             type="warning"
             size="mini"
-            @click="handleEdit(scope.row.skuid)"
+            @click="handleEditProduct(scope.row.skuid)"
           >
             编辑
           </el-button>
@@ -234,11 +205,12 @@ import isEmpty from 'lodash/isEmpty'
 import { validateURL } from '@/utils/validate'
 import { getProductListApi, updateProductInfoApi, searchProductsApi } from '@/api/products'
 import Pagination from '@/components/Pagination'
+import CategorySelection from './categorySelection'
 import { ProductStateOptions } from '@/utils/constants'
 
 export default {
   name: 'Product',
-  components: { Pagination },
+  components: { Pagination, CategorySelection },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -266,11 +238,6 @@ export default {
       productsTotal: 0,
       productsData: [],
       listLoading: false,
-      firstCategoryValue: null,
-      secondCategoryValue: null,
-      thirdCategoryValue: null,
-      rootCategorySelected: null,
-      secondCategorySelected: null,
       productExporting: false,
       productSelection: [],
       exportDialogVisible: false,
@@ -280,57 +247,36 @@ export default {
   },
   computed: {
     ...mapGetters({
-      productQuery: 'productQuery',
-      categoriesLoaded: 'categoriesLoaded',
-      categoryData: 'categories',
-      categoriesLoading: 'categoriesLoading'
+      productQuery: 'productQuery'
     }),
-    categoryOptions() {
-      if (this.categoriesLoaded) {
-        return this.categoryData
-      } else {
-        return [{
-          categoryName: '正在加载类别...',
-          categoryId: -1
-        }]
+    firstCategoryValue: {
+      get() {
+        return this.productQuery.firstCategoryId
+      },
+      set(value) {
+        this.$store.commit('products/SET_FIRST_CATEGORY_ID', {
+          firstCategoryId: Number.isSafeInteger(value) ? value : null
+        })
       }
     },
-    firstCategoryOptions: {
+    secondCategoryValue: {
       get() {
-        if (this.categoriesLoaded) {
-          return this.categoryOptions.map(item => {
-            return { categoryId: item.categoryId, categoryName: item.categoryName }
-          })
-        } else {
-          return [{
-            categoryId: -1,
-            categoryName: '正在加载类别...'
-          }]
-        }
+        return this.productQuery.secondCategoryId
+      },
+      set(value) {
+        this.$store.commit('products/SET_SECOND_CATEGORY_ID', {
+          secondCategoryId: Number.isSafeInteger(value) ? value : null
+        })
       }
     },
-    secondCategoryOptions: {
+    thirdCategoryValue: {
       get() {
-        if (this.categoriesLoaded &&
-          this.rootCategorySelected !== null) {
-          return this.rootCategorySelected.subs.map(item => {
-            return { categoryId: item.categoryId, categoryName: item.categoryName }
-          })
-        } else {
-          return []
-        }
-      }
-    },
-    thirdCategoryOptions: {
-      get() {
-        if (this.categoriesLoaded &&
-          this.secondCategorySelected !== null) {
-          return this.secondCategorySelected.subs.map(item => {
-            return { categoryId: item.categoryId, categoryName: item.categoryName }
-          })
-        } else {
-          return []
-        }
+        return this.productQuery.thirdCategoryId
+      },
+      set(value) {
+        this.$store.commit('products/SET_THIRD_CATEGORY_ID', {
+          thirdCategoryId: Number.isSafeInteger(value) ? value : null
+        })
       }
     },
     listData: {
@@ -394,18 +340,8 @@ export default {
   },
   created() {
     this.getListData()
-    this.getAllCategories()
   },
   methods: {
-    async getAllCategories() {
-      if (this.categoriesLoaded === false && this.categoriesLoading === false) {
-        try {
-          await this.$store.dispatch('categories/getAllData')
-        } catch (e) {
-          console.log(('Get Main Category failed: ' + e))
-        }
-      }
-    },
     isFilterChanged() {
       return this.listQuery !== this.searchParams.query ||
         this.listSkuId !== this.searchParams.skuid ||
@@ -496,15 +432,20 @@ export default {
     handleFilter() {
       this.getListData()
     },
-    handleEdit(skuid) {
+    hanleCreateProduct() {
       this.$router.push({
-        name: 'ProductDetail',
+        name: 'CreateProduct'
+      })
+    },
+    handleEditProduct(skuid) {
+      this.$router.push({
+        name: 'EditProduct',
         params: { skuid }
       })
     },
-    handleView(skuid) {
+    handleViewProduct(skuid) {
       this.$router.push({
-        name: 'ProductDetail',
+        name: 'ViewProduct',
         params: { skuid }
       })
     },
@@ -536,23 +477,33 @@ export default {
       }).catch(() => {
       })
     },
-    handleFirstCategoryChanged(value) {
-      if (this.categoriesLoaded && Number.isSafeInteger(value)) {
-        this.rootCategorySelected = this.categoryOptions.find(category => category.categoryId === value)
-      } else {
-        this.rootCategorySelected = null
+    handleCategorySelectionChanged(category) {
+      const value = Number.isSafeInteger(category.value) ? category.value : null
+      switch (category.level) {
+        case 1:
+          this.handleFirstCategoryChanged(value)
+          break
+        case 2:
+          this.handleSecondCategoryChanged(value)
+          break
+        case 3:
+          this.handleThirdCategoryChanged(value)
+          break
+        default:
+          break
       }
-      this.secondCategorySelected = null
+    },
+    handleFirstCategoryChanged(value) {
+      this.firstCategoryValue = value
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
     },
     handleSecondCategoryChanged(value) {
-      if (this.categoriesLoaded && Number.isSafeInteger(value) && this.rootCategorySelected !== null) {
-        this.secondCategorySelected = this.rootCategorySelected.subs.find(category => category.categoryId === value)
-      } else {
-        this.secondCategorySelected = null
-      }
+      this.secondCategoryValue = value
       this.thirdCategoryValue = null
+    },
+    handleThirdCategoryChanged(value) {
+      this.thirdCategoryValue = value
     },
     handleSelectionChange(selection) {
       this.productSelection = selection

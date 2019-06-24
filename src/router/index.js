@@ -62,10 +62,24 @@ export const constantRoutes = [
         meta: { title: '商品管理', icon: 'products' }
       },
       {
-        path: 'productDetail/:skuid',
-        name: 'ProductDetail',
+        path: 'viewProduct/:skuid',
+        name: 'ViewProduct',
         component: () => import('@/views/product/detail'),
-        meta: { title: '商品详情', icon: 'products' },
+        meta: { title: '查看商品', icon: 'products' },
+        hidden: true
+      },
+      {
+        path: 'editProduct/:skuid',
+        name: 'EditProduct',
+        component: () => import('@/views/product/detail'),
+        meta: { title: '编辑商品', icon: 'products' },
+        hidden: true
+      },
+      {
+        path: 'createProduct',
+        name: 'CreateProduct',
+        component: () => import('@/views/product/detail'),
+        meta: { title: '创建商品', icon: 'products' },
         hidden: true
       },
       {

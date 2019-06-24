@@ -18,7 +18,17 @@ export function searchProductsApi(params) {
   })
 }
 
-export function updateProductInfoApi(params) {
+export function createProductApi(params) {
+  return Vue.axios.request({
+    url: '/v2/products/adminProd',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function updateProductApi(params) {
   return Vue.axios.request({
     url: '/v2/products/adminProd',
     method: 'put',

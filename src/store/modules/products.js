@@ -5,7 +5,10 @@ const state = {
     query: '',
     skuid: '',
     brand: '',
-    state: -1
+    state: -1,
+    firstCategoryId: null,
+    secondCategoryId: null,
+    thirdCategoryId: null
   }
 }
 
@@ -16,6 +19,15 @@ const mutations = {
         state.search[key] = params[key]
       }
     })
+  },
+  SET_FIRST_CATEGORY_ID: (state, params) => {
+    state.search.firstCategoryId = params.firstCategoryId
+  },
+  SET_SECOND_CATEGORY_ID: (state, params) => {
+    state.search.secondCategoryId = params.secondCategoryId
+  },
+  SET_THIRD_CATEGORY_ID: (state, params) => {
+    state.search.thirdCategoryId = params.thirdCategoryId
   }
 }
 
