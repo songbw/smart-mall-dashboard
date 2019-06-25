@@ -82,6 +82,7 @@ import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import { IndustryDefinitions, VendorStatus } from './constants'
 import {
+  app_upload_url,
   vendor_status_init,
   vendor_status_rejected
 } from '@/utils/constants'
@@ -123,7 +124,7 @@ export default {
     }
     return {
       statusRejected: vendor_status_rejected,
-      uploadUrl: process.env.VUE_APP_UPLOAD_URL,
+      uploadUrl: app_upload_url,
       uploadData: {
         pathName: 'vendor/licenses'
       },

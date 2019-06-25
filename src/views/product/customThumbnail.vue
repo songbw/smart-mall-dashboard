@@ -51,6 +51,8 @@
 </template>
 
 <script>
+import { app_upload_url } from '@/utils/constants'
+
 export default {
   name: 'CustomThumbnail',
   props: {
@@ -77,7 +79,7 @@ export default {
   },
   data() {
     return {
-      uploadUrl: process.env.VUE_APP_UPLOAD_URL,
+      uploadUrl: app_upload_url,
       uploadData: {
         pathName: this.bucket
       }

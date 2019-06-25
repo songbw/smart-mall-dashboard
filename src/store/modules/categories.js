@@ -9,7 +9,7 @@ import {
   storage_product_categories
 } from '@/utils/constants'
 
-const findCategoryByRelationID = allClassesData => relation => {
+const findCategoryByRelationID = (allClassesData, relation) => {
   const grandCategory = allClassesData.find(item => item.categoryId === relation.grandID)
   if (relation.parentID) {
     if (grandCategory) {
@@ -78,13 +78,17 @@ const mutations = {
 }
 
 const actions = {
-  async getAllData({ dispatch, commit, state }) {
+  async getAllData({ dispatch, commit, state }, params) {
     commit('SET_DATA_LOADED', false)
     commit('SET_DATA_IS_LOADING', true)
     let total = 0
     let allData = null
     try {
-      allData = await localForage.getItem(storage_product_categories)
+      if (params && params.clearCache) {
+        await localForage.removeItem(storage_product_categories)
+      } else {
+        allData = await localForage.getItem(storage_product_categories)
+      }
       if (allData === null) {
         const { data } = await getMainCategoriesApi({ offset: 1, limit: 1000 })
         const firstClassList = data.result.list
@@ -123,9 +127,10 @@ const actions = {
     const { data } = await getCategoryInfoApi(params)
     return data.result
   },
-  async updateCategoryInfo({ commit }, params) {
+  async updateCategoryInfo({ commit, state }, params) {
     await updateCategoryInfoApi(params)
     commit('UPDATE_CATEGORY_DATA', params)
+    await localForage.setItem(storage_product_categories, state.allData)
   },
   async searchCategoryInfo({ commit }, params) {
     const { data } = await searchCategoryInfoApi(params)

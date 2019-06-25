@@ -6,7 +6,7 @@
       ref="imageUpload"
       :action="uploadUrl"
       :data="uploadData"
-      :auto-upload="false"
+      :auto-upload="autoUpload"
       :multiple="false"
       :limit="1"
       :before-upload="handleBeforeUploadImage"
@@ -17,8 +17,16 @@
       list-type="picture"
       name="file"
     >
-      <el-button slot="trigger" size="small" type="primary">选择图标文件</el-button>
-      <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传图片</el-button>
+      <el-button slot="trigger" size="small" type="primary">选择图片文件</el-button>
+      <el-button
+        v-if="!autoUpload"
+        style="margin-left: 10px;"
+        size="small"
+        type="success"
+        @click="submitUpload"
+      >
+        上传图片
+      </el-button>
       <div slot="tip" class="el-upload__tip">{{ tip }}</div>
     </el-upload>
     <el-progress
@@ -32,6 +40,8 @@
 </template>
 
 <script>
+import { app_upload_url } from '@/utils/constants'
+
 export default {
   name: 'ImageUpload',
   props: {
@@ -51,6 +61,10 @@ export default {
       type: Boolean,
       default: false
     },
+    autoUpload: {
+      type: Boolean,
+      default: true
+    },
     tip: {
       type: String,
       default() {
@@ -60,7 +74,7 @@ export default {
   },
   data() {
     return {
-      uploadUrl: process.env.VUE_APP_UPLOAD_URL,
+      uploadUrl: app_upload_url,
       uploadData: {
         pathName: this.pathName
       },
@@ -105,13 +119,9 @@ export default {
       if (this.imageFileList.length > 0) {
         this.$refs.imageUpload.submit()
       } else {
-        this.$emit('success', null)
+        this.$message.warning('请选择对应的图片文件！')
       }
     }
   }
 }
 </script>
-
-<style scoped>
-
-</style>

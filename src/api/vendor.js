@@ -2,14 +2,14 @@ import Vue from 'vue'
 
 export function getProfileApi() {
   return Vue.axios.request({
-    url: '/vendors/v1/companies/profile',
+    url: '/vendors/companies/profile',
     method: 'get'
   })
 }
 
 export function createProfileApi(data) {
   return Vue.axios.request({
-    url: '/vendors/v1/companies/profile',
+    url: '/vendors/companies/profile',
     method: 'post',
     data
   })
@@ -17,7 +17,7 @@ export function createProfileApi(data) {
 
 export function updateProfileApi(data) {
   return Vue.axios.request({
-    url: '/vendors/v1/companies/profile',
+    url: '/vendors/companies/profile',
     method: 'put',
     data
   })
@@ -25,14 +25,14 @@ export function updateProfileApi(data) {
 
 export function submitProfileApi(data) {
   return Vue.axios.request({
-    url: '/vendors/v1/companies/status',
+    url: '/vendors/companies/status',
     method: 'put'
   })
 }
 
 export function getVendorListApi(params) {
   return Vue.axios.request({
-    url: '/vendors/v1/companies/list',
+    url: '/vendors/companies/list',
     method: 'get',
     params
   })
@@ -44,7 +44,7 @@ export function reviewVendorProfileApi(params) {
     comments: params.comments
   }
   return Vue.axios.request({
-    url: `/vendors/v1/companies/${params.id}/status`,
+    url: `/vendors/companies/${params.id}/status`,
     method: 'put',
     data
   })

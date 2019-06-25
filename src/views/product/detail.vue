@@ -211,7 +211,10 @@ import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
 import CategorySelection from './categorySelection'
-import { ProductStateOptions } from '@/utils/constants'
+import {
+  app_upload_url,
+  ProductStateOptions
+} from '@/utils/constants'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -251,7 +254,7 @@ export default {
       }
     }
     return {
-      uploadUrl: process.env.VUE_APP_UPLOAD_URL,
+      uploadUrl: app_upload_url,
       uploading: false,
       uploadPercent: 0,
       uploadCoverData: {
@@ -343,11 +346,11 @@ export default {
   },
   methods: {
     getProductInfo() {
-      const skuID = this.$route.params.skuid
+      const id = this.$route.params.id
       const params = {
         offset: 1,
         limit: 10,
-        skuid: skuID
+        id
       }
       this.loading = true
       searchProductsApi(params).then(response => {
@@ -375,10 +378,10 @@ export default {
             this.introductionUrls = this.introductions.map(img => this.$store.getters.cosUrl + img)
           }
 
-          this.uploadCoverData.pathName = this.productForm.category + '/' + this.productForm.skuid + '/CoverU'
-          this.thumbnailUploadPath = this.productForm.category + '/' + this.productForm.skuid + '/ZTU'
+          this.uploadCoverData.pathName = this.productInfo.category + '/' + this.productInfo.id + '/CoverU'
+          this.thumbnailUploadPath = this.productInfo.category + '/' + this.productInfo.id + '/ZTU'
           this.uploadThumbnailData.pathName = this.thumbnailUploadPath
-          this.introductionUploadPath = this.productForm.category + '/' + this.productForm.skuid + '/XTU'
+          this.introductionUploadPath = this.productInfo.category + '/' + this.productInfo.id + '/XTU'
           this.uploadIntroductionData.pathName = this.introductionUploadPath
 
           this.getCategoryName(this.productForm.category)
@@ -421,6 +424,13 @@ export default {
             this.categoryName = category[0].categoryName + ` / ` + this.categoryName
           } else {
             this.categoryName = category[0].categoryName
+          }
+          if (category[0].categoryClass === '3') {
+            this.thirdCategoryValue = category[0].categoryId
+          } else if (category[0].categoryClass === '2') {
+            this.secondCategoryValue = category[0].categoryId
+          } else {
+            this.firstCategoryValue = category[0].categoryId
           }
           const parentID = category[0].parentId
           if (parentID !== 0) {
@@ -508,8 +518,9 @@ export default {
     },
     handleUpdateProduct() {
       let changed = false
-      const params = {}
-      params.skuid = this.productForm.skuid
+      const params = {
+        id: this.productForm.id
+      }
       Object.keys(this.productForm).forEach(key => {
         if (this.productInfo[key] !== this.productForm[key]) {
           params[key] = this.productForm[key]
@@ -517,7 +528,7 @@ export default {
         }
       })
       if (changed) {
-        this.$confirm('是否确定修改此商品的信息？请再次确认此次修改的主图、详情图等图片信息。', '警告',
+        this.$confirm('请确定是否修改此商品的信息？', '警告',
           {
             confirmButtonText: '确定',
             cancelButtonText: '取消',

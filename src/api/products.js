@@ -2,7 +2,7 @@ import Vue from 'vue'
 
 export function getProductListApi(params) {
   return Vue.axios.request({
-    url: '/v2/products/adminProd/prodList',
+    url: '/products/adminProd/prodList',
     method: 'get',
     params
   })
@@ -10,7 +10,7 @@ export function getProductListApi(params) {
 
 export function searchProductsApi(params) {
   return Vue.axios.request({
-    url: '/v2/products/adminProd/search',
+    url: '/products/adminProd/search',
     method: 'post',
     data: {
       ...params
@@ -20,7 +20,7 @@ export function searchProductsApi(params) {
 
 export function createProductApi(params) {
   return Vue.axios.request({
-    url: '/v2/products/adminProd',
+    url: '/products/adminProd',
     method: 'post',
     data: {
       ...params
@@ -30,10 +30,18 @@ export function createProductApi(params) {
 
 export function updateProductApi(params) {
   return Vue.axios.request({
-    url: '/v2/products/adminProd',
+    url: '/products/adminProd',
     method: 'put',
     data: {
       ...params
     }
+  })
+}
+
+export function deleteProductApi(params) {
+  return Vue.axios.request({
+    url: `/products/adminProd`,
+    method: 'delete',
+    params
   })
 }

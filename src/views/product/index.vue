@@ -43,7 +43,7 @@
         <el-button
           type="primary"
           icon="el-icon-goods"
-          @click="hanleCreateProduct"
+          @click="handleCreateProduct"
         >
           新建商品
         </el-button>
@@ -85,20 +85,14 @@
         align="center"
         width="55"
       />
-      <el-table-column label="商品SKU" align="center" width="120">
+      <el-table-column label="商品ID" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品图" align="center" width="200">
+      <el-table-column label="商品SKU" align="center" width="100">
         <template slot-scope="scope">
-          <el-image
-            v-if="scope.row.image"
-            :src="getProductImage(scope.row)"
-            fit="contain"
-            lazy
-            class="image-container"
-          />
+          <span>{{ scope.row.skuid }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
@@ -106,7 +100,7 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="品牌" align="center" width="200">
+      <el-table-column label="品牌" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.brand }}</span>
         </template>
@@ -143,7 +137,7 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" width="120">
+      <el-table-column label="状态" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.state | productState }}</span>
         </template>
@@ -151,23 +145,48 @@
       <el-table-column
         label="操作"
         align="center"
-        width="200"
+        width="280"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
           <el-button
             type="primary"
             size="mini"
-            @click="handleViewProduct(scope.row.skuid)"
+            @click="handleViewProduct(scope.row.id)"
           >
             查看
           </el-button>
           <el-button
-            type="warning"
+            v-if="!isProductOnSale(scope.row.state)"
+            type="info"
             size="mini"
-            @click="handleEditProduct(scope.row.skuid)"
+            @click="handleEditProduct(scope.row.id)"
           >
             编辑
+          </el-button>
+          <el-button
+            v-if="!isProductOnSale(scope.row.state)"
+            type="warning"
+            size="mini"
+            @click="handleProductOnSale(scope.row.id)"
+          >
+            上架
+          </el-button>
+          <el-button
+            v-else
+            type="warning"
+            size="mini"
+            @click="handleProductOffShelves(scope.row.id)"
+          >
+            下架
+          </el-button>
+          <el-button
+            v-if="!isProductOnSale(scope.row.state)"
+            type="danger"
+            size="mini"
+            @click="handleDeleteProduct(scope.row.id)"
+          >
+            删除
           </el-button>
         </template>
       </el-table-column>
@@ -202,11 +221,19 @@
 <script>
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
-import { validateURL } from '@/utils/validate'
-import { getProductListApi, updateProductInfoApi, searchProductsApi } from '@/api/products'
+import {
+  getProductListApi,
+  updateProductApi,
+  searchProductsApi,
+  deleteProductApi
+} from '@/api/products'
 import Pagination from '@/components/Pagination'
 import CategorySelection from './categorySelection'
-import { ProductStateOptions } from '@/utils/constants'
+import {
+  product_state_off_shelves,
+  product_state_on_sale,
+  ProductStateOptions
+} from '@/utils/constants'
 
 export default {
   name: 'Product',
@@ -429,24 +456,91 @@ export default {
         this.listLoading = false
       }
     },
+    isProductOnSale(state) {
+      const value = Number.parseInt(state)
+      if (Number.isNaN(value)) {
+        return false
+      } else {
+        return value === product_state_on_sale
+      }
+    },
     handleFilter() {
       this.getListData()
     },
-    hanleCreateProduct() {
+    handleCreateProduct() {
       this.$router.push({
         name: 'CreateProduct'
       })
     },
-    handleEditProduct(skuid) {
+    handleEditProduct(id) {
       this.$router.push({
         name: 'EditProduct',
-        params: { skuid }
+        params: { id }
       })
     },
-    handleViewProduct(skuid) {
+    handleViewProduct(id) {
       this.$router.push({
         name: 'ViewProduct',
-        params: { skuid }
+        params: { id }
+      })
+    },
+    handleProductOnSale(id) {
+      this.$confirm('是否继续上架此商品？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const params = {
+            id,
+            state: product_state_on_sale
+          }
+          await updateProductApi(params)
+          this.$message({ message: '产品上架成功！', type: 'success' })
+          this.getListData()
+        } catch (e) {
+          console.warn(`Update product state error: ${e}`)
+        }
+      }).catch(() => {
+      })
+    },
+    handleProductOffShelves(id) {
+      this.$confirm('是否继续下架此商品？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const params = {
+            id,
+            state: product_state_off_shelves
+          }
+          await updateProductApi(params)
+          this.$message({ message: '产品下架成功！', type: 'success' })
+          this.getListData()
+        } catch (e) {
+          console.warn(`Update product state error: ${e}`)
+        }
+      }).catch(() => {
+      })
+    },
+    handleDeleteProduct(id) {
+      this.$confirm('是否继续删除此商品？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const params = {
+            id
+          }
+          await deleteProductApi(params)
+          this.$message({ message: '产品删除成功！', type: 'success' })
+          this.getListData()
+        } catch (e) {
+          console.warn(`Update product state error: ${e}`)
+        }
+      }).catch(() => {
       })
     },
     handleCancelEditPrice(row) {
@@ -468,7 +562,7 @@ export default {
             skuid: row.skuid,
             price: row.price
           }
-          await updateProductInfoApi(params)
+          await updateProductApi(params)
           this.$message({ message: '更新产品价格成功。', type: 'success' })
           row.originalPrice = row.price
         } catch (e) {
@@ -575,13 +669,6 @@ export default {
           }
         }
       }))
-    },
-    getProductImage(row) {
-      if (validateURL(row.imageExtend)) {
-        return row.imageExtend
-      } else {
-        return row.image
-      }
     }
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <div v-loading="categoriesLoading" class="app-container">
-    <div class="filter-container">
-      <span>
+    <el-form inline>
+      <el-form-item>
         <el-input
           v-model="filterName"
           placeholder="输入类别名"
@@ -9,16 +9,26 @@
           class="filter-item"
           @keyup.enter.native="handleFilter"
         />
+      </el-form-item>
+      <el-form-item>
         <el-button
-          class="filter-item"
           type="primary"
           icon="el-icon-search"
           @click="handleFilter"
         >
-          搜索
+          搜索类别
         </el-button>
-      </span>
-    </div>
+      </el-form-item>
+      <el-form-item>
+        <el-button
+          type="danger"
+          icon="el-icon-refresh"
+          @click="handleRefresh"
+        >
+          强制刷新
+        </el-button>
+      </el-form-item>
+    </el-form>
     <el-container>
       <el-aside>
         <el-tree :data="topCategoriesData" :props="columnProps" accordion @node-click="handleTopCategoryClick" />
@@ -31,7 +41,7 @@
           </el-button-group>
         </el-header>
         <el-main>
-          <el-table :data="currentTableCategoriesData" border @cell-mouse-enter="handleTableCellMouseEnter">
+          <el-table :data="currentTableCategoriesData" border>
             <el-table-column label="类别名称" align="center">
               <template slot-scope="scope">
                 <span>{{ scope.row.categoryName }}</span>
@@ -87,9 +97,8 @@
             :view-only="noEditPermission"
             path-name="categories"
             image-width="200px"
-            tip="请选择对应的类别文件，类型位JPG或PNG"
+            tip="请选择对应的类别图标文件，类型位JPEG或PNG"
             @success="handleUploadImageSuccess"
-            @failed="handleUploadImageFailed"
           />
         </el-form-item>
       </el-form>
@@ -104,9 +113,6 @@
 <script>
 import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
-import {
-  role_admin_name
-} from '@/utils/constants'
 
 export default {
   name: 'Categories',
@@ -149,13 +155,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      userRole: 'userRole',
+      isAdminUser: 'isAdminUser',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
       categoryData: 'categories'
     }),
     noEditPermission() {
-      return role_admin_name !== this.userRole
+      return !this.isAdminUser
     },
     topCategoriesData() {
       const copyCatetory = src => {
@@ -188,7 +194,7 @@ export default {
     async getAllCategories() {
       if (this.categoriesLoaded === false && this.categoriesLoading === false) {
         try {
-          await this.$store.dispatch('categories/getAllData')
+          await this.$store.dispatch('categories/getAllData', { clearCache: false })
         } catch (e) {
           console.log(('Get Main Category failed: ' + e))
         }
@@ -208,13 +214,8 @@ export default {
         try {
           await this.$store.dispatch('categories/updateCategoryInfo', this.updateValue)
         } catch (e) {
-          console.log('handleUploadImageSuccess:' + e)
+          console.log('updateCategory:' + e)
         }
-      }
-    },
-    handleTableCellMouseEnter(row, column, cell, event) {
-      if (row.categoryId !== this.updateValue.categoryId && this.uploadingImage === false) {
-        this.setUpdateValue(row)
       }
     },
     handleTopCategoryClick(category) {
@@ -242,6 +243,20 @@ export default {
         return []
       }
     },
+    handleRefresh() {
+      this.$confirm('此操作将重新获取全部类别信息, 并需要一段时间，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          await this.$store.dispatch('categories/getAllData', { clearCache: true })
+        } catch (e) {
+          console.log(('Refresh Categories failed: ' + e))
+        }
+      }).catch(() => {
+      })
+    },
     handleFilter() {
       if (this.filterName !== null && this.filterName.length > 0) {
         this.$store.dispatch('categories/searchCategoryInfo', {
@@ -264,19 +279,14 @@ export default {
         this.imageUploadPercent = 0
         this.dialogFormTitle = '编辑 ' + toEdit.categoryName
         this.dialogFormVisible = true
-        this.dialogValue = toEdit
+        this.dialogValue = { ...toEdit }
         this.setUpdateValue(toEdit)
       }
     },
     handleUploadImageSuccess(url) {
-      if (url) {
-        this.updateValue.categoryIcon = url
-      }
-    },
-    handleUploadImageFailed() {
-      if (this.dialogFormVisible) {
-        this.dialogFormVisible = false
-      }
+      console.log('handleUploadImageSuccess:' + url)
+      this.dialogValue.categoryIcon = url
+      this.updateValue.categoryIcon = url
     }
   }
 }
