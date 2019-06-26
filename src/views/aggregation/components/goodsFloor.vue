@@ -235,8 +235,7 @@ export default {
     handleSelectionChange(val) {
       if (val.length > 0) {
         this.selectedItems = val.map(item =>
-          this.floorInfo.skus.indexOf(item.skuid))
-        this.selectedItems.sort((a, b) => b - a)
+          this.floorInfo.skus.findIndex(sku => sku.skuid === item.skuid))
       } else {
         this.selectedItems = []
       }

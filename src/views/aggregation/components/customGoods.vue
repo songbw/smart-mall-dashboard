@@ -183,47 +183,46 @@ export default {
       }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: -1, value: floor })
     },
-    onSortGoodsFloor(index, up) {
-      if ((up && index > 0) || (!up && index < this.goodsList.length - 1)) {
-        this.$store.commit('aggregations/SORT_ITEM_IN_CONTENT', { index: index, up: up })
+    onSortGoodsFloor(floorIndex, up) {
+      if ((up && floorIndex > 0) || (!up && floorIndex < this.goodsList.length - 1)) {
+        this.$store.commit('aggregations/SORT_ITEM_IN_CONTENT', { index: floorIndex, up: up })
       }
     },
-    onDeleteGoodsFloor(index) {
-      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+    onDeleteGoodsFloor(floorIndex) {
+      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', floorIndex)
     },
-    onGoodsFloorTitleChanged(index, title) {
+    onGoodsFloorTitleChanged(floorIndex, title) {
       const floor = { title: title }
-      this.$store.commit('aggregations/SET_GOODS_LIST', { index: index, value: floor })
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
-    onGoodsFloorContentChanged(index, skus) {
-      const floor = Object.assign({}, this.goodsList[index])
-      const skuSet = new Set(floor.skus.map(sku => sku.skuid))
+    onGoodsFloorContentChanged(floorIndex, skus) {
+      const floor = {}
+      const skuIds = this.goodsList[floorIndex].skus.map(sku => sku.skuid)
       const skuArray = []
-      floor.skus.forEach(sku => {
-        skuArray.push(Object.assign({}, sku))
-      })
       skus.forEach(sku => {
-        if (skuSet.has(sku.skuid) === false) {
-          skuSet.add(sku.skuid)
+        if (skuIds.includes(sku.skuid) === false) {
           skuArray.push(sku)
         }
       })
-      floor.skus = Array.from(skuArray)
-      this.$store.commit('aggregations/SET_GOODS_LIST', { index: index, value: floor })
+      if (skuArray.length > 0) {
+        floor.skus = this.goodsList[floorIndex].skus.concat(skuArray)
+        this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+      }
     },
-    onGoodsFloorContentSort(index, params) {
-      const floor = Object.assign({}, this.goodsList[index])
+    onGoodsFloorContentSort(floorIndex, params) {
       const skuIndex = params.index
+      const selected = this.goodsList[floorIndex].skus[skuIndex]
       const up = params.up
+      const floor = {}
+      floor.skus = this.goodsList[floorIndex].skus.filter(sku => sku.skuid !== selected.skuid)
       const newSkuIndex = up ? (skuIndex - params.distance) : (skuIndex + params.distance)
-      const item = floor.skus.splice(skuIndex, 1)[0]
-      floor.skus.splice(newSkuIndex, 0, item)
-      this.$store.commit('aggregations/SET_GOODS_LIST', { index: index, value: floor })
+      floor.skus.splice(newSkuIndex, 0, selected)
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
-    onGoodsFloorDeleteSelection(index, selection) {
-      const floor = Object.assign({}, this.goodsList[index])
-      selection.forEach(i => floor.skus.splice(i, 1))
-      this.$store.commit('aggregations/SET_GOODS_LIST', { index: index, value: floor })
+    onGoodsFloorDeleteSelection(floorIndex, selection) {
+      const floor = {}
+      floor.skus = this.goodsList[floorIndex].skus.filter((sku, index) => !selection.includes(index))
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     }
   }
 }
