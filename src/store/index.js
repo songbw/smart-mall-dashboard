@@ -6,6 +6,7 @@ import user from './modules/user'
 import vendor from './modules/vendor'
 import products from './modules/products'
 import categories from './modules/categories'
+import aggregations from './modules/aggregations'
 
 Vue.use(Vuex)
 
@@ -17,7 +18,8 @@ const store = new Vuex.Store({
     user,
     vendor,
     products,
-    categories
+    categories,
+    aggregations
   },
   getters,
   strict: debug

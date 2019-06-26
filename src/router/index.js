@@ -97,6 +97,35 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/marketing',
+    component: Layout,
+    redirect: '/marketing/aggregations',
+    name: 'Marketing',
+    meta: { title: '营销', icon: 'marketing' },
+    children: [
+      {
+        path: 'aggregations',
+        name: 'Aggregations',
+        component: () => import('@/views/aggregation/index'),
+        meta: { title: '聚合页管理', icon: 'products' }
+      },
+      {
+        path: 'editAggregation/:id',
+        name: 'EditAggregation',
+        component: () => import('@/views/aggregation/detail'),
+        meta: { title: '编辑聚合页', icon: 'products' },
+        hidden: true
+      },
+      {
+        path: 'createAggregation/',
+        name: 'CreateAggregation',
+        component: () => import('@/views/aggregation/detail'),
+        meta: { title: '创建聚合页', icon: 'products' },
+        hidden: true
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
     redirect: '/vendorInfo/profile',

@@ -1,0 +1,217 @@
+<template>
+  <el-dialog
+    :visible="dialogVisible"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :show-close="false"
+    title="导入商品"
+    width="60%"
+    center
+  >
+    <input
+      ref="excel-upload-input"
+      class="excel-upload-input"
+      type="file"
+      accept=".xlsx, .xls"
+      @change="handleFileChange"
+    >
+    <el-form label-width="160px">
+      <el-form-item label="文件">
+        <el-input v-model="fileName" readonly />
+        <span>建议上传大小不超过1M的.xls文件，最多200个商品</span>
+      </el-form-item>
+      <el-form-item>
+        <el-button :loading="loading" type="primary" icon="el-icon-upload" @click="handleSelect">
+          选择文件
+        </el-button>
+        <el-button icon="el-icon-document" @click="handleTemplate">
+          下载模板
+        </el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-progress
+          v-if="loading"
+          text-inside
+          :stroke-width="18"
+          :percentage="percentage"
+          style="width: 80%"
+        />
+      </el-form-item>
+    </el-form>
+
+    <el-table
+      v-loading="loading"
+      element-loading-text="正在导入..."
+      :data="excelData.results"
+      border
+      style="width: 100%;margin-top:20px;"
+      height="250"
+    >
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.skuid }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品名" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.intro }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品价格(元)" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <span slot="footer">
+      <el-button @click="handleDialogCancel">取消</el-button>
+      <el-button
+        type="primary"
+        :disabled="loading"
+        @click="handleDialogConfirm"
+      >
+        确认
+      </el-button>
+    </span>
+  </el-dialog>
+</template>
+
+<script>
+import XLSX from 'xlsx'
+import { searchProductsApi } from '@/api/products'
+
+export default {
+  name: 'GoodsImportDialog',
+  props: {
+    dialogVisible: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      loading: false,
+      fileName: '',
+      percentage: 0,
+      excelData: {
+        header: [],
+        results: []
+      }
+    }
+  },
+  methods: {
+    handleFileChange(e) {
+      const files = e.target.files
+      const rawFile = files[0] // only use files[0]
+      if (!rawFile) return
+      this.fileName = rawFile.name
+      this.$refs['excel-upload-input'].value = null // fix can't select the same excel
+      this.readDate(rawFile)
+    },
+    handleSelect() {
+      this.$refs['excel-upload-input'].click()
+    },
+    handleTemplate() {
+      import('@/utils/Export2Excel').then(excel => {
+        const tHeader = ['skuID']
+        const data = []
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: '导入商品信息模板'
+        })
+      })
+    },
+    handleDialogCancel() {
+      this.clearDialogData()
+      this.$emit('onSelectionCancelled')
+    },
+    handleDialogConfirm() {
+      const skus = this.excelData.results
+      this.$emit('onSelectionConfirmed', skus)
+      this.clearDialogData()
+    },
+    clearDialogData() {
+      this.percentage = 0
+      this.fileName = ''
+      this.excelData.header = []
+      this.excelData.results = []
+    },
+    readDate(rawFile) {
+      this.loading = true
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = e => {
+          const data = e.target.result
+          const workbook = XLSX.read(data, { type: 'array' })
+          const firstSheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[firstSheetName]
+          const header = this.getHeaderRow(worksheet)
+          const results = XLSX.utils.sheet_to_json(worksheet)
+          this.generateData({ header, results })
+          resolve()
+        }
+        reader.readAsArrayBuffer(rawFile)
+      })
+    },
+    getHeaderRow(sheet) {
+      const headers = []
+      const range = XLSX.utils.decode_range(sheet['!ref'])
+      let C
+      const R = range.s.r
+      /* start in the first row */
+      for (C = range.s.c; C <= range.e.c; ++C) { /* walk every column in the range */
+        const cell = sheet[XLSX.utils.encode_cell({ c: C, r: R })]
+        /* find the cell in the first row */
+        let hdr = 'UNKNOWN ' + C // <-- replace with your desired default
+        if (cell && cell.t) hdr = XLSX.utils.format_cell(cell)
+        headers.push(hdr)
+      }
+      return headers
+    },
+    isProductValid(product) {
+      const price = Number.parseFloat(product.price)
+      const image = product.image || product.imageExtend
+      return !(Number.isNaN(price) || image === null)
+    },
+    async generateData({ header, results }) {
+      this.excelData.header = header
+      const fetchedSkus = []
+      let fetchedNum = 0
+      for (let i = 0; i < results.length; i++) {
+        const skuID = results[i].skuID
+        try {
+          const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
+          fetchedNum++
+          this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
+          const data = response.data.result
+          if (data.total > 0) {
+            const product = data.list[0]
+            if (this.isProductValid(product)) {
+              const item = {
+                skuid: product.skuid,
+                price: product.price,
+                imagePath: product.image,
+                intro: product.name
+              }
+              fetchedSkus.push(item)
+            }
+          }
+        } catch (err) {
+          console.log('GoodImport: search error ' + skuID)
+        }
+      }
+      this.excelData.results = fetchedSkus
+      this.loading = false
+      this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
+    }
+  }
+}
+</script>
+
+<style scoped>
+  .excel-upload-input {
+    display: none;
+    z-index: -9999;
+  }
+</style>

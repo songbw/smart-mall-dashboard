@@ -3,6 +3,7 @@ import Vue from 'vue'
 import './plugins/element-ui'
 import './plugins/localforage'
 import './plugins/axios'
+import './plugins/qriously'
 
 import App from './App'
 import store from './store'

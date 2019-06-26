@@ -14,6 +14,12 @@ const getters = {
   productQuery: state => state.products.search,
   categoriesLoaded: state => state.categories.dataLoaded,
   categoriesLoading: state => state.categories.dataLoading,
-  categories: state => state.categories.allData
+  categories: state => state.categories.allData,
+  aggregationsQuery: state => state.aggregations.search,
+  currentAggregation: state => state.aggregations.aggregation,
+  currentAggregationContent: state => state.aggregations.aggregation.content,
+  currentAggregationContentIndex: state => state.aggregations.contentIndex,
+  aggregationGroupId: state => state.aggregations.groupId,
+  aggregationGroups: state => state.aggregations.groups
 }
 export default getters

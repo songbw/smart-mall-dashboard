@@ -1,0 +1,7 @@
+export const bannerType = '0'
+export const serviceType = '1'
+export const gridType = '2'
+export const promotionType = '3'
+export const goodsType = '4'
+export const couponType = '6'
+export const hotZoneType = '7'
