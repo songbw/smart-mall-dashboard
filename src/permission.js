@@ -26,8 +26,6 @@ router.beforeEach(async(to, from, next) => {
     }
   })
 
-  console.log(`Route: path=${to.path} with pass through ${pass}`)
-
   NProgress.start()
   try {
     if (pass) {

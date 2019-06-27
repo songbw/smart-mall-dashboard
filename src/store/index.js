@@ -8,6 +8,7 @@ import products from './modules/products'
 import categories from './modules/categories'
 import aggregations from './modules/aggregations'
 import promotions from './modules/promotions'
+import coupons from './modules/coupons'
 
 Vue.use(Vuex)
 
@@ -21,7 +22,8 @@ const store = new Vuex.Store({
     products,
     categories,
     aggregations,
-    promotions
+    promotions,
+    coupons
   },
   getters,
   strict: debug

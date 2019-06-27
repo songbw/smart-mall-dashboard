@@ -97,6 +97,48 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/coupons',
+    component: Layout,
+    redirect: '/coupons/index',
+    name: 'Coupons',
+    meta: { title: '权益', icon: 'golds' },
+    children: [
+      {
+        path: 'index',
+        name: 'CouponsIndex',
+        component: () => import('@/views/coupons/index'),
+        meta: { title: '优惠券管理', icon: 'coupons' }
+      },
+      {
+        path: 'tags',
+        name: 'CouponTags',
+        component: () => import('@/views/coupons/tags'),
+        meta: { title: '标签管理', icon: 'tags' }
+      },
+      {
+        path: 'detail/:id',
+        name: 'CouponDetail',
+        component: () => import('@/views/coupons/custom'),
+        meta: { title: '优惠券详情' },
+        hidden: true
+      },
+      {
+        path: 'creation',
+        name: 'CreateCoupon',
+        component: () => import('@/views/coupons/custom'),
+        meta: { title: '创建优惠券' },
+        hidden: true
+      },
+      {
+        path: 'usages/:id',
+        name: 'CouponUsages',
+        component: () => import('@/views/coupons/usages'),
+        meta: { title: '领取详情' },
+        hidden: true
+      }
+    ]
+  },
+  {
     path: '/marketing',
     component: Layout,
     redirect: '/marketing/aggregations',

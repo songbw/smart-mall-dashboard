@@ -21,6 +21,7 @@ const getters = {
   currentAggregationContentIndex: state => state.aggregations.contentIndex,
   aggregationGroupId: state => state.aggregations.groupId,
   aggregationGroups: state => state.aggregations.groups,
-  currentPromotion: state => state.promotions.promotion
+  currentPromotion: state => state.promotions.promotion,
+  couponQuery: state => state.coupons.search
 }
 export default getters

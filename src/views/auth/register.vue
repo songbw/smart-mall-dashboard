@@ -157,11 +157,7 @@ export default {
     }
   },
   created() {
-    if (this.$route.path === '/register') {
-      this.isRegister = true
-    } else {
-      this.isRegister = false
-    }
+    this.isRegister = this.$route.path === '/register'
   },
   beforeDestroy() {
     this.clearTimer()

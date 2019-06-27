@@ -250,7 +250,7 @@ export default {
             return true
           }
         } catch (e) {
-          this.$log.warn('checkHomePage:' + e)
+          console.warn('checkHomePage:' + e)
           return false
         }
       } else {
