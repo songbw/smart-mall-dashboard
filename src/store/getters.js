@@ -20,6 +20,7 @@ const getters = {
   currentAggregationContent: state => state.aggregations.aggregation.content,
   currentAggregationContentIndex: state => state.aggregations.contentIndex,
   aggregationGroupId: state => state.aggregations.groupId,
-  aggregationGroups: state => state.aggregations.groups
+  aggregationGroups: state => state.aggregations.groups,
+  currentPromotion: state => state.promotions.promotion
 }
 export default getters

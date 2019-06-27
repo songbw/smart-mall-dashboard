@@ -107,20 +107,47 @@ export const constantRoutes = [
         path: 'aggregations',
         name: 'Aggregations',
         component: () => import('@/views/aggregation/index'),
-        meta: { title: '聚合页管理', icon: 'products' }
+        meta: { title: '聚合页管理', icon: 'aggregations' }
       },
       {
         path: 'editAggregation/:id',
         name: 'EditAggregation',
         component: () => import('@/views/aggregation/detail'),
-        meta: { title: '编辑聚合页', icon: 'products' },
+        meta: { title: '编辑聚合页', icon: 'aggregations' },
         hidden: true
       },
       {
-        path: 'createAggregation/',
+        path: 'createAggregation',
         name: 'CreateAggregation',
         component: () => import('@/views/aggregation/detail'),
-        meta: { title: '创建聚合页', icon: 'products' },
+        meta: { title: '创建聚合页', icon: 'aggregations' },
+        hidden: true
+      },
+      {
+        path: 'promotions',
+        name: 'Promotions',
+        component: () => import('@/views/promotions/index'),
+        meta: { title: '促销活动', icon: 'promotions' }
+      },
+      {
+        path: 'createPromotion',
+        name: 'CreatePromotion',
+        component: () => import('@/views/promotions/creation'),
+        meta: { title: '创建促销活动', icon: 'promotions' },
+        hidden: true
+      },
+      {
+        path: 'editPromotion/:id',
+        name: 'EditPromotion',
+        component: () => import('@/views/promotions/creation'),
+        meta: { title: '创建促销活动', icon: 'promotions' },
+        hidden: true
+      },
+      {
+        path: 'viewPromotion/:id',
+        name: 'ViewPromotion',
+        component: () => import('@/views/promotions/creation'),
+        meta: { title: '创建促销活动', icon: 'promotions' },
         hidden: true
       }
     ]
@@ -140,7 +167,7 @@ export const constantRoutes = [
         path: 'profile',
         name: 'vendorProfile',
         component: () => import('@/views/vendor/profile'),
-        meta: { title: '商户信息', icon: 'vendor', roles: [role_vendor_name] }
+        meta: { title: '商户信息', icon: 'info', roles: [role_vendor_name] }
       }
     ]
   },
