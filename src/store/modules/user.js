@@ -2,6 +2,7 @@ import localForage from 'localforage'
 import {
   loginApi,
   registerApi,
+  passwordNewApi,
   getVerificationCodeApi,
   getRoleApi,
   logoutApi
@@ -10,6 +11,7 @@ import {
 import {
   storage_key_token,
   storage_key_name,
+  storage_key_phone,
   storage_key_role,
   storage_merchant_id
 } from '@/utils/constants'
@@ -41,16 +43,17 @@ const actions = {
     const username = userInfo.username.trim()
     const password = userInfo.password.trim()
     const data = await loginApi({ name: username, password: password })
+    const phone = data.phone || ''
     commit('SET_NAME', username)
     commit('SET_TOKEN', data.token)
-    commit('SET_PHONE', data.phone || '')
+    commit('SET_PHONE', phone)
     commit('SET_ROLE', '')
 
     await localForage.setItem(storage_key_token, data.token)
     await localForage.setItem(storage_key_name, username)
+    await localForage.setItem(storage_key_phone, phone)
     return data.token
   },
-
   async register({ commit }, params) {
     const name = params.username.trim()
     const phone = params.phone
@@ -58,19 +61,23 @@ const actions = {
     const data = await registerApi({ name, phone, password: params.password.trim(), code })
     return data.token
   },
-
+  async passwordNew({ commit }, params) {
+    const name = params.username.trim()
+    const phone = params.phone
+    const code = params.code
+    const data = await passwordNewApi({ name, phone, password: params.password.trim(), code })
+    return data.id
+  },
   async getVerificationCode({ commit }, params) {
     const data = await getVerificationCodeApi({ phone: params.phone })
     return data.code
   },
-
   async getRole({ commit, state }) {
     const data = await getRoleApi()
     commit('SET_ROLE', data.role)
     await localForage.setItem(storage_key_role, data.role)
     return data.role
   },
-
   async logout({ commit, dispatch }) {
     try {
       await logoutApi()
@@ -80,7 +87,6 @@ const actions = {
       await dispatch('resetUser')
     }
   },
-
   // remove token
   async resetUser({ commit, dispatch }) {
     commit('SET_TOKEN', '')
@@ -89,7 +95,6 @@ const actions = {
     commit('SET_PHONE', '')
     await dispatch('resetStorage')
   },
-
   async resetStorage() {
     try {
       await localForage.removeItem(storage_key_token)

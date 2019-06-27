@@ -24,6 +24,14 @@ export function registerApi(data) {
   })
 }
 
+export function passwordNewApi(data) {
+  return Vue.axios.request({
+    url: '/vendors/vendors/password',
+    method: 'post',
+    data
+  })
+}
+
 export function getVerificationCodeApi(params) {
   return Vue.axios.request({
     url: '/vendors/users/verification_code',

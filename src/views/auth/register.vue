@@ -44,18 +44,11 @@
             />
           </el-form-item>
           <el-form-item label="手机号码" prop="phone">
-            <el-input
-              v-model="registerForm.phone"
-              type="tel"
-              placeholder="输入手机号码"
-            />
-          </el-form-item>
-          <el-form-item label="短信验证码" prop="code">
             <div style="display: flex;justify-content: space-between">
               <el-input
-                v-model="registerForm.code"
-                type="number"
-                placeholder="输入手机验证码"
+                v-model="registerForm.phone"
+                type="tel"
+                placeholder="输入手机号码"
                 style="width: 60%"
               />
               <el-button
@@ -66,6 +59,17 @@
               >
                 {{ codeButtonLabel }}
               </el-button>
+            </div>
+          </el-form-item>
+          <el-form-item label="验证码" prop="code">
+            <div style="display: flex;justify-content: space-between">
+              <el-input
+                v-model="registerForm.code"
+                type="number"
+                placeholder="输入右侧验证码"
+                style="width: 60%"
+              />
+              <span style="font: 25px Georgia;background: #C0C4CC">{{ captcha }}</span>
             </div>
           </el-form-item>
           <el-form-item>
@@ -86,6 +90,7 @@
 </template>
 
 <script>
+import isEmpty from 'lodash/isEmpty'
 import {
   validUserName,
   validPhone,
@@ -125,7 +130,7 @@ export default {
     }
     const validateCode = (rule, value, callback) => {
       if (value.length !== 6 || validVerificationCode(value) === false) {
-        callback(new Error('请输入正确的手机验证码'))
+        callback(new Error('请输入正确的验证码'))
       } else {
         callback()
       }
@@ -134,6 +139,7 @@ export default {
       loading: false,
       timedOut: 60,
       timer: null,
+      captcha: '',
       registerForm: {
         username: '',
         password: '',
@@ -153,7 +159,7 @@ export default {
   },
   computed: {
     codeButtonLabel() {
-      return this.timedOut < 60 ? `${this.timedOut} S` : '获取验证码'
+      return this.timedOut < 60 ? `${this.timedOut} 秒` : '获取验证码'
     }
   },
   created() {
@@ -164,6 +170,7 @@ export default {
   },
   methods: {
     startTimer() {
+      this.clearTimer()
       this.timedOut--
       this.timer = setInterval(() => {
         this.timedOut--
@@ -182,13 +189,12 @@ export default {
     gotoLogin() {
       this.$router.replace('/login')
     },
-    async handleGetCode() {
-      try {
-        const phoneValid = await this.$refs.registerForm.validateField('phone')
-        if (phoneValid) {
+    handleGetCode() {
+      this.$refs.registerForm.validateField('phone', errorMessage => {
+        if (isEmpty(errorMessage)) {
           this.startTimer()
           this.$store.dispatch('user/getVerificationCode', { phone: this.registerForm.phone }).then((code) => {
-            console.info('Verification Code:' + code)
+            this.captcha = code
           }).catch(_ => {
             this.$message({
               message: '获取验证码失败，请稍后重试!',
@@ -197,9 +203,7 @@ export default {
             this.clearTimer()
           })
         }
-      } catch (e) {
-        console.log(`handleGetCode: ${e}`)
-      }
+      })
     },
     handleRegister() {
       this.loading = true
@@ -243,6 +247,16 @@ export default {
       })
     },
     handlePasswordNew() {
+      this.loading = true
+      this.$store.dispatch('user/passwordNew', this.registerForm).then(() => {
+        this.$message({ message: '恭喜你，密码重置成功！', type: 'success' })
+        this.gotoLogin()
+      }).catch((_) => {
+        this.$message({
+          message: '密码重置失败，请检查用户名及手机号码!',
+          type: 'error'
+        })
+      })
     },
     async handleSubmit() {
       try {

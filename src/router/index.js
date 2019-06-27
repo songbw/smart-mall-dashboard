@@ -207,9 +207,15 @@ export const constantRoutes = [
     children: [
       {
         path: 'profile',
-        name: 'vendorProfile',
+        name: 'VendorProfile',
         component: () => import('@/views/vendor/profile'),
-        meta: { title: '商户信息', icon: 'info', roles: [role_vendor_name] }
+        meta: { title: '商户', icon: 'vendor-info', roles: [role_vendor_name] }
+      },
+      {
+        path: 'user',
+        name: 'UserInfo',
+        component: () => import('@/views/vendor/userInfo'),
+        meta: { title: '用户', icon: 'user', roles: [role_vendor_name] }
       }
     ]
   },

@@ -7,6 +7,7 @@ const getters = {
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,
   userName: state => state.user.name,
+  userPhone: state => state.user.phone,
   userRole: state => state.user.role,
   isAdminUser: state => role_admin_name === state.user.role,
   vendorProfile: state => state.vendor.profile,

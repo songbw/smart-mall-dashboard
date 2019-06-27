@@ -1,6 +1,7 @@
 export const app_upload_url = `${process.env.VUE_APP_BASE_URL}/bases/upload/relative`
 export const storage_key_token = 'user_token'
 export const storage_key_name = 'user_name'
+export const storage_key_phone = 'user_phone'
 export const storage_key_role = 'user_role'
 export const storage_merchant_id = 'merchant_id'
 export const storage_product_categories = 'product_categories'
