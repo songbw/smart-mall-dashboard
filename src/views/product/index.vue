@@ -41,6 +41,7 @@
       </el-form>
       <div style="margin-bottom: 10px;display: flex;justify-content: space-between">
         <el-button
+          :disabled="!vendorApproved"
           type="primary"
           icon="el-icon-goods"
           @click="handleCreateProduct"
@@ -274,7 +275,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      productQuery: 'productQuery'
+      productQuery: 'productQuery',
+      vendorApproved: 'vendorApproved'
     }),
     firstCategoryValue: {
       get() {
@@ -382,15 +384,17 @@ export default {
       this.searchParams.categoryID = null
     },
     getListData() {
-      if (this.isFilterChanged()) {
-        this.listOffset = 1
-      }
-      this.resetSearchParams()
-      const params = this.getFilterParams()
-      if (params) {
-        this.getFilterProducts(params)
-      } else {
-        this.getAllProducts()
+      if (this.vendorApproved) {
+        if (this.isFilterChanged()) {
+          this.listOffset = 1
+        }
+        this.resetSearchParams()
+        const params = this.getFilterParams()
+        if (params) {
+          this.getFilterProducts(params)
+        } else {
+          this.getAllProducts()
+        }
       }
     },
     async getAllProducts() {

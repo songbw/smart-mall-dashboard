@@ -167,6 +167,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      vendorApproved: 'vendorApproved',
       orderQuery: 'orderQuery'
     }),
     queryTradeNo: {
@@ -256,11 +257,13 @@ export default {
     },
     async getOrderList() {
       try {
-        this.listLoading = true
-        const params = this.getSearchParams()
-        const { data } = await getOrderListApi(params)
-        this.orderTotal = data.result.total
-        this.orderData = data.result.list
+        if (this.vendorApproved) {
+          this.listLoading = true
+          const params = this.getSearchParams()
+          const { data } = await getOrderListApi(params)
+          this.orderTotal = data.result.total
+          this.orderData = data.result.list
+        }
       } catch (e) {
         console.warn('Orders List error: ' + e)
       } finally {

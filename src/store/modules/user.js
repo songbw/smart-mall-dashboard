@@ -99,6 +99,7 @@ const actions = {
     try {
       await localForage.removeItem(storage_key_token)
       await localForage.removeItem(storage_key_name)
+      await localForage.removeItem(storage_key_phone)
       await localForage.removeItem(storage_key_role)
       await localForage.removeItem(storage_merchant_id)
     } catch (e) {

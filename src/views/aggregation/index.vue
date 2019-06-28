@@ -44,11 +44,17 @@
           :name="item.name"
         >
           <el-button-group>
-            <el-button type="primary" icon="el-icon-document-add" @click="createPage">
+            <el-button
+              :disabled="!vendorApproved"
+              type="primary"
+              icon="el-icon-document-add"
+              @click="createPage"
+            >
               创建聚合页
             </el-button>
             <el-button
               v-if="item.name === '-1' || item.name === '0'"
+              :disabled="!vendorApproved"
               type="info"
               icon="el-icon-folder"
               @click="handleCreateGroup"
@@ -241,6 +247,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      vendorApproved: 'vendorApproved',
       listQuery: 'aggregationsQuery',
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId'
@@ -320,17 +327,21 @@ export default {
   methods: {
     async getAggregationGroups() {
       try {
-        await this.$store.dispatch('aggregations/getGroups', { offset: 1, limit: 100 })
+        if (this.vendorApproved) {
+          await this.$store.dispatch('aggregations/getGroups', { offset: 1, limit: 100 })
+        }
       } catch (e) {
         console.warn('getAggregationGroups:' + e)
       }
     },
     getListData() {
-      const params = this.getFilterParams()
-      if (params) {
-        this.queryFilterData(params)
-      } else {
-        this.queryAllData()
+      if (this.vendorApproved) {
+        const params = this.getFilterParams()
+        if (params) {
+          this.queryFilterData(params)
+        } else {
+          this.queryAllData()
+        }
       }
     },
     async queryAllData() {

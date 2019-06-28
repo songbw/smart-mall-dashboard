@@ -1,5 +1,6 @@
 import {
-  role_admin_name
+  role_admin_name,
+  vendor_status_approved
 } from '@/utils/constants'
 
 const getters = {
@@ -11,7 +12,11 @@ const getters = {
   userRole: state => state.user.role,
   isAdminUser: state => role_admin_name === state.user.role,
   vendorProfile: state => state.vendor.profile,
-  vendorId: state => state.vendor.profile.status === 3 ? state.vendor.profile.id : -1,
+  vendorApproved: state => {
+    return role_admin_name === state.user.role ||
+      state.vendor.profile.status === vendor_status_approved
+  },
+  vendorId: state => state.vendor.profile.status === vendor_status_approved ? state.vendor.profile.id : -1,
   productQuery: state => state.products.search,
   categoriesLoaded: state => state.categories.dataLoaded,
   categoriesLoading: state => state.categories.dataLoading,

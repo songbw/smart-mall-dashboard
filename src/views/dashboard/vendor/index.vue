@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-editor-container">
+  <div class="app-container">
     <vendor-info />
     <panel-group @handleSetLineChartData="handleSetLineChartData" />
   </div>
@@ -22,9 +22,3 @@ export default {
 }
 </script>
 
-<style scoped>
-  .dashboard-editor-container {
-    padding: 32px;
-    background-color: rgb(240, 242, 245);
-  }
-</style>
