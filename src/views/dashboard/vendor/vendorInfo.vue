@@ -46,7 +46,7 @@ export default {
   },
   methods: {
     handleViewVendor() {
-      this.$router.push({ name: 'vendorProfile' })
+      this.$router.push({ name: 'VendorProfile' })
     }
   }
 }

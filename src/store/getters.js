@@ -23,6 +23,7 @@ const getters = {
   aggregationGroupId: state => state.aggregations.groupId,
   aggregationGroups: state => state.aggregations.groups,
   currentPromotion: state => state.promotions.promotion,
-  couponQuery: state => state.coupons.search
+  couponQuery: state => state.coupons.search,
+  orderQuery: state => state.orders.search
 }
 export default getters

@@ -195,6 +195,34 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/orders',
+    component: Layout,
+    redirect: '/orders/index',
+    name: 'OrderManager',
+    meta: { title: '订单', icon: 'orders' },
+    children: [
+      {
+        path: 'index',
+        name: 'Orders',
+        component: () => import('@/views/orders/index'),
+        meta: { title: '订单管理', icon: 'carts' }
+      },
+      {
+        path: 'viewOrder/:subId',
+        name: 'ViewOrder',
+        component: () => import('@/views/orders/detail'),
+        meta: { title: '查看订单', icon: 'orders' },
+        hidden: true
+      },
+      {
+        path: 'delivery',
+        name: 'OrderDelivery',
+        component: () => import('@/views/orders/delivery'),
+        meta: { title: '订单物流', icon: 'delivery' }
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
     redirect: '/vendorInfo/profile',
