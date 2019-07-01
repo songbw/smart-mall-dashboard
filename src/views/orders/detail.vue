@@ -4,7 +4,7 @@
       <el-col :span="12">
         <el-card>
           <div slot="header">
-            <h3>订单信息</h3>
+            <span class="card-header-text">订单信息</span>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="订单状态:">
@@ -19,14 +19,8 @@
             <el-form-item label="下单时间:">
               <span>{{ orderData.createdAt | timeFilter }}</span>
             </el-form-item>
-            <el-form-item label="支付编号:">
-              <span>{{ orderData.paymentNo }}</span>
-            </el-form-item>
-            <el-form-item label="支付时间:">
-              <span>{{ orderData.paymentAt | timeFilter }}</span>
-            </el-form-item>
-            <el-form-item label="金额:">
-              <span>{{ orderData.amount }}</span>
+            <el-form-item label="更新时间:">
+              <span>{{ orderData.updatedAt | timeFilter }}</span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -34,7 +28,7 @@
       <el-col :span="12">
         <el-card>
           <div slot="header">
-            <h3>收获人信息</h3>
+            <span class="card-header-text">收货信息</span>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="OpenID:">
@@ -63,7 +57,7 @@
       <el-col :span="12">
         <el-card>
           <div slot="header">
-            <h3>发票信息</h3>
+            <span class="card-header-text">发票信息</span>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="是否开票:">
@@ -81,7 +75,7 @@
       <el-col :span="12">
         <el-card>
           <div slot="header">
-            <h3>物流信息</h3>
+            <span class="card-header-text">物流信息</span>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="物流单号:">
@@ -98,10 +92,12 @@
       <el-col :span="12">
         <el-card>
           <div slot="header">
-            <h3>订单商品</h3>
-            <el-image :src="orderData.image" fit="contain" style="height: 200px" lazy />
+            <span class="card-header-text">商品信息</span>
           </div>
           <el-form label-position="right" label-width="120">
+            <el-form-item>
+              <el-image :src="orderData.image" fit="contain" style="height: 200px" lazy />
+            </el-form-item>
             <el-form-item label="商品SKU:">
               <span>{{ orderData.skuId }}</span>
             </el-form-item>
@@ -113,6 +109,30 @@
             </el-form-item>
             <el-form-item label="购买数量:">
               <span>{{ orderData.num }}</span>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card>
+          <div slot="header">
+            <span class="card-header-text">支付信息</span>
+          </div>
+          <el-form label-position="right" label-width="120">
+            <el-form-item label="支付状态">
+              <span>{{ orderData.payStatus | payFilter }}</span>
+            </el-form-item>
+            <el-form-item label="支付编号:">
+              <span>{{ orderData.paymentNo }}</span>
+            </el-form-item>
+            <el-form-item label="支付时间:">
+              <span>{{ orderData.paymentAt | timeFilter }}</span>
+            </el-form-item>
+            <el-form-item label="支付金额:">
+              <span>{{ orderData.amount }}</span>
+            </el-form-item>
+            <el-form-item label="运费:">
+              <span>{{ orderData.servFee }}</span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -129,7 +149,7 @@ import {
   getOrderListApi,
   getAddressApi
 } from '@/api/orders'
-import { orderStatus } from './constants'
+import { orderStatus, paymentStatus } from './constants'
 
 export default {
   name: 'OrderDetail',
@@ -145,6 +165,10 @@ export default {
     },
     invoiceFilter(state) {
       return state === '1' ? '需要' : '不需要'
+    },
+    payFilter: status => {
+      const find = paymentStatus.find(option => option.value === status)
+      return find ? find.label : status
     }
   },
   data() {
@@ -220,5 +244,8 @@ export default {
 </script>
 
 <style scoped>
-
+  .card-header-text {
+    font-size: 16px;
+    font-weight: bold;
+  }
 </style>

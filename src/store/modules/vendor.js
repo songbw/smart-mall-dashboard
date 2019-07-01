@@ -29,9 +29,16 @@ const mutations = {
 
 const actions = {
   async getProfile({ commit, state }) {
-    const { company } = await getProfileApi()
-    commit('SET_VENDOR_PROFILE', company)
-    return { status: company.status, id: company.id }
+    try {
+      const { company } = await getProfileApi()
+      commit('SET_VENDOR_PROFILE', company)
+      return { status: company.status, id: company.id }
+    } catch (_) {
+      commit('SET_VENDOR_PROFILE',
+        { id: -1, name: '', address: '', industry: '', licenseUrl: '', status: 0, comments: '' }
+      )
+      return { status: 0, id: -1 }
+    }
   },
   async createProfile({ commit, dispatch }, params) {
     const data = await createProfileApi(params)
