@@ -11,7 +11,7 @@ const state = {
     name: '',
     address: '',
     industry: '', // 'FINANCE;GAME;TRAFFIC;LIFE;E_BUSINESS;SOCIAL;CATERERS;CAR;RECRUIT;OTHER'
-    licenceUrl: '',
+    licenseUrl: '',
     status: 0, // 0:未创建 1:编辑中 2:神话中 3:审核通过 4:审核有问题
     comments: ''
   }

@@ -84,8 +84,8 @@
             <h3>物流信息</h3>
           </div>
           <el-form label-position="right" label-width="120">
-            <el-form-item label="物流编号:">
-              <span>{{ orderData.logisticsId | invoiceFilter }}</span>
+            <el-form-item label="物流单号:">
+              <span>{{ orderData.logisticsId }}</span>
             </el-form-item>
             <el-form-item label="物流内容:">
               <span>{{ orderData.logisticsContent }}</span>

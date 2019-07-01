@@ -90,9 +90,9 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="物流单号" align="center" width="180">
+      <el-table-column label="下单时间" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.logisticsId }}</span>
+          <span>{{ scope.row.createdAt | timeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column label="订单状态" align="center" width="80">
@@ -136,6 +136,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
@@ -151,6 +152,11 @@ export default {
     orderStatus: status => {
       const find = orderStatus.find(option => option.value === status)
       return find ? find.label : status
+    },
+    timeFilter: date => {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const momentDate = moment(date)
+      return momentDate.isValid() ? momentDate.format(format) : ''
     }
   },
   data() {

@@ -35,8 +35,8 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="营业执照" prop="licenceUrl">
-            <img v-if="vendorlicenceUrl" :src="vendorlicenceUrl" width="50%" alt="">
+          <el-form-item label="营业执照" prop="licenseUrl">
+            <img v-if="vendorLicenseUrl" :src="vendorLicenseUrl" width="50%" alt="">
             <el-upload
               ref="uploadLicense"
               :action="uploadUrl"
@@ -108,17 +108,17 @@ export default {
       if (this.vendorIndustry && this.vendorIndustry.length > 0) {
         callback()
       } else {
-        callback(new Error('请选择商户推广广告类别'))
+        callback(new Error('请选择商户类型'))
       }
     }
     const validateLicense = (rule, value, callback) => {
-      if (this.vendorlicenceUrl && this.vendorlicenceUrl.length > 1) {
+      if (this.vendorLicenseUrl && this.vendorLicenseUrl.length > 1) {
         callback()
       } else {
         if (this.uploadFileList.length > 0) {
           callback()
         } else {
-          callback(new Error('请选择商户推广广告类别'))
+          callback(new Error('请选择营业执照图片'))
         }
       }
     }
@@ -133,14 +133,14 @@ export default {
         name: null,
         address: null,
         industry: null,
-        licenceUrl: null
+        licenseUrl: null
       },
       loading: false,
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
         industry: [{ required: true, trigger: 'change', validator: validateIndustry }],
-        licenceUrl: [{ required: true, trigger: 'change', validator: validateLicense }]
+        licenseUrl: [{ required: true, trigger: 'change', validator: validateLicense }]
       },
       uploadFileList: []
     }
@@ -222,8 +222,8 @@ export default {
         this.profile.industry = values.join(';')
       }
     },
-    vendorlicenceUrl() {
-      return this.profile.licenceUrl != null ? this.profile.licenceUrl : this.vendorProfile.licenceUrl
+    vendorLicenseUrl() {
+      return this.profile.licenseUrl != null ? this.profile.licenseUrl : this.vendorProfile.licenseUrl
     }
   },
   created() {
@@ -259,6 +259,7 @@ export default {
         }
       } catch (e) {
         console.log(`Update vendor profile error:${e}`)
+        this.$message.error('企业信息更新失败，请联系管理人员！')
       } finally {
         this.loading = false
       }
@@ -270,6 +271,7 @@ export default {
         this.$message.success('企业信息登记成功!')
       } catch (e) {
         console.log(`Create vendor profile error:${e}`)
+        this.$message.error('企业信息登记失败，请联系管理人员！')
       } finally {
         this.loading = false
       }
@@ -300,7 +302,7 @@ export default {
       })
     },
     async handleUploadImageSuccess(response) {
-      this.profile.licenceUrl = this.cosUrl + response.data.url
+      this.profile.licenseUrl = this.cosUrl + response.data.url
       this.$refs.uploadLicense.clearFiles()
       await this.createOrSaveProfile()
     },
