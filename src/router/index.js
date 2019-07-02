@@ -223,6 +223,34 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/workOrders',
+    component: Layout,
+    redirect: '/workOrders/index',
+    name: 'WorkOrderManager',
+    meta: { title: '售后', icon: 'after-sales' },
+    children: [
+      {
+        path: 'index',
+        name: 'WorkOrders',
+        component: () => import('@/views/workorders/index'),
+        meta: { title: '售后管理', icon: 'work-order' }
+      },
+      {
+        path: 'viewWorkOrder/:id',
+        name: 'ViewWorkOrder',
+        component: () => import('@/views/workorders/detail'),
+        meta: { title: '查看售后详情', icon: 'work-order' },
+        hidden: true
+      },
+      {
+        path: 'types',
+        name: 'WorkOrderTypes',
+        component: () => import('@/views/workorders/types'),
+        meta: { title: '售后类型', icon: 'tags' }
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
     redirect: '/vendorInfo/profile',

@@ -9,7 +9,7 @@
           size="mini"
           @click="showImageDialog(true)"
         >
-          添加模块
+          添加轮播图
         </el-button>
       </div>
     </el-header>

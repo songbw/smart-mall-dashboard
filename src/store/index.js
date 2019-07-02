@@ -10,6 +10,7 @@ import aggregations from './modules/aggregations'
 import promotions from './modules/promotions'
 import coupons from './modules/coupons'
 import orders from './modules/orders'
+import workOrders from './modules/workOrders'
 
 Vue.use(Vuex)
 
@@ -25,7 +26,8 @@ const store = new Vuex.Store({
     aggregations,
     promotions,
     coupons,
-    orders
+    orders,
+    workOrders
   },
   getters,
   strict: debug

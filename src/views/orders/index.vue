@@ -143,7 +143,7 @@ import OrderProduct from './OrderProduct'
 import {
   getOrderListApi
 } from '@/api/orders'
-import { orderStatus } from './constants'
+import { orderStatus } from '@/utils/constants'
 
 export default {
   name: 'Orders',

@@ -3,12 +3,41 @@
     <el-row :gutter="20" style="margin: 10px">
       <el-col :span="12">
         <el-card shadow="never">
+          <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
+            <span class="card-header-text">售后信息</span>
+            <el-button type="primary">
+              处理
+            </el-button>
+          </div>
+          <el-form label-position="right" label-width="120">
+            <el-form-item label="售后状态:">
+              <span>{{ workOrderData.status | workOrderStatus }}</span>
+            </el-form-item>
+            <el-form-item label="售后类型">
+              <span>{{ workOrderData.typeName }}</span>
+            </el-form-item>
+            <el-form-item label="售后原因:">
+              <span>{{ workOrderData.title }}</span>
+            </el-form-item>
+            <el-form-item label="售后描述:">
+              <span>{{ workOrderData.description }}</span>
+            </el-form-item>
+            <el-form-item label="申请时间:">
+              <span>{{ workOrderData.createTime | timeFilter }}</span>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+    </el-row>
+    <el-row :gutter="20" style="margin: 10px">
+      <el-col :span="12">
+        <el-card shadow="never">
           <div slot="header">
             <span class="card-header-text">订单信息</span>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="订单状态:">
-              <span>{{ orderData.status | statusFilter }}</span>
+              <span>{{ orderData.status | orderStatus }}</span>
             </el-form-item>
             <el-form-item label="主订单编号:">
               <span>{{ orderData.tradeNo }}</span>
@@ -48,41 +77,6 @@
             </el-form-item>
             <el-form-item label="收货邮编:">
               <span>{{ orderData.zip }}</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20" style="margin: 10px">
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">发票信息</span>
-          </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item label="是否开票:">
-              <span>{{ orderData.invoiceState | invoiceFilter }}</span>
-            </el-form-item>
-            <el-form-item label="发票抬头:">
-              <span>{{ orderData.invoiceTitle }}</span>
-            </el-form-item>
-            <el-form-item label="发票内容:">
-              <span>{{ orderData.invoiceContent }}</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">物流信息</span>
-          </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item label="物流单号:">
-              <span>{{ orderData.logisticsId }}</span>
-            </el-form-item>
-            <el-form-item label="物流内容:">
-              <span>{{ orderData.logisticsContent }}</span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -149,12 +143,21 @@ import {
   getOrderListApi,
   getAddressApi
 } from '@/api/orders'
+import {
+  getWorkOrderByIdApi,
+  getWorkOrderTypesApi
+} from '@/api/workOrders'
 import { orderStatus, paymentStatus } from '@/utils/constants'
+import { WorkOrderStatus } from './constants'
 
 export default {
-  name: 'OrderDetail',
+  name: 'WorkOrderDetail',
   filters: {
-    statusFilter: status => {
+    workOrderStatus: status => {
+      const find = WorkOrderStatus.find(option => option.value === status)
+      return find ? find.label : status
+    },
+    orderStatus: status => {
       const find = orderStatus.find(option => option.value === status)
       return find ? find.label : status
     },
@@ -177,26 +180,52 @@ export default {
       province: '',
       city: '',
       country: '',
-      orderData: {}
+      typeOptions: [],
+      orderData: {},
+      workOrderData: {}
     }
   },
   created() {
-    this.getOrderData()
+    this.getWorkOrderData()
   },
   methods: {
-    async getOrderData() {
-      const subOrderId = this.$route.params.subId
+    async getWorkOrderData() {
       try {
         this.dataLoading = true
+        const id = this.$route.params.id
+        await this.getTypeOptions()
+        this.workOrderData = await getWorkOrderByIdApi({ id })
+        const find = this.typeOptions.find(option => option.value === this.workOrderData.typeId)
+        this.$set(this.workOrderData, 'typeName', find ? find.label : '')
+        await this.getOrderData(this.workOrderData.orderId)
+      } catch (e) {
+        console.warn('Work order get error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+    },
+    async getTypeOptions() {
+      try {
+        const data = await getWorkOrderTypesApi({ pageIndex: 1, pageSize: 100 })
+        this.typeOptions = data.rows.map(row => {
+          return {
+            value: row.id,
+            label: row.name
+          }
+        })
+      } catch (e) {
+        console.log('Get work order type error: ' + e)
+      }
+    },
+    async getOrderData(subOrderId) {
+      try {
         const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
         if (data.result.list.length > 0) {
           this.orderData = data.result.list[0]
           await this.getAddressData(this.orderData.provinceId)
         }
       } catch (e) {
-        console.warn('Get order detail error:' + e)
-      } finally {
-        this.dataLoading = false
+        console.warn('Work order get order detail error:' + e)
       }
     },
     async getAddressData(id) {
@@ -237,7 +266,7 @@ export default {
     goBack() {
       window.history.length > 1
         ? this.$router.go(-1)
-        : this.$router.push('/orders')
+        : this.$router.push('/workOrders')
     }
   }
 }
