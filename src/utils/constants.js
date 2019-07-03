@@ -27,7 +27,7 @@ export const ProductStateOptions = [
   }
 ]
 
-export const orderStatus = [{
+export const OrderStatusDefinitions = [{
   value: -1,
   label: '已删除'
 }, {
@@ -44,7 +44,7 @@ export const orderStatus = [{
   label: '已取消'
 }]
 
-export const paymentStatus = [{
+export const PaymentStatusDefinitions = [{
   value: 0,
   label: '初始状态'
 }, {

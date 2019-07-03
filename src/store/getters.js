@@ -4,6 +4,7 @@ import {
 } from '@/utils/constants'
 
 const getters = {
+  appReady: state => state.app.ready,
   sidebar: state => state.app.sidebar,
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,

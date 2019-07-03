@@ -1,15 +1,15 @@
 <template>
   <div class="app-container">
     <el-form :inline="true">
-      <el-form-item label="主订单编号">
+      <el-form-item label="主订单号">
         <el-input v-model="queryTradeNo" placeholder="输入主订单后8位" clearable />
       </el-form-item>
-      <el-form-item label="子订单编号">
+      <el-form-item label="子订单号">
         <el-input v-model="querySubOrderId" placeholder="输入子订单编号" clearable />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
-      <el-form-item label="收货人电话">
+      <el-form-item label="电话号码">
         <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
       </el-form-item>
       <el-form-item label="订单状态">
@@ -52,8 +52,6 @@
       :data="orderData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%;"
       @selection-change="handleSelectionChange"
     >
@@ -62,13 +60,18 @@
         align="center"
         width="55"
       />
-      <el-table-column label="订单编号" align="center">
+      <el-table-column label="主订单编号" align="center" width="100">
         <template slot-scope="scope">
-          <div>
-            <div class="text-item">{{ `主订单：${scope.row.tradeNo}` }}</div>
-            <el-divider />
-            <div class="text-item">{{ `子订单：${scope.row.subOrderId}` }}</div>
-          </div>
+          <el-link :href="'#/orders/viewMainOrder/' + scope.row.id" type="primary">
+            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="子订单编号" align="center" width="100">
+        <template slot-scope="scope">
+          <el-link :href="'#/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
+            {{ scope.row.subOrderId.substring(scope.row.subOrderId.length - 3) }}
+          </el-link>
         </template>
       </el-table-column>
       <el-table-column label="商品" align="center">
@@ -90,14 +93,21 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="下单时间" align="center" width="180">
+      <el-table-column label="订单时间" align="center" width="200">
         <template slot-scope="scope">
-          <span>{{ scope.row.createdAt | timeFilter }}</span>
+          <div>
+            <div class="text-item">
+              下单：<span>{{ scope.row.createdAt | timeFilter }}</span>
+            </div>
+            <div class="text-item">
+              支付：<span>{{ scope.row.paymentAt | timeFilter }}</span>
+            </div>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="订单状态" align="center" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.status | orderStatus }}</span>
+          <span>{{ scope.row.status | OrderStatus }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -110,7 +120,7 @@
           <el-button
             type="primary"
             size="mini"
-            @click="handleViewOrder(scope.row.subOrderId)"
+            @click="handleViewSubOrder(scope.row.subOrderId)"
           >
             查看
           </el-button>
@@ -143,14 +153,14 @@ import OrderProduct from './OrderProduct'
 import {
   getOrderListApi
 } from '@/api/orders'
-import { orderStatus } from '@/utils/constants'
+import { OrderStatusDefinitions } from '@/utils/constants'
 
 export default {
   name: 'Orders',
   components: { Pagination, OrderProduct },
   filters: {
-    orderStatus: status => {
-      const find = orderStatus.find(option => option.value === status)
+    OrderStatus: status => {
+      const find = OrderStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
     },
     timeFilter: date => {
@@ -164,7 +174,7 @@ export default {
       statusOptions: [{
         value: -2,
         label: '全部'
-      }].concat(orderStatus),
+      }].concat(OrderStatusDefinitions),
       listLoading: false,
       orderData: [],
       orderTotal: 0,
@@ -279,9 +289,9 @@ export default {
     handleSelectionChange(selection) {
       this.orderSelection = selection
     },
-    handleViewOrder(subOrderId) {
+    handleViewSubOrder(subOrderId) {
       this.$router.push({
-        name: 'ViewOrder',
+        name: 'ViewSubOrder',
         params: { subId: subOrderId }
       })
     },

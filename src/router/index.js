@@ -51,18 +51,18 @@ export const constantRoutes = [
   {
     path: '/goods',
     component: Layout,
-    redirect: '/goods/product',
+    redirect: '/goods/products',
     name: 'Goods',
     meta: { title: '商品', icon: 'goods-manager' },
     children: [
       {
-        path: 'product',
-        name: 'Product',
+        path: 'products',
+        name: 'Products',
         component: () => import('@/views/product/index'),
         meta: { title: '商品管理', icon: 'products' }
       },
       {
-        path: 'viewProduct/:id',
+        path: 'viewProduct/:skuId',
         name: 'ViewProduct',
         component: () => import('@/views/product/detail'),
         meta: { title: '查看商品', icon: 'products' },
@@ -208,10 +208,17 @@ export const constantRoutes = [
         meta: { title: '订单管理', icon: 'carts' }
       },
       {
-        path: 'viewOrder/:subId',
-        name: 'ViewOrder',
-        component: () => import('@/views/orders/detail'),
-        meta: { title: '查看订单', icon: 'orders' },
+        path: 'viewSubOrder/:subId',
+        name: 'ViewSubOrder',
+        component: () => import('@/views/orders/subOrderDetail'),
+        meta: { title: '查看子订单', icon: 'orders' },
+        hidden: true
+      },
+      {
+        path: 'viewMainOrder/:mainId',
+        name: 'ViewMainOrder',
+        component: () => import('@/views/orders/mainOrderDetail'),
+        meta: { title: '查看主订单', icon: 'orders' },
         hidden: true
       },
       {

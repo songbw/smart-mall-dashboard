@@ -2,6 +2,7 @@ const state = {
   sidebar: {
     opened: true
   },
+  ready: false,
   cosUrl: `http://iwallet-1258175138.file.myqcloud.com`
 }
 
@@ -11,6 +12,9 @@ const mutations = {
   },
   CLOSE_SIDEBAR: state => {
     state.sidebar.opened = false
+  },
+  SET_READY: state => {
+    state.ready = true
   }
 }
 

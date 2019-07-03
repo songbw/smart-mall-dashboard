@@ -43,7 +43,7 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="$emit('cancelCreation')">取消</el-button>
-        <el-button type="primary" @click="onSubmit">保存并创建</el-button>
+        <el-button type="primary" @click="onSubmit">{{ submitBtnLabel }}</el-button>
       </el-form-item>
     </el-form>
     <el-dialog
@@ -159,6 +159,11 @@ export default {
             return '组未找到'
           }
         }
+      }
+    },
+    submitBtnLabel: {
+      get() {
+        return this.pageInfo.id === -1 ? '保存并创建' : '保存并修改'
       }
     }
   },

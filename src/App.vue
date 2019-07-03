@@ -48,6 +48,7 @@ export default {
         } else if (!isEmpty(token)) {
           await this.getVendorProfile()
         }
+        this.$store.commit('app/SET_READY')
       } catch (e) {
         console.warn(`App init: ${e}`)
       }

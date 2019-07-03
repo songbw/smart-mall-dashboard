@@ -346,11 +346,11 @@ export default {
   },
   methods: {
     getProductInfo() {
-      const id = this.$route.params.id
+      const skuId = this.$route.params.skuId
       const params = {
         offset: 1,
         limit: 10,
-        id
+        skuid: skuId
       }
       this.loading = true
       searchProductsApi(params).then(response => {
@@ -629,7 +629,7 @@ export default {
     goBack() {
       window.history.length > 1
         ? this.$router.go(-1)
-        : this.$router.push('/')
+        : this.$router.push('/goods')
     }
   }
 }

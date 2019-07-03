@@ -153,7 +153,7 @@
           <el-button
             type="primary"
             size="mini"
-            @click="handleViewProduct(scope.row.id)"
+            @click="handleViewProduct(scope.row.skuid)"
           >
             查看
           </el-button>
@@ -482,10 +482,10 @@ export default {
         params: { id }
       })
     },
-    handleViewProduct(id) {
+    handleViewProduct(skuId) {
       this.$router.push({
         name: 'ViewProduct',
-        params: { id }
+        params: { skuId }
       })
     },
     handleProductOnSale(id) {

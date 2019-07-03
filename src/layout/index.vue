@@ -10,13 +10,15 @@
         description="企业信息还未通过审核，请完善后提交审核"
         show-icon
       />
-      <app-main />
+      <app-main v-if="appReady" />
+      <page-loading v-else />
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import PageLoading from '@/components/PageLoading'
 import { NavBar, Sidebar, AppMain } from './components'
 
 export default {
@@ -24,10 +26,12 @@ export default {
   components: {
     NavBar,
     Sidebar,
-    AppMain
+    AppMain,
+    PageLoading
   },
   computed: {
     ...mapGetters([
+      'appReady',
       'vendorApproved'
     ]),
     sidebar() {

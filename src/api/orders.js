@@ -10,6 +10,16 @@ export function getOrderListApi(params) {
   })
 }
 
+export function getMainOrderDetailApi(params) {
+  return Vue.axios.request({
+    url: '/orders/order/searchDetail',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function getAddressApi(params) {
   return Vue.axios.request({
     url: '/orders/address/level',
@@ -17,6 +27,14 @@ export function getAddressApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function getLogisticsInfoApi(params) {
+  return Vue.axios.request({
+    url: '/orders/order/queryLogisticsInfo',
+    method: 'get',
+    params
   })
 }
 

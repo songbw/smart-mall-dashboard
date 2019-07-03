@@ -242,8 +242,8 @@ export default {
     },
     handleDialogViewDetail(skuID) {
       const path = this.$router.resolve({
-        name: 'ProductDetail',
-        params: { skuid: skuID }
+        name: 'ViewProduct',
+        params: { skuId: skuID }
       })
       window.open(path.href, '_blank')
     },
