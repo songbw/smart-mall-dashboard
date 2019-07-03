@@ -28,7 +28,7 @@
       :coupon-discount="orderData.couponDiscount"
     />
     <goods-info
-      :sku-list="orderData.skus"
+      :sku-list="orderData.skusPage.list"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
   </div>
@@ -66,7 +66,7 @@ export default {
       try {
         this.dataLoading = true
         const { data } = await getMainOrderDetailApi({ orderId, pageIndex: 1, pageSize: 100 })
-        this.orderData = data.result.object
+        this.orderData = data.result
       } catch (e) {
         console.warn('Get main order detail error:' + e)
       } finally {
