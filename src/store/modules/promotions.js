@@ -30,7 +30,7 @@ const mutations = {
   SET_DATA: (state, params) => {
     const keys = ['id', 'name', 'tag', 'startDate', 'endDate', 'promotionType', 'status', 'promotionSkus']
     keys.forEach(key => {
-      if (params.hasOwnProperty(key)) {
+      if (key in params) {
         state.promotion[key] = params[key]
       }
     })

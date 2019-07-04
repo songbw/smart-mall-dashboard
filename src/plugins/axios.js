@@ -47,7 +47,7 @@ service.interceptors.response.use(
     const res = error.response
     if (res && res.status === 400 && res.data) {
       const data = res.data
-      if (data.hasOwnProperty('error') && data.error === 400001) {
+      if ('error' in data && data.error === 400001) {
         console.warn('Token expired.')
         try {
           Message({

@@ -264,13 +264,13 @@ export default {
       this.titleLinkUrl = item.link
     },
     handleImageTargetChanges(target) {
-      if (target.hasOwnProperty('type')) {
+      if ('type' in target) {
         this.titleLinkType = target.type
       }
-      if (target.hasOwnProperty('name')) {
+      if ('name' in target) {
         this.titleLinkUrlName = target.name
       }
-      if (target.hasOwnProperty('url')) {
+      if ('url' in target) {
         this.titleLinkUrl = target.url
       }
     }

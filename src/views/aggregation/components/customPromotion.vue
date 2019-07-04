@@ -489,13 +489,13 @@ export default {
       if (this.titleHasPromotionActivity) {
         return
       }
-      if (target.hasOwnProperty('type')) {
+      if ('type' in target) {
         this.titleImageTargetType = target.type
       }
-      if (target.hasOwnProperty('name')) {
+      if ('name' in target) {
         this.titleImageTargetName = target.name
       }
-      if (target.hasOwnProperty('url')) {
+      if ('url' in target) {
         this.titleImageTargetUrl = target.url
       }
     },

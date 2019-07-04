@@ -19,7 +19,7 @@ router.beforeEach(async(to, from, next) => {
   }
 
   const pass = to.matched.some(record => {
-    if (record.meta.hasOwnProperty('requiresAuth')) {
+    if ('requiresAuth' in record.meta) {
       return !record.meta.requiresAuth
     } else {
       return false

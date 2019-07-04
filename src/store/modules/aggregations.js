@@ -37,7 +37,7 @@ const state = {
 const mutations = {
   SET_SEARCH_DATA: (state, params) => {
     Object.keys(state.search).forEach(key => {
-      if (params.hasOwnProperty(key)) {
+      if (key in params) {
         state.search[key] = params[key]
       }
     })
@@ -49,11 +49,11 @@ const mutations = {
   SET_CURRENT_DATA: (state, params) => {
     const keys = ['id', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'groupId']
     keys.forEach(key => {
-      if (params.hasOwnProperty(key)) {
+      if (key in params) {
         state.aggregation[key] = params[key]
       }
     })
-    if (params.hasOwnProperty('content') && params.content !== null) {
+    if ('content' in params && params.content !== null) {
       state.aggregation.content = params.content
       if (params.content.length > 0) {
         state.aggregationTemplateIndex = 0
@@ -91,7 +91,7 @@ const mutations = {
   },
   SORT_ITEM_IN_CONTENT: (state, params) => {
     let distance = 1
-    if (params.hasOwnProperty('distance')) {
+    if ('distance' in params) {
       distance = params.distance
     }
     const up = params.up
@@ -118,10 +118,10 @@ const mutations = {
     if (index === -1) {
       template.data.list.push(params.value)
     } else {
-      if (params.value.hasOwnProperty('title')) {
+      if ('title' in params.value) {
         template.data.list[index].title = params.value.title
       }
-      if (params.value.hasOwnProperty('skus')) {
+      if ('skus' in params.value) {
         template.data.list[index].skus = params.value.skus
       }
     }

@@ -13,7 +13,7 @@ const state = {
 const mutations = {
   SET_SEARCH_DATA: (state, params) => {
     Object.keys(state.search).forEach(key => {
-      if (params.hasOwnProperty(key)) {
+      if (key in params) {
         state.search[key] = params[key]
       }
     })

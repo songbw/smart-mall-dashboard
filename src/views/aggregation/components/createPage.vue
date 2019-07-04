@@ -242,7 +242,7 @@ export default {
       }
     },
     async checkHomePage(params) {
-      if (params.hasOwnProperty('homePage') && params.homePage === false) {
+      if ('homePage' in params && params.homePage === false) {
         try {
           const res = await searchAggregationsApi({ homePage: true, offset: 1, limit: 1 })
           const data = res.data.result

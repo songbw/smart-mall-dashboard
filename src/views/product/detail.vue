@@ -358,7 +358,7 @@ export default {
         if (data.total > 0) {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
-            if (this.productInfo.hasOwnProperty(key)) {
+            if (key in this.productInfo) {
               this.productForm[key] = this.productInfo[key]
             }
           })

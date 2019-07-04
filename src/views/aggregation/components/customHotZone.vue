@@ -178,15 +178,15 @@ export default {
       if (index < this.hotZoneList.length) {
         const zone = this.hotZoneList[index]
         let targetType = zone.targetType
-        if (target.hasOwnProperty('type')) {
+        if ('type' in target) {
           targetType = target.type
         }
         let targetName = zone.targetName
-        if (target.hasOwnProperty('name')) {
+        if ('name' in target) {
           targetName = target.name
         }
         let targetUrl = zone.targetUrl
-        if (target.hasOwnProperty('url')) {
+        if ('url' in target) {
           targetUrl = target.url
         }
         const value = { area: { ...zone.area }, targetType, targetUrl, targetName }

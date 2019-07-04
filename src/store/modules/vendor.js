@@ -20,7 +20,7 @@ const state = {
 const mutations = {
   SET_VENDOR_PROFILE: (state, data) => {
     Object.keys(state.profile).forEach(key => {
-      if (data.hasOwnProperty(key)) {
+      if (key in data) {
         state.profile[key] = data[key]
       }
     })

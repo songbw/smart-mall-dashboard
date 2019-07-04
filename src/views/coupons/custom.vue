@@ -638,7 +638,7 @@ export default {
       this.viewOnly = false
     } else {
       this.couponId = this.$route.params.id
-      if (this.$route.params.hasOwnProperty('readOnly')) {
+      if ('readOnly' in this.$route.params) {
         this.viewOnly = this.$route.params.readOnly
       }
       this.getCouponData()
@@ -692,19 +692,19 @@ export default {
         this.handleCheckedScopesChange(this.couponData.rules.scopes)
       }
       this.formData.rules.couponRules.type = this.couponData.rules.couponRules.type
-      if (this.couponData.rules.couponRules.hasOwnProperty('fullReduceCoupon')) {
+      if ('fullReduceCoupon' in this.couponData.rules.couponRules) {
         this.formData.rules.couponRules.fullReduceCoupon.fullPrice =
           this.couponData.rules.couponRules.fullReduceCoupon.fullPrice
         this.formData.rules.couponRules.fullReduceCoupon.reducePrice =
           this.couponData.rules.couponRules.fullReduceCoupon.reducePrice
       }
-      if (this.couponData.rules.couponRules.hasOwnProperty('discountCoupon')) {
+      if ('discountCoupon' in this.couponData.rules.couponRules) {
         this.formData.rules.couponRules.discountCoupon.discountRatio =
           this.couponData.rules.couponRules.discountCoupon.discountRatio
         this.formData.rules.couponRules.discountCoupon.fullPrice =
           this.couponData.rules.couponRules.discountCoupon.fullPrice
       }
-      if (this.couponData.rules.couponRules.hasOwnProperty('cashCoupon')) {
+      if ('cashCoupon' in this.couponData.rules.couponRules) {
         this.formData.rules.couponRules.cashCoupon.amount =
           this.couponData.rules.couponRules.cashCoupon.amount
       }
@@ -797,7 +797,7 @@ export default {
       this.formData.rules.scenario.categories.splice(index, 1)
     },
     reviseScenarioRules(data) {
-      if (data.hasOwnProperty('rules') && data.rules.hasOwnProperty('scenario')) {
+      if ('rules' in data && 'scenario' in data.rules) {
         switch (data.rules.scenario.type) {
           case 1: // 特定商品类
             data.rules.scenario.excludeSkus = []
@@ -820,16 +820,13 @@ export default {
       }
     },
     reviseCouponStatus(data) {
-      if (data.hasOwnProperty('rules') &&
-        data.rules.hasOwnProperty('collect') &&
-        data.rules.collect.hasOwnProperty('type')) {
+      if ('rules' in data && 'collect' in data.rules && 'type' in data.rules.collect) {
         if (data.rules.collect.type === 4) { // 领取方式为人工分配，状态应为‘待分配’
           data.status = 4
         }
       }
-      if (data.hasOwnProperty('status') &&
-        data.status !== 4 &&
-        data.hasOwnProperty('releaseStartDate')) {
+      if ('status' in data && data.status !== 4 &&
+        'releaseStartDate' in data) {
         const now = moment()
         const startDate = moment(data.releaseStartDate)
         if (startDate.isBefore(now)) {

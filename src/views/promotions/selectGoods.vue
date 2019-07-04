@@ -181,7 +181,7 @@ export default {
     }),
     canChangeType: {
       get() {
-        if (this.promotionData.hasOwnProperty('hasPromotionType')) {
+        if ('hasPromotionType' in this.promotionData) {
           return this.promotionData.hasPromotionType === false
         } else {
           return true
