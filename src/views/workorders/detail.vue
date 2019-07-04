@@ -1,11 +1,11 @@
 <template>
   <div v-loading="dataLoading" class="app-container">
-    <el-row :gutter="20" style="margin: 10px">
+    <el-row :gutter="20" style="margin-bottom: 20px">
       <el-col :span="12">
         <el-card shadow="never">
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
-            <el-button type="primary">
+            <el-button type="primary" @click="handleShowFlowDialog">
               处理
             </el-button>
           </div>
@@ -28,124 +28,104 @@
           </el-form>
         </el-card>
       </el-col>
-    </el-row>
-    <el-row :gutter="20" style="margin: 10px">
       <el-col :span="12">
         <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">订单信息</span>
+          <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
+            <span class="card-header-text">操作记录</span>
           </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item label="订单状态:">
-              <span>{{ orderData.status | orderStatus }}</span>
-            </el-form-item>
-            <el-form-item label="主订单编号:">
-              <span>{{ orderData.tradeNo }}</span>
-            </el-form-item>
-            <el-form-item label="子订单编号:">
-              <span>{{ orderData.subOrderId }}</span>
-            </el-form-item>
-            <el-form-item label="下单时间:">
-              <span>{{ orderData.createdAt | timeFilter }}</span>
-            </el-form-item>
-            <el-form-item label="更新时间:">
-              <span>{{ orderData.updatedAt | timeFilter }}</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">收货信息</span>
-          </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item label="OpenID:">
-              <span>{{ orderData.openId }}</span>
-            </el-form-item>
-            <el-form-item label="收货人姓名:">
-              <span>{{ orderData.receiverName }}</span>
-            </el-form-item>
-            <el-form-item label="收货人电话:">
-              <span>{{ orderData.mobile }}</span>
-            </el-form-item>
-            <el-form-item label="收货省市:">
-              <span>{{ `${province} ${city} ${country}` }}</span>
-            </el-form-item>
-            <el-form-item label="详细地址:">
-              <span>{{ orderData.address }}</span>
-            </el-form-item>
-            <el-form-item label="收货邮编:">
-              <span>{{ orderData.zip }}</span>
-            </el-form-item>
-          </el-form>
+          <el-timeline>
+            <el-timeline-item
+              v-for="flow in flows"
+              :key="flow.id"
+              :timestamp="flow.timeline"
+            >
+              {{ flow.content }}
+            </el-timeline-item>
+          </el-timeline>
         </el-card>
       </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin: 10px">
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">商品信息</span>
-          </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item>
-              <el-image :src="orderData.image" fit="contain" style="height: 200px" lazy />
-            </el-form-item>
-            <el-form-item label="商品SKU:">
-              <span>{{ orderData.skuId }}</span>
-            </el-form-item>
-            <el-form-item label="商品名称:">
-              <span>{{ orderData.name }}</span>
-            </el-form-item>
-            <el-form-item label="商品单价:">
-              <span>{{ orderData.unitPrice }}</span>
-            </el-form-item>
-            <el-form-item label="购买数量:">
-              <span>{{ orderData.num }}</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">
-            <span class="card-header-text">支付信息</span>
-          </div>
-          <el-form label-position="right" label-width="120">
-            <el-form-item label="支付状态">
-              <span>{{ orderData.payStatus | payFilter }}</span>
-            </el-form-item>
-            <el-form-item label="支付编号:">
-              <span>{{ orderData.paymentNo }}</span>
-            </el-form-item>
-            <el-form-item label="支付时间:">
-              <span>{{ orderData.paymentAt | timeFilter }}</span>
-            </el-form-item>
-            <el-form-item label="支付金额:">
-              <span>{{ orderData.amount }}</span>
-            </el-form-item>
-            <el-form-item label="运费:">
-              <span>{{ orderData.servFee }}</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-    </el-row>
+    <order-info
+      :status="orderData.status"
+      :trade-no="orderData.tradeNo"
+      :sub-order-id="orderData.subOrderId"
+      :created-at="orderData.createdAt"
+      :updated-at="orderData.updatedAt"
+      :remark="orderData.remark"
+    />
+    <receiver-info
+      :receiver-name="orderData.receiverName"
+      :mobile="orderData.mobile"
+      :province-id="orderData.provinceId"
+      :province-name="orderData.provinceName"
+      :city-id="orderData.cityId"
+      :city-name="orderData.cityName"
+      :county-id="orderData.countyId"
+      :county-name="orderData.countyName"
+      :address="orderData.address"
+      :zip="orderData.zip"
+    />
+    <payment-info
+      :pay-status="orderData.payStatus"
+      :payment-no="orderData.paymentNo"
+      :payment-at="orderData.paymentAt"
+      :payment-total-fee="orderData.paymentTotalFee"
+      :payment-amount="orderData.paymentAmount"
+      :pay-type="orderData.payType"
+      :refund-fee="orderData.refundFee"
+      :coupon-id="orderData.couponId"
+      :coupon-code="orderData.couponCode"
+      :coupon-discount="orderData.couponDiscount"
+    />
+    <goods-info
+      :sku-list="[orderData]"
+    />
     <el-button type="primary" @click="goBack">返回</el-button>
+
+    <el-dialog title="工单处理" :visible.sync="dialogFlowVisible">
+      <el-form ref="flowForm" :model="flowForm" :rules="flowRules" label-width="120px">
+        <el-form-item label="处理选项" prop="status">
+          <el-select
+            :value="flowForm.status"
+            placeholder="请选择处理"
+            @change="handleFlowOptionChanged"
+          >
+            <el-option
+              v-for="item in flowOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="处理意见" prop="comments">
+          <el-input v-model="flowForm.comments" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelFlow">取消</el-button>
+        <el-button type="primary" @click="handleCreateFlow">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import OrderInfo from '@/components/Order/orderInfo'
+import ReceiverInfo from '@/components/Order/receiverInfo'
+import PaymentInfo from '@/components/Order/paymentInfo'
+import GoodsInfo from '@/components/Order/goodsInfo'
+
 import {
-  getOrderListApi,
-  getAddressApi
+  getOrderListApi
 } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
-  getWorkOrderTypesApi
+  getWorkOrderTypeListApi,
+  getWorkFlowListApi,
+  createWorkOrderFlowApi
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
@@ -153,8 +133,28 @@ import {
 } from '@/utils/constants'
 import { WorkOrderStatus } from './constants'
 
+const FlowStatusOptions = [
+  {
+    value: 2, label: '同意退货'
+  }, {
+    value: 3, label: '收到退货'
+  }, {
+    value: 4, label: '同意退款'
+  }, {
+    value: 5, label: '退款成功'
+  }, {
+    value: 6, label: '退款失败'
+  }, {
+    value: 7, label: '拒绝申请'
+  }]
 export default {
   name: 'WorkOrderDetail',
+  components: {
+    OrderInfo,
+    ReceiverInfo,
+    PaymentInfo,
+    GoodsInfo
+  },
   filters: {
     workOrderStatus: status => {
       const find = WorkOrderStatus.find(option => option.value === status)
@@ -165,6 +165,9 @@ export default {
       return find ? find.label : status
     },
     timeFilter(date) {
+      if (isEmpty(date)) {
+        return ''
+      }
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() ? momentDate.format(format) : ''
@@ -185,7 +188,52 @@ export default {
       country: '',
       typeOptions: [],
       orderData: {},
-      workOrderData: {}
+      workOrderData: {},
+      flows: [],
+      dialogFlowVisible: false,
+      flowForm: {
+        status: null,
+        comments: null
+      },
+      flowRules: {
+        status: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择处理结果'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }],
+        comments: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (isEmpty(value)) {
+              callback(new Error('请输入处理说明'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }]
+      }
+    }
+  },
+  computed: {
+    flowOptions() {
+      let options = []
+      if (this.workOrderData.status === 1) {
+        options = [2, 4, 7]
+      } else if (this.workOrderData.status === 2) {
+        options = [3]
+      } else if (this.workOrderData.status === 3) {
+        options = [4]
+      } else if (this.workOrderData.status === 4) {
+        options = [5, 6]
+      }
+      return FlowStatusOptions.filter(option => options.includes(option.value))
     }
   },
   created() {
@@ -200,6 +248,7 @@ export default {
         this.workOrderData = await getWorkOrderByIdApi({ id })
         const find = this.typeOptions.find(option => option.value === this.workOrderData.typeId)
         this.$set(this.workOrderData, 'typeName', find ? find.label : '')
+        await this.getWorkFlows(id)
         await this.getOrderData(this.workOrderData.orderId)
       } catch (e) {
         console.warn('Work order get error:' + e)
@@ -209,7 +258,7 @@ export default {
     },
     async getTypeOptions() {
       try {
-        const data = await getWorkOrderTypesApi({ pageIndex: 1, pageSize: 100 })
+        const data = await getWorkOrderTypeListApi({ pageIndex: 1, pageSize: 100 })
         this.typeOptions = data.rows.map(row => {
           return {
             value: row.id,
@@ -217,7 +266,22 @@ export default {
           }
         })
       } catch (e) {
-        console.log('Get work order type error: ' + e)
+        console.warn('Get work order type error: ' + e)
+      }
+    },
+    async getWorkFlows(id) {
+      try {
+        const data = await getWorkFlowListApi({ pageIndex: 1, pageSize: 100, workOrderId: id })
+        this.flows = data.rows.map(row => {
+          const format = 'YYYY-MM-DD HH:mm:ss'
+          const momentDate = moment(row.createTime)
+          const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
+          const find = FlowStatusOptions.find(option => option.value === row.status)
+          const content = find ? find.label + ' - ' + row.comments : row.comments
+          return { ...row, timeline, content }
+        })
+      } catch (e) {
+        console.warn('Get work flows error:' + e)
       }
     },
     async getOrderData(subOrderId) {
@@ -225,46 +289,37 @@ export default {
         const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
         if (data.result.list.length > 0) {
           this.orderData = data.result.list[0]
-          await this.getAddressData(this.orderData.provinceId)
         }
       } catch (e) {
         console.warn('Work order get order detail error:' + e)
       }
     },
-    async getAddressData(id) {
-      if (!isEmpty(id)) {
-        try {
-          const { data } = await getAddressApi({ level: '1' })
-          const found = data.list.find(item => item.id === id)
-          this.province = found ? found.name : ''
-          await this.getCityData(this.orderData.cityId)
-        } catch (e) {
-          console.warn('Get order province error:' + e)
-        }
-      }
+    handleShowFlowDialog() {
+      this.flowForm.status = null
+      this.flowForm.comments = ''
+      this.dialogFlowVisible = true
     },
-    async getCityData(id) {
-      if (!isEmpty(id)) {
-        try {
-          const { data } = await getAddressApi({ level: '2', pid: this.orderData.provinceId })
-          const found = data.list.find(item => item.id === id)
-          this.city = found ? found.name : ''
-          await this.getCountryData(this.orderData.countyId)
-        } catch (e) {
-          console.warn('Get order province error:' + e)
-        }
-      }
+    handleCancelFlow() {
+      this.dialogFlowVisible = false
+      this.$refs.flowForm.resetFields()
     },
-    async getCountryData(id) {
-      if (!isEmpty(id)) {
-        try {
-          const { data } = await getAddressApi({ level: '3', pid: this.orderData.cityId })
-          const found = data.list.find(item => item.id === id)
-          this.country = found ? found.name : ''
-        } catch (e) {
-          console.warn('Get order province error:' + e)
+    handleFlowOptionChanged(value) {
+      this.flowForm.status = value
+    },
+    handleCreateFlow() {
+      this.$refs.flowForm.validate(async(valid) => {
+        if (valid) {
+          this.dialogFlowVisible = false
+          try {
+            await createWorkOrderFlowApi({ workOrderId: this.workOrderData.id, ...this.flowForm })
+            this.$message.success('处理工单成功！')
+            this.getWorkOrderData()
+          } catch (e) {
+            console.warn('Work order create flow error:' + e)
+            this.$message.error('处理工单失败，请稍后重试！')
+          }
         }
-      }
+      })
     },
     goBack() {
       window.history.length > 1

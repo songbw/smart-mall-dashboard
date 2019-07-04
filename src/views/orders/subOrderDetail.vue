@@ -11,8 +11,11 @@
     <receiver-info
       :receiver-name="orderData.receiverName"
       :mobile="orderData.mobile"
+      :province-id="orderData.provinceId"
       :province-name="orderData.provinceName"
+      :city-id="orderData.cityId"
       :city-name="orderData.cityName"
+      :county-id="orderData.countyId"
       :county-name="orderData.countyName"
       :address="orderData.address"
       :zip="orderData.zip"
@@ -37,15 +40,13 @@
 </template>
 
 <script>
-import isEmpty from 'lodash/isEmpty'
 import {
-  getOrderListApi,
-  getAddressApi
+  getOrderListApi
 } from '@/api/orders'
-import OrderInfo from './components/orderInfo'
-import ReceiverInfo from './components/receiverInfo'
-import PaymentInfo from './components/paymentInfo'
-import GoodsInfo from './components/goodsInfo'
+import OrderInfo from '@/components/Order/orderInfo'
+import ReceiverInfo from '@/components/Order/receiverInfo'
+import PaymentInfo from '@/components/Order/paymentInfo'
+import GoodsInfo from '@/components/Order/goodsInfo'
 
 export default {
   name: 'OrderDetail',
@@ -72,47 +73,11 @@ export default {
         const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
         if (data.result.list.length > 0) {
           this.orderData = data.result.list[0]
-          await this.getAddressData(this.orderData.provinceId)
         }
       } catch (e) {
         console.warn('Get order detail error:' + e)
       } finally {
         this.dataLoading = false
-      }
-    },
-    async getAddressData(id) {
-      if (!isEmpty(id) && isEmpty(this.orderData.provinceName)) {
-        try {
-          const { data } = await getAddressApi({ level: '1' })
-          const found = data.list.find(item => item.id === id)
-          this.orderData.provinceName = found ? found.name : ''
-        } catch (e) {
-          console.warn('Get order province error:' + e)
-        }
-      }
-      await this.getCityData(this.orderData.cityId)
-    },
-    async getCityData(id) {
-      if (!isEmpty(id) && isEmpty(this.orderData.cityName)) {
-        try {
-          const { data } = await getAddressApi({ level: '2', pid: this.orderData.provinceId })
-          const found = data.list.find(item => item.id === id)
-          this.orderData.cityName = found ? found.name : ''
-        } catch (e) {
-          console.warn('Get order city error:' + e)
-        }
-      }
-      await this.getCountryData(this.orderData.countyId)
-    },
-    async getCountryData(id) {
-      if (!isEmpty(id) && isEmpty(this.orderData.countyName)) {
-        try {
-          const { data } = await getAddressApi({ level: '3', pid: this.orderData.cityId })
-          const found = data.list.find(item => item.id === id)
-          this.orderData.countyName = found ? found.name : ''
-        } catch (e) {
-          console.warn('Get order county error:' + e)
-        }
       }
     },
     goBack() {

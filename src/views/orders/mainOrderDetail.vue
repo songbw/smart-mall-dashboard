@@ -10,8 +10,11 @@
     <receiver-info
       :receiver-name="orderData.receiverName"
       :mobile="orderData.mobile"
+      :province-id="orderData.provinceId"
       :province-name="orderData.provinceName"
+      :city-id="orderData.cityId"
       :city-name="orderData.cityName"
+      :county-id="orderData.countyId"
       :county-name="orderData.countyName"
       :address="orderData.address"
       :zip="orderData.zip"
@@ -39,10 +42,10 @@
 import {
   getMainOrderDetailApi
 } from '@/api/orders'
-import OrderInfo from './components/orderInfo'
-import ReceiverInfo from './components/receiverInfo'
-import PaymentInfo from './components/paymentInfo'
-import GoodsInfo from './components/goodsInfo'
+import OrderInfo from '@/components/Order/orderInfo'
+import ReceiverInfo from '@/components/Order/receiverInfo'
+import PaymentInfo from '@/components/Order/paymentInfo'
+import GoodsInfo from '@/components/Order/goodsInfo'
 
 export default {
   name: 'MainOrderDetail',

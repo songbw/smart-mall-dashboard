@@ -18,7 +18,9 @@
         <el-row class="item-row">
           <el-col :span="12">
             <span class="item-label">所在地区：</span>
-            <span class="item-text">{{ `${provinceName} ${cityName} ${countyName}` }}</span>
+            <span class="item-text">
+              {{ `${provinceName || province} ${cityName || city} ${countyName || county}` }}
+            </span>
           </el-col>
           <el-col :span="12">
             <span class="item-label">详细地址：</span>
@@ -37,6 +39,10 @@
 </template>
 
 <script>
+import isEmpty from 'lodash/isEmpty'
+import {
+  getAddressApi
+} from '@/api/orders'
 
 export default {
   name: 'ReceiverInfo',
@@ -53,11 +59,23 @@ export default {
       type: String,
       default: ''
     },
+    provinceId: {
+      type: String,
+      default: ''
+    },
     cityName: {
       type: String,
       default: ''
     },
+    cityId: {
+      type: String,
+      default: ''
+    },
     countyName: {
+      type: String,
+      default: ''
+    },
+    countyId: {
       type: String,
       default: ''
     },
@@ -68,6 +86,53 @@ export default {
     zip: {
       type: String,
       default: ''
+    }
+  },
+  data() {
+    return {
+      province: '',
+      city: '',
+      county: ''
+    }
+  },
+  created() {
+    this.getProvinceData()
+  },
+  methods: {
+    async getProvinceData() {
+      if (!isEmpty(this.provinceId) && isEmpty(this.provinceName)) {
+        try {
+          const { data } = await getAddressApi({ level: '1' })
+          const found = data.list.find(item => item.id === this.provinceId)
+          this.province = found ? found.name : ''
+        } catch (e) {
+          console.warn('Get order province error:' + e)
+        }
+      }
+      await this.getCityData(this.cityId)
+    },
+    async getCityData(id) {
+      if (!isEmpty(id) && isEmpty(this.cityName)) {
+        try {
+          const { data } = await getAddressApi({ level: '2', pid: this.provinceId })
+          const found = data.list.find(item => item.id === id)
+          this.city = found ? found.name : ''
+        } catch (e) {
+          console.warn('Get order city error:' + e)
+        }
+      }
+      await this.getCountyData(this.countyId)
+    },
+    async getCountyData(id) {
+      if (!isEmpty(id) && isEmpty(this.countyName)) {
+        try {
+          const { data } = await getAddressApi({ level: '3', pid: this.cityId })
+          const found = data.list.find(item => item.id === id)
+          this.county = found ? found.name : ''
+        } catch (e) {
+          console.warn('Get order county error:' + e)
+        }
+      }
     }
   }
 }

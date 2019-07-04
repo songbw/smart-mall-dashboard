@@ -15,7 +15,7 @@ export function getWorkOrderByIdApi(params) {
   })
 }
 
-export function getWorkOrderTypesApi(params) {
+export function getWorkOrderTypeListApi(params) {
   return Vue.axios.request({
     url: '/workorders/order_types/pages',
     method: 'get',
@@ -23,7 +23,7 @@ export function getWorkOrderTypesApi(params) {
   })
 }
 
-export function createWorkOrderApi(params) {
+export function createWorkOrderTypeApi(params) {
   return Vue.axios.request({
     url: '/workorders/order_types',
     method: 'post',
@@ -31,7 +31,7 @@ export function createWorkOrderApi(params) {
   })
 }
 
-export function updateWorkOrderApi(params) {
+export function updateWorkOrderTypeApi(params) {
   return Vue.axios.request({
     url: `/workorders/order_types/${params.id}`,
     method: 'put',
@@ -43,5 +43,21 @@ export function deleteWorkOrderApi(params) {
   return Vue.axios.request({
     url: `/workorders/order_types/${params.id}`,
     method: 'delete'
+  })
+}
+
+export function getWorkFlowListApi(params) {
+  return Vue.axios.request({
+    url: '/workorders/work_flows/pages',
+    method: 'get',
+    params
+  })
+}
+
+export function createWorkOrderFlowApi(params) {
+  return Vue.axios.request({
+    url: '/workorders/work_flows',
+    method: 'post',
+    data: { ...params }
   })
 }

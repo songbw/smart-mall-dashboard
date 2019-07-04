@@ -71,7 +71,9 @@
       </el-table-column>
       <el-table-column label="子订单编号" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.orderId }}</span>
+          <el-link :href="'#/orders/viewSubOrder/' + scope.row.orderId" type="primary">
+            {{ scope.row.orderId }}
+          </el-link>
         </template>
       </el-table-column>
       <el-table-column label="申请时间" align="center" width="180">
@@ -84,7 +86,7 @@
           <span>{{ scope.row.typeName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="售后状态" align="center" width="80">
+      <el-table-column label="售后状态" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.status | statusFilter }}</span>
         </template>
@@ -123,7 +125,7 @@ import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import {
   getWorkOrderListApi,
-  getWorkOrderTypesApi
+  getWorkOrderTypeListApi
 } from '@/api/workOrders'
 import { WorkOrderStatus } from './constants'
 
@@ -221,7 +223,7 @@ export default {
   methods: {
     async getTypeOptions() {
       try {
-        const data = await getWorkOrderTypesApi({ pageIndex: 1, pageSize: 100 })
+        const data = await getWorkOrderTypeListApi({ pageIndex: 1, pageSize: 100 })
         const options = data.rows.map(row => {
           return {
             value: row.id,

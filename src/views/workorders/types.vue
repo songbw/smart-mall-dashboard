@@ -61,10 +61,10 @@
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 import {
-  getWorkOrderTypesApi,
-  createWorkOrderApi,
-  updateWorkOrderApi,
-  deleteWorkOrderApi
+  getWorkOrderTypeListApi,
+  createWorkOrderTypeApi,
+  updateWorkOrderTypeApi,
+  deleteWorkOrderTypeApi
 } from '@/api/workOrders'
 
 export default {
@@ -91,7 +91,7 @@ export default {
     async getworkOrderTypes() {
       this.listLoading = true
       try {
-        const data = await getWorkOrderTypesApi({ offset: this.queryOffset, limit: this.queryLimit })
+        const data = await getWorkOrderTypeListApi({ offset: this.queryOffset, limit: this.queryLimit })
         this.workOrderTypes = data.rows
         this.total = data.total
       } catch (e) {
@@ -106,7 +106,7 @@ export default {
           confirmButtonText: '创建',
           cancelButtonText: '取消'
         })
-        await createWorkOrderApi({ name: value })
+        await createWorkOrderTypeApi({ name: value })
         this.getworkOrderTypes()
       } catch (e) {
         console.warn('WorkOrder: create ' + e)
@@ -118,7 +118,7 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        await updateWorkOrderApi({ id: row.id, name: value })
+        await updateWorkOrderTypeApi({ id: row.id, name: value })
         this.getworkOrderTypes()
       } catch (e) {
         console.warn('WorkOrder: create ' + e)
@@ -131,7 +131,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await deleteWorkOrderApi({ id: row.id })
+        await deleteWorkOrderTypeApi({ id: row.id })
         this.getworkOrderTypes()
       } catch (e) {
         console.warn('WorkOrder: delete ' + e)

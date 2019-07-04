@@ -5,7 +5,11 @@
     </el-col>
     <el-col :span="18">
       <div class="prod-info">
-        <div style="text-align: start">{{ skuId }}</div>
+        <div style="text-align: start">
+          <el-link :href="'#/goods/viewProduct/' + skuId" type="primary">
+            {{ skuId }}
+          </el-link>
+        </div>
         <div style="text-align:start; overflow:hidden; white-space: nowrap; text-overflow: ellipsis">
           {{ name }}
         </div>

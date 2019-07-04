@@ -48,7 +48,7 @@
           </el-col>
           <el-col :span="12">
             <span class="item-label">优惠金额：</span>
-            <span class="item-text">{{ `- ${couponDiscount}` }}</span>
+            <span class="item-text">{{ `￥ -${couponDiscount}` }}</span>
           </el-col>
         </el-row>
       </el-card>
@@ -80,7 +80,8 @@ export default {
       if (Number.isNaN(yuan)) {
         return ''
       } else {
-        return (yuan / 100).toFixed(2)
+        const value = (yuan / 100).toFixed(2)
+        return `￥ ${value}`
       }
     }
   },
