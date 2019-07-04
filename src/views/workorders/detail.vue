@@ -147,7 +147,10 @@ import {
   getWorkOrderByIdApi,
   getWorkOrderTypesApi
 } from '@/api/workOrders'
-import { orderStatus, paymentStatus } from '@/utils/constants'
+import {
+  OrderStatusDefinitions,
+  PaymentStatusDefinitions
+} from '@/utils/constants'
 import { WorkOrderStatus } from './constants'
 
 export default {
@@ -158,7 +161,7 @@ export default {
       return find ? find.label : status
     },
     orderStatus: status => {
-      const find = orderStatus.find(option => option.value === status)
+      const find = OrderStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
     },
     timeFilter(date) {
@@ -170,7 +173,7 @@ export default {
       return state === '1' ? '需要' : '不需要'
     },
     payFilter: status => {
-      const find = paymentStatus.find(option => option.value === status)
+      const find = PaymentStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
     }
   },
