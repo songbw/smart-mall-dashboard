@@ -6,6 +6,7 @@
       :sub-order-id="orderData.subOrderId"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
+      :remark="orderData.remark"
     />
     <receiver-info
       :receiver-name="orderData.receiverName"

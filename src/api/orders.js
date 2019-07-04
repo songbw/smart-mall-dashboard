@@ -20,6 +20,16 @@ export function getMainOrderDetailApi(params) {
   })
 }
 
+export function updateOrderRemarkApi(params) {
+  return Vue.axios.request({
+    url: '/orders/order/updateRemark',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function getAddressApi(params) {
   return Vue.axios.request({
     url: '/orders/address/level',

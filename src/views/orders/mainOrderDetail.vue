@@ -5,6 +5,7 @@
       :trade-no="orderData.tradeNo"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
+      :remark="orderData.remark"
     />
     <receiver-info
       :receiver-name="orderData.receiverName"
@@ -28,7 +29,7 @@
       :coupon-discount="orderData.couponDiscount"
     />
     <goods-info
-      :sku-list="orderData.skusPage.list"
+      :sku-list="skuList"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
   </div>
@@ -54,7 +55,8 @@ export default {
   data() {
     return {
       dataLoading: false,
-      orderData: {}
+      orderData: {},
+      skuList: []
     }
   },
   created() {
@@ -67,6 +69,7 @@ export default {
         this.dataLoading = true
         const { data } = await getMainOrderDetailApi({ orderId, pageIndex: 1, pageSize: 100 })
         this.orderData = data.result
+        this.skuList = this.orderData.skusPage.list
       } catch (e) {
         console.warn('Get main order detail error:' + e)
       } finally {

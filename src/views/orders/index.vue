@@ -127,7 +127,7 @@
           <el-button
             type="info"
             size="mini"
-            @click="handleEditOrder(scope.row.id)"
+            @click="handleEditOrderRemark(scope.row.id)"
           >
             备注
           </el-button>
@@ -151,7 +151,8 @@ import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import {
-  getOrderListApi
+  getOrderListApi,
+  updateOrderRemarkApi
 } from '@/api/orders'
 import { OrderStatusDefinitions } from '@/utils/constants'
 
@@ -295,7 +296,20 @@ export default {
         params: { subId: subOrderId }
       })
     },
-    handleEditOrder(subOrderId) {
+    handleEditOrderRemark(id) {
+      this.$prompt('请输入订单备注信息', '备注', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(async({ value }) => {
+        try {
+          await updateOrderRemarkApi({ id, remark: value })
+          this.$message.success('更新订单备注信息成功！')
+        } catch (e) {
+          this.$message.error('更新订单备注信息失败！')
+        }
+      }).catch(_ => {
+        console.debug('Update order remark cancelled')
+      })
     }
   }
 }

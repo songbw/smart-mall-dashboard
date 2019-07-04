@@ -10,7 +10,13 @@
           :data="skuList"
           style="width: 100%"
           border
+          default-expand-all
         >
+          <el-table-column type="expand">
+            <template slot-scope="props">
+              <p>子订单编号： {{ props.row.subOrderId }}</p>
+            </template>
+          </el-table-column>
           <el-table-column label="商品SKU" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.skuId }}</span>
