@@ -39,7 +39,7 @@ export function updateWorkOrderTypeApi(params) {
   })
 }
 
-export function deleteWorkOrderApi(params) {
+export function deleteWorkOrderTypeApi(params) {
   return Vue.axios.request({
     url: `/workorders/order_types/${params.id}`,
     method: 'delete'
