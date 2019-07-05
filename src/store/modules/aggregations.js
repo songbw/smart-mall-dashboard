@@ -16,6 +16,7 @@ const template = {
   effectiveDate: '',
   backgroundColor: '#FFFFFF',
   groupId: -1,
+  header: null,
   content: []
 }
 
@@ -47,7 +48,7 @@ const mutations = {
     state.aggregation.content = []
   },
   SET_CURRENT_DATA: (state, params) => {
-    const keys = ['id', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'groupId']
+    const keys = ['id', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId']
     keys.forEach(key => {
       if (key in params) {
         state.aggregation[key] = params[key]

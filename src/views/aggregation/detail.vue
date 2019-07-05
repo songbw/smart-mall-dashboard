@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-container>
+    <el-container v-loading="gettingInfo">
       <el-header>
         <el-steps :active="activeStep" finish-status="success" align-center>
           <el-step title="基本信息" />
@@ -8,7 +8,7 @@
           <el-step title="预览页面" />
         </el-steps>
       </el-header>
-      <el-main v-loading="gettingInfo">
+      <el-main>
         <create-page
           v-if="activeStep === 0"
           class="creation-container"

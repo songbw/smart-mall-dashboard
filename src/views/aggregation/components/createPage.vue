@@ -28,6 +28,13 @@
         <el-color-picker v-model="pageColor" />
         <el-tag>{{ pageColor }}</el-tag>
       </el-form-item>
+      <el-form-item label="显示搜索栏">
+        <el-switch v-model="showSearchBar" />
+      </el-form-item>
+      <el-form-item label="头部背景色">
+        <el-color-picker v-model="headerColor" />
+        <el-tag>{{ headerColor }}</el-tag>
+      </el-form-item>
       <el-form-item label="聚合页组">
         <span>{{ groupName }}</span>
         <el-button
@@ -77,11 +84,14 @@ export default {
   data() {
     return {
       creatingPage: false,
+      headerShowSearchBar: null,
+      headerBackgroundColor: '',
       pageForm: {
         name: null,
         homePage: null,
         effectiveDate: null,
         backgroundColor: null,
+        header: null,
         groupId: null
       },
       groupDialogVisible: false,
@@ -146,6 +156,48 @@ export default {
         this.pageForm.backgroundColor = newValue
       }
     },
+    headerColor: {
+      get() {
+        if (this.headerBackgroundColor !== '') {
+          return this.headerBackgroundColor
+        } else {
+          if (isEmpty(this.pageInfo.header)) {
+            return null
+          } else {
+            const header = JSON.parse(this.pageInfo.header)
+            if ('backgroundColor' in header) {
+              return header.backgroundColor
+            } else {
+              return null
+            }
+          }
+        }
+      },
+      set(newValue) {
+        this.headerBackgroundColor = newValue
+      }
+    },
+    showSearchBar: {
+      get() {
+        if (this.headerShowSearchBar != null) {
+          return this.headerShowSearchBar
+        } else {
+          if (isEmpty(this.pageInfo.header)) {
+            return false
+          } else {
+            const header = JSON.parse(this.pageInfo.header)
+            if ('showSearchBar' in header) {
+              return header.showSearchBar
+            } else {
+              return false
+            }
+          }
+        }
+      },
+      set(newValue) {
+        this.headerShowSearchBar = newValue
+      }
+    },
     groupName: {
       get() {
         const id = this.pageForm.groupId !== null ? this.pageForm.groupId : this.pageInfo.groupId
@@ -184,6 +236,11 @@ export default {
       if (params.homePage === null) {
         params.homePage = false
       }
+      const header = {}
+      header.showSearchBar = this.headerShowSearchBar !== null ? this.headerShowSearchBar : false
+      header.backgroundColor = this.headerBackgroundColor !== '' ? this.headerBackgroundColor : null
+      params.header = JSON.stringify(header)
+
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.$emit('createPage', id)
       }).catch(err => {
@@ -227,6 +284,15 @@ export default {
           params.backgroundColor = this.pageForm.backgroundColor
         }
       }
+      const header = {}
+      header.showSearchBar = this.headerShowSearchBar !== null ? this.headerShowSearchBar : false
+      header.backgroundColor = this.headerBackgroundColor !== '' ? this.headerBackgroundColor : null
+      this.pageForm.header = JSON.stringify(header)
+      if (this.pageForm.header !== this.pageInfo.header) {
+        changed = true
+        params.header = this.pageForm.header
+      }
+
       if (this.pageForm.groupId === null) {
         this.pageForm.groupId = this.pageInfo.groupId
       } else {
