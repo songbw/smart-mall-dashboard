@@ -73,7 +73,7 @@
     <el-table
       ref="productsTable"
       v-loading="listLoading"
-      :data="listData"
+      :data="productsData"
       border
       fit
       stripe
@@ -158,7 +158,7 @@
             查看
           </el-button>
           <el-button
-            v-if="!isProductOnSale(scope.row.state)"
+            :disabled="isProductOnSale(scope.row.state)"
             type="info"
             size="mini"
             @click="handleEditProduct(scope.row.id)"
@@ -182,7 +182,7 @@
             下架
           </el-button>
           <el-button
-            v-if="!isProductOnSale(scope.row.state)"
+            :disabled="isProductOnSale(scope.row.state)"
             type="danger"
             size="mini"
             @click="handleDeleteProduct(scope.row.id)"
@@ -308,16 +308,6 @@ export default {
         })
       }
     },
-    listData: {
-      get() {
-        return this.productsData.map(item => {
-          const newItem = Object.assign({}, item)
-          this.$set(newItem, 'editPrice', false)
-          this.$set(newItem, 'originalPrice', newItem.price)
-          return newItem
-        })
-      }
-    },
     listOffset: {
       get() {
         return this.productQuery.offset
@@ -411,6 +401,10 @@ export default {
         const { data } = await getProductListApi(params)
         this.productsTotal = data.result.total
         this.productsData = data.result.list
+        this.productsData.forEach(product => {
+          this.$set(product, 'editPrice', false)
+          this.$set(product, 'originalPrice', product.price)
+        })
       } catch (e) {
         console.warn(`Get products list error:${e}`)
       } finally {
@@ -454,6 +448,10 @@ export default {
         const { data } = await searchProductsApi(params)
         this.productsTotal = data.result.total
         this.productsData = data.result.list
+        this.productsData.forEach(product => {
+          this.$set(product, 'editPrice', false)
+          this.$set(product, 'originalPrice', product.price)
+        })
       } catch (e) {
         console.warn(`Get filter products list error:${e}`)
       } finally {
@@ -562,13 +560,15 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
+          const price = row.price
           const params = {
             skuid: row.skuid,
-            price: row.price
+            price
           }
           await updateProductApi(params)
+          // eslint-disable-next-line require-atomic-updates
+          row.originalPrice = price
           this.$message({ message: '更新产品价格成功。', type: 'success' })
-          row.originalPrice = row.price
         } catch (e) {
           console.warn(`Update product price error: ${e}`)
         }
