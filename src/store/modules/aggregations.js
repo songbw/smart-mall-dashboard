@@ -164,13 +164,11 @@ const actions = {
   async createPage({ commit }, params) {
     const { data } = await createAggregationApi(params)
     const id = data.aggregationId
-    data.content = []
-    commit('SET_CURRENT_DATA', data)
+    commit('SET_CURRENT_DATA', { id, content: [] })
     return id
   },
   async updatePage({ commit }, params) {
     await updateAggregationApi(params)
-    commit('SET_CURRENT_DATA', params)
   },
   async savePageContent({ state }) {
     if (state.aggregation.id !== -1) {

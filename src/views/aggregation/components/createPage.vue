@@ -84,8 +84,6 @@ export default {
   data() {
     return {
       creatingPage: false,
-      headerShowSearchBar: null,
-      headerBackgroundColor: '',
       pageForm: {
         name: null,
         homePage: null,
@@ -126,81 +124,89 @@ export default {
     }),
     pageName: {
       get() {
-        return this.pageForm.name != null ? this.pageForm.name : this.pageInfo.name
+        return this.pageInfo.name
       },
       set(newValue) {
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { name: newValue })
         this.pageForm.name = newValue
       }
     },
     homePage: {
       get() {
-        return this.pageForm.homePage !== null ? this.pageForm.homePage : this.pageInfo.homePage
+        return this.pageInfo.homePage
       },
       set(newValue) {
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { homePage: newValue })
         this.pageForm.homePage = newValue
       }
     },
     pageDate: {
       get() {
-        return this.pageForm.effectiveDate != null ? this.pageForm.effectiveDate : this.pageInfo.effectiveDate
+        return this.pageInfo.effectiveDate
       },
       set(newValue) {
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { effectiveDate: newValue })
         this.pageForm.effectiveDate = newValue
       }
     },
     pageColor: {
       get() {
-        return this.pageForm.backgroundColor != null ? this.pageForm.backgroundColor : this.pageInfo.backgroundColor
+        return this.pageInfo.backgroundColor
       },
       set(newValue) {
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { backgroundColor: newValue })
         this.pageForm.backgroundColor = newValue
       }
     },
     headerColor: {
       get() {
-        if (this.headerBackgroundColor !== '') {
-          return this.headerBackgroundColor
+        if (isEmpty(this.pageInfo.header)) {
+          return null
         } else {
-          if (isEmpty(this.pageInfo.header)) {
-            return null
+          const header = JSON.parse(this.pageInfo.header)
+          if ('backgroundColor' in header) {
+            return header.backgroundColor
           } else {
-            const header = JSON.parse(this.pageInfo.header)
-            if ('backgroundColor' in header) {
-              return header.backgroundColor
-            } else {
-              return null
-            }
+            return null
           }
         }
       },
       set(newValue) {
-        this.headerBackgroundColor = newValue
+        const header = {
+          showSearchBar: this.showSearchBar,
+          backgroundColor: newValue
+        }
+        const headerStr = JSON.stringify(header)
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
+        this.pageForm.header = headerStr
       }
     },
     showSearchBar: {
       get() {
-        if (this.headerShowSearchBar != null) {
-          return this.headerShowSearchBar
+        if (isEmpty(this.pageInfo.header)) {
+          return false
         } else {
-          if (isEmpty(this.pageInfo.header)) {
-            return false
+          const header = JSON.parse(this.pageInfo.header)
+          if ('showSearchBar' in header) {
+            return header.showSearchBar
           } else {
-            const header = JSON.parse(this.pageInfo.header)
-            if ('showSearchBar' in header) {
-              return header.showSearchBar
-            } else {
-              return false
-            }
+            return false
           }
         }
       },
       set(newValue) {
-        this.headerShowSearchBar = newValue
+        const header = {
+          showSearchBar: newValue,
+          backgroundColor: this.headerColor
+        }
+        const headerStr = JSON.stringify(header)
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
+        this.pageForm.header = headerStr
       }
     },
     groupName: {
       get() {
-        const id = this.pageForm.groupId !== null ? this.pageForm.groupId : this.pageInfo.groupId
+        const id = this.pageInfo.groupId
         if (id === null || id <= 0) {
           return '未分组'
         } else {
@@ -222,24 +228,17 @@ export default {
   methods: {
     createPage() {
       this.creatingPage = true
-      const params = Object.assign({}, this.pageForm)
-      if (params.groupId === null) {
-        if (this.groupId > 0) {
-          params.groupId = this.groupId
-        } else {
-          delete params.groupId
+      const params = {}
+      Object.keys(this.pageForm).forEach(key => {
+        params[key] = this.pageInfo[key]
+      })
+      if (isEmpty(params.header)) {
+        const header = {
+          showSearchBar: false,
+          backgroundColor: null
         }
+        params.header = JSON.stringify(header)
       }
-      if (params.backgroundColor === null) {
-        params.backgroundColor = this.pageInfo.backgroundColor
-      }
-      if (params.homePage === null) {
-        params.homePage = false
-      }
-      const header = {}
-      header.showSearchBar = this.headerShowSearchBar !== null ? this.headerShowSearchBar : false
-      header.backgroundColor = this.headerBackgroundColor !== '' ? this.headerBackgroundColor : null
-      params.header = JSON.stringify(header)
 
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.$emit('createPage', id)
@@ -252,55 +251,12 @@ export default {
     getChangedParams() {
       let changed = false
       const params = {}
-      if (this.pageForm.name === null) {
-        this.pageForm.name = this.pageInfo.name
-      } else {
-        if (this.pageForm.name !== this.pageInfo.name) {
+      Object.keys(this.pageForm).forEach(key => {
+        if (this.pageForm[key] !== null) {
+          params[key] = this.pageForm[key]
           changed = true
-          params.name = this.pageForm.name
         }
-      }
-      if (this.pageForm.homePage == null) {
-        this.pageForm.homePage = this.pageInfo.homePage
-      } else {
-        if (this.pageForm.homePage !== this.pageInfo.homePage) {
-          changed = true
-          params.homePage = this.pageForm.homePage
-        }
-      }
-      if (this.pageForm.effectiveDate === null) {
-        this.pageForm.effectiveDate = this.pageInfo.effectiveDate
-      } else {
-        if (this.pageForm.effectiveDate !== this.pageInfo.effectiveDate) {
-          changed = true
-          params.effectiveDate = this.pageForm.effectiveDate
-        }
-      }
-      if (this.pageForm.backgroundColor === null) {
-        this.pageForm.backgroundColor = this.pageInfo.backgroundColor
-      } else {
-        if (this.pageForm.backgroundColor !== this.pageInfo.backgroundColor) {
-          changed = true
-          params.backgroundColor = this.pageForm.backgroundColor
-        }
-      }
-      const header = {}
-      header.showSearchBar = this.headerShowSearchBar !== null ? this.headerShowSearchBar : false
-      header.backgroundColor = this.headerBackgroundColor !== '' ? this.headerBackgroundColor : null
-      this.pageForm.header = JSON.stringify(header)
-      if (this.pageForm.header !== this.pageInfo.header) {
-        changed = true
-        params.header = this.pageForm.header
-      }
-
-      if (this.pageForm.groupId === null) {
-        this.pageForm.groupId = this.pageInfo.groupId
-      } else {
-        if (this.pageForm.groupId !== this.pageInfo.groupId) {
-          changed = true
-          params.groupId = this.pageForm.groupId
-        }
-      }
+      })
       if (changed) {
         return params
       } else {
@@ -310,7 +266,7 @@ export default {
     async checkHomePage(params) {
       if ('homePage' in params && params.homePage === false) {
         try {
-          const res = await searchAggregationsApi({ homePage: true, offset: 1, limit: 1 })
+          const res = await searchAggregationsApi({ homePage: true, offset: 1, limit: 1, status: 1 })
           const data = res.data.result
           if (data.total <= 1) {
             await this.$alert('此聚合页模板为唯一主页模板，请先选择打开其它聚合页的主页选择。', '警告', {
@@ -376,6 +332,7 @@ export default {
     handleConfirmChange() {
       this.groupDialogVisible = false
       this.pageForm.groupId = Number.parseInt(this.groupSelectId)
+      this.$store.commit('aggregations/SET_CURRENT_DATA', { groupId: this.pageForm.groupId })
       this.groupSelectId = null
     }
   }
