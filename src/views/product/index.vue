@@ -8,15 +8,25 @@
         <el-form-item label="商品SKU">
           <el-input v-model="listSkuId" placeholder="输入商品SKU" clearable />
         </el-form-item>
+        <el-form-item label="商品状态">
+          <el-select :value="listState" @change="handleStateChanged">
+            <el-option
+              v-for="item in stateOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
       </el-form>
       <el-form :inline="true">
         <el-form-item label="商品品牌">
           <el-input v-model="listBrand" placeholder="输入品牌关键字" clearable />
         </el-form-item>
-        <el-form-item label="商品状态">
-          <el-select v-model="listState">
+        <el-form-item label="供应商名">
+          <el-select :value="listVendor" clearable @change="handleVendorChanged">
             <el-option
-              v-for="item in stateOptions"
+              v-for="item in vendorOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -265,9 +275,9 @@ export default {
         query: '',
         skuid: '',
         brand: '',
+        vendorId: null,
         categoryID: null
       },
-      vendorOptions: [],
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -282,6 +292,7 @@ export default {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
       productQuery: 'productQuery',
+      vendorOptions: 'productVendors',
       vendorApproved: 'vendorApproved'
     }),
     firstCategoryValue: {
@@ -361,12 +372,24 @@ export default {
       set(value) {
         this.$store.commit('products/SET_SEARCH_DATA', { state: value })
       }
+    },
+    listVendor: {
+      get() {
+        return this.productQuery.vendorId
+      },
+      set(value) {
+        this.$store.commit('products/SET_SEARCH_DATA', { vendorId: value })
+      }
     }
   },
   created() {
-    this.getListData()
+    this.prepareList()
   },
   methods: {
+    async prepareList() {
+      await this.getVendorList()
+      this.getListData()
+    },
     async getVendorList() {
       try {
         const params = {
@@ -374,15 +397,19 @@ export default {
           limit: 100,
           status: vendor_status_approved
         }
+        this.listLoading = true
         const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(row => {
+        const vendors = data.rows.map(row => {
           return {
             value: row.company.id,
             label: row.company.name
           }
         })
+        this.$store.commit('products/SET_VENDOR_OPTIONS', vendors)
       } catch (e) {
         console.warn('Product get vendor list error:' + e)
+      } finally {
+        this.listLoading = false
       }
     },
     getVendorName(vendorId) {
@@ -399,20 +426,18 @@ export default {
       return this.listQuery !== this.searchParams.query ||
         this.listSkuId !== this.searchParams.skuid ||
         this.listBrand !== this.searchParams.brand ||
+        this.listVendor !== this.searchParams.vendorId ||
         this.thirdCategoryValue !== this.searchParams.categoryID
     },
     resetSearchParams() {
       this.searchParams.query = ''
       this.searchParams.skuid = ''
       this.searchParams.brand = ''
+      this.searchParams.vendorId = null
       this.searchParams.categoryID = null
     },
     async getListData() {
       if (this.vendorApproved) {
-        this.listLoading = true
-        if (this.vendorOptions.length === 0) {
-          await this.getVendorList()
-        }
         if (this.isFilterChanged()) {
           this.listOffset = 1
         }
@@ -467,6 +492,11 @@ export default {
         if (!isEmpty(this.listBrand)) {
           this.searchParams.brand = this.listBrand
           params.brand = this.listBrand
+          filter = true
+        }
+        if (Number.isSafeInteger(this.listVendor)) {
+          this.searchParams.vendorId = this.listVendor
+          params.merchantId = this.listVendor
           filter = true
         }
         if (Number.isInteger(this.thirdCategoryValue)) {
@@ -711,6 +741,12 @@ export default {
           }
         }
       }))
+    },
+    handleStateChanged(state) {
+      this.listState = state
+    },
+    handleVendorChanged(vendorId) {
+      this.listVendor = vendorId
     }
   }
 }

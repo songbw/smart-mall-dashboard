@@ -6,10 +6,12 @@ const state = {
     skuid: '',
     brand: '',
     state: -1,
+    vendorId: null,
     firstCategoryId: null,
     secondCategoryId: null,
     thirdCategoryId: null
-  }
+  },
+  vendors: []
 }
 
 const mutations = {
@@ -28,6 +30,9 @@ const mutations = {
   },
   SET_THIRD_CATEGORY_ID: (state, params) => {
     state.search.thirdCategoryId = params.thirdCategoryId
+  },
+  SET_VENDOR_OPTIONS: (state, options) => {
+    state.vendors = options
   }
 }
 

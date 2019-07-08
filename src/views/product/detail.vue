@@ -318,7 +318,6 @@ export default {
       introductionUploadPath: 'products',
       loading: false,
       opType: OP_VIEW,
-      vendorOptions: [],
       brandLoading: false,
       brandOptions: [],
       brandSelectedId: null,
@@ -371,7 +370,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      isAdminUser: 'isAdminUser',
+      vendorOptions: 'productVendors'
     }),
     loadingMessage: {
       get() {
@@ -408,24 +408,27 @@ export default {
       }
     },
     async getVendorList() {
-      try {
-        this.loading = true
-        const params = {
-          page: 1,
-          limit: 100,
-          status: vendor_status_approved
-        }
-        const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
+      if (this.vendorOptions.length === 0) {
+        try {
+          this.loading = true
+          const params = {
+            page: 1,
+            limit: 100,
+            status: vendor_status_approved
           }
-        })
-      } catch (e) {
-        console.warn('Product get vendor list error:' + e)
-      } finally {
-        this.loading = false
+          const data = await getVendorListApi(params)
+          const vendors = data.rows.map(row => {
+            return {
+              value: row.company.id,
+              label: row.company.name
+            }
+          })
+          this.$store.commit('products/SET_VENDOR_OPTIONS', vendors)
+        } catch (e) {
+          console.warn('Product get vendor list error:' + e)
+        } finally {
+          this.loading = false
+        }
       }
     },
     getVendorName(vendorId) {
