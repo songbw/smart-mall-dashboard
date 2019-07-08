@@ -86,11 +86,6 @@
         align="center"
         width="55"
       />
-      <el-table-column label="商品ID" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="商品SKU" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
@@ -136,6 +131,11 @@
               @click="scope.row.editPrice=!scope.row.editPrice"
             />
           </template>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isAdminUser" label="供应商" align="center">
+        <template slot-scope="scope">
+          <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" width="80">
@@ -228,12 +228,16 @@ import {
   searchProductsApi,
   deleteProductApi
 } from '@/api/products'
+import {
+  getVendorListApi
+} from '@/api/vendor'
 import Pagination from '@/components/Pagination'
 import CategorySelection from './categorySelection'
 import {
   product_state_off_shelves,
   product_state_on_sale,
-  ProductStateOptions
+  ProductStateOptions,
+  vendor_status_approved
 } from '@/utils/constants'
 
 export default {
@@ -263,6 +267,7 @@ export default {
         brand: '',
         categoryID: null
       },
+      vendorOptions: [],
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -275,6 +280,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      isAdminUser: 'isAdminUser',
       productQuery: 'productQuery',
       vendorApproved: 'vendorApproved'
     }),
@@ -361,6 +367,34 @@ export default {
     this.getListData()
   },
   methods: {
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 100,
+          status: vendor_status_approved
+        }
+        const data = await getVendorListApi(params)
+        this.vendorOptions = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Product get vendor list error:' + e)
+      }
+    },
+    getVendorName(vendorId) {
+      if (this.vendorOptions.length > 0 && vendorId != null) {
+        const vendor = this.vendorOptions.find(option => option.value === vendorId)
+        if (vendor) {
+          return vendor.label
+        } else {
+          return ''
+        }
+      }
+    },
     isFilterChanged() {
       return this.listQuery !== this.searchParams.query ||
         this.listSkuId !== this.searchParams.skuid ||
@@ -373,8 +407,12 @@ export default {
       this.searchParams.brand = ''
       this.searchParams.categoryID = null
     },
-    getListData() {
+    async getListData() {
       if (this.vendorApproved) {
+        this.listLoading = true
+        if (this.vendorOptions.length === 0) {
+          await this.getVendorList()
+        }
         if (this.isFilterChanged()) {
           this.listOffset = 1
         }

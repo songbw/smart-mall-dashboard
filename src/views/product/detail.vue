@@ -12,6 +12,22 @@
       <el-form-item v-if="!createProduct" label="商品ID">
         <span>{{ productForm.id }}</span>
       </el-form-item>
+      <el-form-item v-if="isAdminUser" label="商品供应商" prop="merchantId">
+        <span v-if="viewProduct">{{ getVendorName(productForm.merchantId) }}</span>
+        <el-select
+          v-else
+          :value="productForm.merchantId"
+          style="width: 50%"
+          @change="handleMerchantChanged"
+        >
+          <el-option
+            v-for="item in vendorOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
         <span v-if="viewProduct">{{ productForm.skuid }}</span>
         <el-input v-else v-model="productForm.skuid" />
@@ -91,8 +107,8 @@
         <el-input v-else v-model="productForm.upc" />
       </el-form-item>
       <el-form-item label="销售单位">
-        <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
-        <el-input v-else v-model="productForm.saleunit" />
+        <span v-if="viewProduct"> {{ productForm.saleUnit }}</span>
+        <el-input v-else v-model="productForm.saleUnit" />
       </el-form-item>
       <el-form-item label="商品价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
@@ -205,6 +221,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
@@ -213,8 +230,12 @@ import CustomIntroduction from './customIntroduction'
 import CategorySelection from './categorySelection'
 import {
   app_upload_url,
-  ProductStateOptions
+  ProductStateOptions,
+  vendor_status_approved
 } from '@/utils/constants'
+import {
+  getVendorListApi
+} from '@/api/vendor'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -237,8 +258,15 @@ export default {
   data() {
     this.productInfo = null
     const validateValue = (rule, value, callback) => {
-      if (isEmpty(value)) {
+      if (value == null) {
         switch (rule.field) {
+          case 'merchantId':
+            if (this.isAdminUser) {
+              callback(new Error('请选择商品供应商'))
+            } else {
+              callback()
+            }
+            break
           case 'skuid':
             callback(new Error('请输入商品SKU'))
             break
@@ -247,6 +275,9 @@ export default {
             break
           case 'category':
             callback(new Error('请选择商品类别'))
+            break
+          case 'price':
+            callback(new Error('请输入商品销售价'))
             break
         }
       } else {
@@ -270,6 +301,7 @@ export default {
       introductionUploadPath: 'products',
       loading: false,
       opType: OP_VIEW,
+      vendorOptions: [],
       brandLoading: false,
       brandOptions: [],
       brandSelectedId: null,
@@ -284,6 +316,7 @@ export default {
       introductionUrls: [],
       productForm: {
         id: null,
+        merchantId: null,
         skuid: null,
         state: 0,
         name: null,
@@ -294,13 +327,16 @@ export default {
         image: null,
         weight: null,
         upc: null,
-        saleunit: null,
+        saleUnit: null,
         price: null,
         inventory: null, // Number
         imagesUrl: null,
         introductionUrl: null
       },
       formRules: {
+        merchantId: [{
+          required: true, validator: validateValue, trigger: 'blur'
+        }],
         skuid: [{
           required: true, validator: validateValue, trigger: 'blur'
         }],
@@ -317,6 +353,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser'
+    }),
     loadingMessage: {
       get() {
         return this.uploading ? '正在上传图片...' + this.uploadPercent + '%' : '正在加载中...'
@@ -341,11 +380,48 @@ export default {
       } else {
         this.opType = OP_VIEW
       }
-      this.getProductInfo()
     }
+    this.prepareProduct()
   },
   methods: {
-    getProductInfo() {
+    async prepareProduct() {
+      await this.getVendorList()
+      if (this.opType !== OP_CREATE) {
+        this.getProductInfo()
+      }
+    },
+    async getVendorList() {
+      try {
+        this.loading = true
+        const params = {
+          page: 1,
+          limit: 100,
+          status: vendor_status_approved
+        }
+        const data = await getVendorListApi(params)
+        this.vendorOptions = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Product get vendor list error:' + e)
+      } finally {
+        this.loading = false
+      }
+    },
+    getVendorName(vendorId) {
+      if (this.vendorOptions.length > 0 && vendorId != null) {
+        const vendor = this.vendorOptions.find(option => option.value === vendorId)
+        if (vendor) {
+          return vendor.label
+        } else {
+          return ''
+        }
+      }
+    },
+    async getProductInfo() {
       const skuId = this.$route.params.skuId
       const params = {
         offset: 1,
@@ -411,6 +487,9 @@ export default {
           this.brandLoading = false
         }
       }
+    },
+    handleMerchantChanged(value) {
+      this.productForm.merchantId = value
     },
     handleBrandChanged(value) {
       this.productForm.brandId = value

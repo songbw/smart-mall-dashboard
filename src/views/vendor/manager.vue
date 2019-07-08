@@ -56,7 +56,7 @@
             查看
           </el-button>
           <el-button
-            :disabled="scope.row.company.status !== 2"
+            :disabled="scope.row.company.status !== statusReviewing"
             type="warning"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -64,7 +64,7 @@
             批准
           </el-button>
           <el-button
-            :disabled="scope.row.company.status !== 2"
+            :disabled="scope.row.company.status !== statusReviewing"
             type="danger"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -82,10 +82,10 @@
       @pagination="getVendorData"
     />
     <vendor-detail
-      :dialog-visible="detailVisiable"
+      :dialog-visible="detailVisible"
       :company="currentVendor.company"
       :users="currentVendor.users"
-      @onConfirmed="detailVisiable = false"
+      @onConfirmed="detailVisible = false"
     />
   </div>
 </template>
@@ -99,22 +99,28 @@ import {
   getVendorListApi,
   reviewVendorProfileApi
 } from '@/api/vendor'
+import {
+  vendor_status_editing,
+  vendor_status_reviewing,
+  vendor_status_approved,
+  vendor_status_rejected
+} from '@/utils/constants'
 
 const VendorStatus = [
   {
-    value: 1,
+    value: vendor_status_editing,
     label: '编辑中'
   },
   {
-    value: 2,
+    value: vendor_status_reviewing,
     label: '待审核'
   },
   {
-    value: 3,
+    value: vendor_status_approved,
     label: '审核已通过'
   },
   {
-    value: 4,
+    value: vendor_status_rejected,
     label: '审核有问题'
   }
 ]
@@ -135,11 +141,12 @@ export default {
   },
   data() {
     return {
+      statusReviewing: vendor_status_reviewing,
       statusOptions: [{
         value: -1,
         label: '全部'
       }].concat(VendorStatus),
-      detailVisiable: false,
+      detailVisible: false,
       dataLoading: false,
       vendorData: [],
       vendorTotal: 0,
@@ -181,7 +188,7 @@ export default {
     },
     handleViewVendor(index) {
       this.currentVendor = this.vendorData[index]
-      this.detailVisiable = true
+      this.detailVisible = true
     },
     async handleApproveVendor(index) {
       try {
@@ -191,7 +198,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.handleReviewVendor(this.vendorData[index].company.id, 3, 'Approved')
+        this.handleReviewVendor(this.vendorData[index].company.id, vendor_status_approved, 'Approved')
       } catch (e) {
         console.warn('Vendor manager approve:' + e)
       }
@@ -202,7 +209,7 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        this.handleReviewVendor(this.vendorData[index].company.id, 4, value)
+        this.handleReviewVendor(this.vendorData[index].company.id, vendor_status_rejected, value)
       } catch (e) {
         console.warn('Vendor manager reject:' + e)
       }
