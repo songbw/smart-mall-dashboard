@@ -79,6 +79,10 @@ import {
   searchAggregationsApi
 } from '@/api/aggregations'
 
+import {
+  aggregation_on_sale_status
+} from '../constants'
+
 export default {
   name: 'CreationForm',
   data() {
@@ -264,6 +268,9 @@ export default {
       }
     },
     async checkHomePage(params) {
+      if (this.pageInfo.status !== aggregation_on_sale_status) {
+        return true
+      }
       if ('homePage' in params && params.homePage === false) {
         try {
           const res = await searchAggregationsApi({ homePage: true, offset: 1, limit: 1, status: 1 })

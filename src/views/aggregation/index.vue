@@ -111,7 +111,7 @@
 
         <el-table-column label="状态" align="center" width="100px">
           <template slot-scope="scope">
-            <el-tag>{{ scope.row.status | statusFilter(statusTitle) }}</el-tag>
+            <el-tag>{{ scope.row.status | statusFilter }}</el-tag>
           </template>
         </el-table-column>
 
@@ -191,16 +191,22 @@ import moment from 'moment'
 import Pagination from '@/components/Pagination'
 import {
   getAggregationsApi,
-  searchAggregationsApi
+  searchAggregationsApi,
+  deleteAggregationApi,
+  updateAggregationApi
 } from '@/api/aggregations'
-import { deleteAggregationApi, updateAggregationApi } from '../../api/aggregations'
+
+import {
+  AggregationStatusOptions
+} from './constants'
 
 export default {
   name: 'AggregationPages',
   components: { Pagination },
   filters: {
-    statusFilter(status, titles) {
-      return titles[status]
+    statusFilter(status) {
+      const item = AggregationStatusOptions.find(option => option.value === status)
+      return item ? item.label : status
     },
     dateFilter(date) {
       const format = 'YYYY-MM-DD'
@@ -212,24 +218,10 @@ export default {
     return {
       qrCodeValue: '',
       iframeSrc: '',
-      statusTitle: [
-        '编辑中',
-        '销售中',
-        '已下架'
-      ],
       statusOptions: [{
         value: -1,
         label: '全部'
-      }, {
-        value: 0,
-        label: '编辑中'
-      }, {
-        value: 1,
-        label: '销售中'
-      }, {
-        value: 2,
-        label: '已下架'
-      }],
+      }].concat(AggregationStatusOptions),
       orderOptions: [{
         value: 'asc',
         label: '升序'

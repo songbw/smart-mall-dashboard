@@ -11,6 +11,7 @@ import {
 
 const template = {
   id: -1,
+  status: 0,
   name: '',
   homePage: false,
   effectiveDate: '',
@@ -48,7 +49,7 @@ const mutations = {
     state.aggregation.content = []
   },
   SET_CURRENT_DATA: (state, params) => {
-    const keys = ['id', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId']
+    const keys = ['id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId']
     keys.forEach(key => {
       if (key in params) {
         state.aggregation[key] = params[key]
