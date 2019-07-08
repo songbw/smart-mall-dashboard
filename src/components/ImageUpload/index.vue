@@ -17,15 +17,23 @@
       list-type="picture"
       name="file"
     >
-      <el-button slot="trigger" size="small" type="primary">选择图片文件</el-button>
+      <el-button
+        slot="trigger"
+        size="small"
+        type="primary"
+        icon="el-icon-picture"
+      >
+        选择图片
+      </el-button>
       <el-button
         v-if="!autoUpload"
         style="margin-left: 10px;"
         size="small"
         type="success"
+        icon="el-icon-upload"
         @click="submitUpload"
       >
-        上传图片
+        开始上传
       </el-button>
       <div slot="tip" class="el-upload__tip">{{ tip }}</div>
     </el-upload>

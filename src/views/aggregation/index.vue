@@ -517,7 +517,6 @@ export default {
       }
     },
     onGroupChanged(group) {
-      console.debug('Aggregation group changed:' + group.name)
       if (this.queryGroupId !== group.name) {
         this.getListData()
       }

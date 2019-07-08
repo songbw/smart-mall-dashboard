@@ -85,9 +85,9 @@
             ref="coverUpload"
             :action="uploadUrl"
             :data="uploadCoverData"
-            :auto-upload="true"
+            :auto-upload="false"
             :limit="1"
-            :show-file-list="false"
+            :show-file-list="true"
             :before-upload="handleBeforeUpload"
             :on-success="handleUploadCoverSuccess"
             :on-error="handleUploadError"
@@ -96,8 +96,11 @@
             list-type="picture"
             name="file"
           >
-            <el-button slot="trigger" type="primary" icon="el-icon-edit">
-              上传商品图
+            <el-button slot="trigger" type="primary" icon="el-icon-picture">
+              选择封面图
+            </el-button>
+            <el-button style="margin-left: 10px;" type="success" icon="el-icon-upload" @click="handleUploadCover">
+              开始上传
             </el-button>
           </el-upload>
         </template>
@@ -125,9 +128,9 @@
             ref="thumbnailUpload"
             :action="uploadUrl"
             :data="uploadThumbnailData"
-            :auto-upload="true"
-            :limit="1"
-            :show-file-list="false"
+            :auto-upload="false"
+            :limit="5 - thumbnails.length < 0 ? 0 : 5 - thumbnails.length"
+            :show-file-list="true"
             :before-upload="handleBeforeUpload"
             :on-success="handleUploadThumbnailSuccess"
             :on-error="handleUploadError"
@@ -135,9 +138,13 @@
             style="margin: 10px"
             list-type="picture"
             name="file"
+            multiple
           >
-            <el-button slot="trigger" :disabled="thumbnails.length >= 5" type="primary" icon="el-icon-upload">
-              点击上传新主图
+            <el-button slot="trigger" :disabled="thumbnails.length >= 5" type="primary" icon="el-icon-picture">
+              选择主图
+            </el-button>
+            <el-button style="margin-left: 10px;" type="success" icon="el-icon-upload" @click="handleUploadThumbnail">
+              开始上传
             </el-button>
             <div slot="tip" class="el-upload__tip">请选择商品的主图，最多支持5个</div>
           </el-upload>
@@ -167,14 +174,19 @@
       </el-form-item>
       <el-form-item label="商品描述图">
         <template>
-          <div v-if="!viewProduct" style="display: flex; flex-direction: row;align-items: center;">
+          <div v-if="!viewProduct">
+            <el-radio-group v-model="newIntroductionType" style="margin-left: 20px">
+              <el-radio :label="1">正常详情图</el-radio>
+              <el-radio :label="2">头部详情图</el-radio>
+              <el-radio :label="3">尾部详情图</el-radio>
+            </el-radio-group>
             <el-upload
               ref="introductionUpload"
               :action="uploadUrl"
               :data="uploadIntroductionData"
-              :auto-upload="true"
-              :limit="1"
-              :show-file-list="false"
+              :auto-upload="false"
+              :limit="10"
+              :show-file-list="true"
               :before-upload="handleBeforeUpload"
               :on-success="handleUploadIntroductionSuccess"
               :on-error="handleUploadError"
@@ -182,16 +194,20 @@
               style="margin: 10px"
               list-type="picture"
               name="file"
+              multiple
             >
-              <el-button slot="trigger" type="primary" icon="el-icon-upload">
-                点击上传新的详情图
+              <el-button slot="trigger" type="primary" icon="el-icon-picture">
+                选择详情图
+              </el-button>
+              <el-button
+                style="margin-left: 10px;"
+                type="success"
+                icon="el-icon-upload"
+                @click="handleUploadIntroduction"
+              >
+                开始上传
               </el-button>
             </el-upload>
-            <el-radio-group v-model="newIntroductionType" style="margin-left: 20px">
-              <el-radio :label="1">正常详情图</el-radio>
-              <el-radio :label="2">头部详情图</el-radio>
-              <el-radio :label="3">尾部详情图</el-radio>
-            </el-radio-group>
           </div>
           <div v-for="(img, index) in introductionUrls" :key="introductions[index]" style="padding: 14px">
             <custom-introduction
@@ -210,13 +226,14 @@
           </div>
         </template>
       </el-form-item>
+      <el-divider />
+      <el-form-item>
+        <el-button type="primary" @click="goBack">返回</el-button>
+        <el-button v-if="!viewProduct" type="danger" @click="handleSubmit">
+          {{ createProduct ? '创建' : '修改' }}
+        </el-button>
+      </el-form-item>
     </el-form>
-    <el-footer class="fixed-bottom" style="z-index: 1">
-      <el-button type="primary" @click="goBack">返回</el-button>
-      <el-button v-if="!viewProduct" type="danger" @click="handleSubmit">
-        {{ createProduct ? '创建' : '修改' }}
-      </el-button>
-    </el-footer>
   </div>
 </template>
 
@@ -626,18 +643,35 @@ export default {
         this.goBack()
       }
     },
+    handleUploadCover() {
+      this.$refs.coverUpload.submit()
+    },
     handleUploadCoverSuccess(res) {
       this.$refs.coverUpload.clearFiles()
       this.loading = false
       this.uploading = false
       this.productForm.image = this.$store.getters.cosUrl + res.data.url
     },
-    handleUploadThumbnailSuccess(res) {
-      this.$refs.thumbnailUpload.clearFiles()
-      this.loading = false
-      this.uploading = false
-      this.thumbnails.push(res.data.url)
-      this.thumbnailUrls.push(this.$store.getters.cosUrl + res.data.url)
+    handleUploadThumbnail() {
+      this.$refs.thumbnailUpload.submit()
+    },
+    handleUploadThumbnailSuccess(res, file, fileList) {
+      let count = 0
+      fileList.forEach(item => {
+        if (item.status === 'success') {
+          const url = item.response.data.url
+          if (!this.thumbnails.includes(url)) {
+            this.thumbnails.push(url)
+            this.thumbnailUrls.push(this.$store.getters.cosUrl + url)
+          }
+          count++
+        }
+      })
+      if (count === fileList.length) {
+        this.loading = false
+        this.uploading = false
+        this.$refs.thumbnailUpload.clearFiles()
+      }
     },
     handleUploadThumbnailIndexSuccess(params) {
       const index = params.index
@@ -649,34 +683,56 @@ export default {
       this.thumbnailUrls.splice(index, 1)
       this.thumbnailUrls.splice(index, 0, this.$store.getters.cosUrl + url)
     },
-    handleUploadIntroductionSuccess(res) {
-      this.$refs.introductionUpload.clearFiles()
-      this.loading = false
-      this.uploading = false
-      let index = 0
-
-      switch (this.newIntroductionType) {
-        case 1: // normal
-          if (this.introductionUrls.length > 2) {
-            index = this.introductions.length - 1 // the first item just before last one
-          } else {
-            if (this.introductionUrls.length > 0) {
-              index = 1
-            } else {
-              index = 0
+    handleUploadIntroduction() {
+      this.$refs.introductionUpload.submit()
+    },
+    handleUploadIntroductionSuccess(res, file, fileList) {
+      if (fileList.length > 1) {
+        let count = 0
+        fileList.forEach(item => {
+          if (item.status === 'success') {
+            const url = item.response.data.url
+            if (!this.introductions.includes(url)) {
+              this.introductions.push(url)
+              this.introductionUrls.push(this.$store.getters.cosUrl + url)
             }
+            count++
           }
-          this.introductions.splice(index, 0, res.data.url)
-          this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + res.data.url)
-          break
-        case 2: // Head
-          this.introductions.splice(0, 0, res.data.url)
-          this.introductionUrls.splice(0, 0, this.$store.getters.cosUrl + res.data.url)
-          break
-        case 3: // Tail
-          this.introductions.push(res.data.url)
-          this.introductionUrls.push(this.$store.getters.cosUrl + res.data.url)
-          break
+        })
+        if (count === fileList.length) {
+          this.loading = false
+          this.uploading = false
+          this.$refs.introductionUpload.clearFiles()
+        }
+      } else {
+        this.$refs.introductionUpload.clearFiles()
+        this.loading = false
+        this.uploading = false
+        let index = 0
+
+        switch (this.newIntroductionType) {
+          case 1: // normal
+            if (this.introductionUrls.length > 2) {
+              index = this.introductions.length - 1 // the first item just before last one
+            } else {
+              if (this.introductionUrls.length > 0) {
+                index = 1
+              } else {
+                index = 0
+              }
+            }
+            this.introductions.splice(index, 0, res.data.url)
+            this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + res.data.url)
+            break
+          case 2: // Head
+            this.introductions.splice(0, 0, res.data.url)
+            this.introductionUrls.splice(0, 0, this.$store.getters.cosUrl + res.data.url)
+            break
+          case 3: // Tail
+            this.introductions.push(res.data.url)
+            this.introductionUrls.push(this.$store.getters.cosUrl + res.data.url)
+            break
+        }
       }
     },
     handleUploadIntroductionIndexSuccess(params) {
@@ -715,8 +771,7 @@ export default {
 </script>
 
 <style scoped>
-  .fixed-bottom {
-    position: fixed;
+  .bottom {
     bottom: 10px;
     right: 10px;
   }
