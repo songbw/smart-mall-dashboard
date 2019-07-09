@@ -69,6 +69,13 @@ export const constantRoutes = [
         hidden: true
       },
       {
+        path: 'showProduct/:id',
+        name: 'ShowProduct',
+        component: () => import('@/views/product/detail'),
+        meta: { title: '查看商品', icon: 'products' },
+        hidden: true
+      },
+      {
         path: 'editProduct/:id',
         name: 'EditProduct',
         component: () => import('@/views/product/detail'),

@@ -3,16 +3,16 @@
     <el-form inline>
       <el-form-item>
         <el-input
-          v-model="filterTitle"
+          v-model="listQuery.query"
           placeholder="输入品牌名"
           style="max-width: 400px;"
           class="filter-item"
-          @keyup.enter.native="handleFilter"
-          @change="onTitleChanged"
+          clearable
+          @keyup.enter.native="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="handleFilter">
+        <el-button type="primary" icon="el-icon-search" @click="handleSearch">
           搜索
         </el-button>
       </el-form-item>
@@ -134,7 +134,7 @@ export default {
       listQuery: {
         offset: 1,
         limit: 20,
-        header: undefined
+        query: null
       },
       listLoading: false,
       brandTotal: 0,
@@ -161,20 +161,16 @@ export default {
     async getListData() {
       this.listLoading = true
       try {
-        const { data } = await getBrandListApi(this.listQuery)
+        const { data } = await getBrandListApi({
+          offset: this.listQuery.offset,
+          limit: this.listQuery.limit
+        })
         this.listData = data.result.list
         this.brandTotal = data.result.total
       } catch (e) {
         console.warn('Get brand list error: ' + e)
       } finally {
         this.listLoading = false
-      }
-    },
-    onTitleChanged(title) {
-      if (title.trim() !== '') {
-        this.listQuery.query = title
-      } else {
-        this.listQuery.query = null
       }
     },
     async handleFilter() {
@@ -188,6 +184,13 @@ export default {
         console.warn('Brand filter:' + e)
       } finally {
         this.listLoading = false
+      }
+    },
+    handleSearch() {
+      if (this.listQuery.query) {
+        this.handleFilter()
+      } else {
+        this.getListData()
       }
     },
     handleEdit(row) {

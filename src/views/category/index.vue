@@ -21,6 +21,7 @@
       </el-form-item>
       <el-form-item>
         <el-button
+          v-if="false"
           type="danger"
           icon="el-icon-refresh"
           @click="handleRefresh"
@@ -89,7 +90,7 @@
         </el-form-item>
         <el-form-item label="类别排序">
           <el-input v-if="noEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
-          <el-input-number v-else v-model="dialogValue.sortOrder" class="dialog-form-item" />
+          <el-input-number v-else v-model="dialogValue.sortOrder" />
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload

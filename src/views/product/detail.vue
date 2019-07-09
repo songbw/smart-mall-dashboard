@@ -200,7 +200,7 @@
               multiple
             >
               <el-button slot="trigger" type="primary" icon="el-icon-picture">
-                选择详情图
+                选择描述图
               </el-button>
               <el-button
                 style="margin-left: 10px;"
@@ -445,11 +445,14 @@ export default {
       }
     },
     async getProductInfo() {
-      const skuId = this.$route.params.skuId
       const params = {
         offset: 1,
-        limit: 10,
-        skuid: skuId
+        limit: 1
+      }
+      if (this.$route.params.skuId) {
+        params.skuid = this.$route.params.skuId
+      } else {
+        params.id = this.$route.params.id
       }
       this.loading = true
       searchProductsApi(params).then(response => {
