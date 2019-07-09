@@ -72,15 +72,15 @@
     />
 
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :model="dialogValue" label-position="left">
+      <el-form ref="dataForm" :model="dialogValue" label-position="right" label-width="120">
         <el-form-item label="品牌全称">
-          <el-input v-model="dialogValue.brandName" :readonly="noEditPermission" />
+          <el-input v-model="dialogValue.brandName" readonly class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="品牌中文名">
-          <el-input v-model="dialogValue.brandCname" :readonly="noEditPermission" />
+        <el-form-item label="中文名称">
+          <el-input v-model="dialogValue.brandCname" :readonly="noEditPermission" class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="品牌英文名">
-          <el-input v-model="dialogValue.brandEname" :readonly="noEditPermission" />
+        <el-form-item label="英文名称">
+          <el-input v-model="dialogValue.brandEname" :readonly="noEditPermission" class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="品牌图标">
           <image-upload
@@ -216,4 +216,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .dialog-form-item {
+    width: 80%;
+  }
+</style>
 

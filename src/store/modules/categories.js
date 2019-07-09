@@ -27,6 +27,8 @@ const findCategoryByRelationID = (allClassesData, relation) => {
   }
 }
 
+const couldChangeKeys = ['categoryIcon', 'sortOrder']
+
 const state = {
   dataLoaded: false,
   dataLoading: false,
@@ -72,7 +74,11 @@ const mutations = {
       }
     }
     if (category) {
-      category.categoryIcon = params.categoryIcon
+      couldChangeKeys.forEach(key => {
+        if (key in params) {
+          category[key] = params[key]
+        }
+      })
     }
   }
 }

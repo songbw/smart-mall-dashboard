@@ -98,6 +98,7 @@
             :on-error="handleUploadImageError"
             :on-progress="handleUploadImageProgress"
             :on-change="handleUploadImageChanged"
+            accept="image/png, image/jpeg"
             list-type="picture"
             name="file"
           >
@@ -260,8 +261,17 @@ export default {
       this.dialogImageFileList = []
       this.showImageDialog(false)
     },
-    handleDelete(index) {
-      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+    async handleDelete(index) {
+      try {
+        await this.$confirm('是否要删除此服务入口？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+      } catch (e) {
+        console.warn('Aggregation delete service error: ' + e)
+      }
     },
     handleBeforeUploadImage(file) {
       this.uploadingImage = true
@@ -281,7 +291,10 @@ export default {
       if (this.isNewItem) {
         this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index: -1, value: this.dialogValue })
       } else {
-        this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index: this.currentEditIndex, value: this.dialogValue })
+        this.$store.commit('aggregations/SET_LIST_IN_CONTENT', {
+          index: this.currentEditIndex,
+          value: this.dialogValue
+        })
       }
     },
     handleUploadImageError(res) {

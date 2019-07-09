@@ -155,6 +155,7 @@
               发布
             </el-button>
             <el-button
+              :disabled="scope.row.status === onSaleStatus"
               type="danger"
               size="mini"
               @click="handleDelete(scope.$index)"
@@ -197,7 +198,8 @@ import {
 } from '@/api/aggregations'
 
 import {
-  AggregationStatusOptions
+  AggregationStatusOptions,
+  aggregation_on_sale_status
 } from './constants'
 
 export default {
@@ -229,6 +231,7 @@ export default {
         value: 'desc',
         label: '降序'
       }],
+      onSaleStatus: aggregation_on_sale_status,
       aggregationList: [],
       aggregationTotal: 0,
       displayPageId: 0,

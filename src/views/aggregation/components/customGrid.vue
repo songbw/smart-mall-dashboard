@@ -215,8 +215,17 @@ export default {
       const settings = Object.assign({}, this.gridInfo.settings, { title: title })
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
     },
-    removeGridList(index) {
-      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+    async removeGridList(index) {
+      try {
+        await this.$confirm('是否要删除此宫格行？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+      } catch (e) {
+        console.warn('Aggregation delete grid error:' + e)
+      }
     },
     addGridList() {
       const grid = {

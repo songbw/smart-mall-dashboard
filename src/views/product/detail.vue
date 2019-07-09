@@ -92,6 +92,7 @@
             :on-success="handleUploadCoverSuccess"
             :on-error="handleUploadError"
             :on-progress="handleUploadProgress"
+            accept="image/png, image/jpeg"
             style="margin: 10px"
             list-type="picture"
             name="file"
@@ -110,8 +111,8 @@
         <el-input v-else v-model="productForm.upc" />
       </el-form-item>
       <el-form-item label="销售单位">
-        <span v-if="viewProduct"> {{ productForm.saleUnit }}</span>
-        <el-input v-else v-model="productForm.saleUnit" />
+        <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
+        <el-input v-else v-model="productForm.saleunit" />
       </el-form-item>
       <el-form-item label="商品价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
@@ -135,6 +136,7 @@
             :on-success="handleUploadThumbnailSuccess"
             :on-error="handleUploadError"
             :on-progress="handleUploadProgress"
+            accept="image/png, image/jpeg"
             style="margin: 10px"
             list-type="picture"
             name="file"
@@ -192,6 +194,7 @@
               :on-error="handleUploadError"
               :on-progress="handleUploadProgress"
               style="margin: 10px"
+              accept="image/png, image/jpeg"
               list-type="picture"
               name="file"
               multiple
@@ -343,7 +346,7 @@ export default {
         image: null,
         weight: null,
         upc: null,
-        saleUnit: null,
+        saleunit: null,
         price: null,
         inventory: null, // Number
         imagesUrl: null,

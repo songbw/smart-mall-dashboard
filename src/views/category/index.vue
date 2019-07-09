@@ -76,22 +76,22 @@
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" center width="40%">
       <el-form ref="dataForm" :model="dialogValue" label-position="right" label-width="160">
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="所属父类">
-          <el-input v-model="topCategoryHeaderTitle" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input v-model="topCategoryHeaderTitle" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '2'" label="所属父类">
-          <el-input v-model="firstClassCategoryName" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input v-model="firstClassCategoryName" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="类别名称">
-          <el-input v-model="dialogValue.categoryName" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input v-model="dialogValue.categoryName" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="类别级别">
-          <el-input v-model="dialogValue.categoryClass" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="类别排序">
           <el-input v-if="noEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="类别图标">
+        <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload
             :image-url="dialogValue.categoryIcon"
             :view-only="noEditPermission"
@@ -130,11 +130,8 @@ export default {
         categoryIcon: null,
         sortOrder: 0
       },
-      updateValue: {
-        categoryId: 0,
-        parentId: 0,
-        grandId: 0,
-        categoryClass: '0',
+      originalValue: {
+        sortOrder: 0,
         categoryIcon: null
       },
       filterName: null,
@@ -196,25 +193,41 @@ export default {
         try {
           await this.$store.dispatch('categories/getAllData', { clearCache: false })
         } catch (e) {
-          console.log(('Get Main Category failed: ' + e))
+          console.warn('Get Main Category failed: ' + e)
         }
       }
     },
     setUpdateValue(category) {
-      this.updateValue.categoryId = category.categoryId
-      this.updateValue.parentId = category.parentId
-      this.updateValue.categoryClass = category.categoryClass
+      Object.keys(this.originalValue).forEach(key => {
+        this.originalValue[key] = category[key]
+      })
     },
     async updateCategory() {
+      let changed = false
+      const params = {}
       if (this.dialogFormVisible) {
         this.dialogFormVisible = false
       }
-      if (this.updateValue.categoryIcon) {
-        this.updateValue.grandId = this.firstClassCategoryID
+      if (this.originalValue.sortOrder !== this.dialogValue.sortOrder) {
+        params.sortOrder = this.dialogValue.sortOrder
+        changed = true
+      }
+      if (this.originalValue.categoryIcon !== this.dialogValue.categoryIcon) {
+        params.categoryIcon = this.dialogValue.categoryIcon
+        changed = true
+      }
+      if (changed) {
+        params.categoryId = this.dialogValue.categoryId
+        params.parentId = this.dialogValue.parentId
+        params.categoryClass = this.dialogValue.categoryClass
+        params.grandId = this.firstClassCategoryID
         try {
-          await this.$store.dispatch('categories/updateCategoryInfo', this.updateValue)
+          await this.$store.dispatch('categories/updateCategoryInfo', params)
+          if (params.categoryId === this.currentSelectedTopCategory.categoryId && 'sortOrder' in params) {
+            this.currentSelectedTopCategory.sortOrder = params.sortOrder
+          }
         } catch (e) {
-          console.log('updateCategory:' + e)
+          console.warn('updateCategory:' + e)
         }
       }
     },
@@ -252,7 +265,7 @@ export default {
         try {
           await this.$store.dispatch('categories/getAllData', { clearCache: true })
         } catch (e) {
-          console.log(('Refresh Categories failed: ' + e))
+          console.warn('Refresh Categories failed: ' + e)
         }
       }).catch(() => {
       })
@@ -276,7 +289,6 @@ export default {
         toEdit = this.currentSelectedTopCategory
       }
       if (toEdit) {
-        this.imageUploadPercent = 0
         this.dialogFormTitle = '编辑 ' + toEdit.categoryName
         this.dialogFormVisible = true
         this.dialogValue = { ...toEdit }
@@ -284,9 +296,7 @@ export default {
       }
     },
     handleUploadImageSuccess(url) {
-      console.log('handleUploadImageSuccess:' + url)
       this.dialogValue.categoryIcon = url
-      this.updateValue.categoryIcon = url
     }
   }
 }
@@ -301,6 +311,6 @@ export default {
   }
 
   .dialog-form-item {
-    width: 50%;
+    width: 80%;
   }
 </style>

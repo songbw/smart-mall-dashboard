@@ -20,6 +20,7 @@
           :rules="loginRules"
           label-position="right"
           label-width="100px"
+          @keyup.enter.native="handleLogin"
         >
           <el-form-item label="用户名" prop="username">
             <el-input v-model="loginForm.username" placeholder="请输入用户名" />

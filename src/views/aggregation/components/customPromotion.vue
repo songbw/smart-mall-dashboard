@@ -46,6 +46,7 @@
                 :on-progress="handleUploadImageProgress"
                 :on-success="handleUploadImageSuccess"
                 :on-error="handleUploadImageError"
+                accept="image/png, image/jpeg"
                 list-type="picture"
                 name="file"
               >
@@ -452,21 +453,42 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item =>
-          this.skuData.indexOf(item))
-        this.selectedItems.sort((a, b) => b - a)
+        this.selectedItems = val.map(item => item.skuid)
       } else {
         this.selectedItems = []
       }
     },
-    handleDeleteSelection() {
+    async handleDeleteSelection() {
       if (this.selectedItems.length > 0) {
-        this.selectedItems.forEach(this.handleDeleteRow)
-        this.$refs.skuTable.clearSelection()
+        try {
+          await this.$confirm('是否要删除所选商品？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          this.selectedItems.forEach(skuid => {
+            const index = this.skuData.findIndex(sku => sku.skuid === skuid)
+            if (index >= 0) {
+              this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+            }
+          })
+          this.$refs.skuTable.clearSelection()
+        } catch (e) {
+          console.warn('Aggregation delete promotion selection error: ' + e)
+        }
       }
     },
-    handleDeleteRow(index) {
-      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+    async handleDeleteRow(index) {
+      try {
+        await this.$confirm('是否要删除此商品？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+      } catch (e) {
+        console.warn('Aggregation delete promotion good error: ' + e)
+      }
     },
     handleSortRow(up, index) {
       if ((up && index > 0) || (!up && index < (this.skuData.length - 1))) {

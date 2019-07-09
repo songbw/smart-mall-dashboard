@@ -223,8 +223,17 @@ export default {
     handleSortFloor(up) {
       this.$emit('sortFloor', this.index, up)
     },
-    handleDeleteFloor() {
-      this.$emit('deleteFloor', this.index)
+    async handleDeleteFloor() {
+      try {
+        await this.$confirm('是否要删除此楼层商品？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$emit('deleteFloor', this.index)
+      } catch (e) {
+        console.warn('Goods delete floor error: ' + e)
+      }
     },
     handleSaveTitle() {
       this.editingTitle = false
@@ -240,14 +249,32 @@ export default {
         this.selectedItems = []
       }
     },
-    handleDeleteSelection() {
+    async handleDeleteSelection() {
       if (this.selectedItems.length > 0) {
-        this.$emit('deleteSelection', this.index, this.selectedItems)
-        this.$refs.skuTable.clearSelection()
+        try {
+          await this.$confirm('是否要删除所选商品？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          this.$emit('deleteSelection', this.index, this.selectedItems)
+          this.$refs.skuTable.clearSelection()
+        } catch (e) {
+          console.warn('Goods delete selection error: ' + e)
+        }
       }
     },
-    handleDeleteRow(index) {
-      this.$emit('deleteSelection', this.index, [index])
+    async handleDeleteRow(index) {
+      try {
+        await this.$confirm('是否要删除此商品？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$emit('deleteSelection', this.index, [index])
+      } catch (e) {
+        console.warn('Goods delete row error:' + e)
+      }
     },
     sortSkuData(up, index, distance) {
       const newIndex = up ? index - distance : index + distance

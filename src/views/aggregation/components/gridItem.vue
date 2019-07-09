@@ -48,6 +48,7 @@
             :on-success="handleUploadImageSuccess"
             :on-error="handleUploadImageError"
             :on-change="handleUploadImageChanged"
+            accept="image/png, image/jpeg"
             list-type="picture"
             name="file"
           >

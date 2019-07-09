@@ -29,8 +29,7 @@ export function updateCategoryInfoApi(params) {
     url: '/products/adminCategory/updateCategory',
     method: 'post',
     data: {
-      categoryId: params.categoryId,
-      categoryIcon: params.categoryIcon
+      ...params
     }
   })
 }
@@ -40,5 +39,15 @@ export function searchCategoryInfoApi(params) {
     url: '/products/adminCategory/search',
     method: 'get',
     params
+  })
+}
+
+export function createCategoryApi(params) {
+  return Vue.axios.request({
+    url: '/products/adminCategory/saveCategory',
+    method: 'post',
+    data: {
+      ...params
+    }
   })
 }

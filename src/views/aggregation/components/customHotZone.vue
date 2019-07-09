@@ -24,6 +24,7 @@
       :on-error="handleUploadImageError"
       :on-progress="handleUploadImageProgress"
       :on-change="handleUploadImageChanged"
+      accept="image/png, image/jpeg"
       list-type="picture"
       name="file"
     >

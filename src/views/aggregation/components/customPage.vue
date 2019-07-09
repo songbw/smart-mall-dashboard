@@ -230,20 +230,29 @@ export default {
     handleEditTemplateType(index) {
       this.setEditTemplateTypeIndex(index)
     },
-    handleDelTemplateType(index) {
-      const length = this.pageTemplateList.length - 1
-      if (index === this.currentTemplateIndex) {
-        if (length > 0) {
-          if (index > 0) {
-            this.setEditTemplateTypeIndex(index - 1)
+    async handleDelTemplateType(index) {
+      try {
+        await this.$confirm('是否要删除此模块？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        const length = this.pageTemplateList.length - 1
+        if (index === this.currentTemplateIndex) {
+          if (length > 0) {
+            if (index > 0) {
+              this.setEditTemplateTypeIndex(index - 1)
+            } else {
+              this.setEditTemplateTypeIndex(0)
+            }
           } else {
-            this.setEditTemplateTypeIndex(0)
+            this.setEditTemplateTypeIndex(-1)
           }
-        } else {
-          this.setEditTemplateTypeIndex(-1)
         }
+        this.$store.commit('aggregations/DELETE_CONTENT', index)
+      } catch (e) {
+        console.warn('Aggregation delete template error: ' + e)
       }
-      this.$store.commit('aggregations/DELETE_CONTENT', index)
     },
     setEditTemplateTypeIndex(index) {
       if (index >= 0 && this.pageTemplateList.length > index) {
