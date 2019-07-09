@@ -30,7 +30,9 @@
               :key="item.value"
               :label="item.label"
               :value="item.value"
-            />
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -752,8 +754,3 @@ export default {
 }
 </script>
 
-<style scoped>
-  .image-container {
-    width: 70%;
-  }
-</style>
