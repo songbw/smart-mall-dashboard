@@ -138,13 +138,13 @@ const actions = {
     couldChangeKeys.forEach(key => {
       if (key in params) {
         values[key] = params[key]
-      }
-      if (key === 'isShow') {
-        values[key] = !params[key]
+        if (key === 'isShow') {
+          values[key] = !params[key]
+        }
       }
     })
     await updateCategoryInfoApi(values)
-    commit('UPDATE_CATEGORY_DATA', params)
+    commit('UPDATE_CATEGORY_DATA', Object.assign({}, params, values))
     await localForage.setItem(storage_product_categories, state.allData)
   },
   async searchCategoryInfo({ commit }, params) {

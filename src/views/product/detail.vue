@@ -12,6 +12,9 @@
       <el-form-item v-if="!createProduct" label="商品ID">
         <span>{{ productForm.id }}</span>
       </el-form-item>
+      <el-form-item v-if="!createProduct" label="创建时间">
+        <span>{{ productForm.createdAt | dateFormat }}</span>
+      </el-form-item>
       <el-form-item v-if="isAdminUser" label="商品供应商" prop="merchantId">
         <span v-if="viewProduct">{{ getVendorName(productForm.merchantId) }}</span>
         <el-select
@@ -246,6 +249,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
@@ -276,6 +280,15 @@ export default {
       } else {
         const find = ProductStateOptions.find(option => option.value === value)
         return find ? find.label : state
+      }
+    },
+    dateFormat: date => {
+      if (isEmpty(date)) {
+        return ''
+      } else {
+        const format = 'YYYY-MM-DD HH:mm:ss'
+        const momentDate = moment(date)
+        return momentDate.isValid() ? momentDate.format(format) : date
       }
     }
   },
@@ -354,6 +367,8 @@ export default {
         price: null,
         sprice: null,
         inventory: null, // Number
+        mpu: null,
+        createdAt: null,
         imagesUrl: null,
         introductionUrl: null
       },

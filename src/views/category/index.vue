@@ -148,7 +148,7 @@ export default {
         isShow: null
       },
       originalValue: {
-        sortOrder: 0,
+        sortOrder: null,
         categoryIcon: null,
         isShow: null
       },
@@ -240,7 +240,6 @@ export default {
           changed = true
         }
       })
-
       if (changed) {
         params.categoryId = this.dialogValue.categoryId
         params.parentId = this.dialogValue.parentId
@@ -248,8 +247,21 @@ export default {
         params.grandId = this.firstClassCategoryID
         try {
           await this.$store.dispatch('categories/updateCategoryInfo', params)
-          if (params.categoryId === this.currentSelectedTopCategory.categoryId && 'sortOrder' in params) {
-            this.currentSelectedTopCategory.sortOrder = params.sortOrder
+          if (params.categoryId === this.currentSelectedTopCategory.categoryId) {
+            Object.keys(this.originalValue).forEach(key => {
+              if (key in params) {
+                this.currentSelectedTopCategory[key] = params[key]
+              }
+            })
+          } else {
+            const category = this.currentTableCategoriesData.find(item => item.categoryId === params.categoryId)
+            if (category) {
+              Object.keys(this.originalValue).forEach(key => {
+                if (key in params) {
+                  category[key] = params[key]
+                }
+              })
+            }
           }
         } catch (e) {
           console.warn('updateCategory:' + e)
@@ -289,6 +301,9 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
+        this.currentTableCategoriesData = []
+        this.currentSelectedTopCategory = null
+        this.filterName = null
         try {
           await this.$store.dispatch('categories/getAllData', { clearCache: true })
         } catch (e) {
