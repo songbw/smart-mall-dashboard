@@ -5,8 +5,8 @@ const state = {
     query: '',
     skuid: '',
     brand: '',
-    state: -1,
-    vendorId: null,
+    state: -2,
+    vendorId: -1,
     firstCategoryId: null,
     secondCategoryId: null,
     thirdCategoryId: null

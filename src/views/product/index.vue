@@ -52,14 +52,24 @@
         </el-form-item>
       </el-form>
       <div style="margin-bottom: 10px;display: flex;justify-content: space-between">
-        <el-button
-          :disabled="!vendorApproved"
-          type="primary"
-          icon="el-icon-goods"
-          @click="handleCreateProduct"
-        >
-          新建商品
-        </el-button>
+        <div>
+          <el-button
+            :disabled="!vendorApproved"
+            type="primary"
+            icon="el-icon-goods"
+            @click="handleCreateProduct"
+          >
+            新建商品
+          </el-button>
+          <el-button
+            :disabled="!vendorApproved"
+            type="success"
+            icon="el-icon-upload2"
+            @click="dialogImportVisible = true"
+          >
+            批量创建商品
+          </el-button>
+        </div>
         <div>
           <el-button
             :disabled="productSelection.length === 0"
@@ -108,7 +118,7 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="品牌" align="center">
+      <el-table-column label="品牌" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.brand }}</span>
         </template>
@@ -145,7 +155,7 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column v-if="isAdminUser" label="供应商" align="center">
+      <el-table-column v-if="isAdminUser" label="供应商" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
@@ -228,6 +238,12 @@
         <el-button type="primary" @click="handleCancelExportAll">取消</el-button>
       </span>
     </el-dialog>
+    <goods-import-dialog
+      :dialog-visible="dialogImportVisible"
+      :product-creation="true"
+      @onSelectionCancelled="onGoodsImportCancelled"
+      @onSelectionConfirmed="onGoodsImportConfirmed"
+    />
   </div>
 </template>
 
@@ -238,12 +254,14 @@ import {
   getProductListApi,
   updateProductApi,
   searchProductsApi,
-  deleteProductApi
+  deleteProductApi,
+  createProductApi
 } from '@/api/products'
 import {
   getVendorListApi
 } from '@/api/vendor'
 import Pagination from '@/components/Pagination'
+import GoodsImportDialog from '@/components/GoodsImportDialog'
 import CategorySelection from './categorySelection'
 import {
   product_state_off_shelves,
@@ -254,7 +272,7 @@ import {
 
 export default {
   name: 'Product',
-  components: { Pagination, CategorySelection },
+  components: { Pagination, CategorySelection, GoodsImportDialog },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -270,7 +288,7 @@ export default {
     return {
       couldEditProduct: true,
       stateOptions: [{
-        value: -1,
+        value: -2,
         label: '全部'
       }].concat(ProductStateOptions),
       searchParams: {
@@ -287,16 +305,20 @@ export default {
       productSelection: [],
       exportDialogVisible: false,
       allExportCancelled: false,
-      allExportProgress: 0
+      allExportProgress: 0,
+      dialogImportVisible: false
     }
   },
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
       productQuery: 'productQuery',
-      vendorOptions: 'productVendors',
+      productVendors: 'productVendors',
       vendorApproved: 'vendorApproved'
     }),
+    vendorOptions() {
+      return [{ value: -1, label: '全部' }].concat(this.productVendors)
+    },
     firstCategoryValue: {
       get() {
         return this.productQuery.firstCategoryId
@@ -457,7 +479,7 @@ export default {
         offset: this.listOffset,
         limit: this.listLimit
       }
-      if (this.listState !== -1) {
+      if (this.listState !== -2) {
         params.state = this.listState
       }
 
@@ -496,7 +518,7 @@ export default {
           params.brand = this.listBrand
           filter = true
         }
-        if (Number.isSafeInteger(this.listVendor)) {
+        if (this.listVendor > 0) {
           this.searchParams.vendorId = this.listVendor
           params.merchantId = this.listVendor
           filter = true
@@ -507,7 +529,7 @@ export default {
           filter = true
         }
       }
-      if (this.listState !== -1) {
+      if (this.listState !== -2) {
         params.state = this.listState
       }
       return filter ? params : null
@@ -749,6 +771,27 @@ export default {
     },
     handleVendorChanged(vendorId) {
       this.listVendor = vendorId
+    },
+    async onGoodsImportConfirmed(skus) {
+      this.dialogImportVisible = false
+      if (skus.length > 0) {
+        const loading = this.$loading({
+          lock: true,
+          text: '正在创建商品...',
+          spinner: 'el-icon-loading'
+        })
+        for (const sku of skus) {
+          try {
+            await createProductApi(sku)
+          } catch (e) {
+            console.warn('Good import creation error:' + e)
+          }
+        }
+        loading.close()
+      }
+    },
+    onGoodsImportCancelled() {
+      this.dialogImportVisible = false
     }
   }
 }

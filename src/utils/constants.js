@@ -17,8 +17,12 @@ export const vendor_status_rejected = 4
 
 export const product_state_off_shelves = 0
 export const product_state_on_sale = 1
+export const product_state_is_editing = -1
 export const ProductStateOptions = [
   {
+    value: product_state_is_editing,
+    label: '编辑中'
+  }, {
     value: product_state_on_sale,
     label: '销售中'
   }, {

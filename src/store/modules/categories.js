@@ -27,7 +27,7 @@ const findCategoryByRelationID = (allClassesData, relation) => {
   }
 }
 
-const couldChangeKeys = ['categoryIcon', 'sortOrder']
+const couldChangeKeys = ['categoryIcon', 'sortOrder', 'isShow']
 
 const state = {
   dataLoaded: false,
@@ -134,7 +134,16 @@ const actions = {
     return data.result
   },
   async updateCategoryInfo({ commit, state }, params) {
-    await updateCategoryInfoApi(params)
+    const values = { categoryId: params.categoryId }
+    couldChangeKeys.forEach(key => {
+      if (key in params) {
+        values[key] = params[key]
+      }
+      if (key === 'isShow') {
+        values[key] = !params[key]
+      }
+    })
+    await updateCategoryInfoApi(values)
     commit('UPDATE_CATEGORY_DATA', params)
     await localForage.setItem(storage_product_categories, state.allData)
   },

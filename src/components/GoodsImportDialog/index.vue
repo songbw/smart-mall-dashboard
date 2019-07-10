@@ -15,10 +15,22 @@
       accept=".xlsx, .xls"
       @change="handleFileChange"
     >
-    <el-form label-width="160px">
+    <el-form ref="importForm" :model="formData" :rules="formRules" label-width="160px">
+      <el-form-item v-if="productCreation && isAdminUser" label="供应商名" prop="merchantId">
+        <el-select :value="formData.merchantId" clearable @change="handleVendorChanged">
+          <el-option
+            v-for="item in productVendors"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+            <span>{{ item.label }}</span>
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="文件">
-        <el-input v-model="fileName" readonly />
-        <span>建议上传大小不超过1M的.xls文件，最多200个商品</span>
+        <el-input :value="formData.fileName" readonly />
+        <span>建议上传大小不超过1M的.xls文件</span>
       </el-form-item>
       <el-form-item>
         <el-button :loading="loading" type="primary" icon="el-icon-upload" @click="handleSelect">
@@ -42,7 +54,7 @@
     <el-table
       v-loading="loading"
       element-loading-text="正在导入..."
-      :data="excelData.results"
+      :data="excelResults"
       border
       style="width: 100%;margin-top:20px;"
       height="250"
@@ -54,7 +66,7 @@
       </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.intro }}</span>
+          <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品价格(元)" align="center" width="150">
@@ -77,8 +89,30 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
+import isString from 'lodash/isString'
+import isNumber from 'lodash/isNumber'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
+
+const CreationHeaders = [
+  { field: 'skuid', label: '商品SKU', type: 'string' },
+  { field: 'name', label: '商品名称', type: 'string' },
+  { field: 'brand', label: '商品品牌', type: 'string' },
+  { field: 'brandId', label: '品牌编号', type: 'number' },
+  { field: 'category', label: '类别编号', type: 'string' },
+  { field: 'model', label: '商品型号', type: 'string' },
+  { field: 'weight', label: '商品重量', type: 'string' },
+  { field: 'image', label: '商品封面图', type: 'string' },
+  { field: 'upc', label: '商品条形码', type: 'string' },
+  { field: 'saleunit', label: '销售单位', type: 'string' },
+  { field: 'price', label: '销售价格', type: 'string' },
+  { field: 'sprice', label: '进货价格', type: 'string' },
+  { field: 'inventory', label: '商品库存', type: 'number' },
+  { field: 'imagesUrl', label: '商品主图', type: 'string' },
+  { field: 'introductionUrl', label: '商品描述图', type: 'string' }
+]
 
 export default {
   name: 'GoodsImportDialog',
@@ -86,34 +120,67 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    productCreation: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
       loading: false,
-      fileName: '',
+      formRules: {
+        merchantId: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (value === null && this.productCreation && this.isAdminUser) {
+              callback(new Error('请选择商品供应商'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }]
+      },
+      formData: {
+        merchantId: null,
+        fileName: null
+      },
       percentage: 0,
-      excelData: {
-        header: [],
-        results: []
-      }
+      excelResults: []
     }
   },
+  computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser',
+      productVendors: 'productVendors'
+    })
+  },
   methods: {
+    handleVendorChanged(value) {
+      this.formData.merchantId = value
+      this.excelResults.forEach(item => {
+        item.merchantId = value
+      })
+    },
     handleFileChange(e) {
       const files = e.target.files
       const rawFile = files[0] // only use files[0]
       if (!rawFile) return
-      this.fileName = rawFile.name
+      this.formData.fileName = rawFile.name
       this.$refs['excel-upload-input'].value = null // fix can't select the same excel
-      this.readDate(rawFile)
+      this.readDate(rawFile).then(_ => {
+        console.debug('Good import file ' + this.formData.fileName)
+      }).catch(e => {
+        console.warn('Good import file error: ' + e)
+      })
     },
     handleSelect() {
       this.$refs['excel-upload-input'].click()
     },
     handleTemplate() {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['skuID']
+        const tHeader = this.productCreation ? CreationHeaders.map(header => header.label) : ['skuID']
         const data = []
         excel.export_json_to_excel({
           header: tHeader,
@@ -127,15 +194,24 @@ export default {
       this.$emit('onSelectionCancelled')
     },
     handleDialogConfirm() {
-      const skus = this.excelData.results
-      this.$emit('onSelectionConfirmed', skus)
-      this.clearDialogData()
+      const skus = this.excelResults
+      if (skus.length > 0) {
+        this.$refs.importForm.validate((valid) => {
+          if (valid) {
+            this.$emit('onSelectionConfirmed', skus)
+            this.clearDialogData()
+          }
+        })
+      } else {
+        this.$emit('onSelectionConfirmed', skus)
+        this.clearDialogData()
+      }
     },
     clearDialogData() {
       this.percentage = 0
-      this.fileName = ''
-      this.excelData.header = []
-      this.excelData.results = []
+      this.formData.merchantId = null
+      this.formData.fileName = null
+      this.excelResults = []
     },
     readDate(rawFile) {
       this.loading = true
@@ -174,34 +250,79 @@ export default {
       const image = product.image || product.imageExtend
       return !(Number.isNaN(price) || image === null)
     },
-    async generateData({ header, results }) {
-      this.excelData.header = header
+    generateData({ header, results }) {
+      if (this.productCreation) {
+        this.parseSkuData(results)
+      } else {
+        this.searchSkuData(results)
+      }
+    },
+    parseValue(type, value) {
+      if (type === 'string') {
+        if (isString(value)) {
+          return value
+        } else {
+          return value ? value.toString() : null
+        }
+      } else {
+        if (isNumber(value)) {
+          return value
+        } else {
+          const val = Number.parseInt(value)
+          return Number.isNaN(val) ? null : val
+        }
+      }
+    },
+    parseSkuData(results) {
+      let count = 0
+      results.forEach(item => {
+        const product = {}
+        CreationHeaders.forEach(header => {
+          if (header.label in item) {
+            product[header.field] = this.parseValue(header.type, item[header.label])
+          }
+        })
+        if (!isEmpty(product)) {
+          if (this.formData.merchantId) {
+            product.merchantId = this.formData.merchantId
+          }
+          count++
+          this.excelResults.push(product)
+        }
+      })
+      this.loading = false
+      this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
+    },
+    async searchSkuData(results) {
       const fetchedSkus = []
       let fetchedNum = 0
       for (let i = 0; i < results.length; i++) {
         const skuID = results[i].skuID
-        try {
-          const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
-          fetchedNum++
-          this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
-          const data = response.data.result
-          if (data.total > 0) {
-            const product = data.list[0]
-            if (this.isProductValid(product)) {
-              const item = {
-                skuid: product.skuid,
-                price: product.price,
-                imagePath: product.image,
-                intro: product.name
+        if (skuID) {
+          try {
+            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
+            fetchedNum++
+            this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
+            const data = response.data.result
+            if (data.total > 0) {
+              const product = data.list[0]
+              if (this.isProductValid(product)) {
+                const item = {
+                  skuid: product.skuid,
+                  price: product.price,
+                  name: product.name,
+                  imagePath: product.image,
+                  intro: product.name
+                }
+                fetchedSkus.push(item)
               }
-              fetchedSkus.push(item)
             }
+          } catch (err) {
+            console.log('GoodImport: search error ' + skuID)
           }
-        } catch (err) {
-          console.log('GoodImport: search error ' + skuID)
         }
       }
-      this.excelData.results = fetchedSkus
+      this.excelResults = fetchedSkus
       this.loading = false
       this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
     }

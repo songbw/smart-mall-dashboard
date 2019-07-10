@@ -21,12 +21,11 @@
       </el-form-item>
       <el-form-item>
         <el-button
-          v-if="false"
           type="danger"
           icon="el-icon-refresh"
           @click="handleRefresh"
         >
-          强制刷新
+          刷新所有类别
         </el-button>
       </el-form-item>
     </el-form>
@@ -36,13 +35,20 @@
       </el-aside>
       <el-container>
         <el-header class="custom-header">
-          <span>{{ topCategoryHeaderTitle }}</span>
+          <span>{{ topCategoryHeaderTitle }}
+            <el-tag v-if="currentSelectedTopCategory">{{ topCategoryShowState }}</el-tag>
+          </span>
           <el-button-group>
             <el-button size="mini" @click="handleEdit(null)">编辑</el-button>
           </el-button-group>
         </el-header>
         <el-main>
           <el-table :data="currentTableCategoriesData" border>
+            <el-table-column label="类别编号" align="center">
+              <template slot-scope="scope">
+                <span>{{ scope.row.categoryId }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="类别名称" align="center">
               <template slot-scope="scope">
                 <span>{{ scope.row.categoryName }}</span>
@@ -59,12 +65,17 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="类别排序" align="center">
+            <el-table-column label="显示状态" align="center" width="80">
+              <template slot-scope="scope">
+                <el-tag>{{ scope.row.isShow ? '显示' : '隐藏' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="类别排序" align="center" width="80">
               <template slot-scope="scope">
                 <span>{{ scope.row.sortOrder }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center">
+            <el-table-column label="操作" align="center" width="80">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
               </template>
@@ -88,9 +99,13 @@
         <el-form-item label="类别级别">
           <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
         </el-form-item>
+        <el-form-item label="是否显示">
+          <el-switch v-model="dialogValue.isShow" :disabled="noEditPermission" />
+        </el-form-item>
         <el-form-item label="类别排序">
           <el-input v-if="noEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" />
+          <span style="font-size: 13px;margin-left: 10px">数值越小优先级越高</span>
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload
@@ -129,11 +144,13 @@ export default {
         categoryClass: '0',
         categoryName: null,
         categoryIcon: null,
-        sortOrder: 0
+        sortOrder: 0,
+        isShow: null
       },
       originalValue: {
         sortOrder: 0,
-        categoryIcon: null
+        categoryIcon: null,
+        isShow: null
       },
       filterName: null,
       columnProps: {
@@ -169,6 +186,7 @@ export default {
           categoryClass: src.categoryClass,
           categoryIcon: src.categoryIcon,
           sortOrder: src.sortOrder,
+          isShow: src.isShow === false, // false means SHOWING
           parentId: src.parentId
         }
       }
@@ -182,6 +200,13 @@ export default {
         })
       } else {
         return []
+      }
+    },
+    topCategoryShowState() {
+      if (this.currentSelectedTopCategory !== null) {
+        return this.currentSelectedTopCategory.isShow ? '显示' : '隐藏'
+      } else {
+        return ''
       }
     }
   },
@@ -209,14 +234,13 @@ export default {
       if (this.dialogFormVisible) {
         this.dialogFormVisible = false
       }
-      if (this.originalValue.sortOrder !== this.dialogValue.sortOrder) {
-        params.sortOrder = this.dialogValue.sortOrder
-        changed = true
-      }
-      if (this.originalValue.categoryIcon !== this.dialogValue.categoryIcon) {
-        params.categoryIcon = this.dialogValue.categoryIcon
-        changed = true
-      }
+      Object.keys(this.originalValue).forEach(key => {
+        if (this.originalValue[key] !== this.dialogValue[key]) {
+          params[key] = this.dialogValue[key]
+          changed = true
+        }
+      })
+
       if (changed) {
         params.categoryId = this.dialogValue.categoryId
         params.parentId = this.dialogValue.parentId
@@ -252,7 +276,9 @@ export default {
       const firstClass = this.categoryData.find(item => item.categoryId === secondCategory.parentId)
       if (firstClass) {
         const secondClass = firstClass.subs.find(item => item.categoryId === secondCategory.categoryId)
-        return secondClass.subs
+        return secondClass.subs.map(item => {
+          return Object.assign({}, item, { isShow: !item.isShow })
+        })
       } else {
         return []
       }
@@ -276,7 +302,9 @@ export default {
         this.$store.dispatch('categories/searchCategoryInfo', {
           offset: 1, limit: 100, query: this.filterName
         }).then((res) => {
-          this.currentTableCategoriesData = res.list
+          this.currentTableCategoriesData = res.list.map(item => {
+            return Object.assign({}, item, { isShow: !item.isShow })
+          })
         }).catch(() => {
           this.filterName = null
         })

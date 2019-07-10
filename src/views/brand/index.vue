@@ -26,7 +26,7 @@
       highlight-current-row
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="品牌ID" align="center" width="65">
+      <el-table-column label="品牌编号" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.brandId }}</span>
         </template>
