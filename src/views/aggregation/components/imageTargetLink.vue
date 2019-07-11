@@ -84,7 +84,10 @@ export default {
         label: '商品'
       }, {
         value: 'category',
-        label: '商品主分类'
+        label: '商品分类'
+      }, {
+        value: 'coupon',
+        label: '优惠券活动页'
       }],
       dialogAggregationVisible: false,
       dialogSelectionVisible: false,
@@ -111,6 +114,9 @@ export default {
         if (value === 'category') {
           newTarget.name = '商品分类'
           newTarget.url = 'route://category'
+        } else if (value === 'coupon') {
+          newTarget.name = '优惠券活动页'
+          newTarget.url = 'route://coupon_center'
         } else if (value === 'blank') {
           newTarget.name = '无链接'
           newTarget.url = 'about:blank'
