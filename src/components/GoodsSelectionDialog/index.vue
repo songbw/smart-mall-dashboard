@@ -9,7 +9,19 @@
     append-to-body
     center
   >
-    <el-form :inline="true" :model="dialogFilterForm">
+    <category-selection
+      v-if="!hasPromotion"
+      :first-value="firstCategoryValue"
+      :second-value="secondCategoryValue"
+      :third-value="thirdCategoryValue"
+      @changed="handleCategorySelectionChanged"
+    />
+    <el-form v-if="hasPromotion" inline>
+      <el-button type="primary" @click="handleDialogPromotionQuery">
+        获取促销活动商品
+      </el-button>
+    </el-form>
+    <el-form v-else inline :model="dialogFilterForm">
       <el-form-item label="商品SKU">
         <el-input
           v-model="filterSkus"
@@ -27,9 +39,6 @@
         </el-button>
         <el-button @click="handleDialogFilterClear">
           清空
-        </el-button>
-        <el-button v-if="hasPromotion" type="primary" @click="handleDialogPromotionQuery">
-          获取促销活动商品
         </el-button>
       </el-form-item>
     </el-form>
@@ -57,7 +66,7 @@
       </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.brand + ' ' + scope.row.name }}</span>
+          <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品价格(元)" align="center" width="120">
@@ -72,7 +81,7 @@
       </el-table-column>
       <el-table-column label="商品详情" align="center" width="80">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleDialogViewDetail(scope.row.skuid)">
+          <el-button type="primary" size="mini" @click="handleDialogViewDetail(scope.row.mpu)">
             查看
           </el-button>
         </template>
@@ -96,13 +105,14 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
+import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
 import { searchProductsApi } from '@/api/products'
 import { getPromotionByIdApi } from '@/api/promotions'
 
 export default {
   name: 'GoodsSelectionDialog',
-  components: { Pagination },
+  components: { CategorySelection, Pagination },
   props: {
     dialogVisible: {
       type: Boolean,
@@ -123,6 +133,9 @@ export default {
       offset: 1,
       limit: 50,
       dataLoading: false,
+      firstCategoryValue: null,
+      secondCategoryValue: null,
+      thirdCategoryValue: null,
       dialogSkuData: [],
       dialogSelectedItems: []
     }
@@ -196,12 +209,18 @@ export default {
             })
           }
         })
-      } else if (this.dialogFilterForm.query !== '') {
+      } else if (this.dialogFilterForm.query !== '' ||
+        this.thirdCategoryValue !== null) {
         const params = {
           offset: this.offset,
           limit: this.limit,
-          state: 1,
-          query: this.dialogFilterForm.query
+          state: 1
+        }
+        if (this.dialogFilterForm.query !== '') {
+          params.query = this.dialogFilterForm.query
+        }
+        if (this.thirdCategoryValue !== null) {
+          params.categoryID = this.thirdCategoryValue
         }
         this.dataLoading = true
         searchProductsApi(params).then(response => {
@@ -227,9 +246,11 @@ export default {
         this.dialogSelectedItems = val.map(item => {
           const selectItem = {
             skuid: item.skuid,
+            mpu: item.mpu,
             price: item.price,
             imagePath: item.image,
-            intro: item.name
+            brand: item.brand,
+            name: item.name
           }
           if (this.hasPromotion) {
             selectItem.discount = item.discount
@@ -240,10 +261,10 @@ export default {
         this.dialogSelectedItems = []
       }
     },
-    handleDialogViewDetail(skuID) {
+    handleDialogViewDetail(mpu) {
       const path = this.$router.resolve({
         name: 'ViewProduct',
-        params: { skuId: skuID }
+        params: { mpu: mpu }
       })
       window.open(path.href, '_blank')
     },
@@ -260,7 +281,38 @@ export default {
       this.offset = 1
       this.dialogSelectedItems = []
       this.dialogSkuData = []
+      this.firstCategoryValue = null
+      this.secondCategoryValue = null
+      this.thirdCategoryValue = null
       this.handleDialogFilterClear()
+    },
+    handleCategorySelectionChanged(category) {
+      const value = Number.isSafeInteger(category.value) ? category.value : null
+      switch (category.level) {
+        case 1:
+          this.handleFirstCategoryChanged(value)
+          break
+        case 2:
+          this.handleSecondCategoryChanged(value)
+          break
+        case 3:
+          this.handleThirdCategoryChanged(value)
+          break
+        default:
+          break
+      }
+    },
+    handleFirstCategoryChanged(value) {
+      this.firstCategoryValue = value
+      this.secondCategoryValue = null
+      this.thirdCategoryValue = null
+    },
+    handleSecondCategoryChanged(value) {
+      this.secondCategoryValue = value
+      this.thirdCategoryValue = null
+    },
+    handleThirdCategoryChanged(value) {
+      this.thirdCategoryValue = value
     }
   }
 }

@@ -297,15 +297,25 @@ export default {
       if (updatedParams !== null) {
         const pass = await this.checkHomePage(updatedParams)
         if (pass) {
-          this.creatingPage = true
-          const params = { id: pageID, ...updatedParams }
-          this.$store.dispatch('aggregations/updatePage', params).then(() => {
-            this.$emit('createPage', pageID)
-          }).catch(err => {
-            this.$message(err)
-          }).finally(() => {
-            this.creatingPage = false
-          })
+          try {
+            await this.$confirm('保存此次修改，并开始下一步，是否继续？', '警告', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            this.creatingPage = true
+            const params = { id: pageID, ...updatedParams }
+            this.$store.dispatch('aggregations/updatePage', params).then(() => {
+              this.$emit('createPage', pageID)
+            }).catch(err => {
+              console.warn('Update aggregation error:' + err)
+              this.$message.error('保存聚合页失败，请稍后重试！')
+            }).finally(() => {
+              this.creatingPage = false
+            })
+          } catch (_) {
+            console.warn('Cancel update aggregation page')
+          }
         }
       } else {
         this.$emit('createPage', pageID)
@@ -314,7 +324,7 @@ export default {
     },
     onSubmit() {
       const pageID = this.pageInfo.id
-      this.$refs.ruleForm.validate((valid) => {
+      this.$refs.ruleForm.validate(async(valid) => {
         if (valid) {
           if (pageID === -1) {
             this.createPage()

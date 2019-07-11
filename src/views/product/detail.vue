@@ -12,6 +12,9 @@
       <el-form-item v-if="!createProduct" label="商品ID">
         <span>{{ productForm.id }}</span>
       </el-form-item>
+      <el-form-item v-if="!createProduct" label="商品MPU">
+        <span>{{ productForm.mpu }}</span>
+      </el-form-item>
       <el-form-item v-if="!createProduct" label="创建时间">
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
@@ -255,7 +258,7 @@ import { createProductApi, updateProductApi, searchProductsApi } from '@/api/pro
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
-import CategorySelection from './categorySelection'
+import CategorySelection from '@/components/CategorySelection'
 import {
   app_upload_url,
   ProductStateOptions,
@@ -469,8 +472,8 @@ export default {
         offset: 1,
         limit: 1
       }
-      if (this.$route.params.skuId) {
-        params.skuid = this.$route.params.skuId
+      if (this.$route.params.mpu) {
+        params.mpu = this.$route.params.mpu
       } else {
         params.id = this.$route.params.id
       }

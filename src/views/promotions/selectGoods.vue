@@ -179,15 +179,6 @@ export default {
     ...mapGetters({
       promotionData: 'currentPromotion'
     }),
-    canChangeType: {
-      get() {
-        if ('hasPromotionType' in this.promotionData) {
-          return this.promotionData.hasPromotionType === false
-        } else {
-          return true
-        }
-      }
-    },
     promotionType: {
       get() {
         return this.promotionData.promotionType
@@ -264,23 +255,38 @@ export default {
       })
     },
     handleSetSelectedDiscount(discount) {
-      this.selectedItems.forEach(select => {
-        this.$store.commit('promotions/SET_SKU_DISCOUNT', { skuid: select.skuid, discount: discount })
-        const added = this.addedItems.find(item => item.skuid === select.skuid)
+      this.selectedItems.forEach(mpu => {
+        const added = this.addedItems.find(item => item.mpu === mpu)
         if (added) {
           added.discount = discount
         } else {
-          const updated = this.updateItems.find(item => item.skuid === select.skuid)
+          const updated = this.updateItems.find(item => item.mpu === mpu)
           if (updated) {
             updated.discount = discount
           } else {
-            this.updateItems.push({ skuid: select.skuid, discount: discount })
+            this.updateItems.push({ mpu: mpu, discount: discount })
           }
         }
       })
+      this.$store.commit('promotions/SET_SKUS_DISCOUNT', { mpus: this.selectedItems, discount: discount })
     },
     handleSelectionChange(selection) {
-      this.selectedItems = selection
+      this.selectedItems = selection.map(item => item.mpu)
+    },
+    handleDeleteCachedItems(mpu) {
+      const addedIndex = this.addedItems.findIndex(item => item.mpu === mpu)
+      if (addedIndex >= 0) {
+        this.addedItems.splice(addedIndex, 1)
+      } else {
+        const updateIndex = this.updateItems.findIndex(item => item.mpu === mpu)
+        if (updateIndex >= 0) {
+          this.updateItems.splice(updateIndex, 1)
+        }
+        const deleteIndex = this.deleteItems.findIndex(item => item.mpu === mpu)
+        if (deleteIndex < 0) {
+          this.deleteItems.push({ mpu })
+        }
+      }
     },
     handleDeleteRow(sku) {
       this.$confirm('请确认是否删除此优惠商品？', '删除商品', {
@@ -288,21 +294,9 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        const addedIndex = this.addedItems.findIndex(item => item.skuid === sku.skuid)
-        if (addedIndex >= 0) {
-          this.addedItems.splice(addedIndex, 1)
-        } else {
-          const updateIndex = this.updateItems.findIndex(item => item.skuid === sku.skuid)
-          if (updateIndex >= 0) {
-            this.updateItems.splice(updateIndex, 1)
-          }
-          const deleteIndex = this.deleteItems.findIndex(item => item.skuid === sku.skuid)
-          if (deleteIndex < 0) {
-            this.deleteItems.push({ skuid: sku.skuid })
-          }
-        }
-        const index = this.promotionData.promotionSkus.findIndex(item => item.skuid === sku.skuid)
-        this.$store.commit('promotions/DELETE_SKU', index)
+        this.handleDeleteCachedItems(sku.mpu)
+        const index = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
+        this.$store.commit('promotions/DELETE_SKU_INDEX', index)
       }).catch(() => {
       })
     },
@@ -312,16 +306,8 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.dataLoading = true
-        const promise = new Promise((resolve) => {
-          for (const sku of this.selectedItems) {
-            this.handleDeleteRow(sku)
-          }
-          resolve()
-        })
-        promise.then(() => {
-          this.dataLoading = false
-        })
+        this.selectedItems.forEach(mpu => this.handleDeleteCachedItems(mpu))
+        this.$store.commit('promotions/DELETE_SKUS', this.selectedItems)
       }).catch(() => {
       })
     },
@@ -353,19 +339,22 @@ export default {
     addPromotionContentAsync(skus) {
       return new Promise((resolve, reject) => {
         let total = 0
+        const toAdd = []
         for (const sku of skus) {
-          const found = this.promotionData.promotionSkus.findIndex(item => item.skuid === sku.skuid)
+          const found = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
           if (found < 0) {
-            const deleteIndex = this.deleteItems.findIndex(item => item.skuid === sku.skuid)
+            const deleteIndex = this.deleteItems.findIndex(item => item.mpu === sku.mpu)
             if (deleteIndex >= 0) {
               this.deleteItems.splice(deleteIndex, 1)
-              this.updateItems.push({ skuid: sku.skuid, discount: 0 })
+              this.updateItems.push({ mpu: sku.mpu, discount: 0 })
             } else {
-              this.addedItems.push({ skuid: sku.skuid, discount: 0 })
+              this.addedItems.push({ skuid: sku.skuid, mpu: sku.mpu, discount: 0 })
             }
-            this.$store.commit('promotions/ADD_SKU', {
+            toAdd.push({
               skuid: sku.skuid,
-              name: sku.intro,
+              mpu: sku.mpu,
+              name: sku.name,
+              brand: sku.brand,
               price: sku.price,
               discount: 0
             })
@@ -373,6 +362,7 @@ export default {
           }
         }
         if (total > 0) {
+          this.$store.commit('promotions/ADD_SKUS', toAdd)
           resolve(total)
         } else {
           reject()
@@ -385,17 +375,17 @@ export default {
     },
     handleConfirmEditDiscount(row) {
       row.editDiscount = false
-      this.$store.commit('promotions/SET_SKU_DISCOUNT', { skuid: row.skuid, discount: row.discount })
+      this.$store.commit('promotions/SET_SKU_DISCOUNT', { mpu: row.mpu, discount: row.discount })
 
-      const addedIndex = this.addedItems.findIndex(item => item.skuid === row.skuid)
+      const addedIndex = this.addedItems.findIndex(item => item.mpu === row.mpu)
       if (addedIndex >= 0) {
         this.addedItems[addedIndex].discount = row.discount
       } else {
-        const updateIndex = this.updateItems.findIndex(item => item.skuid === row.skuid)
+        const updateIndex = this.updateItems.findIndex(item => item.mpu === row.mpu)
         if (updateIndex >= 0) {
           this.updateItems[updateIndex].discount = row.discount
         } else {
-          this.updateItems.push({ skuid: row.skuid, discount: row.discount })
+          this.updateItems.push({ mpu: row.mpu, discount: row.discount })
         }
       }
     },
@@ -407,10 +397,10 @@ export default {
       this.$store.dispatch('promotions/update', params).then(() => {
         this.handleUpdateGoods()
       }).catch(err => {
-        this.console.log('updatePromotion:' + err)
+        console.warn('updatePromotion:' + err)
       })
     },
-    handleUpdateGoods() {
+    async handleUpdateGoods() {
       const promises = []
       if (this.addedItems.length > 0) {
         const params = { id: this.promotionData.id, promotionSkus: [] }
@@ -438,15 +428,24 @@ export default {
         }
       }
       if (promises.length > 0) {
-        Promise.all(promises).then(() => {
-          this.dataLoading = false
-          this.$emit('onUpdateSuccess')
-        }).catch(err => {
-          this.dataLoading = false
-          console.log('SavePromotion:' + err)
-        })
+        try {
+          await this.$confirm('请确认是否保存此次促销活动的更改？', '保存活动', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          this.dataLoading = true
+          Promise.all(promises).then(() => {
+            this.$emit('onUpdateSuccess')
+          }).catch(err => {
+            console.log('SavePromotion:' + err)
+          }).finally(() => {
+            this.dataLoading = false
+          })
+        } catch (_) {
+          console.debug('Cancel save promotion changes')
+        }
       } else {
-        this.dataLoading = false
         this.$emit('onUpdateSuccess')
       }
     },
@@ -471,12 +470,7 @@ export default {
           }
         }
       }
-      this.dataLoading = true
-      if (this.canChangeType) {
-        this.handleUpdatePromotion()
-      } else {
-        this.handleUpdateGoods()
-      }
+      this.handleUpdateGoods()
     }
   }
 }

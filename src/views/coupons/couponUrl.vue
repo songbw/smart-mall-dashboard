@@ -136,7 +136,7 @@ export default {
       this.dialogSelectionVisible = false
       if (skus.length > 0) {
         this.$emit('urlChanged', {
-          url: 'route://commodity/' + skus[0].skuid
+          url: 'route://commodity/' + skus[0].mpu
         })
       }
     },

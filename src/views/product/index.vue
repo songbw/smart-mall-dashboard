@@ -118,7 +118,7 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="品牌" align="center" width="200">
+      <el-table-column label="品牌" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.brand }}</span>
         </template>
@@ -145,7 +145,7 @@
           <template v-else>
             <span style="padding-right: 10px">{{ scope.row.price }}</span>
             <el-button
-              v-if="couldEditProduct"
+              v-if="scope.row.price && couldEditProduct"
               icon="el-icon-edit"
               size="mini"
               type="primary"
@@ -168,49 +168,53 @@
       <el-table-column
         label="操作"
         align="center"
-        width="280"
+        width="150"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
-          <el-button
-            type="primary"
-            size="mini"
-            @click="handleViewProduct(scope.row.id)"
-          >
-            查看
-          </el-button>
-          <el-button
-            :disabled="isProductOnSale(scope.row.state)"
-            type="info"
-            size="mini"
-            @click="handleEditProduct(scope.row.id)"
-          >
-            编辑
-          </el-button>
-          <el-button
-            v-if="!isProductOnSale(scope.row.state)"
-            type="warning"
-            size="mini"
-            @click="handleProductOnSale(scope.row.id)"
-          >
-            上架
-          </el-button>
-          <el-button
-            v-else
-            type="warning"
-            size="mini"
-            @click="handleProductOffShelves(scope.row.id)"
-          >
-            下架
-          </el-button>
-          <el-button
-            :disabled="isProductOnSale(scope.row.state)"
-            type="danger"
-            size="mini"
-            @click="handleDeleteProduct(scope.row.id)"
-          >
-            删除
-          </el-button>
+          <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
+            <el-button type="primary" icon="el-icon-arrow-down">
+              选择操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="`view:${scope.$index}`"
+                icon="el-icon-view"
+              >
+                查看商品
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="`edit:${scope.$index}`"
+                :disabled="isProductOnSale(scope.row.state)"
+                icon="el-icon-edit"
+                divided
+              >
+                编辑商品
+              </el-dropdown-item>
+              <el-dropdown-item
+                v-if="!isProductOnSale(scope.row.state)"
+                :command="`start:${scope.$index}`"
+                icon="el-icon-sell"
+              >
+                上架商品
+              </el-dropdown-item>
+              <el-dropdown-item
+                v-else
+                :command="`stop:${scope.$index}`"
+                icon="el-icon-sold-out"
+              >
+                下架商品
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="`delete:${scope.$index}`"
+                :disabled="isProductOnSale(scope.row.state)"
+                icon="el-icon-delete"
+                divided
+              >
+                删除商品
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -262,7 +266,7 @@ import {
 } from '@/api/vendor'
 import Pagination from '@/components/Pagination'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
-import CategorySelection from './categorySelection'
+import CategorySelection from '@/components/CategorySelection'
 import {
   product_state_off_shelves,
   product_state_on_sale,
@@ -566,76 +570,105 @@ export default {
         name: 'CreateProduct'
       })
     },
-    handleEditProduct(id) {
+    handleEditProduct(index) {
+      const id = this.productsData[index].id
       this.$router.push({
         name: 'EditProduct',
         params: { id }
       })
     },
-    handleViewProduct(id) {
+    handleViewProduct(index) {
+      const id = this.productsData[index].id
       this.$router.push({
         name: 'ShowProduct',
         params: { id }
       })
     },
-    handleProductOnSale(id) {
+    handleProductOnSale(index) {
+      const that = this
       this.$confirm('是否继续上架此商品？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
         try {
+          const id = that.productsData[index].id
           const params = {
             id,
             state: product_state_on_sale
           }
           await updateProductApi(params)
-          this.$message({ message: '产品上架成功！', type: 'success' })
-          this.getListData()
+          that.$message({ message: '产品上架成功！', type: 'success' })
+          that.getListData()
         } catch (e) {
           console.warn(`Update product state error: ${e}`)
         }
       }).catch(() => {
       })
     },
-    handleProductOffShelves(id) {
+    handleProductOffShelves(index) {
+      const that = this
       this.$confirm('是否继续下架此商品？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
         try {
+          const id = that.productsData[index].id
           const params = {
             id,
             state: product_state_off_shelves
           }
           await updateProductApi(params)
-          this.$message({ message: '产品下架成功！', type: 'success' })
-          this.getListData()
+          that.$message({ message: '产品下架成功！', type: 'success' })
+          that.getListData()
         } catch (e) {
           console.warn(`Update product state error: ${e}`)
         }
       }).catch(() => {
       })
     },
-    handleDeleteProduct(id) {
+    handleDeleteProduct(index) {
+      const that = this
       this.$confirm('是否继续删除此商品？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
         try {
+          const id = that.productsData[index].id
           const params = {
             id
           }
           await deleteProductApi(params)
           this.$message({ message: '产品删除成功！', type: 'success' })
-          this.getListData()
+          that.getListData()
         } catch (e) {
-          console.warn(`Update product state error: ${e}`)
+          console.warn(`Delete product error: ${e}`)
         }
       }).catch(() => {
       })
+    },
+    handleOpsAction(action) {
+      const cmd = action.split(':')[0]
+      const index = Number.parseInt(action.split(':')[1])
+      switch (cmd) {
+        case 'start':
+          this.handleProductOnSale(index)
+          break
+        case 'view':
+          this.handleViewProduct(index)
+          break
+        case 'edit':
+          this.handleEditProduct(index)
+          break
+        case 'stop':
+          this.handleProductOffShelves(index)
+          break
+        case 'delete':
+          this.handleDeleteProduct(index)
+          break
+      }
     },
     handleCancelEditPrice(row) {
       row.price = row.originalPrice
@@ -654,10 +687,12 @@ export default {
         try {
           const price = row.price
           const params = {
-            skuid: row.skuid,
+            id: row.id,
             price
           }
           await updateProductApi(params)
+          // eslint-disable-next-line require-atomic-updates
+          row.editPrice = false
           // eslint-disable-next-line require-atomic-updates
           row.originalPrice = price
           this.$message({ message: '更新产品价格成功。', type: 'success' })

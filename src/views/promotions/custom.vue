@@ -181,6 +181,17 @@ export default {
       }
       return 0
     },
+    handleSetPromotionType(id) {
+      const params = {
+        id,
+        promotionType: 0
+      }
+      this.$store.dispatch('promotions/update', params).then(() => {
+        this.$emit('onPromotionCreated')
+      }).catch(err => {
+        console.warn('updatePromotion:' + err)
+      })
+    },
     handleCreatePromotion() {
       const params = {
         name: this.promotionName,
@@ -189,10 +200,10 @@ export default {
         endDate: this.promotionEndDate,
         status: 1
       }
-      this.$store.dispatch('promotions/create', params).then(() => {
-        this.$emit('onPromotionCreated')
+      this.$store.dispatch('promotions/create', params).then((id) => {
+        this.handleSetPromotionType(id)
       }).catch(err => {
-        this.console.log('createPromotion:' + err)
+        console.warn('createPromotion:' + err)
       })
     },
     handleUpdatePromotion() {
@@ -218,7 +229,7 @@ export default {
         this.$store.dispatch('promotions/update', params).then(() => {
           this.$emit('onPromotionCreated')
         }).catch(err => {
-          this.console.log('updatePromotion:' + err)
+          console.warn('updatePromotion:' + err)
         })
       } else {
         this.$emit('onPromotionCreated')

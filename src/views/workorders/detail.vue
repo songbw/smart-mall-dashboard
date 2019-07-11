@@ -123,7 +123,6 @@ import {
 } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
-  getWorkOrderTypeListApi,
   getWorkFlowListApi,
   createWorkOrderFlowApi
 } from '@/api/workOrders'
@@ -131,7 +130,7 @@ import {
   OrderStatusDefinitions,
   PaymentStatusDefinitions
 } from '@/utils/constants'
-import { WorkOrderStatus } from './constants'
+import { WorkOrderStatus, WorkOrderTypes } from './constants'
 
 const FlowStatusOptions = [
   {
@@ -186,7 +185,7 @@ export default {
       province: '',
       city: '',
       country: '',
-      typeOptions: [],
+      typeOptions: WorkOrderTypes,
       orderData: {},
       workOrderData: {},
       flows: [],
@@ -244,7 +243,6 @@ export default {
       try {
         this.dataLoading = true
         const id = this.$route.params.id
-        await this.getTypeOptions()
         this.workOrderData = await getWorkOrderByIdApi({ id })
         const find = this.typeOptions.find(option => option.value === this.workOrderData.typeId)
         this.$set(this.workOrderData, 'typeName', find ? find.label : '')
@@ -254,19 +252,6 @@ export default {
         console.warn('Work order get error:' + e)
       } finally {
         this.dataLoading = false
-      }
-    },
-    async getTypeOptions() {
-      try {
-        const data = await getWorkOrderTypeListApi({ pageIndex: 1, pageSize: 100 })
-        this.typeOptions = data.rows.map(row => {
-          return {
-            value: row.id,
-            label: row.name
-          }
-        })
-      } catch (e) {
-        console.warn('Get work order type error: ' + e)
       }
     },
     async getWorkFlows(id) {

@@ -7,8 +7,8 @@
           <el-form v-if="showTitle" label-position="right" label-width="120px">
             <el-form-item label="文字位置">
               <el-radio-group v-model="titleTextAlign">
-                <el-radio label="center">居中</el-radio>
                 <el-radio label="left">居左</el-radio>
+                <el-radio label="center">居中</el-radio>
               </el-radio-group>
             </el-form-item>
             <el-form-item label="标题" required>

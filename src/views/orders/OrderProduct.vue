@@ -6,7 +6,7 @@
     <el-col :span="18">
       <div class="prod-info">
         <div style="text-align: start">
-          <el-link :href="'#/goods/viewProduct/' + skuId" type="primary">
+          <el-link :href="'#/goods/viewProduct/' + mpu" type="primary">
             {{ skuId }}
           </el-link>
         </div>
@@ -31,6 +31,10 @@ export default {
       default: null
     },
     name: {
+      type: String,
+      default: ''
+    },
+    mpu: {
       type: String,
       default: ''
     },

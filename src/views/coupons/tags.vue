@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div v-if="isAdminUser" class="filter-container">
+    <div v-if="isAdminUser" style="margin-bottom: 10px">
       <el-button type="primary" @click="handleCreate">创建标签</el-button>
     </div>
     <el-table

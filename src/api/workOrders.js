@@ -15,37 +15,6 @@ export function getWorkOrderByIdApi(params) {
   })
 }
 
-export function getWorkOrderTypeListApi(params) {
-  return Vue.axios.request({
-    url: '/workorders/order_types/pages',
-    method: 'get',
-    params
-  })
-}
-
-export function createWorkOrderTypeApi(params) {
-  return Vue.axios.request({
-    url: '/workorders/order_types',
-    method: 'post',
-    data: { ...params }
-  })
-}
-
-export function updateWorkOrderTypeApi(params) {
-  return Vue.axios.request({
-    url: `/workorders/order_types/${params.id}`,
-    method: 'put',
-    data: { ...params }
-  })
-}
-
-export function deleteWorkOrderTypeApi(params) {
-  return Vue.axios.request({
-    url: `/workorders/order_types/${params.id}`,
-    method: 'delete'
-  })
-}
-
 export function getWorkFlowListApi(params) {
   return Vue.axios.request({
     url: '/workorders/work_flows/pages',

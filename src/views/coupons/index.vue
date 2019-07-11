@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="名称" class="form-item">
+      <el-form-item label="优惠券名称" class="form-item">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
-      <el-form-item label="状态" class="form-item">
+      <el-form-item label="优惠券状态" class="form-item">
         <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
@@ -98,11 +98,11 @@
           <span>{{ scope.row.releaseEndDate | dateFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="120">
+      <el-table-column label="操作" align="center" width="150">
         <template slot-scope="scope">
           <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
-              操作
+              选择操作
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
@@ -110,27 +110,27 @@
                 :disabled="scope.row.status !== 1"
                 icon="el-icon-time"
               >
-                发布
+                发布优惠券
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`view:${scope.$index}`"
                 icon="el-icon-view"
                 divided
               >
-                查看
+                查看优惠券
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
                 :disabled="scope.row.status === 2 || scope.row.status === 3"
                 icon="el-icon-edit"
               >
-                修改
+                修改优惠券
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`usage:${scope.$index}`"
                 icon="el-icon-collection"
               >
-                记录
+                优惠券记录
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`stop:${scope.$index}`"
@@ -138,14 +138,14 @@
                 icon="el-icon-sold-out"
                 divided
               >
-                下线
+                下线优惠券
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`delete:${scope.$index}`"
                 :disabled="scope.row.status === 2"
                 icon="el-icon-delete"
               >
-                删除
+                删除优惠券
               </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>

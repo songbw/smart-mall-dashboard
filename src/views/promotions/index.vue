@@ -272,20 +272,27 @@ export default {
       })
     },
     async handleStartPromotion(index) {
-      const id = this.promotionData[index].id
-      const dateNow = memont()
-      dateNow.minute(0)
-      dateNow.second(0)
-      const params = { id: id, status: 2 }
-      params.startDate = dateNow.format('YYYY-MM-DD HH:mm:ss')
-      try {
-        await updatePromotionApi(params)
-        this.$message({ message: '活动开始成功！', type: 'success' })
-        this.getPromotionData()
-      } catch (e) {
-        console.warn('Start Promotion: ' + e)
-        this.$message({ message: '活动开始失败！', type: 'error' })
-      }
+      this.$confirm('请确认是否立即开始此优惠活动？', '优惠设置', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        const id = this.promotionData[index].id
+        const dateNow = memont()
+        dateNow.minute(0)
+        dateNow.second(0)
+        const params = { id: id, status: 2 }
+        params.startDate = dateNow.format('YYYY-MM-DD HH:mm:ss')
+        try {
+          await updatePromotionApi(params)
+          this.$message({ message: '活动开始成功！', type: 'success' })
+          this.getPromotionData()
+        } catch (e) {
+          console.warn('Start Promotion: ' + e)
+          this.$message({ message: '活动开始失败！', type: 'error' })
+        }
+      }).catch(() => {
+      })
     },
     handleViewPromotion(index) {
       const id = this.promotionData[index].id

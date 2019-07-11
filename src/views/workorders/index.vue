@@ -124,10 +124,9 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import {
-  getWorkOrderListApi,
-  getWorkOrderTypeListApi
+  getWorkOrderListApi
 } from '@/api/workOrders'
-import { WorkOrderStatus } from './constants'
+import { WorkOrderStatus, WorkOrderTypes } from './constants'
 
 export default {
   name: 'WorkOrders',
@@ -149,7 +148,10 @@ export default {
         value: 0,
         label: '全部'
       }].concat(WorkOrderStatus),
-      typeOptions: [],
+      typeOptions: [{
+        value: 0,
+        label: '全部'
+      }].concat(WorkOrderTypes),
       listLoading: false,
       workOrderData: [],
       workOrderTotal: 0,
@@ -221,20 +223,6 @@ export default {
     this.getWorkOrderList()
   },
   methods: {
-    async getTypeOptions() {
-      try {
-        const data = await getWorkOrderTypeListApi({ pageIndex: 1, pageSize: 100 })
-        const options = data.rows.map(row => {
-          return {
-            value: row.id,
-            label: row.name
-          }
-        })
-        this.typeOptions = [{ value: -1, label: '全部' }].concat(options)
-      } catch (e) {
-        console.log('Get work order type error: ' + e)
-      }
-    },
     getSearchParams() {
       const params = {
         pageIndex: this.queryOffset,
@@ -256,9 +244,6 @@ export default {
     },
     async getWorkOrderList() {
       try {
-        if (this.typeOptions.length === 0) {
-          await this.getTypeOptions()
-        }
         this.listLoading = true
         const params = this.getSearchParams()
         const data = await getWorkOrderListApi(params)

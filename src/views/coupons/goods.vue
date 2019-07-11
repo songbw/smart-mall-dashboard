@@ -22,7 +22,7 @@
           导出商品
         </el-button>
       </div>
-      <div v-if="skuIdList.length > 0" class="header-ops-container">
+      <div v-if="mpuList.length > 0" class="header-ops-container">
         <span>{{ `已选择${selectedItems.length}件商品` }}</span>
         <el-button
           type="text"
@@ -35,7 +35,7 @@
       </div>
     </div>
     <el-table
-      v-if="skuIdList.length > 0"
+      v-if="mpuList.length > 0"
       ref="skuTable"
       v-loading="dataLoading"
       :data="skuPageList"
@@ -69,15 +69,15 @@
               size="mini"
               circle
               :disabled="viewOnly"
-              @click="handleDeleteRow(scope.row.skuid)"
+              @click="handleDeleteRow(scope.row.mpu)"
             />
           </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
     <pagination
-      v-if="skuIdList.length > limit"
-      :total="skuIdList.length"
+      v-if="mpuList.length > limit"
+      :total="mpuList.length"
       :auto-scroll="false"
       :page.sync="offset"
       :limit.sync="limit"
@@ -112,7 +112,7 @@ export default {
   name: 'CouponGoods',
   components: { GoodsSelectionDialog, GoodsImportDialog, Pagination },
   props: {
-    skuIdList: {
+    mpuList: {
       type: Array,
       default: function() {
         return []
@@ -137,13 +137,13 @@ export default {
     }
   },
   watch: {
-    skuIdList: function(newList, oldList) {
+    mpuList: function(newList, oldList) {
       this.handleFetchSkuInfo(newList)
     }
   },
   mounted() {
     this.pageMounted = true
-    this.handleFetchSkuInfo(this.skuIdList)
+    this.handleFetchSkuInfo(this.mpuList)
   },
   beforeDestroy() {
     this.pageMounted = false
@@ -159,32 +159,34 @@ export default {
       const end = begin + this.limit
       this.skuPageList = this.skuInfoList.slice(begin, end)
     },
-    async handleFetchSkuInfo(skuIdList) {
-      this.skuInfoList = filter(this.skuInfoList, item => includes(skuIdList, item.skuid))
-      const fetchList = filter(skuIdList, skuId => findIndex(this.skuInfoList, item => item.skuid === skuId) < 0)
+    async handleFetchSkuInfo(mpuList) {
+      this.skuInfoList = filter(this.skuInfoList, item => includes(mpuList, item.mpu))
+      const fetchList = filter(mpuList, mpu => findIndex(this.skuInfoList, item => item.mpu === mpu) < 0)
       if (fetchList.length > 0) {
         this.dataLoading = true
-        for (const skuID of fetchList) {
+        for (const mpu of fetchList) {
           try {
             if (!this.pageMounted) {
               return
             }
-            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
+            const response = await searchProductsApi({ offset: 1, limit: 10, mpu: mpu })
             const data = response.data.result
             if (data.total > 0) {
               const product = data.list[0]
               if (this.isProductValid(product)) {
                 const item = {
                   skuid: product.skuid,
+                  mpu: product.mpu,
                   price: product.price,
                   imagePath: product.image,
+                  name: product.name,
                   intro: product.name
                 }
                 this.skuInfoList.push(item)
               }
             }
           } catch (err) {
-            console.warn('Coupon Goods: search error:' + skuID)
+            console.warn('Coupon Goods: search error:' + mpu)
           }
         }
         this.dataLoading = false
@@ -196,12 +198,12 @@ export default {
     },
     handleDeleteSelection() {
       if (this.selectedItems.length > 0) {
-        this.$emit('contentDelete', this.selectedItems.map(item => item.skuid))
+        this.$emit('contentDelete', this.selectedItems.map(item => item.mpu))
         this.$refs.skuTable.clearSelection()
       }
     },
-    handleDeleteRow(skuid) {
-      this.$emit('contentDelete', [skuid])
+    handleDeleteRow(mpu) {
+      this.$emit('contentDelete', [mpu])
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
@@ -218,16 +220,16 @@ export default {
       this.dialogImportVisible = false
     },
     addContentSkus(skus) {
-      const skuids = skus.map(item => item.skuid)
-      const filterSkuids = difference(skuids, this.skuIdList)
-      if (filterSkuids.length > 0) {
-        if (skuids.length === filterSkuids.length) {
+      const mpus = skus.map(item => item.mpu)
+      const filterMpus = difference(mpus, this.mpuList)
+      if (filterMpus.length > 0) {
+        if (mpus.length === filterMpus.length) {
           this.skuInfoList = concat(this.skuInfoList, skus)
         } else {
-          const filterInfoList = filter(skus, item => includes(filterSkuids, item.skuid))
+          const filterInfoList = filter(skus, item => includes(filterMpus, item.mpu))
           this.skuInfoList = concat(this.skuInfoList, filterInfoList)
         }
-        this.$emit('contentAdd', filterSkuids)
+        this.$emit('contentAdd', filterMpus)
         this.offset = 1
       }
     },

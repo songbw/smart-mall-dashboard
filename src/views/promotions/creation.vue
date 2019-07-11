@@ -52,7 +52,8 @@ export default {
         this.$store.dispatch('promotions/findById', { id: id }).then(() => {
           this.dataLoading = false
         }).catch(err => {
-          console.error('getPromotionData:' + err)
+          console.warn('getPromotionData:' + err)
+          this.$message.warning('获取促销活动失败，请稍后重试！')
           this.dataLoading = false
         })
       } else {

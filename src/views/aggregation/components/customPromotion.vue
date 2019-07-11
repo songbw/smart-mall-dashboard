@@ -115,7 +115,7 @@
       </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.intro }}</span>
+          <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品价格(元)" align="center" width="100">
@@ -453,7 +453,7 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item => item.skuid)
+        this.selectedItems = val.map(item => item.mpu)
       } else {
         this.selectedItems = []
       }
@@ -466,12 +466,8 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
-          this.selectedItems.forEach(skuid => {
-            const index = this.skuData.findIndex(sku => sku.skuid === skuid)
-            if (index >= 0) {
-              this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
-            }
-          })
+          const skus = this.goodsList.filter(good => !this.selectedItems.includes(good.mpu))
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
           this.$refs.skuTable.clearSelection()
         } catch (e) {
           console.warn('Aggregation delete promotion selection error: ' + e)

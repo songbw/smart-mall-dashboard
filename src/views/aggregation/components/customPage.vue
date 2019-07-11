@@ -203,12 +203,22 @@ export default {
       const option = this.options.find(option => option.type === type)
       return option.image
     },
-    previewPage() {
-      this.$store.dispatch('aggregations/savePageContent').then(() => {
-        this.$emit('nextStep')
-      }).catch(error => {
-        this.$message.warning(error)
-      })
+    async previewPage() {
+      try {
+        await this.$confirm('保存此次修改，并开始预览聚合页，是否继续？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.$store.dispatch('aggregations/savePageContent').then(() => {
+          this.$emit('nextStep')
+        }).catch(error => {
+          console.warn('Save aggregation page error: ' + error)
+          this.$message.warning('聚合页保存失败，请稍后重试！')
+        })
+      } catch (e) {
+        console.warn('Cancel preview aggregation')
+      }
     },
     handleSortUpTemplateType(index) {
       const params = { up: true, index: index }

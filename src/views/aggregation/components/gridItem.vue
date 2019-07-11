@@ -1,5 +1,5 @@
 <template>
-  <div style="width: 100%;height: 100%">
+  <div style="margin: 10px 0">
     <el-row :gutter="0" class="show-border">
       <el-col v-for="(item, index) in gridInfo.grids" :key="index" :span="colSpan">
         <el-card shadow="hover" class="box-card" body-style="{ padding: '0px' }">

@@ -203,8 +203,8 @@ export default {
         this.$emit('targetChanges', {
           index: this.targetIndex,
           type: this.imageType,
-          name: skus[0].intro,
-          url: 'route://commodity/' + skus[0].skuid
+          name: skus[0].name,
+          url: 'route://commodity/' + skus[0].mpu
         })
       }
     },

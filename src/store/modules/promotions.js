@@ -36,16 +36,29 @@ const mutations = {
     })
   },
   SET_SKU_DISCOUNT: (state, params) => {
-    const sku = state.promotion.promotionSkus.find(item => item.skuid === params.skuid)
+    const sku = state.promotion.promotionSkus.find(item => item.mpu === params.mpu)
     if (sku) {
       sku.discount = params.discount
     }
   },
-  ADD_SKU: (state, sku) => {
-    state.promotion.promotionSkus.push(sku)
+  SET_SKUS_DISCOUNT: (state, params) => {
+    params.mpus.forEach(mpu => {
+      const sku = state.promotion.promotionSkus.find(item => item.mpu === mpu)
+      if (sku) {
+        sku.discount = params.discount
+      }
+    })
   },
-  DELETE_SKU: (state, index) => {
+  ADD_SKUS: (state, skus) => {
+    const current = state.promotion.promotionSkus
+    state.promotion.promotionSkus = current.concat(skus)
+  },
+  DELETE_SKU_INDEX: (state, index) => {
     state.promotion.promotionSkus.splice(index, 1)
+  },
+  DELETE_SKUS: (state, mpus) => {
+    const current = state.promotion.promotionSkus
+    state.promotion.promotionSkus = current.filter(item => !mpus.includes(item.mpu))
   }
 }
 
@@ -58,6 +71,7 @@ const actions = {
     const { data } = await createPromotionApi(params)
     const id = data.promotionId
     commit('SET_DATA', { id })
+    return id
   },
   async update({ commit }, params) {
     await updatePromotionApi(params)

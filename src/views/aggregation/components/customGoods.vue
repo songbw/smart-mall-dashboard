@@ -197,10 +197,10 @@ export default {
     },
     onGoodsFloorContentChanged(floorIndex, skus) {
       const floor = {}
-      const skuIds = this.goodsList[floorIndex].skus.map(sku => sku.skuid)
+      const mpus = this.goodsList[floorIndex].skus.map(sku => sku.mpu)
       const skuArray = []
       skus.forEach(sku => {
-        if (skuIds.includes(sku.skuid) === false) {
+        if (mpus.includes(sku.mpu) === false) {
           skuArray.push(sku)
         }
       })
@@ -214,7 +214,7 @@ export default {
       const selected = this.goodsList[floorIndex].skus[skuIndex]
       const up = params.up
       const floor = {}
-      floor.skus = this.goodsList[floorIndex].skus.filter(sku => sku.skuid !== selected.skuid)
+      floor.skus = this.goodsList[floorIndex].skus.filter(sku => sku.mpu !== selected.mpu)
       const newSkuIndex = up ? (skuIndex - params.distance) : (skuIndex + params.distance)
       floor.skus.splice(newSkuIndex, 0, selected)
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })

@@ -153,6 +153,7 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
+      vendorId: 'vendorId',
       productVendors: 'productVendors'
     })
   },
@@ -283,8 +284,12 @@ export default {
           }
         })
         if (!isEmpty(product)) {
-          if (this.formData.merchantId) {
-            product.merchantId = this.formData.merchantId
+          if (this.isAdminUser()) {
+            if (this.formData.merchantId) {
+              product.merchantId = this.formData.merchantId
+            }
+          } else {
+            product.merchantId = this.vendorId
           }
           count++
           this.excelResults.push(product)
@@ -309,10 +314,11 @@ export default {
               if (this.isProductValid(product)) {
                 const item = {
                   skuid: product.skuid,
+                  mpu: product.mpu,
                   price: product.price,
                   name: product.name,
-                  imagePath: product.image,
-                  intro: product.name
+                  brand: product.brand,
+                  imagePath: product.image
                 }
                 fetchedSkus.push(item)
               }

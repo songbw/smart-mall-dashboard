@@ -75,7 +75,7 @@
         </el-table-column>
         <el-table-column label="商品名" align="center">
           <template slot-scope="scope">
-            <span>{{ scope.row.intro }}</span>
+            <span>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="100">
@@ -244,7 +244,7 @@ export default {
     handleSelectionChange(val) {
       if (val.length > 0) {
         this.selectedItems = val.map(item =>
-          this.floorInfo.skus.findIndex(sku => sku.skuid === item.skuid))
+          this.floorInfo.skus.findIndex(sku => sku.mpu === item.mpu))
       } else {
         this.selectedItems = []
       }
@@ -275,11 +275,6 @@ export default {
       } catch (e) {
         console.warn('Goods delete row error:' + e)
       }
-    },
-    sortSkuData(up, index, distance) {
-      const newIndex = up ? index - distance : index + distance
-      const item = this.skuData.splice(index, 1)[0]
-      this.skuData.splice(newIndex, 0, item)
     },
     handleSortRow(up, index) {
       if ((up && index > 0) || (!up && index < (this.skuData.length - 1))) {

@@ -143,7 +143,7 @@ const mutations = {
     const len = template.data.list.length
     template.data.list.splice(0, len)
     params.forEach(item => {
-      template.data.list.push(Object.assign({}, item))
+      template.data.list.push({ ...item })
     })
   },
   SET_GROUP_LIST: (state, list) => {

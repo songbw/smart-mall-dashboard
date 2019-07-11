@@ -82,6 +82,7 @@
             :price="scope.row.unitPrice"
             :count="scope.row.num"
             :sku-id="scope.row.skuId"
+            :mpu="scope.row.mpu"
           />
         </template>
       </el-table-column>

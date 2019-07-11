@@ -24,7 +24,7 @@
       </el-form-item>
     </el-form>
     <el-form :inline="true">
-      <el-form-item label="按创建时间排序：">
+      <el-form-item label="创建时间排列：">
         <el-select v-model="queryOrder" @change="onOrderChanged">
           <el-option
             v-for="item in orderOptions"

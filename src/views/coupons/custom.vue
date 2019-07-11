@@ -276,24 +276,24 @@
         </el-select>
       </el-form-item>
       <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" required>
-        <span>已关联{{ formData.rules.scenario.couponSkus.length }}个商品(至多关联400个商品)</span>
+        <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
         <coupon-goods
           key="include"
-          :sku-id-list="formData.rules.scenario.couponSkus"
+          :mpu-list="formData.rules.scenario.couponMpus"
           :view-only="viewOnly"
-          @contentAdd="handleAddCouponSkus"
-          @contentDelete="handleDeleteCouponSkus"
+          @contentAdd="handleAddCouponMpus"
+          @contentDelete="handleDeleteCouponMpus"
         />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.scenario.type === 2" label="排除商品" required>
         <p>请确认是否要创建全场通用券,该券创建后可用于您发布的任何商品(排除商品除外)</p>
-        <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
+        <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
         <coupon-goods
           key="exclude"
-          :sku-id-list="formData.rules.scenario.excludeSkus"
+          :mpu-list="formData.rules.scenario.excludeMpus"
           :view-only="viewOnly"
-          @contentAdd="handleAddExcludeSkus"
-          @contentDelete="handleDeleteExcludeSkus"
+          @contentAdd="handleAddExcludeMpus"
+          @contentDelete="handleDeleteExcludeMpus"
         />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.scenario.type === 3" label="活动类别" required>
@@ -315,13 +315,13 @@
           >
             添加类别
           </el-button>
-          <p>已排除{{ formData.rules.scenario.excludeSkus.length }}个商品(排除商品数量至多为100个)</p>
+          <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods
             key="exclude"
-            :sku-id-list="formData.rules.scenario.excludeSkus"
+            :mpu-list="formData.rules.scenario.excludeMpus"
             :view-only="viewOnly"
-            @contentAdd="handleAddExcludeSkus"
-            @contentDelete="handleDeleteExcludeSkus"
+            @contentAdd="handleAddExcludeMpus"
+            @contentDelete="handleDeleteExcludeMpus"
           />
         </div>
         <div v-else-if="categoriesLoading">
@@ -376,11 +376,11 @@
         </ul>
       </el-form-item>
       <el-form-item>
-        <el-button v-if="!viewOnly" v-loading="inSubmitting" type="primary" @click="handleSubmit">
-          {{ createCoupon ? '创建' : '保存' }}
-        </el-button>
         <el-button :type="viewOnly ? 'primary' : 'default'" @click="handleCancel">
           {{ viewOnly ? '确定' : '取消' }}
+        </el-button>
+        <el-button v-if="!viewOnly" v-loading="inSubmitting" type="primary" @click="handleSubmit">
+          {{ createCoupon ? '创建' : '保存' }}
         </el-button>
       </el-form-item>
     </el-form>
@@ -392,7 +392,6 @@ import { mapGetters } from 'vuex'
 import merge from 'lodash/merge'
 import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
-import difference from 'lodash/difference'
 import includes from 'lodash/includes'
 import filter from 'lodash/filter'
 import concat from 'lodash/concat'
@@ -489,8 +488,8 @@ export default {
           },
           scenario: {
             type: 1,
-            couponSkus: [],
-            excludeSkus: [],
+            couponMpus: [],
+            excludeMpus: [],
             categories: [],
             brands: []
           },
@@ -711,13 +710,13 @@ export default {
       this.formData.rules.collect.type = this.couponData.rules.collect.type
       this.formData.rules.collect.points = this.couponData.rules.collect.points
       this.formData.rules.scenario.type = this.couponData.rules.scenario.type
-      if (!isEmpty(this.couponData.rules.scenario.couponSkus)) {
-        this.couponData.rules.scenario.couponSkus.forEach(sku =>
-          this.formData.rules.scenario.couponSkus.push(sku))
+      if (!isEmpty(this.couponData.rules.scenario.couponMpus)) {
+        this.couponData.rules.scenario.couponMpus.forEach(sku =>
+          this.formData.rules.scenario.couponMpus.push(sku))
       }
-      if (!isEmpty(this.couponData.rules.scenario.excludeSkus)) {
-        this.couponData.rules.scenario.excludeSkus.forEach(sku =>
-          this.formData.rules.scenario.excludeSkus.push(sku))
+      if (!isEmpty(this.couponData.rules.scenario.excludeMpus)) {
+        this.couponData.rules.scenario.excludeMpus.forEach(sku =>
+          this.formData.rules.scenario.excludeMpus.push(sku))
       }
       if (!isEmpty(this.couponData.categories)) {
         this.couponData.rules.scenario.categories.forEach(category =>
@@ -757,27 +756,29 @@ export default {
     handleDeleteExcludeDate(index) {
       this.formData.excludeDates.splice(index, 1)
     },
-    handleAddCouponSkus(skus) {
-      const filterSkus = filter(skus, sku => !includes(this.formData.rules.scenario.couponSkus, sku))
-      if (this.formData.rules.scenario.couponSkus.length + filterSkus.length <= 400) {
-        this.formData.rules.scenario.couponSkus = concat(this.formData.rules.scenario.couponSkus, filterSkus)
+    handleAddCouponMpus(mpus) {
+      const filterMpus = filter(mpus, mpu => !includes(this.formData.rules.scenario.couponMpus, mpu))
+      if (this.formData.rules.scenario.couponMpus.length + filterMpus.length <= 400) {
+        this.formData.rules.scenario.couponMpus = concat(this.formData.rules.scenario.couponMpus, filterMpus)
       } else {
         this.$message.warn('请重新选择活动商品，最多支持400个')
       }
     },
-    handleDeleteCouponSkus(skus) {
-      this.formData.rules.scenario.couponSkus = difference(this.formData.rules.scenario.couponSkus, skus)
+    handleDeleteCouponMpus(mpus) {
+      const currents = this.formData.rules.scenario.couponMpus
+      this.formData.rules.scenario.couponMpus = currents.filter(mpu => !mpus.includes(mpu))
     },
-    handleAddExcludeSkus(skus) {
-      const filterSkus = filter(skus, sku => !includes(this.formData.rules.scenario.excludeSkus, sku))
-      if (this.formData.rules.scenario.excludeSkus.length + filterSkus.length <= 100) {
-        this.formData.rules.scenario.excludeSkus = concat(this.formData.rules.scenario.excludeSkus, filterSkus)
+    handleAddExcludeMpus(mpus) {
+      const filterMpus = filter(mpus, mpu => !includes(this.formData.rules.scenario.excludeMpus, mpu))
+      if (this.formData.rules.scenario.excludeMpus.length + filterMpus.length <= 100) {
+        this.formData.rules.scenario.excludeMpus = concat(this.formData.rules.scenario.excludeMpus, filterMpus)
       } else {
         this.$message.warn('请重新选择活动排除商品，最多支持100个')
       }
     },
-    handleDeleteExcludeSkus(skus) {
-      this.formData.rules.scenario.excludeSkus = difference(this.formData.rules.scenario.excludeSkus, skus)
+    handleDeleteExcludeMpus(mpus) {
+      const currents = this.formData.rules.scenario.excludeMpus
+      this.formData.rules.scenario.excludeMpus = currents.filter(mpu => !mpus.includes(mpu))
     },
     handleNewCategory() {
       if (this.formData.rules.scenario.categories.length >= 5) {
@@ -800,20 +801,20 @@ export default {
       if ('rules' in data && 'scenario' in data.rules) {
         switch (data.rules.scenario.type) {
           case 1: // 特定商品类
-            data.rules.scenario.excludeSkus = []
+            data.rules.scenario.excludeMpus = []
             data.rules.scenario.categories = []
             break
           case 2: // 全场类
-            data.rules.scenario.couponSkus = []
+            data.rules.scenario.couponMpus = []
             data.rules.scenario.categories = []
             break
           case 3: // 特定类别类
-            data.rules.scenario.couponSkus = []
+            data.rules.scenario.couponMpus = []
             data.rules.scenario.categories = data.rules.scenario.categories.map(category => category !== -1)
             break
           case 4: // 特定服务类
-            data.rules.scenario.couponSkus = []
-            data.rules.scenario.excludeSkus = []
+            data.rules.scenario.couponMpus = []
+            data.rules.scenario.excludeMpus = []
             data.rules.scenario.categories = []
             break
         }
@@ -967,9 +968,9 @@ export default {
     handleCouponUrlChanged(data) {
       this.formData.url = data.url
       if (data.url.startsWith('route://commodity')) {
-        const skuID = data.url.substring('route://commodity/'.length)
+        const mpu = data.url.substring('route://commodity/'.length)
         this.formData.rules.scenario.type = 1
-        this.formData.rules.scenario.couponSkus = [skuID]
+        this.formData.rules.scenario.couponMpus = [mpu]
       }
     }
   }
