@@ -3,8 +3,8 @@
     <el-row :gutter="0" class="show-border">
       <el-col v-for="(item, index) in gridInfo.grids" :key="index" :span="colSpan">
         <el-card shadow="hover" class="box-card" body-style="{ padding: '0px' }">
-          <img v-if="item.imageUrl" :src="item.imageUrl" class="card-image">
-          <img v-else :src="placeholderUrl" class="card-image">
+          <img v-if="item.imageUrl" :src="item.imageUrl" class="card-image" alt="">
+          <img v-else :src="placeholderUrl" class="card-image" alt="">
           <el-button
             icon="el-icon-upload"
             size="mini"
@@ -20,7 +20,7 @@
       </el-col>
       <el-col :span="4">
         <div class="ops-container">
-          <el-select v-model="gridCount">
+          <el-select :value="gridCount" @change="onGridCountChanged">
             <el-option
               v-for="o in gridOptions"
               :key="o.label"
@@ -37,24 +37,13 @@
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
       <el-form ref="ruleForm" :model="dialogValue" label-position="left" label-width="80px">
         <el-form-item label="缩略图">
-          <img v-if="dialogValue.imageUrl" :src="dialogValue.imageUrl" width="100px">
-          <el-upload
-            ref="upload"
-            :action="uploadUrl"
-            :data="uploadData"
-            :auto-upload="false"
-            :limit="1"
-            :before-upload="handleBeforeUploadImage"
-            :on-success="handleUploadImageSuccess"
-            :on-error="handleUploadImageError"
-            :on-change="handleUploadImageChanged"
-            accept="image/png, image/jpeg"
-            list-type="picture"
-            name="file"
-          >
-            <el-button slot="trigger" size="small" type="primary">选择图标文件</el-button>
-            <div slot="tip" class="el-upload__tip">{{ uploadTips }}</div>
-          </el-upload>
+          <image-upload
+            :image-url="dialogValue.imageUrl"
+            :tip="uploadTips"
+            path-name="aggregations"
+            image-width="100px"
+            @success="handleUploadImageSuccess"
+          />
         </el-form-item>
         <el-form-item
           label="图片链接"
@@ -83,13 +72,13 @@
 </template>
 
 <script>
+import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
-import { app_upload_url } from '@/utils/constants'
 
 const placeholder = require('@/assets/images/placeholder-150x150.png')
 export default {
   name: 'GridItem',
-  components: { ImageTargetLink },
+  components: { ImageUpload, ImageTargetLink },
   props: {
     gridInfo: {
       type: Object,
@@ -109,11 +98,6 @@ export default {
   },
   data() {
     return {
-      uploadUrl: app_upload_url,
-      uploadData: {
-        pathName: 'aggregations'
-      },
-      uploadingImage: false,
       dialogFormTitle: '',
       dialogFormVisible: false,
       dialogValue: {
@@ -122,7 +106,6 @@ export default {
         targetUrl: null,
         targetName: null
       },
-      dialogImageFileList: [],
       currentEditIndex: -1,
       placeholderUrl: placeholder,
       gridOptions: [
@@ -183,13 +166,15 @@ export default {
     }
   },
   methods: {
+    onGridCountChanged(value) {
+      this.gridCount = value
+    },
     handleUploadImage(index) {
       this.currentEditIndex = index
       this.dialogValue.imageUrl = this.gridInfo.grids[index].imageUrl
       this.dialogValue.targetUrl = this.gridInfo.grids[index].targetUrl
       this.dialogValue.targetName = this.gridInfo.grids[index].targetName
       this.dialogValue.targetType = this.gridInfo.grids[index].targetType
-      this.dialogImageFileList = []
       this.dialogFormVisible = true
       this.dialogFormTitle =
         this.gridInfo.grids[index].imageUrl
@@ -198,44 +183,16 @@ export default {
     handleSubmit() {
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          if (this.dialogImageFileList.length > 0) {
-            this.$refs.upload.submit()
-          } else {
-            this.dialogFormVisible = false
-            this.saveGridItemContent()
-          }
+          this.dialogFormVisible = false
+          this.saveGridItemContent()
         }
       })
     },
-    handleBeforeUploadImage(file) {
-      this.uploadingImage = true
-      return true
-    },
-    handleUploadImageSuccess(res) {
-      this.dialogValue.imageUrl = this.$store.getters.cosUrl + res.data.url
-      if (this.dialogFormVisible) {
-        setTimeout(() => {
-          this.dialogFormVisible = false
-        }, 500)
-        this.$refs.upload.clearFiles()
-      }
-
-      this.saveGridItemContent()
+    handleUploadImageSuccess(url) {
+      this.dialogValue.imageUrl = url
     },
     saveGridItemContent() {
       this.$emit('gridImageChanged', this.gridIndex, { index: this.currentEditIndex, value: this.dialogValue })
-    },
-    handleUploadImageError(res) {
-      if (this.dialogFormVisible) {
-        setTimeout(() => {
-          this.dialogFormVisible = false
-        }, 500)
-        this.$refs.upload.clearFiles()
-      }
-      this.uploadingImage = false
-    },
-    handleUploadImageChanged(file, fileList) {
-      this.dialogImageFileList = fileList
     },
     handleImageTargetChanges(target) {
       if ('type' in target) {

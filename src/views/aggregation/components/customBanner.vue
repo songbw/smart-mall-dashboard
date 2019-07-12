@@ -68,9 +68,9 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-form :model="formValue" label-width="80px" style="margin: 10px">
-        <el-form-item label="下边距" prop="marginBottom">
-          <el-select v-model="formValue.marginBottom" @change="onMarginChanged">
+      <el-form label-width="80px" style="margin: 10px">
+        <el-form-item label="下边距">
+          <el-select :value="bannerMarginBottom" @change="onMarginChanged">
             <el-option label="0px" value="0" />
             <el-option label="10px" value="10" />
             <el-option label="20px" value="20" />
@@ -86,30 +86,11 @@
           <el-input v-model="dialogValue.name" />
         </el-form-item>
         <el-form-item label="缩略图" prop="imageUrl">
-          <el-image v-if="dialogValue.imageUrl" :src="dialogValue.imageUrl" fit="contain" style="width: 100px" />
-          <el-upload
-            ref="upload"
-            :action="uploadUrl"
-            :data="uploadData"
-            :auto-upload="false"
-            :limit="1"
-            :before-upload="handleBeforeUploadImage"
-            :on-success="handleUploadImageSuccess"
-            :on-error="handleUploadImageError"
-            :on-progress="handleUploadImageProgress"
-            :on-change="handleUploadImageChanged"
-            accept="image/png, image/jpeg"
-            list-type="picture"
-            name="file"
-          >
-            <el-button slot="trigger" size="small" type="primary">选择图标文件</el-button>
-            <div slot="tip" class="el-upload__tip">建议上传宽度为1095px,高度687px，不超过500k，格式为jpg/png的图片</div>
-          </el-upload>
-          <el-progress
-            :text-inside="true"
-            :stroke-width="18"
-            :percentage="imageUploadPercent"
-            status="success"
+          <image-upload
+            :image-url="dialogValue.imageUrl"
+            path-name="aggregations"
+            image-width="100px"
+            @success="handleUploadImageSuccess"
           />
         </el-form-item>
         <el-form-item
@@ -135,19 +116,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import ImageUpload from '@/components/ImageUpload'
 import { bannerType } from './templateType'
 import ImageTargetLink from './imageTargetLink'
-import { app_upload_url } from '@/utils/constants'
 
 export default {
   name: 'CustomBanner',
-  components: { ImageTargetLink },
+  components: { ImageUpload, ImageTargetLink },
   data() {
     return {
-      uploadUrl: app_upload_url,
-      uploadData: {
-        pathName: 'aggregations'
-      },
       dialogFormTitle: '',
       dialogFormVisible: false,
       dialogValue: {
@@ -164,12 +141,6 @@ export default {
           trigger: 'changed'
         }]
       },
-      dialogImageFileList: [],
-      formValue: {
-        marginBottom: this.bannerInfo ? this.bannerInfo.settings.marginBottom : '0'
-      },
-      uploadingImage: false,
-      imageUploadPercent: 0,
       isNewItem: false,
       currentEditIndex: -1
     }
@@ -198,6 +169,11 @@ export default {
       get() {
         return this.bannerInfo.list.length
       }
+    },
+    bannerMarginBottom: {
+      get() {
+        return this.bannerInfo ? this.bannerInfo.settings.marginBottom : '0'
+      }
     }
   },
   methods: {
@@ -216,24 +192,18 @@ export default {
         this.dialogValue.targetUrl = null
         this.dialogValue.imageUrl = null
         this.dialogValue.name = null
-        this.dialogImageFileList = []
         this.dialogFormTitle = '添加轮播图'
       } else {
         this.isNewItem = false
         this.dialogFormTitle = '编辑轮播图'
       }
-      this.imageUploadPercent = 0
       this.dialogFormVisible = true
     },
     handleSubmit() {
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          if (this.dialogImageFileList.length > 0) {
-            this.$refs.upload.submit()
-          } else {
-            this.dialogFormVisible = false
-            this.saveBannerContent()
-          }
+          this.dialogFormVisible = false
+          this.saveBannerContent()
         } else {
           console.log('handleSubmit: validate failed')
         }
@@ -252,7 +222,6 @@ export default {
       this.dialogValue.targetType = this.bannerInfo.list[index].targetType
       this.dialogValue.targetUrl = this.bannerInfo.list[index].targetUrl
       this.dialogValue.targetName = this.bannerInfo.list[index].targetName
-      this.dialogImageFileList = []
       this.showImageDialog(false)
     },
     async handleDelete(index) {
@@ -267,19 +236,8 @@ export default {
         console.warn('Banner delete error: ' + e)
       }
     },
-    handleBeforeUploadImage(file) {
-      this.uploadingImage = true
-      return true
-    },
-    handleUploadImageSuccess(res) {
-      this.dialogValue.imageUrl = this.$store.getters.cosUrl + res.data.url
-      if (this.dialogFormVisible) {
-        setTimeout(() => {
-          this.dialogFormVisible = false
-        }, 500)
-        this.$refs.upload.clearFiles()
-      }
-      this.saveBannerContent()
+    handleUploadImageSuccess(url) {
+      this.dialogValue.imageUrl = url
     },
     saveBannerContent() {
       if (this.isNewItem) {
@@ -289,22 +247,6 @@ export default {
         this.$store.commit('aggregations/SET_LIST_IN_CONTENT',
           { index: this.currentEditIndex, value: this.dialogValue })
       }
-    },
-    handleUploadImageError(res) {
-      if (this.dialogFormVisible) {
-        setTimeout(() => {
-          this.dialogFormVisible = false
-        }, 500)
-        this.$refs.upload.clearFiles()
-      }
-      this.$message.error('上传图片文件失败，请联系管理员')
-      this.uploadingImage = false
-    },
-    handleUploadImageProgress(event) {
-      this.imageUploadPercent = event.percent
-    },
-    handleUploadImageChanged(file, fileList) {
-      this.dialogImageFileList = fileList
     },
     handleImageTargetChanges(target) {
       if ('type' in target) {

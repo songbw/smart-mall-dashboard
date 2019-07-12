@@ -47,7 +47,7 @@
               :on-error="handleUploadImageError"
               :on-change="handleUploadImageChange"
               :on-remove="handleUploadImageRemove"
-              accept="image/png, image/jpeg"
+              accept="image/png, image/jpeg, image/jpg"
               list-type="picture"
               name="file"
               class="item-input"
