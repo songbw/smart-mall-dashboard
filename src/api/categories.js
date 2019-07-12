@@ -1,5 +1,12 @@
 import Vue from 'vue'
 
+export function getAllCategoriesApi() {
+  return Vue.axios.request({
+    url: '/products/adminCategory/all',
+    method: 'get'
+  })
+}
+
 export function getMainCategoriesApi(params) {
   return Vue.axios.request({
     url: '/products/adminCategory/oneLevel',
@@ -49,5 +56,13 @@ export function createCategoryApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function deleteCategoryApi(params) {
+  return Vue.axios.request({
+    url: '/products/adminCategory',
+    method: 'delete',
+    params
   })
 }

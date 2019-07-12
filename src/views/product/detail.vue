@@ -254,6 +254,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import sortBy from 'lodash/sortBy'
 import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -688,18 +689,16 @@ export default {
       this.$refs.thumbnailUpload.submit()
     },
     handleUploadThumbnailSuccess(res, file, fileList) {
-      let count = 0
-      fileList.forEach(item => {
-        if (item.status === 'success') {
+      const sucList = fileList.filter(item => item.status === 'success')
+      if (sucList.length === fileList.length) {
+        const sortList = sortBy(sucList, ['name'])
+        for (const item of sortList) {
           const url = item.response.data.url
           if (!this.thumbnails.includes(url)) {
             this.thumbnails.push(url)
             this.thumbnailUrls.push(this.$store.getters.cosUrl + url)
           }
-          count++
         }
-      })
-      if (count === fileList.length) {
         this.loading = false
         this.uploading = false
         this.$refs.thumbnailUpload.clearFiles()
@@ -720,18 +719,16 @@ export default {
     },
     handleUploadIntroductionSuccess(res, file, fileList) {
       if (fileList.length > 1) {
-        let count = 0
-        fileList.forEach(item => {
-          if (item.status === 'success') {
+        const sucList = fileList.filter(item => item.status === 'success')
+        if (sucList.length === fileList.length) {
+          const sortList = sortBy(sucList, ['name'])
+          for (const item of sortList) {
             const url = item.response.data.url
             if (!this.introductions.includes(url)) {
               this.introductions.push(url)
               this.introductionUrls.push(this.$store.getters.cosUrl + url)
             }
-            count++
           }
-        })
-        if (count === fileList.length) {
           this.loading = false
           this.uploading = false
           this.$refs.introductionUpload.clearFiles()

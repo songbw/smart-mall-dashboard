@@ -7,6 +7,7 @@
           placeholder="输入类别名"
           style="width: 300px;"
           class="filter-item"
+          clearable
           @keyup.enter.native="handleFilter"
         />
       </el-form-item>
@@ -29,21 +30,52 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <div v-if="isAdminUser" style="margin-bottom: 10px">
+      <el-button type="primary" @click="handleCreateFirstClass">
+        新建一级类别
+      </el-button>
+    </div>
     <el-container>
       <el-aside>
-        <el-tree :data="topCategoriesData" :props="columnProps" accordion @node-click="handleTopCategoryClick" />
+        <el-tree
+          :data="topCategoriesData"
+          :props="columnProps"
+          accordion
+          @node-click="handleTopCategoryClick"
+        />
       </el-aside>
       <el-container>
         <el-header class="custom-header">
           <span>{{ topCategoryHeaderTitle }}
             <el-tag v-if="currentSelectedTopCategory">{{ topCategoryShowState }}</el-tag>
           </span>
-          <el-button-group>
-            <el-button size="mini" @click="handleEdit(null)">编辑</el-button>
+          <el-button-group v-if="currentSelectedTopCategory">
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
+              编辑
+            </el-button>
+            <el-button
+              v-if="currentSelectedTopCategory.idate"
+              type="info"
+              size="mini"
+              icon="el-icon-plus"
+              @click="handleCreateSubClass"
+            >
+              创建子类别
+            </el-button>
+            <el-button
+              v-if="currentSelectedTopCategory.idate"
+              :disabled="currentSelectedTopCategory.subTotal > 0"
+              type="danger"
+              size="mini"
+              icon="el-icon-delete"
+              @click="handleDelete(currentSelectedTopCategory)"
+            >
+              删除
+            </el-button>
           </el-button-group>
         </el-header>
         <el-main>
-          <el-table :data="currentTableCategoriesData" border>
+          <el-table :data="tableCategoriesData" border>
             <el-table-column label="类别编号" align="center">
               <template slot-scope="scope">
                 <span>{{ scope.row.categoryId }}</span>
@@ -75,9 +107,12 @@
                 <span>{{ scope.row.sortOrder }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="80">
+            <el-table-column label="操作" align="center" width="160">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+                <el-button v-if="scope.row.idate" size="mini" type="danger" @click="handleDelete(scope.row)">
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -86,15 +121,26 @@
     </el-container>
 
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" center width="40%">
-      <el-form ref="dataForm" :model="dialogValue" label-position="right" label-width="160">
+      <el-form
+        ref="categoryForm"
+        v-loading="dialogLoading"
+        :model="dialogValue"
+        :rules="dialogRules"
+        label-position="right"
+        label-width="160"
+      >
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="所属父类">
           <el-input v-model="topCategoryHeaderTitle" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '2'" label="所属父类">
           <el-input v-model="firstClassCategoryName" readonly class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="类别名称">
-          <el-input v-model="dialogValue.categoryName" readonly class="dialog-form-item" />
+        <el-form-item label="类别名称" prop="categoryName">
+          <el-input
+            v-model="dialogValue.categoryName"
+            :readonly="editCategory && dialogValue.idate === null"
+            class="dialog-form-item"
+          />
         </el-form-item>
         <el-form-item label="类别级别">
           <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
@@ -119,35 +165,62 @@
         </el-form-item>
       </el-form>
       <div slot="footer">
-        <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="updateCategory">确定</el-button>
+        <el-button @click="handleCancel">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import isEmpty from 'lodash/isEmpty'
+import sortBy from 'lodash/sortBy'
 import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
+
+const copyCategory = src => {
+  return {
+    categoryId: src.categoryId,
+    categoryName: src.categoryName,
+    categoryClass: src.categoryClass,
+    categoryIcon: src.categoryIcon,
+    sortOrder: src.sortOrder,
+    isShow: src.isShow === false, // false means SHOWING
+    idate: src.idate, // null means preset
+    parentId: src.parentId,
+    subTotal: src.subTotal
+  }
+}
 
 export default {
   name: 'Categories',
   components: { ImageUpload },
   data() {
+    const validateName = (rule, value, callback) => {
+      if (this.dialogValue.idate !== null && isEmpty(this.dialogValue.categoryName)) {
+        callback(new Error('请输入有效的类别名称'))
+      } else {
+        callback()
+      }
+    }
     return {
       dialogFormTitle: '',
       dialogFormVisible: false,
+      dialogRules: {
+        categoryName: [{ required: true, trigger: 'change', validator: validateName }]
+      },
       dialogValue: {
         categoryId: 0,
         parentId: 0,
-        grandId: 0,
         categoryClass: '0',
-        categoryName: null,
+        categoryName: '',
         categoryIcon: null,
         sortOrder: 0,
-        isShow: null
+        isShow: null,
+        idate: null
       },
       originalValue: {
+        categoryName: null,
         sortOrder: null,
         categoryIcon: null,
         isShow: null
@@ -165,7 +238,9 @@ export default {
       firstClassCategoryID: 0,
       firstClassCategoryName: '',
       topCategoryHeaderTitle: '',
-      currentTableCategoriesData: []
+      searchCategoriesData: [],
+      editCategory: true,
+      dialogLoading: false
     }
   },
   computed: {
@@ -173,31 +248,22 @@ export default {
       isAdminUser: 'isAdminUser',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
-      categoryData: 'categories'
+      categoryData: 'categories',
+      secondCategoryData: 'secondClassCategories'
     }),
     noEditPermission() {
       return !this.isAdminUser
     },
     topCategoriesData() {
-      const copyCatetory = src => {
-        return {
-          categoryId: src.categoryId,
-          categoryName: src.categoryName,
-          categoryClass: src.categoryClass,
-          categoryIcon: src.categoryIcon,
-          sortOrder: src.sortOrder,
-          isShow: src.isShow === false, // false means SHOWING
-          parentId: src.parentId
-        }
-      }
       if (this.categoriesLoaded) {
-        return this.categoryData.map(item => {
+        const topList = this.categoryData.map(item => {
           const subs = item.subs.map(sub => {
-            return copyCatetory(sub)
+            return copyCategory(sub)
           })
-          const copyItem = copyCatetory(item)
-          return { ...copyItem, subs: subs }
+          const copyItem = copyCategory(item)
+          return { ...copyItem, subs: sortBy(subs, ['sortOrder']) }
         })
+        return sortBy(topList, ['sortOrder'])
       } else {
         return []
       }
@@ -208,6 +274,26 @@ export default {
       } else {
         return ''
       }
+    },
+    tableCategoriesData() {
+      if (this.searchCategoriesData.length > 0) {
+        return this.searchCategoriesData
+      } else {
+        const category = this.currentSelectedTopCategory
+        if (category === null || category.categoryClass === '1') {
+          return []
+        } else {
+          const second = this.secondCategoryData.find(item => item.categoryId === category.categoryId)
+          if (second) {
+            const subs = second.subs.map(sub => {
+              return copyCategory(sub)
+            })
+            return sortBy(subs, ['sortOrder'])
+          } else {
+            return []
+          }
+        }
+      }
     }
   },
   created() {
@@ -217,7 +303,7 @@ export default {
     async getAllCategories() {
       if (this.categoriesLoaded === false && this.categoriesLoading === false) {
         try {
-          await this.$store.dispatch('categories/getAllData', { clearCache: false })
+          await this.$store.dispatch('categories/getAllData')
         } catch (e) {
           console.warn('Get Main Category failed: ' + e)
         }
@@ -228,12 +314,48 @@ export default {
         this.originalValue[key] = category[key]
       })
     },
+    handleCancel() {
+      if (!this.editCategory) {
+        this.$refs.categoryForm.resetFields()
+      }
+      this.dialogFormVisible = false
+    },
+    handleSubmit() {
+      if (this.editCategory) {
+        this.updateCategory()
+      } else {
+        this.createCategory()
+      }
+    },
+    createCategory() {
+      this.$refs.categoryForm.validate(async valid => {
+        if (valid) {
+          try {
+            this.dialogLoading = true
+            const params = {
+              parentId: this.dialogValue.parentId,
+              categoryName: this.dialogValue.categoryName,
+              categoryClass: this.dialogValue.categoryClass,
+              categoryIcon: this.dialogValue.categoryIcon,
+              sortOrder: this.dialogValue.sortOrder,
+              isShow: this.dialogValue.isShow
+            }
+            await this.$store.dispatch('categories/createCategory', params)
+            this.$message.success(`创建类别${params.categoryName}成功！`)
+          } catch (e) {
+            console.warn('Create category error:' + e)
+            this.$message.error(`创建类别失败，请稍后重试！`)
+          } finally {
+            this.dialogFormVisible = false
+            this.dialogLoading = false
+          }
+        }
+      })
+    },
     async updateCategory() {
       let changed = false
       const params = {}
-      if (this.dialogFormVisible) {
-        this.dialogFormVisible = false
-      }
+
       Object.keys(this.originalValue).forEach(key => {
         if (this.originalValue[key] !== this.dialogValue[key]) {
           params[key] = this.dialogValue[key]
@@ -244,8 +366,8 @@ export default {
         params.categoryId = this.dialogValue.categoryId
         params.parentId = this.dialogValue.parentId
         params.categoryClass = this.dialogValue.categoryClass
-        params.grandId = this.firstClassCategoryID
         try {
+          this.dialogLoading = true
           await this.$store.dispatch('categories/updateCategoryInfo', params)
           if (params.categoryId === this.currentSelectedTopCategory.categoryId) {
             Object.keys(this.originalValue).forEach(key => {
@@ -253,46 +375,31 @@ export default {
                 this.currentSelectedTopCategory[key] = params[key]
               }
             })
-          } else {
-            const category = this.currentTableCategoriesData.find(item => item.categoryId === params.categoryId)
-            if (category) {
-              Object.keys(this.originalValue).forEach(key => {
-                if (key in params) {
-                  category[key] = params[key]
-                }
-              })
-            }
+            this.updateTopCategoryTitle(this.currentSelectedTopCategory)
           }
         } catch (e) {
           console.warn('updateCategory:' + e)
+        } finally {
+          this.dialogLoading = false
+          this.dialogFormVisible = false
         }
       }
     },
     handleTopCategoryClick(category) {
+      this.searchCategoriesData = []
       this.currentSelectedTopCategory = category
       this.filterName = null
       if (category.categoryClass === '1') {
+        this.firstClassCategoryID = category.categoryId
+      }
+      this.updateTopCategoryTitle(category)
+    },
+    updateTopCategoryTitle(category) {
+      if (category.categoryClass === '1') {
         this.topCategoryHeaderTitle = category.categoryName
         this.firstClassCategoryName = category.categoryName
-        this.firstClassCategoryID = category.categoryId
-        this.currentTableCategoriesData = []
       } else {
         this.topCategoryHeaderTitle = this.firstClassCategoryName + ' / ' + category.categoryName
-        this.currentTableCategoriesData = this.getThirdClassCategoryData({
-          parentId: category.parentId,
-          categoryId: category.categoryId
-        })
-      }
-    },
-    getThirdClassCategoryData(secondCategory) {
-      const firstClass = this.categoryData.find(item => item.categoryId === secondCategory.parentId)
-      if (firstClass) {
-        const secondClass = firstClass.subs.find(item => item.categoryId === secondCategory.categoryId)
-        return secondClass.subs.map(item => {
-          return Object.assign({}, item, { isShow: !item.isShow })
-        })
-      } else {
-        return []
       }
     },
     handleRefresh() {
@@ -301,11 +408,10 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
-        this.currentTableCategoriesData = []
         this.currentSelectedTopCategory = null
         this.filterName = null
         try {
-          await this.$store.dispatch('categories/getAllData', { clearCache: true })
+          await this.$store.dispatch('categories/getAllData')
         } catch (e) {
           console.warn('Refresh Categories failed: ' + e)
         }
@@ -317,14 +423,14 @@ export default {
         this.$store.dispatch('categories/searchCategoryInfo', {
           offset: 1, limit: 100, query: this.filterName
         }).then((res) => {
-          this.currentTableCategoriesData = res.list.map(item => {
+          this.searchCategoriesData = res.list.map(item => {
             return Object.assign({}, item, { isShow: !item.isShow })
           })
         }).catch(() => {
           this.filterName = null
         })
       } else {
-        this.currentTableCategoriesData = []
+        this.searchCategoriesData = []
       }
     },
     handleEdit(category) {
@@ -333,14 +439,53 @@ export default {
         toEdit = this.currentSelectedTopCategory
       }
       if (toEdit) {
+        this.editCategory = true
         this.dialogFormTitle = '编辑 ' + toEdit.categoryName
         this.dialogFormVisible = true
         this.dialogValue = { ...toEdit }
         this.setUpdateValue(toEdit)
       }
     },
+    async handleDelete(category) {
+      try {
+        await this.$store.dispatch('categories/deleteCategory', category)
+      } catch (e) {
+        console.warn('Delete category error:' + e)
+      }
+    },
     handleUploadImageSuccess(url) {
       this.dialogValue.categoryIcon = url
+    },
+    handleCreateFirstClass() {
+      this.editCategory = false
+      this.dialogFormTitle = '新建一级类别'
+      this.dialogValue.categoryId = null
+      this.dialogValue.parentId = 0
+      this.dialogValue.categoryClass = '1'
+      this.dialogValue.categoryName = null
+      this.dialogValue.categoryIcon = null
+      this.dialogValue.sortOrder = 50
+      this.dialogValue.isShow = false
+      this.dialogFormVisible = true
+    },
+    handleCreateSubClass() {
+      if (this.currentSelectedTopCategory) {
+        this.editCategory = false
+        if (this.currentSelectedTopCategory.categoryClass === '1') {
+          this.dialogFormTitle = '新建二级类别'
+          this.dialogValue.categoryClass = '2'
+        } else {
+          this.dialogFormTitle = '新建三级类别'
+          this.dialogValue.categoryClass = '3'
+        }
+        this.dialogValue.categoryId = null
+        this.dialogValue.parentId = this.currentSelectedTopCategory.categoryId
+        this.dialogValue.categoryName = null
+        this.dialogValue.categoryIcon = null
+        this.dialogValue.sortOrder = 50
+        this.dialogValue.isShow = false
+        this.dialogFormVisible = true
+      }
     }
   }
 }

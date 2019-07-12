@@ -180,6 +180,9 @@ export default {
       this.offset = 1
       this.dialogFilterForm.skus = []
       this.dialogFilterForm.query = ''
+      this.firstCategoryValue = null
+      this.secondCategoryValue = null
+      this.thirdCategoryValue = null
     },
     handleDialogFilterSearch() {
       if (this.dialogFilterForm.skus.length > 0) {
