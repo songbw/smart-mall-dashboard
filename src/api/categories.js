@@ -1,14 +1,14 @@
 import Vue from 'vue'
 
 export function getAllCategoriesApi() {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/all',
     method: 'get'
   })
 }
 
 export function getMainCategoriesApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/oneLevel',
     method: 'get',
     params
@@ -16,7 +16,7 @@ export function getMainCategoriesApi(params) {
 }
 
 export function getSubCategoriesApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/subcategory',
     method: 'get',
     params
@@ -24,7 +24,7 @@ export function getSubCategoriesApi(params) {
 }
 
 export function getCategoryInfoApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/category',
     method: 'get',
     params
@@ -32,7 +32,7 @@ export function getCategoryInfoApi(params) {
 }
 
 export function updateCategoryInfoApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/updateCategory',
     method: 'post',
     data: {
@@ -42,7 +42,7 @@ export function updateCategoryInfoApi(params) {
 }
 
 export function searchCategoryInfoApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/search',
     method: 'get',
     params
@@ -50,7 +50,7 @@ export function searchCategoryInfoApi(params) {
 }
 
 export function createCategoryApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory/saveCategory',
     method: 'post',
     data: {
@@ -60,7 +60,7 @@ export function createCategoryApi(params) {
 }
 
 export function deleteCategoryApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('categories').request({
     url: '/products/adminCategory',
     method: 'delete',
     params

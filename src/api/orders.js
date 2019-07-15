@@ -1,7 +1,7 @@
 import Vue from 'vue'
 
 export function getOrderListApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/order/searchOrder',
     method: 'post',
     data: {
@@ -11,7 +11,7 @@ export function getOrderListApi(params) {
 }
 
 export function getMainOrderDetailApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/order/searchDetail',
     method: 'post',
     data: {
@@ -21,7 +21,7 @@ export function getMainOrderDetailApi(params) {
 }
 
 export function updateOrderRemarkApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/order/updateRemark',
     method: 'post',
     data: {
@@ -31,7 +31,7 @@ export function updateOrderRemarkApi(params) {
 }
 
 export function getAddressApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/address/level',
     method: 'post',
     data: {
@@ -41,7 +41,7 @@ export function getAddressApi(params) {
 }
 
 export function getLogisticsInfoApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/order/logistics',
     method: 'get',
     params
@@ -49,7 +49,7 @@ export function getLogisticsInfoApi(params) {
 }
 
 export function deliveryUploadApi(params) {
-  return Vue.axios.request({
+  return Vue.axios('orders').request({
     url: '/orders/order/uploadLogistics',
     method: 'post',
     data: {
