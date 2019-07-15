@@ -448,6 +448,11 @@ export default {
     },
     async handleDelete(category) {
       try {
+        await this.$confirm('是否继续删除此类别？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
         await this.$store.dispatch('categories/deleteCategory', category)
       } catch (e) {
         console.warn('Delete category error:' + e)

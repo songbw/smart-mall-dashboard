@@ -27,6 +27,7 @@ const deleteCategoryFromParent = (tree, category) => {
     const index = parent.subs.findIndex(item => item.categoryId === category.categoryId)
     if (index >= 0) {
       parent.subs.splice(index, 1)
+      parent.subTotal--
     }
   }
 }
@@ -87,6 +88,7 @@ const mutations = {
       case '1': {
         if (category.subs === null) {
           category.subs = []
+          category.subTotal = 0
         }
         state.categoriesTree.push(category)
         break
@@ -94,11 +96,13 @@ const mutations = {
       case '2': {
         if (category.subs === null) {
           category.subs = []
+          category.subTotal = 0
         }
         const parent = state.categoriesTree.find(item => item.categoryId === category.parentId)
         if (parent) {
           parent.subs.push(category)
           parent.subTotal++
+          state.secondClassTree.push(category)
         }
         break
       }
@@ -236,6 +240,7 @@ const actions = {
   },
   async deleteCategory({ commit }, params) {
     await deleteCategoryApi({ id: params.categoryId })
+    commit('DELETE_CATEGORY', params)
   }
 }
 
