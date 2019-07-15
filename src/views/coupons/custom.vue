@@ -409,10 +409,10 @@ import {
 } from '@/api/coupons'
 
 import {
-  couponAppScopes,
-  couponTypeOptions,
-  couponCollectOptions,
-  couponScenarioOptions
+  CouponAppScopes,
+  CouponTypeOptions,
+  CouponCollectOptions,
+  CouponScenarioOptions
 } from './constants'
 
 export default {
@@ -420,24 +420,24 @@ export default {
   components: { CouponGoods, CouponCategory, ImageUpload, CouponUrl },
   filters: {
     couponTypeFilter: type => {
-      const item = couponTypeOptions.find(coupon => coupon.value === type)
+      const item = CouponTypeOptions.find(coupon => coupon.value === type)
       return item ? item.label : ''
     },
     couponCollectFilter: type => {
-      const item = couponCollectOptions.find(coupon => coupon.value === type)
+      const item = CouponCollectOptions.find(coupon => coupon.value === type)
       return item ? item.label : ''
     },
     couponScenarioFilter: type => {
-      const item = couponScenarioOptions.find(coupon => coupon.value === type)
+      const item = CouponScenarioOptions.find(coupon => coupon.value === type)
       return item ? item.label : ''
     }
   },
   data() {
     return {
-      appScopes: couponAppScopes,
-      typeOptions: couponTypeOptions,
-      collectOptions: couponCollectOptions,
-      scenarioOptions: couponScenarioOptions,
+      appScopes: CouponAppScopes,
+      typeOptions: CouponTypeOptions,
+      collectOptions: CouponCollectOptions,
+      scenarioOptions: CouponScenarioOptions,
       createCoupon: false,
       viewOnly: true,
       couponDataLoaded: false,

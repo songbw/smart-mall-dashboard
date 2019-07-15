@@ -150,7 +150,7 @@ import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import Pagination from '@/components/Pagination'
-import { usageStatusOptions } from './constants'
+import { UsageStatusOptions } from './constants'
 import {
   getCouponByIdApi,
   getCouponUsageByIdApi,
@@ -162,7 +162,7 @@ export default {
   components: { Pagination },
   filters: {
     usageStatus: status => {
-      const usage = usageStatusOptions.find(option => status === option.value)
+      const usage = UsageStatusOptions.find(option => status === option.value)
       return usage ? usage.label : ''
     },
     timeFormat: time => {
@@ -180,7 +180,7 @@ export default {
       statusOptions: [{
         value: 0,
         label: '全部'
-      }].concat(usageStatusOptions),
+      }].concat(UsageStatusOptions),
       couponId: -1,
       queryData: {
         userName: '',
@@ -326,7 +326,7 @@ export default {
         if (j !== 'status') {
           return v[j]
         } else {
-          const usage = usageStatusOptions.find(option => status === option.value)
+          const usage = UsageStatusOptions.find(option => status === option.value)
           return usage ? usage.label : ''
         }
       }))

@@ -5,7 +5,7 @@
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
       <el-form-item label="状态" class="form-item">
-        <el-select v-model="queryStatus">
+        <el-select :value="queryStatus" @change="onQueryStatusChanged">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -222,6 +222,9 @@ export default {
       } catch (_) {
         this.$message.warning('更新企业信息失败，请稍后重试！')
       }
+    },
+    onQueryStatusChanged(value) {
+      this.queryStatus = value
     }
   }
 }

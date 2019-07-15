@@ -49,3 +49,11 @@ export function reviewVendorProfileApi(params) {
     data
   })
 }
+
+export function getVendorUserListApi(params) {
+  return Vue.axios('vendor').request({
+    url: '/vendors/users/list',
+    method: 'get',
+    params
+  })
+}
