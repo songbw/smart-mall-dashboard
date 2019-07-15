@@ -38,6 +38,15 @@
                 活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}
               </div>
             </el-form-item>
+            <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
+              <el-switch v-model="titleHasTextLink" />
+            </el-form-item>
+            <el-form-item
+              v-if="titleTextAlign === 'left' && titleHasTextLink"
+              label="文件链接标题"
+            >
+              <el-input v-model="titleTextLinkValue" />
+            </el-form-item>
             <el-form-item label="开启活动图片">
               <el-switch v-model="titleHasImage" />
             </el-form-item>
@@ -68,22 +77,22 @@
               </el-upload>
             </el-form-item>
             <el-form-item
-              v-if="titleHasImage"
-              label="活动图片链接"
+              v-if="titleHasLink"
+              label="文字和图片链接地址"
             >
               <image-target-link
                 :could-change="titleHasPromotionActivity === false"
                 :target-index="currentTemplateIndex"
-                :target-type="titleImageTargetType"
-                :target-url="titleImageTargetUrl"
-                :target-name="titleImageTargetName"
+                :target-type="titleTargetType"
+                :target-url="titleTargetUrl"
+                :target-name="titleTargetName"
                 @targetChanges="handleImageTargetChanges"
               />
             </el-form-item>
           </el-form>
         </el-form-item>
         <el-form-item label="下边距">
-          <el-select v-model="marginBottom">
+          <el-select :value="marginBottom" @change="onMarginBottomChanged">
             <el-option label="0px" value="0" />
             <el-option label="10px" value="10" />
             <el-option label="20px" value="20" />
@@ -251,6 +260,8 @@ export default {
               show: false,
               textAlign: 'left',
               textValue: '',
+              hasTextLink: false,
+              textLinkValue: '',
               hasPromotionActivity: false,
               promotionActivityId: -1,
               promotionActivityName: '',
@@ -306,6 +317,24 @@ export default {
         this.changeTitle(title)
       }
     },
+    titleHasTextLink: {
+      get() {
+        return this.promotionData.settings.title.hasTextLink
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { hasTextLink: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titleTextLinkValue: {
+      get() {
+        return this.promotionData.settings.title.textLinkValue
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { textLinkValue: newValue })
+        this.changeTitle(title)
+      }
+    },
     titleHasPromotionActivity: {
       get() {
         return this.promotionData.settings.title.hasPromotionActivity
@@ -330,7 +359,7 @@ export default {
             newTitle.targetName = this.titlePromotionActivityName
             newTitle.targetUrl = 'route://promotion/' + promotionId
           }
-        } else if (newValue === false && this.titleImageTargetType === 'promotion') {
+        } else if (newValue === false && this.titleTargetType === 'promotion') {
           if (this.originalImageProp && this.originalImageProp.hasPromotionActivity === false) {
             newTitle.targetType = this.originalImageProp.imageTargetType
             newTitle.targetUrl = this.originalImageProp.imageTargetUrl
@@ -403,7 +432,12 @@ export default {
         this.changeTitle(title)
       }
     },
-    titleImageTargetType: {
+    titleHasLink: {
+      get() {
+        return this.titleHasImage || this.titleHasTextLink
+      }
+    },
+    titleTargetType: {
       get() {
         return this.promotionData.settings.title.targetType
       },
@@ -412,7 +446,7 @@ export default {
         this.changeTitle(title)
       }
     },
-    titleImageTargetUrl: {
+    titleTargetUrl: {
       get() {
         return this.promotionData.settings.title.targetUrl
       },
@@ -421,7 +455,7 @@ export default {
         this.changeTitle(title)
       }
     },
-    titleImageTargetName: {
+    titleTargetName: {
       get() {
         return this.promotionData.settings.title.targetName
       },
@@ -526,13 +560,13 @@ export default {
         return
       }
       if ('type' in target) {
-        this.titleImageTargetType = target.type
+        this.titleTargetType = target.type
       }
       if ('name' in target) {
-        this.titleImageTargetName = target.name
+        this.titleTargetName = target.name
       }
       if ('url' in target) {
-        this.titleImageTargetUrl = target.url
+        this.titleTargetUrl = target.url
       }
     },
     onGoodsImportConfirmed(skus) {
@@ -548,12 +582,15 @@ export default {
       this.titlePromotionActivityName = promotion.name
       this.titlePromotionActivityStartDate = promotion.startDate
       this.titlePromotionActivityEndDate = promotion.endDate
-      this.titleImageTargetType = 'promotion'
-      this.titleImageTargetUrl = 'route://promotion/' + promotion.id
-      this.titleImageTargetName = promotion.name
+      this.titleTargetType = 'promotion'
+      this.titleTargetUrl = 'route://promotion/' + promotion.id
+      this.titleTargetName = promotion.name
     },
     onPromotionSelectionCancelled() {
       this.dialogPromotionVisible = false
+    },
+    onMarginBottomChanged(value) {
+      this.marginBottom = value
     }
   }
 }

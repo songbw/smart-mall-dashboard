@@ -318,6 +318,8 @@ export default {
               show: false,
               textAlign: 'left',
               textValue: '',
+              hasTextLink: false,
+              textLinkValue: '',
               hasPromotionActivity: false,
               promotionActivityId: -1,
               promotionActivityName: '',
