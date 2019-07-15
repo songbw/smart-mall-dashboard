@@ -85,7 +85,7 @@
       </el-table-column>
       <el-table-column label="状态" align="center" width="100">
         <template slot-scope="scope">
-          <el-tag>{{ scope.row.status | couponStatus }}</el-tag>
+          <el-tag>{{ scope.row.status | couponStatusFilter }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="发布开始时间" align="center" width="180">
@@ -107,7 +107,7 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
                 :command="`start:${scope.$index}`"
-                :disabled="scope.row.status !== 1"
+                :disabled="scope.row.status !== initStatus"
                 icon="el-icon-time"
               >
                 发布优惠券
@@ -121,7 +121,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
-                :disabled="scope.row.status === 2 || scope.row.status === 3"
+                :disabled="scope.row.status !== initStatus"
                 icon="el-icon-edit"
               >
                 修改优惠券
@@ -134,7 +134,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`stop:${scope.$index}`"
-                :disabled="scope.row.status === 1 || scope.row.status === 3"
+                :disabled="scope.row.status === initStatus || scope.row.status === offShelvesStatus"
                 icon="el-icon-sold-out"
                 divided
               >
@@ -142,7 +142,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`delete:${scope.$index}`"
-                :disabled="scope.row.status === 2"
+                :disabled="scope.row.status !== initStatus"
                 icon="el-icon-delete"
               >
                 删除优惠券
@@ -169,7 +169,13 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
-import { couponStatus } from './constants'
+import {
+  coupon_status_init,
+  coupon_status_published,
+  coupon_status_on_sale,
+  coupon_status_off_shelves,
+  CouponStatusDefinition
+} from './constants'
 import {
   getCouponsApi,
   searchCouponsApi,
@@ -181,8 +187,8 @@ export default {
   name: 'Coupon',
   components: { Pagination },
   filters: {
-    couponStatus: (status) => {
-      const item = couponStatus.find(coupon => coupon.value === status)
+    couponStatusFilter: (status) => {
+      const item = CouponStatusDefinition.find(coupon => coupon.value === status)
       return item ? item.label : ''
     },
     dateFilter(date) {
@@ -193,10 +199,13 @@ export default {
   },
   data() {
     return {
+      initStatus: coupon_status_init,
+      onSaleStatus: coupon_status_on_sale,
+      offShelvesStatus: coupon_status_off_shelves,
       statusOptions: [{
         value: 0,
         label: '全部'
-      }].concat(couponStatus),
+      }].concat(CouponStatusDefinition),
       dataLoading: false,
       couponData: [],
       couponTotal: 0
@@ -356,7 +365,7 @@ export default {
           type: 'warning',
           center: true
         })
-        await updateCouponApi({ id: this.couponData[index].id, status: 2 })
+        await updateCouponApi({ id: this.couponData[index].id, status: coupon_status_published })
         this.getCouponData()
       } catch (e) {
         console.warn('Update coupon ' + e)
@@ -382,7 +391,7 @@ export default {
           type: 'warning',
           center: true
         })
-        await updateCouponApi({ id: this.couponData[index].id, status: 3 })
+        await updateCouponApi({ id: this.couponData[index].id, status: coupon_status_off_shelves })
         this.getCouponData()
       } catch (e) {
         console.warn('Stop coupon:' + e)

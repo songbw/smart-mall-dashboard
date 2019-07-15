@@ -255,6 +255,12 @@ export const constantRoutes = [
         component: () => import('@/views/workorders/detail'),
         meta: { title: '查看售后详情', icon: 'work-order' },
         hidden: true
+      },
+      {
+        path: 'returnAddress',
+        name: 'ReturnAddress',
+        component: () => import('@/views/workorders/returnAddress'),
+        meta: { title: '退换货地址', icon: 'return-address' }
       }
     ]
   },
@@ -299,6 +305,12 @@ export const constantRoutes = [
         name: 'VendorManager',
         component: () => import('@/views/vendor/manager'),
         meta: { title: '商户管理', icon: 'vendor', roles: [role_admin_name] }
+      },
+      {
+        path: 'users',
+        name: 'UserManager',
+        component: () => import('@/views/vendor/userManager'),
+        meta: { title: '用户管理', icon: 'user-manager', roles: [role_admin_name] }
       }
     ]
   },

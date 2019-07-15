@@ -172,17 +172,11 @@
         @pagination="getListData"
       />
     </div>
-    <el-dialog :visible.sync="qrCodeDialogVisible" :show-close="false" title="页面预览" width="380px" center>
-      <div class="content-center">
-        <h3>请通过手机“扫一扫”功能，在手机上进行预览</h3>
-      </div>
-      <div class="content-center">
-        <qriously :value="qrCodeValue" :size="200" />
-      </div>
-      <span slot="footer">
-        <el-button type="primary" @click="qrCodeDialogVisible = false">确认</el-button>
-      </span>
-    </el-dialog>
+    <preview-dialog
+      :dialog-visible="qrCodeDialogVisible"
+      :qr-code="qrCodeValue"
+      @closed="onPreviewClosed"
+    />
   </div>
 </template>
 
@@ -190,6 +184,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
+import PreviewDialog from './components/previewDialog'
 import {
   getAggregationsApi,
   searchAggregationsApi,
@@ -204,7 +199,7 @@ import {
 
 export default {
   name: 'AggregationPages',
-  components: { Pagination },
+  components: { Pagination, PreviewDialog },
   filters: {
     statusFilter(status) {
       const item = AggregationStatusOptions.find(option => option.value === status)
@@ -410,9 +405,12 @@ export default {
         name: 'CreateAggregation'
       })
     },
+    onPreviewClosed() {
+      this.qrCodeDialogVisible = false
+    },
     handleView(index) {
       const id = this.aggregationList[index].id
-      this.qrCodeValue = process.env.VUE_APP_MALL_URL + id
+      this.qrCodeValue = process.env.VUE_APP_MALL_URL + '/index/' + id
       this.qrCodeDialogVisible = true
     },
     handleEdit(index) {
@@ -532,9 +530,5 @@ export default {
 </script>
 
 <style scoped>
-  .content-center {
-    display: flex;
-    justify-content: center;
-  }
 </style>
 

@@ -24,8 +24,19 @@
               >
                 选择促销活动
               </el-button>
-              <div>活动名称： {{ titlePromotionActivityName }}</div>
-              <div>活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}</div>
+              <div v-if="titleHasPromotionActivity">
+                <span>活动名称：</span>
+                <el-link
+                  :href="`#/marketing/viewPromotion/${titlePromotionActivityId}`"
+                  target="_blank"
+                  type="primary"
+                >
+                  {{ titlePromotionActivityName }}
+                </el-link>
+              </div>
+              <div v-if="titleHasPromotionActivity">
+                活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}
+              </div>
             </el-form-item>
             <el-form-item label="开启活动图片">
               <el-switch v-model="titleHasImage" />
@@ -34,7 +45,7 @@
               v-if="titleHasImage"
               label="活动图片"
             >
-              <img v-if="titleImageUrl" :src="titleImageUrl" width="200px">
+              <img v-if="titleImageUrl" :src="titleImageUrl" width="200px" alt="">
               <el-upload
                 ref="upload"
                 :action="uploadUrl"
@@ -61,6 +72,7 @@
               label="活动图片链接"
             >
               <image-target-link
+                :could-change="titleHasPromotionActivity === false"
                 :target-index="currentTemplateIndex"
                 :target-type="titleImageTargetType"
                 :target-url="titleImageTargetUrl"
@@ -313,8 +325,12 @@ export default {
         }
         if (newValue) {
           newTitle.targetType = 'promotion'
+          const promotionId = this.promotionData.settings.title.promotionActivityId
+          if (promotionId >= 0) {
+            newTitle.targetName = this.titlePromotionActivityName
+            newTitle.targetUrl = 'route://promotion/' + promotionId
+          }
         } else if (newValue === false && this.titleImageTargetType === 'promotion') {
-          newTitle.promotionActivityId = -1
           if (this.originalImageProp && this.originalImageProp.hasPromotionActivity === false) {
             newTitle.targetType = this.originalImageProp.imageTargetType
             newTitle.targetUrl = this.originalImageProp.imageTargetUrl

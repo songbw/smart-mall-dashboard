@@ -27,7 +27,7 @@ export default {
   computed: {
     qrCodeValue: {
       get() {
-        return process.env.VUE_APP_MALL_URL + this.pageId
+        return process.env.VUE_APP_MALL_URL + '/index/' + this.pageId
       }
     }
   },

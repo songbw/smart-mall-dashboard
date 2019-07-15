@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <el-select v-model="displayType">
+  <div style="margin-top: 5px">
+    <el-select :disabled="!couldChange" :value="displayType" @change="onTypeChanged">
       <el-option
         v-for="item in typeOptions"
         :key="item.value"
@@ -9,7 +9,7 @@
       />
     </el-select>
     <div v-if="displayType === 'aggregation'">
-      <el-button type="primary" size="mini" @click="dialogAggregationVisible = true">
+      <el-button :disabled="!couldChange" type="primary" size="mini" @click="dialogAggregationVisible = true">
         选择聚合页
       </el-button>
       <aggregation-selection-dialog
@@ -19,7 +19,7 @@
       />
     </div>
     <div v-else-if="displayType === 'promotion'">
-      <el-button type="primary" size="mini" @click="dialogPromotionVisible = true">
+      <el-button :disabled="!couldChange" type="primary" size="mini" @click="dialogPromotionVisible = true">
         选择促销活动页
       </el-button>
       <promotion-selection
@@ -29,7 +29,7 @@
       />
     </div>
     <div v-else-if="displayType === 'commodity'">
-      <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+      <el-button :disabled="!couldChange" type="primary" size="mini" @click="dialogSelectionVisible = true">
         选择商品
       </el-button>
       <goods-selection-dialog
@@ -38,7 +38,15 @@
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
     </div>
-    <div v-if="displayName" style="margin-left: 10px">{{ displayName }}</div>
+    <div v-if="displayName" style="margin-left: 10px">
+      <el-button type="text" @click="dialogPreviewVisible = true">{{ displayName }}</el-button>
+    </div>
+    <preivew-dialog
+      v-if="qrCodeValue"
+      :qr-code="qrCodeValue"
+      :dialog-visible="dialogPreviewVisible"
+      @closed="dialogPreviewVisible = false"
+    />
   </div>
 </template>
 
@@ -46,10 +54,11 @@
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
 import PromotionSelection from './promotionSelection'
+import PreivewDialog from './previewDialog'
 
 export default {
   name: 'ImageTargetLink',
-  components: { GoodsSelectionDialog, AggregationSelectionDialog, PromotionSelection },
+  components: { GoodsSelectionDialog, AggregationSelectionDialog, PromotionSelection, PreivewDialog },
   props: {
     targetIndex: {
       type: Number,
@@ -66,6 +75,10 @@ export default {
     targetName: {
       type: String,
       default: ''
+    },
+    couldChange: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
@@ -92,6 +105,7 @@ export default {
       dialogAggregationVisible: false,
       dialogSelectionVisible: false,
       dialogPromotionVisible: false,
+      dialogPreviewVisible: false,
       imageType: this.targetType,
       originalProp: {
         type: this.targetType,
@@ -136,6 +150,10 @@ export default {
             return this.targetName
           } else if (this.targetType === 'promotion' && this.targetUrl.indexOf('promotion') >= 0) {
             return this.targetName
+          } else if (this.targetType === 'category') {
+            return '商品分类'
+          } else if (this.targetType === 'coupon') {
+            return '优惠券活动页'
           } else {
             return ''
           }
@@ -159,6 +177,39 @@ export default {
           url: this.imageUrl
         })
       }
+    },
+    qrCodeValue: {
+      get() {
+        switch (this.targetType) {
+          case 'aggregation':
+            if (this.targetUrl.indexOf('aggregation') >= 0) {
+              const id = this.targetUrl.substring('aggregation://'.length)
+              return process.env.VUE_APP_MALL_URL + '/index/' + id
+            }
+            break
+          case 'promotion':
+            if (this.targetUrl.indexOf('promotion') >= 0) {
+              const id = this.targetUrl.substring('route://promotion/'.length)
+              return process.env.VUE_APP_MALL_URL + '/category/goods/promotion/' + id
+            }
+            break
+          case 'commodity':
+            /*
+            if (this.targetUrl.indexOf('commodity') >= 0) {
+              const id = this.targetUrl.substring('route://commodity/'.length)
+              return process.env.VUE_APP_MALL_URL + '/category/goods/promotion/' + id
+            }
+             */
+            return null
+          case 'category':
+            return process.env.VUE_APP_MALL_URL + '/category/all'
+          case 'coupon':
+            return process.env.VUE_APP_MALL_URL + '/user/couponCenter'
+          default:
+            return null
+        }
+        return null
+      }
     }
   },
   watch: {
@@ -171,6 +222,9 @@ export default {
     }
   },
   methods: {
+    onTypeChanged(value) {
+      this.displayType = value
+    },
     onAggregationSelectionCancelled() {
       this.dialogAggregationVisible = false
     },

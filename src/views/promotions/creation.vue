@@ -64,14 +64,18 @@ export default {
       if (this.activeStep > 0) {
         this.activeStep -= 1
       } else {
-        this.$router.replace({ name: 'Promotions' })
+        window.history.length > 1
+          ? this.$router.go(-1)
+          : this.$router.replace({ name: 'Promotions' })
       }
     },
     handlePromotionCreated() {
       this.activeStep += 1
     },
     handlePromotionUpdated() {
-      this.$router.replace({ name: 'Promotions' })
+      window.history.length > 1
+        ? this.$router.go(-1)
+        : this.$router.replace({ name: 'Promotions' })
     }
   }
 }

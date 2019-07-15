@@ -1,18 +1,27 @@
-export const couponStatus = [{
-  value: 1,
+export const coupon_status_init = 1
+export const coupon_status_published = 2
+export const coupon_status_on_sale = 3
+export const coupon_status_off_shelves = 4
+export const coupon_status_distributing = 5
+
+export const CouponStatusDefinition = [{
+  value: coupon_status_init,
   label: '未开始'
 }, {
-  value: 2,
+  value: coupon_status_published,
   label: '已发布'
 }, {
-  value: 3,
+  value: coupon_status_on_sale,
+  label: '进行中'
+}, {
+  value: coupon_status_off_shelves,
   label: '已下线'
 }, {
-  value: 4,
+  value: coupon_status_distributing,
   label: '待分配'
 }]
 
-export const couponAppScopes = [{
+export const CouponAppScopes = [{
   id: '20190001',
   name: '无锡智慧城市'
 }, {
@@ -20,7 +29,7 @@ export const couponAppScopes = [{
   name: '北部湾智慧城市'
 }]
 
-export const couponTypeOptions = [{
+export const CouponTypeOptions = [{
   value: 0,
   label: '满减券'
 }, {
@@ -34,7 +43,7 @@ export const couponTypeOptions = [{
   label: '服务券'
 }]
 
-export const couponCollectOptions = [{
+export const CouponCollectOptions = [{
   value: 1,
   label: '主动领取'
 }, {
@@ -48,7 +57,7 @@ export const couponCollectOptions = [{
   label: '人工分配'
 }]
 
-export const couponScenarioOptions = [{
+export const CouponScenarioOptions = [{
   value: 1,
   label: '特定商品类'
 }, {
@@ -62,18 +71,7 @@ export const couponScenarioOptions = [{
   label: '特定服务类'
 }]
 
-export const couponTagOptions = [{
-  value: 1,
-  label: '凤巢精选'
-}, {
-  value: 2,
-  label: '凤巢推荐'
-}, {
-  value: 3,
-  label: '会员专享'
-}]
-
-export const usageStatusOptions = [{
+export const UsageStatusOptions = [{
   value: 1,
   label: '未使用'
 }, {
