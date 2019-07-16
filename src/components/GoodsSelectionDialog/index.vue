@@ -11,9 +11,12 @@
   >
     <category-selection
       v-if="!hasPromotion"
-      :first-value="firstCategoryValue"
-      :second-value="secondCategoryValue"
-      :third-value="thirdCategoryValue"
+      :first-selectable="presetFirstCategory === null"
+      :first-value="presetFirstCategory || firstCategoryValue"
+      :seond-selectable="presetSecondCategory === null"
+      :second-value="presetSecondCategory || secondCategoryValue"
+      :third-selectable="presetThirdCategory === null"
+      :third-value="presetThirdCategory || thirdCategoryValue"
       @changed="handleCategorySelectionChanged"
     />
     <el-form v-if="hasPromotion" inline>
@@ -121,6 +124,18 @@ export default {
     promotionId: {
       type: Number,
       default: -1
+    },
+    presetFirstCategory: {
+      type: Number,
+      default: null
+    },
+    presetSecondCategory: {
+      type: Number,
+      default: null
+    },
+    presetThirdCategory: {
+      type: Number,
+      default: null
     }
   },
   data() {
@@ -213,6 +228,7 @@ export default {
           }
         })
       } else if (this.dialogFilterForm.query !== '' ||
+        this.presetThirdCategory != null ||
         this.thirdCategoryValue !== null) {
         const params = {
           offset: this.offset,
@@ -222,7 +238,9 @@ export default {
         if (this.dialogFilterForm.query !== '') {
           params.query = this.dialogFilterForm.query
         }
-        if (this.thirdCategoryValue !== null) {
+        if (this.presetThirdCategory != null) {
+          params.categoryID = this.presetThirdCategory
+        } else if (this.thirdCategoryValue !== null) {
           params.categoryID = this.thirdCategoryValue
         }
         this.dataLoading = true

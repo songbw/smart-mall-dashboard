@@ -61,15 +61,15 @@
               </el-button>
             </div>
           </el-form-item>
-          <el-form-item label="验证码" prop="code">
+          <el-form-item label="手机验证码" prop="code">
             <div style="display: flex;justify-content: space-between">
               <el-input
                 v-model="registerForm.code"
                 type="number"
-                placeholder="输入右侧验证码"
+                placeholder="输入手机验证码"
                 style="width: 60%"
               />
-              <span style="font: 25px Georgia;background: #C0C4CC">{{ captcha }}</span>
+              <span v-if="showCode" style="font: 25px Georgia;background: #C0C4CC">{{ captcha }}</span>
             </div>
           </el-form-item>
           <el-form-item>
@@ -136,6 +136,7 @@ export default {
       }
     }
     return {
+      showCode: false,
       loading: false,
       timedOut: 60,
       timer: null,
@@ -205,43 +206,39 @@ export default {
         }
       })
     },
+    getErrorMessage(error) {
+      let msg = null
+      if (error.response) {
+        const status = error.response.status
+        if (status >= 400) {
+          const data = error.response.data
+          const errno = Number.parseInt(data.error)
+          switch (errno) {
+            case 400001:
+            case 400002:
+            case 400003:
+              msg = data.message + '，请确认后重试'
+              break
+            default:
+              break
+          }
+        } else if (status >= 500) {
+          msg = '广告服务平台出现问题，请联系管理员!'
+        }
+      }
+      return msg
+    },
     handleRegister() {
       this.loading = true
       this.$store.dispatch('user/register', this.registerForm).then(() => {
         this.$message({ message: '恭喜你，注册成功！请登录完善信息。', type: 'success' })
         this.gotoLogin()
       }).catch((error) => {
-        if (error.response) {
-          const status = error.response.status
-          if (status >= 400) {
-            const errno = Number.parseInt(error.response.data.error)
-            let msg = ''
-            switch (errno) {
-              case 400001:
-                msg = '此用户名已被使用，请确认后重试'
-                break
-              case 400002:
-                msg = '此手机号码已被使用，请确认后重试'
-                break
-              case 400003:
-                msg = '手机验证码错误，请重新获取验证码'
-                break
-              default:
-                msg = '注册失败，请检查填写内容'
-            }
-            this.$message({ message: msg, type: 'error' })
-          } else if (status >= 500) {
-            this.$message({
-              message: '广告服务平台出现问题，请联系管理员!',
-              type: 'error'
-            })
-          }
-        } else {
-          this.$message({
-            message: '服务网络出现未知，请联系管理员!',
-            type: 'error'
-          })
-        }
+        const msg = this.getErrorMessage(error) || '注册失败，请检查填写内容'
+        this.$message({
+          message: msg,
+          type: 'error'
+        })
       }).finally(() => {
         this.loading = false
       })
@@ -251,11 +248,14 @@ export default {
       this.$store.dispatch('user/passwordNew', this.registerForm).then(() => {
         this.$message({ message: '恭喜你，密码重置成功！', type: 'success' })
         this.gotoLogin()
-      }).catch((_) => {
+      }).catch((e) => {
+        const msg = this.getErrorMessage(e) || '密码重置失败，请检查用户名及手机号码!'
         this.$message({
-          message: '密码重置失败，请检查用户名及手机号码!',
+          message: msg,
           type: 'error'
         })
+      }).finally(() => {
+        this.loading = false
       })
     },
     async handleSubmit() {

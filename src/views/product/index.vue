@@ -209,7 +209,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`delete:${scope.$index}`"
-                :disabled="isProductOnSale(scope.row.state)"
+                :disabled="isProductCouldDelete(scope.row) === false"
                 icon="el-icon-delete"
                 divided
               >
@@ -563,6 +563,10 @@ export default {
       } else {
         return value === product_state_on_sale
       }
+    },
+    isProductCouldDelete(product) {
+      // MerchantId equals 2 means product is Aoyi, not allow delete
+      return product.merchantId !== 2 && !this.isProductOnSale(product.state)
     },
     handleFilter() {
       this.getListData()

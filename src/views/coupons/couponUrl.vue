@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-select v-model="displayType">
+    <el-select :disabled="readOnly" :value="displayType" @change="value => displayType = value">
       <el-option
         v-for="item in typeOptions"
         :key="item.value"
@@ -9,7 +9,7 @@
       />
     </el-select>
     <div v-if="displayType === 'aggregation'">
-      <el-button type="primary" size="mini" @click="dialogAggregationVisible = true">
+      <el-button :disabled="readOnly" type="primary" size="mini" @click="dialogAggregationVisible = true">
         选择聚合页
       </el-button>
       <aggregation-selection-dialog
@@ -19,10 +19,11 @@
       />
     </div>
     <div v-else-if="displayType === 'commodity'">
-      <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+      <el-button :disabled="readOnly" type="primary" size="mini" @click="dialogSelectionVisible = true">
         选择商品
       </el-button>
       <goods-selection-dialog
+        :preset-first-category="firstClassCategory"
         :dialog-visible="dialogSelectionVisible"
         @onSelectionCancelled="onGoodsSelectionCancelled"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
@@ -50,6 +51,10 @@ export default {
     readOnly: {
       type: Boolean,
       default: true
+    },
+    firstClassCategory: {
+      type: Number,
+      default: null
     }
   },
   data() {
@@ -59,7 +64,7 @@ export default {
         label: '聚合页'
       }, {
         value: 'commodity',
-        label: '特定商品'
+        label: '单一商品'
       }, {
         value: 'listing',
         label: '商品列表'

@@ -122,11 +122,11 @@
       </el-form-item>
       <el-form-item label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
-        <el-input v-else v-model="productForm.price" />
+        <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" />
       </el-form-item>
       <el-form-item label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
-        <el-input v-else v-model="productForm.sprice" />
+        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" />
       </el-form-item>
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
@@ -390,7 +390,7 @@ export default {
           required: true, validator: validateValue, trigger: 'blur'
         }],
         price: [{
-          required: true, validator: validateValue, trigger: 'blur'
+          required: true, validator: validateValue, trigger: 'change'
         }]
       }
     }
@@ -485,7 +485,11 @@ export default {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
-              this.productForm[key] = this.productInfo[key]
+              if (key !== 'price' || key !== 'sprice') {
+                this.productForm[key] = this.productInfo[key]
+              } else {
+                this.productForm[key] = Number.parseFloat(this.productInfo[key])
+              }
             }
           })
 

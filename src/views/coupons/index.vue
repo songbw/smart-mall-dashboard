@@ -88,12 +88,12 @@
           <el-tag>{{ scope.row.status | couponStatusFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="发布开始时间" align="center" width="180">
+      <el-table-column label="上线开始时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseStartDate | dateFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="发布结束时间" align="center" width="180">
+      <el-table-column label="上线结束时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseEndDate | dateFilter }}</span>
         </template>

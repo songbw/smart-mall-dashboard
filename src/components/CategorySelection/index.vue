@@ -3,6 +3,7 @@
     <el-form-item>
       <el-select
         :value="firstCategoryValue"
+        :disabled="firstSelectable === false"
         clearable
         placeholder="选择一级类别"
         @change="handleFirstCategoryChanged"
@@ -18,6 +19,7 @@
     <el-form-item>
       <el-select
         :value="secondCategoryValue"
+        :disabled="secondSelectable === false"
         clearable
         placeholder="选择二级类别"
         @change="handleSecondCategoryChanged"
@@ -33,6 +35,7 @@
     <el-form-item>
       <el-select
         :value="thirdCategoryValue"
+        :disabled="thirdSelectable === false"
         clearable
         placeholder="选择三级类别"
         @change="handleThirdCategoryChanged"
@@ -54,13 +57,25 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'CategorySelection',
   props: {
+    firstSelectable: {
+      type: Boolean,
+      default: true
+    },
     firstValue: {
       type: Number,
       default: null
     },
+    secondSelectable: {
+      type: Boolean,
+      default: true
+    },
     secondValue: {
       type: Number,
       default: null
+    },
+    thirdSelectable: {
+      type: Boolean,
+      default: true
     },
     thirdValue: {
       type: Number,

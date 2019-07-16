@@ -1,7 +1,23 @@
 <template>
-  <div class="app-container">
+  <div v-loading="dataLoading" class="app-container">
     <el-form ref="couponForm" :model="formData" :rules="viewOnly ? {} : formRules" label-width="120px">
       <el-divider content-position="left"><span class="divider-text">基础信息</span></el-divider>
+      <el-form-item label="优惠券供应商" prop="supplierMerchantId">
+        <span v-if="viewOnly">{{ formData.supplierMerchantName }}</span>
+        <el-select
+          v-else
+          :value="selectVendorId"
+          style="width: 50%"
+          @change="onMerchantChanged"
+        >
+          <el-option
+            v-for="item in vendorOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="优惠券名称" prop="name">
         <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
       </el-form-item>
@@ -12,7 +28,7 @@
         </div>
         <span v-else>{{ formData.rules.code }}</span>
       </el-form-item>
-      <el-form-item label="发布日期" required>
+      <el-form-item label="上线日期" required>
         <div style="display: flex; justify-content: start">
           <el-form-item prop="releaseStartDate">
             <el-date-picker
@@ -115,7 +131,13 @@
         </div>
       </el-form-item>
       <el-form-item label="优惠券类别" prop="category">
-        <el-select v-model="formData.category" clearable placeholder="选择类别" :disabled="viewOnly">
+        <el-select
+          :value="formData.category"
+          :disabled="viewOnly"
+          clearable
+          placeholder="选择类别"
+          @change="onCategoryChanged"
+        >
           <el-option
             v-for="item in categoryOptions"
             :key="item.categoryId"
@@ -138,7 +160,7 @@
         </span>
         <el-select
           v-if="!viewOnly && tagInputVisible"
-          v-model="tagSelected"
+          :value="tagSelected"
           placeholder="选择标签"
           class="input-new-select"
           @change="handleTagSelected"
@@ -165,7 +187,12 @@
         />
       </el-form-item>
       <el-form-item label="优惠券链接" class="form-item" prop="url">
-        <coupon-url :url="formData.url" :read-only="viewOnly" @urlChanged="handleCouponUrlChanged" />
+        <coupon-url
+          :url="formData.url"
+          :read-only="viewOnly"
+          :first-class-category="formData.category"
+          @urlChanged="handleCouponUrlChanged"
+        />
       </el-form-item>
       <el-form-item label="优惠券描述" prop="description" class="form-item">
         <el-input v-model="formData.description" type="textarea" resize="none" :rows="4" :readonly="viewOnly" />
@@ -280,6 +307,7 @@
         <coupon-goods
           key="include"
           :mpu-list="formData.rules.scenario.couponMpus"
+          :first-class-category="formData.category"
           :view-only="viewOnly"
           @contentAdd="handleAddCouponMpus"
           @contentDelete="handleDeleteCouponMpus"
@@ -302,6 +330,7 @@
             v-for="(category, index) in formData.rules.scenario.categories"
             :key="'category-' + index"
             :view-only="viewOnly"
+            :preset-first-category="formData.category"
             :category-value="category"
             :index="index"
             @categorySet="handleSetCategory"
@@ -319,6 +348,7 @@
           <coupon-goods
             key="exclude"
             :mpu-list="formData.rules.scenario.excludeMpus"
+            :first-class-category="formData.category"
             :view-only="viewOnly"
             @contentAdd="handleAddExcludeMpus"
             @contentDelete="handleDeleteExcludeMpus"
@@ -407,7 +437,8 @@ import {
   createCouponApi,
   updateCouponApi
 } from '@/api/coupons'
-
+import { getVendorListApi } from '@/api/vendor'
+import { vendor_status_approved } from '@/utils/constants'
 import {
   CouponAppScopes,
   CouponTypeOptions,
@@ -438,6 +469,9 @@ export default {
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
       scenarioOptions: CouponScenarioOptions,
+      selectVendorId: null,
+      vendorOptions: [],
+      dataLoading: false,
       createCoupon: false,
       viewOnly: true,
       couponDataLoaded: false,
@@ -453,6 +487,8 @@ export default {
       couponData: null,
       formData: {
         name: '',
+        supplierMerchantId: null,
+        supplierMerchantName: null,
         releaseStartDate: null,
         releaseEndDate: null,
         releaseTotal: 0,
@@ -497,6 +533,15 @@ export default {
         }
       },
       formRules: {
+        supplierMerchantId: [{
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择的优惠券供应商'))
+            } else {
+              callback()
+            }
+          }
+        }],
         name: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (isEmpty(value)) {
@@ -526,7 +571,12 @@ export default {
               callback(new Error('开始时间必须早于结束时间'))
             } else {
               if (value) {
-                callback()
+                const now = moment()
+                if (moment(value).isBefore(now)) {
+                  callback(new Error('开始时间必须晚于当前时间'))
+                } else {
+                  callback()
+                }
               } else {
                 callback(new Error('请选择发布的开始日期和时间'))
               }
@@ -557,7 +607,12 @@ export default {
               callback(new Error('开始时间必须早于结束时间'))
             } else {
               if (value) {
-                callback()
+                const now = moment()
+                if (moment(value).isBefore(now)) {
+                  callback(new Error('开始时间必须晚于当前时间'))
+                } else {
+                  callback()
+                }
               } else {
                 callback(new Error('请选择发布的开始日期和时间'))
               }
@@ -642,16 +697,41 @@ export default {
       }
       this.getCouponData()
     }
+    this.getVendorList()
     this.getCouponTags()
     this.getAllCategories()
   },
   methods: {
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 100,
+          status: vendor_status_approved
+        }
+        this.dataLoading = true
+        const data = await getVendorListApi(params)
+        this.vendorOptions = data.rows.map(row => {
+          return {
+            value: row.company.id.toString(),
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Coupon get vendor list error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+    },
     async getCouponTags() {
       try {
+        this.dataLoading = true
         const { data } = await getCouponTagsApi({ offset: 1, limit: 100 })
         this.couponTags = data.result.list
       } catch (e) {
         console.warn('getCouponTags: ' + e)
+      } finally {
+        this.dataLoading = false
       }
     },
     getCouponTagName(tagId) {
@@ -660,35 +740,38 @@ export default {
     },
     backupCouponData() {
       this.formData.name = this.couponData.name
+      if (this.couponData.supplierMerchantId !== null) {
+        this.selectVendorId = this.couponData.supplierMerchantId
+        this.couponData.supplierMerchantId = Number.parseInt(this.selectVendorId)
+        this.formData.supplierMerchantId = Number.parseInt(this.selectVendorId)
+      }
+      this.formData.supplierMerchantName = this.couponData.supplierMerchantName
       this.formData.releaseStartDate = this.couponData.releaseStartDate
       this.formData.releaseEndDate = this.couponData.releaseEndDate
       this.formData.releaseTotal = this.couponData.releaseTotal
       this.formData.effectiveStartDate = this.couponData.effectiveStartDate
       this.formData.effectiveEndDate = this.couponData.effectiveEndDate
-      if (!isEmpty(this.couponData.excludeDates)) {
-        this.couponData.excludeDates.forEach(date => {
-          const exclude = Object.assign({}, date)
-          this.formData.excludeDates.push(exclude)
-        })
-      }
+      this.formData.imageUrl = this.couponData.imageUrl
+      this.formData.url = this.couponData.url
+      this.formData.description = this.couponData.description
       this.formData.category = this.couponData.category
-      if (!isEmpty(this.couponData.tags)) {
-        this.couponData.tags.forEach(tag => this.formData.tags.push(tag))
+      if (Array.isArray(this.couponData.excludeDates)) {
+        const items = this.couponData.excludeDates.filter(date => !isEmpty(date))
+        this.couponData.excludeDates = items
+        this.formData.excludeDates = items
       }
-      if (this.couponData.imageUrl) {
-        this.formData.imageUrl = this.couponData.imageUrl
-      }
-      if (this.couponData.url) {
-        this.formData.url = this.couponData.url
-      }
-      if (this.couponData.description) {
-        this.formData.description = this.couponData.description
+      if (Array.isArray(this.couponData.tags)) {
+        const items = this.couponData.tags.filter(tag => !isEmpty(tag))
+        this.couponData.tags = items
+        this.formData.tags = items
       }
       this.formData.rules.code = this.couponData.rules.code
       this.formData.rules.perLimited = this.couponData.rules.perLimited
-      if (!isEmpty(this.couponData.rules.scopes)) {
-        this.couponData.rules.scopes.forEach(scope => this.formData.rules.scopes.push(scope))
-        this.handleCheckedScopesChange(this.couponData.rules.scopes)
+      if (Array.isArray(this.couponData.rules.scopes)) {
+        const items = this.couponData.rules.scopes.filter(scope => !isEmpty(scope))
+        this.couponData.rules.scopes = items
+        this.formData.rules.scopes = items
+        this.handleCheckedScopesChange(this.formData.rules.scopes)
       }
       this.formData.rules.couponRules.type = this.couponData.rules.couponRules.type
       if ('fullReduceCoupon' in this.couponData.rules.couponRules) {
@@ -710,24 +793,27 @@ export default {
       this.formData.rules.collect.type = this.couponData.rules.collect.type
       this.formData.rules.collect.points = this.couponData.rules.collect.points
       this.formData.rules.scenario.type = this.couponData.rules.scenario.type
-      if (!isEmpty(this.couponData.rules.scenario.couponMpus)) {
-        this.couponData.rules.scenario.couponMpus.forEach(sku =>
-          this.formData.rules.scenario.couponMpus.push(sku))
+      if (Array.isArray(this.couponData.rules.scenario.couponMpus)) {
+        const items = this.couponData.rules.scenario.couponMpus.filter(mpu => !isEmpty(mpu))
+        this.couponData.rules.scenario.couponMpus = items
+        this.formData.rules.scenario.couponMpus = items
       }
-      if (!isEmpty(this.couponData.rules.scenario.excludeMpus)) {
-        this.couponData.rules.scenario.excludeMpus.forEach(sku =>
-          this.formData.rules.scenario.excludeMpus.push(sku))
+      if (Array.isArray(this.couponData.rules.scenario.excludeMpus)) {
+        const items = this.couponData.rules.scenario.excludeMpus.filter(mpu => !isEmpty(mpu))
+        this.couponData.rules.scenario.excludeMpus = items
+        this.formData.rules.scenario.excludeMpus = items
       }
-      if (!isEmpty(this.couponData.categories)) {
-        this.couponData.rules.scenario.categories.forEach(category =>
-          this.formData.rules.scenario.categories.push(category))
+      if (Array.isArray(this.couponData.rules.scenario.categories)) {
+        const items = this.couponData.rules.scenario.categories.filter(category => !isEmpty(category))
+        const categories = items.map(category => Number.parseInt(category))
+        this.couponData.rules.scenario.categories = categories
+        this.formData.rules.scenario.categories = categories
       }
-      if (this.couponData.rules.rulesDescription) {
-        this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription
-      }
+      this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription
     },
     async getCouponData() {
       try {
+        this.dataLoading = true
         this.couponDataLoaded = false
         const { data } = await getCouponByIdApi({ id: this.couponId })
         this.couponData = data.result
@@ -739,14 +825,19 @@ export default {
         this.couponDataLoaded = true
       } catch (e) {
         console.warn('Get coupon error:' + e)
+      } finally {
+        this.dataLoading = false
       }
     },
     async getAllCategories() {
       if (this.categoriesLoaded === false && this.categoriesLoading === false) {
         try {
-          await this.$store.dispatch('categories/getAllData', { clearCache: false })
+          this.dataLoading = true
+          await this.$store.dispatch('categories/getAllData')
         } catch (e) {
           console.log(('Get Main Category failed: ' + e))
+        } finally {
+          this.dataLoading = false
         }
       }
     },
@@ -810,7 +901,7 @@ export default {
             break
           case 3: // 特定类别类
             data.rules.scenario.couponMpus = []
-            data.rules.scenario.categories = data.rules.scenario.categories.map(category => category !== -1)
+            data.rules.scenario.categories = data.rules.scenario.categories.filter(category => category !== -1)
             break
           case 4: // 特定服务类
             data.rules.scenario.couponMpus = []
@@ -840,8 +931,6 @@ export default {
     async handleCreateCoupon() {
       const params = {}
       merge(params, this.formData)
-      params.supplierMerchantId = 8001
-      params.supplierMerchantName = '凤巢科技'
       if (this.autoCode) {
         params.rules.code = ''
       }
@@ -959,8 +1048,8 @@ export default {
       this.formData.imageUrl = url
     },
     handleTagSelected(value) {
-      if (!includes(this.formData.tags, this.tagSelected)) {
-        this.formData.tags.push(this.tagSelected)
+      if (!includes(this.formData.tags, value)) {
+        this.formData.tags.push(value)
       }
       this.tagSelected = null
       this.tagInputVisible = false
@@ -969,8 +1058,25 @@ export default {
       this.formData.url = data.url
       if (data.url.startsWith('route://commodity')) {
         const mpu = data.url.substring('route://commodity/'.length)
-        this.formData.rules.scenario.type = 1
-        this.formData.rules.scenario.couponMpus = [mpu]
+        if (!isEmpty(mpu)) {
+          this.formData.rules.scenario.type = 1
+          this.formData.rules.scenario.couponMpus = [mpu]
+        }
+      }
+    },
+    onMerchantChanged(value) {
+      this.selectVendorId = value
+      this.formData.supplierMerchantId = isEmpty(value) ? null : Number.parseInt(value)
+      this.formData.supplierMerchantName =
+        isEmpty(value) ? null : this.vendorOptions.find(vendor => vendor.value === value).label
+    },
+    onCategoryChanged(value) {
+      const id = Number.parseInt(value)
+      if (Number.isNaN(id)) {
+        this.formData.category = null
+      } else {
+        this.formData.category = id
+        this.formData.rules.scenario.categories = []
       }
     }
   }

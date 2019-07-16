@@ -114,7 +114,15 @@ export default {
             this.$router.push({ path: '/' })
           } catch (e) {
             console.warn('User Login:' + e)
-            this.$message.warning('用户名或密码错误，请确认后重试！')
+            let msg = '用户名或密码错误，请确认后重试！'
+            const res = e.response
+            if (res && res.data) {
+              const data = res.data
+              if (data.error === 400002) {
+                msg = '此用户名未注册，请确认后重试！'
+              }
+            }
+            this.$message.warning(msg)
           } finally {
             this.loading = false
           }

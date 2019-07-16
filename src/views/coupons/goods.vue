@@ -86,6 +86,7 @@
     />
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
+      :preset-first-category="firstClassCategory"
       @onSelectionCancelled="onGoodsSelectionCancelled"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
@@ -121,6 +122,10 @@ export default {
     viewOnly: {
       type: Boolean,
       default: true
+    },
+    firstClassCategory: {
+      type: Number,
+      default: null
     }
   },
   data() {

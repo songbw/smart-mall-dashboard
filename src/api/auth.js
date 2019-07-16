@@ -27,7 +27,7 @@ export function registerApi(data) {
 export function passwordNewApi(data) {
   return Vue.axios('auth').request({
     url: '/vendors/vendors/password',
-    method: 'post',
+    method: 'put',
     data
   })
 }
