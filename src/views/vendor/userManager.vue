@@ -33,7 +33,7 @@
       </el-table-column>
       <el-table-column label="电话号码" align="center" width="120">
         <template slot-scope="scope">
-          <el-tag>{{ scope.row.phone }}</el-tag>
+          <span>{{ scope.row.phone }}</span>
         </template>
       </el-table-column>
       <el-table-column label="用户角色" align="center" width="100">

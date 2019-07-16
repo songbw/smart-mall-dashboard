@@ -182,13 +182,13 @@ export default {
       get() {
         switch (this.targetType) {
           case 'aggregation':
-            if (this.targetUrl.indexOf('aggregation') >= 0) {
+            if (this.targetUrl && this.targetUrl.indexOf('aggregation') >= 0) {
               const id = this.targetUrl.substring('aggregation://'.length)
               return process.env.VUE_APP_MALL_URL + '/index/' + id
             }
             break
           case 'promotion':
-            if (this.targetUrl.indexOf('promotion') >= 0) {
+            if (this.targetUrl && this.targetUrl.indexOf('promotion') >= 0) {
               const id = this.targetUrl.substring('route://promotion/'.length)
               return process.env.VUE_APP_MALL_URL + '/category/goods/promotion/' + id
             }
