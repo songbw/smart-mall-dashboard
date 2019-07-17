@@ -51,6 +51,7 @@
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
+          <span style="font-size: 12px;margin-left: 10px">用户可查看和领取的日期区间</span>
         </div>
       </el-form-item>
       <el-form-item label="发放总数" required>
@@ -80,10 +81,12 @@
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
+          <span style="font-size: 12px;margin-left: 10px">用户可使用的日期区间</span>
         </div>
       </el-form-item>
       <el-form-item label="排除日期">
         <div>
+          为有效期间的排除日期，禁止用户使用，最多支持5个区间
           <div
             v-for="(exclude, index) in formData.excludeDates"
             :key="`exclude-${index}`"
@@ -120,14 +123,17 @@
               删除
             </el-button>
           </div>
-          <el-button
-            v-if="!viewOnly"
-            type="primary"
-            icon="el-icon-edit"
-            @click="handleAddExcludeDate"
-          >
-            添加
-          </el-button>
+          <div>
+            <el-button
+              v-if="!viewOnly"
+              :disabled="formData.excludeDates.length >= 5"
+              type="primary"
+              icon="el-icon-edit"
+              @click="handleAddExcludeDate"
+            >
+              添加
+            </el-button>
+          </div>
         </div>
       </el-form-item>
       <el-form-item label="优惠券类别" prop="category">
@@ -180,10 +186,10 @@
       <el-form-item label="优惠券图片">
         <image-upload
           path-name="coupons"
-          image-width="300px"
+          image-width="200px"
           :image-url="formData.imageUrl"
           :view-only="viewOnly"
-          @urlChanged="handleImageUrlChanged"
+          @success="handleImageUrlChanged"
         />
       </el-form-item>
       <el-form-item label="优惠券链接" class="form-item" prop="url">
@@ -200,7 +206,7 @@
       <el-divider content-position="left"><span class="divider-text">规则设置</span></el-divider>
       <el-form-item label="每人限领数量" required>
         <span v-if="viewOnly">{{ formData.rules.perLimited }}</span>
-        <el-input-number v-else v-model="formData.rules.perLimited" :min="0" :max="1000000" />
+        <el-input-number v-else v-model="formData.rules.perLimited" :min="1" :max="1000000" />
       </el-form-item>
       <el-form-item label="推广区域">
         <div v-if="viewOnly">
@@ -241,12 +247,17 @@
           <span style="margin-right: 10px">满</span>
           <el-form-item>
             <span v-if="viewOnly">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>
-            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice" :min="0" />
+            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice" :min="1" />
           </el-form-item>
           <span style="margin: 0 10px">元 减</span>
           <el-form-item>
             <span v-if="viewOnly">{{ formData.rules.couponRules.fullReduceCoupon.reducePrice }}</span>
-            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.reducePrice" :min="0" />
+            <el-input-number
+              v-else
+              v-model="formData.rules.couponRules.fullReduceCoupon.reducePrice"
+              :min="1"
+              :max="formData.rules.couponRules.fullReduceCoupon.fullPrice"
+            />
           </el-form-item>
           <span style="margin: 0 10px">元</span>
         </div>
@@ -610,6 +621,9 @@ export default {
                 const now = moment()
                 if (moment(value).isBefore(now)) {
                   callback(new Error('开始时间必须晚于当前时间'))
+                } else if (this.formData.releaseStartDate &&
+                  moment(value).isBefore(this.formData.releaseStartDate)) {
+                  callback(new Error('有效开始时间必须晚于上线开始时间'))
                 } else {
                   callback()
                 }
@@ -757,20 +771,22 @@ export default {
       this.formData.category = this.couponData.category
       if (Array.isArray(this.couponData.excludeDates)) {
         const items = this.couponData.excludeDates.filter(date => !isEmpty(date))
-        this.couponData.excludeDates = items
-        this.formData.excludeDates = items
+        this.couponData.excludeDates = [...items]
+        this.formData.excludeDates = [...items]
       }
       if (Array.isArray(this.couponData.tags)) {
-        const items = this.couponData.tags.filter(tag => !isEmpty(tag))
-        this.couponData.tags = items
-        this.formData.tags = items
+        const items = this.couponData.tags.filter(tag => Number.isSafeInteger(tag))
+        this.couponData.tags = [...items]
+        this.formData.tags = [...items]
+      } else {
+        this.couponData.tags = []
       }
       this.formData.rules.code = this.couponData.rules.code
       this.formData.rules.perLimited = this.couponData.rules.perLimited
       if (Array.isArray(this.couponData.rules.scopes)) {
         const items = this.couponData.rules.scopes.filter(scope => !isEmpty(scope))
-        this.couponData.rules.scopes = items
-        this.formData.rules.scopes = items
+        this.couponData.rules.scopes = [...items]
+        this.formData.rules.scopes = [...items]
         this.handleCheckedScopesChange(this.formData.rules.scopes)
       }
       this.formData.rules.couponRules.type = this.couponData.rules.couponRules.type
@@ -795,19 +811,19 @@ export default {
       this.formData.rules.scenario.type = this.couponData.rules.scenario.type
       if (Array.isArray(this.couponData.rules.scenario.couponMpus)) {
         const items = this.couponData.rules.scenario.couponMpus.filter(mpu => !isEmpty(mpu))
-        this.couponData.rules.scenario.couponMpus = items
-        this.formData.rules.scenario.couponMpus = items
+        this.couponData.rules.scenario.couponMpus = [...items]
+        this.formData.rules.scenario.couponMpus = [...items]
       }
       if (Array.isArray(this.couponData.rules.scenario.excludeMpus)) {
         const items = this.couponData.rules.scenario.excludeMpus.filter(mpu => !isEmpty(mpu))
-        this.couponData.rules.scenario.excludeMpus = items
-        this.formData.rules.scenario.excludeMpus = items
+        this.couponData.rules.scenario.excludeMpus = [...items]
+        this.formData.rules.scenario.excludeMpus = [...items]
       }
       if (Array.isArray(this.couponData.rules.scenario.categories)) {
         const items = this.couponData.rules.scenario.categories.filter(category => !isEmpty(category))
         const categories = items.map(category => Number.parseInt(category))
-        this.couponData.rules.scenario.categories = categories
-        this.formData.rules.scenario.categories = categories
+        this.couponData.rules.scenario.categories = [...categories]
+        this.formData.rules.scenario.categories = [...categories]
       }
       this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription
     },
@@ -976,10 +992,13 @@ export default {
         this.reviseCouponStatus(diff)
         this.reviseScenarioRules(diff)
         try {
+          this.inSubmitting = true
           await updateCouponApi(diff)
           this.$router.go(-1)
         } catch (e) {
           console.warn('Update coupon:' + e)
+        } finally {
+          this.inSubmitting = false
         }
       }
     },

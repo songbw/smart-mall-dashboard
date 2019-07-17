@@ -108,7 +108,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
-                :disabled="scope.row.status === 3"
+                :disabled="scope.row.status !== 1"
                 icon="el-icon-edit"
               >
                 修改活动

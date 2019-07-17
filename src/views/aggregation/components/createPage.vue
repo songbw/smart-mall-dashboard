@@ -15,15 +15,6 @@
       <el-form-item label="主页设置" prop="homePage">
         <el-switch v-model="homePage" />
       </el-form-item>
-      <el-form-item label="生效日期" prop="effectiveDate">
-        <el-date-picker
-          v-model="pageDate"
-          placeholder="选择日期"
-          type="date"
-          format="yyyy/MM/dd"
-          value-format="yyyy-MM-dd"
-        />
-      </el-form-item>
       <el-form-item label="背景色" prop="backgroundColor">
         <el-color-picker v-model="pageColor" />
         <el-tag>{{ pageColor }}</el-tag>
@@ -74,6 +65,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import {
   searchAggregationsApi
@@ -91,7 +83,6 @@ export default {
       pageForm: {
         name: null,
         homePage: null,
-        effectiveDate: null,
         backgroundColor: null,
         header: null,
         groupId: null
@@ -103,15 +94,6 @@ export default {
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (isEmpty(this.pageName)) {
               callback(new Error('请输入有效的名称'))
-            } else {
-              callback()
-            }
-          }
-        }],
-        effectiveDate: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (isEmpty(this.pageDate)) {
-              callback(new Error('请选择生效日期'))
             } else {
               callback()
             }
@@ -232,7 +214,9 @@ export default {
   methods: {
     createPage() {
       this.creatingPage = true
+      const now = moment().format('YYYY-MM-DD')
       const params = {}
+      params.effectiveDate = now
       Object.keys(this.pageForm).forEach(key => {
         params[key] = this.pageInfo[key]
       })
@@ -243,7 +227,7 @@ export default {
         }
         params.header = JSON.stringify(header)
       }
-
+      console.debug(JSON.stringify(params))
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.$emit('createPage', id)
       }).catch(err => {

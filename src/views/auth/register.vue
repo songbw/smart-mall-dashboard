@@ -213,17 +213,11 @@ export default {
         if (status >= 400) {
           const data = error.response.data
           const errno = Number.parseInt(data.error)
-          switch (errno) {
-            case 400001:
-            case 400002:
-            case 400003:
-              msg = data.message + '，请确认后重试'
-              break
-            default:
-              break
+          if (Number.isNaN(errno)) {
+            msg = data.message + '，请确认后重试！'
           }
         } else if (status >= 500) {
-          msg = '广告服务平台出现问题，请联系管理员!'
+          msg = '广告服务平台出现问题，请联系管理员！'
         }
       }
       return msg
@@ -234,7 +228,7 @@ export default {
         this.$message({ message: '恭喜你，注册成功！请登录完善信息。', type: 'success' })
         this.gotoLogin()
       }).catch((error) => {
-        const msg = this.getErrorMessage(error) || '注册失败，请检查填写内容'
+        const msg = this.getErrorMessage(error) || '注册失败，请检查填写内容！'
         this.$message({
           message: msg,
           type: 'error'

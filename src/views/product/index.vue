@@ -37,7 +37,7 @@
         </el-form-item>
       </el-form>
       <el-form :inline="true">
-        <el-form-item label="商品品牌">
+        <el-form-item label="商品类别">
           <category-selection
             :first-value="firstCategoryValue"
             :second-value="secondCategoryValue"
@@ -452,13 +452,6 @@ export default {
         }
       }
     },
-    isFilterChanged() {
-      return this.listQuery !== this.searchParams.query ||
-        this.listSkuId !== this.searchParams.skuid ||
-        this.listBrand !== this.searchParams.brand ||
-        this.listVendor !== this.searchParams.vendorId ||
-        this.thirdCategoryValue !== this.searchParams.categoryID
-    },
     resetSearchParams() {
       this.searchParams.query = ''
       this.searchParams.skuid = ''
@@ -468,9 +461,6 @@ export default {
     },
     async getListData() {
       if (this.vendorApproved) {
-        if (this.isFilterChanged()) {
-          this.listOffset = 1
-        }
         this.resetSearchParams()
         const params = this.getFilterParams()
         if (params) {
@@ -569,6 +559,16 @@ export default {
       return product.merchantId !== 2 && !this.isProductOnSale(product.state)
     },
     handleFilter() {
+      if (this.firstCategoryValue != null) {
+        if (this.secondCategoryValue === null) {
+          this.$message.warning('请选择商品二级类别！')
+          return
+        } else if (this.thirdCategoryValue === null) {
+          this.$message.warning('请选择商品三级类别！')
+          return
+        }
+      }
+      this.listOffset = 1
       this.getListData()
     },
     handleCreateProduct() {

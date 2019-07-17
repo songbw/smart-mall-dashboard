@@ -67,10 +67,10 @@
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="子订单编号" align="center" width="100">
+      <el-table-column label="子订单编号" align="center" width="200">
         <template slot-scope="scope">
           <el-link :href="'#/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
-            {{ scope.row.subOrderId.substring(scope.row.subOrderId.length - 3) }}
+            {{ scope.row.subOrderId }}
           </el-link>
         </template>
       </el-table-column>

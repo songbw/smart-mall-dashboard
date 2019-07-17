@@ -103,7 +103,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="生效时间" align="center" width="150px">
+        <el-table-column label="创建日期" align="center" width="150px">
           <template slot-scope="scope">
             <span>{{ scope.row.effectiveDate | dateFilter }}</span>
           </template>
@@ -336,12 +336,12 @@ export default {
     },
     async queryAllData() {
       this.listLoading = true
-      const params = {
-        offset: this.listQuery.offset,
-        limit: this.listQuery.limit,
-        order: this.listQuery.order
-      }
       try {
+        const params = {
+          offset: this.listQuery.offset,
+          limit: this.listQuery.limit,
+          order: this.listQuery.order
+        }
         const { data } = await getAggregationsApi(params)
         this.aggregationList = data.result.list
         this.aggregationTotal = data.result.total

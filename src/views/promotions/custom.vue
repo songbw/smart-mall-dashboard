@@ -9,7 +9,7 @@
       <el-input v-model="promotionName" />
     </el-form-item>
     <el-form-item label="活动标签" required>
-      <el-select v-model="promotionTagValue">
+      <el-select :value="promotionTagValue" @change="value => promotionTagValue = value">
         <el-option
           v-for="item in promotionOptions"
           :key="item.value"
@@ -169,11 +169,16 @@ export default {
         this.$message({ message: '请选择有效的开始时间！', type: 'error' })
         return -1
       }
+      const startDate = Date.parse(this.promotionStartDate)
+      const now = Date.now()
+      if (now > startDate) {
+        this.$message({ message: '开始时间必须晚于当前时间！', type: 'error' })
+        return -1
+      }
       if (this.promotionEndDate === null || this.promotionEndDate.trim().length === 0) {
         this.$message({ message: '请选择有效的结束时间！', type: 'error' })
         return -1
       }
-      const startDate = Date.parse(this.promotionStartDate)
       const endDate = Date.parse(this.promotionEndDate)
       if (endDate <= startDate) {
         this.$message({ message: '请选择有效的结束时间！结束时间必须晚于开始时间！', type: 'error' })
