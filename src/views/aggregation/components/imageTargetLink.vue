@@ -38,10 +38,17 @@
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
     </div>
+    <div v-else-if="displayType === 'external'">
+      <el-form v-model="externalData" :rules="externalRules">
+        <el-form-item prop="url">
+          <el-input v-model="displayUrl" placeholder="请输入外部链接地址" clearable />
+        </el-form-item>
+      </el-form>
+    </div>
     <div v-if="displayName" style="margin-left: 10px">
       <el-button type="text" @click="dialogPreviewVisible = true">{{ displayName }}</el-button>
     </div>
-    <preivew-dialog
+    <preview-dialog
       v-if="qrCodeValue"
       :qr-code="qrCodeValue"
       :dialog-visible="dialogPreviewVisible"
@@ -54,11 +61,12 @@
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
 import PromotionSelection from './promotionSelection'
-import PreivewDialog from './previewDialog'
+import PreviewDialog from './previewDialog'
+import { validateURL } from '@/utils/validate'
 
 export default {
   name: 'ImageTargetLink',
-  components: { GoodsSelectionDialog, AggregationSelectionDialog, PromotionSelection, PreivewDialog },
+  components: { GoodsSelectionDialog, AggregationSelectionDialog, PromotionSelection, PreviewDialog },
   props: {
     targetIndex: {
       type: Number,
@@ -82,6 +90,13 @@ export default {
     }
   },
   data() {
+    const validateUrl = (rule, value, callback) => {
+      if (this.displayType === 'external' && validateURL(this.displayUrl)) {
+        callback()
+      } else {
+        callback(new Error('请输入有效的链接地址'))
+      }
+    }
     return {
       typeOptions: [{
         value: 'blank',
@@ -101,6 +116,9 @@ export default {
       }, {
         value: 'coupon',
         label: '领券中心'
+      }, {
+        value: 'external',
+        label: '外部链接'
       }],
       dialogAggregationVisible: false,
       dialogSelectionVisible: false,
@@ -111,6 +129,12 @@ export default {
         type: this.targetType,
         name: this.targetName,
         url: this.targetUrl
+      },
+      externalData: {
+        url: ''
+      },
+      externalRules: {
+        url: [{ validator: validateUrl, trigger: 'change' }]
       }
     }
   },
@@ -134,6 +158,9 @@ export default {
         } else if (value === 'blank') {
           newTarget.name = '无链接'
           newTarget.url = 'about:blank'
+        } else if (value === 'external') {
+          newTarget.name = '外部链接'
+          newTarget.url = ''
         } else if (value === this.originalProp.type) {
           newTarget.name = this.originalProp.name
           newTarget.url = this.originalProp.url
