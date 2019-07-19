@@ -4,6 +4,7 @@ import './plugins/element-ui'
 import './plugins/localforage'
 import './plugins/axios'
 import './plugins/qriously'
+import './plugins/v-charts'
 
 import App from './App'
 import store from './store'
