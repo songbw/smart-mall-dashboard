@@ -30,7 +30,7 @@
       highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="60">
         <template slot-scope="scope">
           <span>{{ scope.row.company.id }}</span>
         </template>
@@ -50,14 +50,14 @@
           <span>{{ scope.row.company.updateTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="240">
+      <el-table-column label="操作" align="center" width="280">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleViewVendor(scope.$index)">
             查看
           </el-button>
           <el-button
             :disabled="scope.row.company.status !== statusReviewing"
-            type="warning"
+            type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
           >
@@ -65,11 +65,14 @@
           </el-button>
           <el-button
             :disabled="scope.row.company.status !== statusReviewing"
-            type="danger"
+            type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
           >
             拒绝
+          </el-button>
+          <el-button type="danger" size="mini" @click="handleDeleteVendor(scope.$index)">
+            删除
           </el-button>
         </template>
       </el-table-column>
@@ -97,6 +100,7 @@ import Pagination from '@/components/Pagination'
 import VendorDetail from './detail'
 import {
   getVendorListApi,
+  deleteVendorApi,
   reviewVendorProfileApi
 } from '@/api/vendor'
 import {
@@ -221,6 +225,20 @@ export default {
         this.getVendorData()
       } catch (_) {
         this.$message.warning('更新企业信息失败，请稍后重试！')
+      }
+    },
+    async handleDeleteVendor(index) {
+      try {
+        const name = this.vendorData[index].company.name
+        await this.$confirm(`删除公司：${name}，此公司将需要重新申请审核, 是否继续?`, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        await deleteVendorApi({ id: this.vendorData[index].company.id })
+        this.getVendorData()
+      } catch (e) {
+        console.warn('Vendor manager delete:' + e)
       }
     },
     onQueryStatusChanged(value) {

@@ -466,6 +466,9 @@ export default {
       }).then(() => {
         this.listLoading = true
         deleteAggregationApi({ id: this.aggregationList[index].id }).then(() => {
+          if (this.aggregationList.length === 1 && this.queryOffset > 1) {
+            this.queryOffset = this.queryOffset - 1
+          }
           this.getListData()
         }).catch(error => {
           this.listLoading = false

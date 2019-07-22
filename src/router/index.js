@@ -260,7 +260,8 @@ export const constantRoutes = [
         path: 'returnAddress',
         name: 'ReturnAddress',
         component: () => import('@/views/workorders/returnAddress'),
-        meta: { title: '退换货地址', icon: 'return-address' }
+        meta: { title: '退换货地址', icon: 'return-address' },
+        hidden: true
       }
     ]
   },
@@ -319,7 +320,7 @@ export const constantRoutes = [
 ]
 
 const createRouter = () => new Router({
-  // mode: 'history', // require service support
+  mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })

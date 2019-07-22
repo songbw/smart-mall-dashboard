@@ -132,6 +132,9 @@ export default {
           type: 'warning'
         })
         await deleteCouponTagApi({ id: row.id })
+        if (this.couponTags.length === 1 && this.queryOffset > 1) {
+          this.queryOffset = this.queryOffset - 1
+        }
         this.getCouponTags()
       } catch (e) {
         console.warn('CouponTag: delete ' + e)

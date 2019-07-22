@@ -31,7 +31,7 @@
           </el-table-column>
           <el-table-column label="商品SKU" align="center" width="120">
             <template slot-scope="scope">
-              <el-link :href="'#/goods/viewProduct/' + scope.row.mpu" type="primary">
+              <el-link :href="'/goods/viewProduct/' + scope.row.mpu" type="primary">
                 {{ scope.row.skuId }}
               </el-link>
             </template>

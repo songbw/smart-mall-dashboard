@@ -1,3 +1,6 @@
+import isString from 'lodash/isString'
+import trim from 'lodash/trim'
+
 const state = {
   search: {
     pageIndex: 1,
@@ -7,7 +10,8 @@ const state = {
     mobile: '',
     payDateStart: null,
     payDateEnd: null,
-    status: null
+    status: -2,
+    merchantId: -1
   }
 }
 
@@ -15,7 +19,11 @@ const mutations = {
   SET_SEARCH_DATA: (state, params) => {
     Object.keys(state.search).forEach(key => {
       if (key in params) {
-        state.search[key] = params[key]
+        if (isString(params[key])) {
+          state.search[key] = trim(params[key])
+        } else {
+          state.search[key] = params[key]
+        }
       }
     })
   }

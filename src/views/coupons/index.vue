@@ -406,6 +406,9 @@ export default {
           center: true
         })
         await deleteCouponApi({ id: this.couponData[index].id })
+        if (this.couponData.length === 1 && this.queryOffset > 1) {
+          this.queryOffset = this.queryOffset - 1
+        }
         this.getCouponData()
       } catch (e) {
         console.warn('Delete coupon:' + e)

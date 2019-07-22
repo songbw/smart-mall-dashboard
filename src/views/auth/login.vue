@@ -23,10 +23,15 @@
           @keyup.enter.native="handleLogin"
         >
           <el-form-item label="用户名" prop="username">
-            <el-input v-model="loginForm.username" placeholder="请输入用户名" />
+            <el-input v-model="loginName" placeholder="请输入用户名" />
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <el-input v-model="loginForm.password" placeholder="请输入密码" show-password />
+            <el-input
+              v-model="loginPassword"
+              placeholder="请输入密码"
+              type="password"
+              show-password
+            />
           </el-form-item>
           <el-form-item>
             <el-button
@@ -57,6 +62,7 @@
 <script>
 import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
+import trim from 'lodash/trim'
 import {
   role_admin_name,
   storage_merchant_id,
@@ -77,7 +83,11 @@ export default {
       if (isEmpty(value) || value.length < 6) {
         callback(new Error('请输入不小于6位密码'))
       } else {
-        callback()
+        if (value === this.loginForm.username) {
+          callback(new Error('请输入与用户名不一致的密码'))
+        } else {
+          callback()
+        }
       }
     }
     return {
@@ -89,6 +99,32 @@ export default {
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+      }
+    }
+  },
+  computed: {
+    loginName: {
+      get() {
+        return this.loginForm.username
+      },
+      set(value) {
+        if (value === null) {
+          this.loginForm.username = ''
+        } else {
+          this.loginForm.username = trim(value)
+        }
+      }
+    },
+    loginPassword: {
+      get() {
+        return this.loginForm.password
+      },
+      set(value) {
+        if (value === null) {
+          this.loginForm.password = ''
+        } else {
+          this.loginForm.password = trim(value)
+        }
       }
     }
   },

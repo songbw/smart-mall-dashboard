@@ -70,7 +70,7 @@
         />
         <el-table-column label="商品SKU" align="center" width="150">
           <template slot-scope="scope">
-            <el-link :href="'#/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+            <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
               {{ scope.row.skuid }}
             </el-link>
           </template>

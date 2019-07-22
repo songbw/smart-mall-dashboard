@@ -3,7 +3,7 @@
     <el-form inline>
       <el-form-item>
         <el-input
-          v-model="listQuery.query"
+          v-model="queryName"
           placeholder="输入品牌名"
           style="max-width: 400px;"
           class="filter-item"
@@ -104,6 +104,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import ImageUpload from '@/components/ImageUpload'
 import {
@@ -134,7 +135,7 @@ export default {
       listQuery: {
         offset: 1,
         limit: 20,
-        query: null
+        query: ''
       },
       listLoading: false,
       brandTotal: 0,
@@ -152,6 +153,14 @@ export default {
     }),
     noEditPermission() {
       return !this.isAdminUser
+    },
+    queryName: {
+      get() {
+        return this.listQuery.query
+      },
+      set(value) {
+        this.listQuery.query = trim(value)
+      }
     }
   },
   created() {

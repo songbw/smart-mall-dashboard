@@ -13,13 +13,25 @@
         <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
       </el-form-item>
       <el-form-item label="订单状态">
-        <el-select v-model="queryStatus">
+        <el-select :value="queryStatus" @change="onQueryStatusChanged">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
           />
+        </el-select>
+      </el-form-item>
+      <el-form-item v-if="isAdminUser" label="供应商名">
+        <el-select :value="queryVendor" @change="onQueryVendorChanged">
+          <el-option
+            v-for="item in vendorOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+            <span>{{ item.label }}</span>
+          </el-option>
         </el-select>
       </el-form-item>
     </el-form>
@@ -44,6 +56,9 @@
         <el-button type="primary" icon="el-icon-search" @click="getOrderList">
           搜索
         </el-button>
+        <el-button type="success" icon="el-icon-download" @click="handleExportOrders">
+          导出全部订单
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -55,21 +70,16 @@
       style="width: 100%;"
       @selection-change="handleSelectionChange"
     >
-      <el-table-column
-        type="selection"
-        align="center"
-        width="55"
-      />
       <el-table-column label="主订单编号" align="center" width="100">
         <template slot-scope="scope">
-          <el-link :href="'#/orders/viewMainOrder/' + scope.row.id" type="primary">
+          <el-link :href="'/orders/viewMainOrder/' + scope.row.id" type="primary">
             {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
           </el-link>
         </template>
       </el-table-column>
       <el-table-column label="子订单编号" align="center" width="200">
         <template slot-scope="scope">
-          <el-link :href="'#/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
+          <el-link :href="'/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
             {{ scope.row.subOrderId }}
           </el-link>
         </template>
@@ -155,7 +165,10 @@ import {
   getOrderListApi,
   updateOrderRemarkApi
 } from '@/api/orders'
-import { OrderStatusDefinitions } from '@/utils/constants'
+import {
+  getVendorListApi
+} from '@/api/vendor'
+import { OrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
 
 export default {
   name: 'Orders',
@@ -177,6 +190,7 @@ export default {
         value: -2,
         label: '全部'
       }].concat(OrderStatusDefinitions),
+      vendors: [],
       listLoading: false,
       orderData: [],
       orderTotal: 0,
@@ -185,9 +199,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      isAdminUser: 'isAdminUser',
       vendorApproved: 'vendorApproved',
       orderQuery: 'orderQuery'
     }),
+    vendorOptions() {
+      return [{ value: -1, label: '全部' }].concat(this.vendors)
+    },
     queryTradeNo: {
       get() {
         return this.orderQuery.tradeNo
@@ -218,6 +236,14 @@ export default {
       },
       set(value) {
         this.$store.commit('orders/SET_SEARCH_DATA', { status: value })
+      }
+    },
+    queryVendor: {
+      get() {
+        return this.orderQuery.merchantId
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { merchantId: value })
       }
     },
     queryStartDate: {
@@ -257,6 +283,27 @@ export default {
     this.getOrderList()
   },
   methods: {
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 100,
+          status: vendor_status_approved
+        }
+        this.listLoading = true
+        const data = await getVendorListApi(params)
+        this.vendors = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Orders get vendor list error:' + e)
+      } finally {
+        this.listLoading = false
+      }
+    },
     getSearchParams() {
       const params = {
         pageIndex: this.queryOffset,
@@ -276,6 +323,9 @@ export default {
     async getOrderList() {
       try {
         if (this.vendorApproved) {
+          if (this.vendors.length === 0) {
+            await this.getVendorList()
+          }
           this.listLoading = true
           const params = this.getSearchParams()
           const { data } = await getOrderListApi(params)
@@ -311,6 +361,30 @@ export default {
       }).catch(_ => {
         console.debug('Update order remark cancelled')
       })
+    },
+    onQueryStatusChanged(value) {
+      this.queryStatus = value
+    },
+    onQueryVendorChanged(value) {
+      this.queryVendor = value
+    },
+    handleExportOrders() {
+      if (this.queryStartDate === null || this.queryEndDate === null) {
+        this.$message.warning('请先选择导出订单的时间段！')
+        return
+      }
+      const startDate = moment(this.queryStartDate, 'YYYY-MM-DD')
+      const endDate = moment(this.queryEndDate, 'YYYY-MM-DD')
+      if (startDate.isAfter(endDate)) {
+        this.$message.warning('导出订单的开始时间必须早于结束时间！')
+        return
+      }
+      endDate.subtract(1, 'months')
+      if (endDate.isAfter(startDate)) {
+        this.$message.warning('导出订单的时间段不能大于一个自然月！')
+        return
+      }
+      console.debug(`Start export from ${startDate.format()} to ${endDate.format()}`)
     }
   }
 }

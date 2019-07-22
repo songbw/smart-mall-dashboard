@@ -175,6 +175,7 @@
 <script>
 import isEmpty from 'lodash/isEmpty'
 import sortBy from 'lodash/sortBy'
+import trim from 'lodash/trim'
 import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 
@@ -225,7 +226,7 @@ export default {
         categoryIcon: null,
         isShow: null
       },
-      filterName: null,
+      searchName: null,
       columnProps: {
         label: 'categoryName',
         children: 'subs'
@@ -253,6 +254,14 @@ export default {
     }),
     noEditPermission() {
       return !this.isAdminUser
+    },
+    filterName: {
+      get() {
+        return this.searchName
+      },
+      set(value) {
+        this.searchName = trim(value)
+      }
     },
     topCategoriesData() {
       if (this.categoriesLoaded) {

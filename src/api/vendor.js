@@ -50,10 +50,27 @@ export function reviewVendorProfileApi(params) {
   })
 }
 
+export function deleteVendorApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/companies/${params.id}`,
+    method: 'delete'
+  })
+}
+
 export function getVendorUserListApi(params) {
   return Vue.axios('vendor').request({
     url: '/vendors/users/list',
     method: 'get',
     params
+  })
+}
+
+export function setUserVendorApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users/company`,
+    method: 'put',
+    data: {
+      ...params
+    }
   })
 }

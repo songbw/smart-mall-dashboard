@@ -24,7 +24,7 @@
           <el-input v-model="listBrand" placeholder="输入品牌关键字" clearable />
         </el-form-item>
         <el-form-item label="供应商名">
-          <el-select :value="listVendor" clearable @change="handleVendorChanged">
+          <el-select :value="listVendor" @change="handleVendorChanged">
             <el-option
               v-for="item in vendorOptions"
               :key="item.value"
@@ -110,7 +110,7 @@
       />
       <el-table-column label="商品SKU" align="center" width="100">
         <template slot-scope="scope">
-          <el-link :href="'#/goods/showProduct/' + scope.row.id" type="primary">
+          <el-link :href="'/goods/showProduct/' + scope.row.id" type="primary">
             {{ scope.row.skuid }}
           </el-link>
         </template>
@@ -648,6 +648,9 @@ export default {
           }
           await deleteProductApi(params)
           this.$message({ message: '产品删除成功！', type: 'success' })
+          if (this.productsData.length === 1 && this.listOffset > 1) {
+            this.listOffset = this.listOffset - 1
+          }
           that.getListData()
         } catch (e) {
           console.warn(`Delete product error: ${e}`)

@@ -25,13 +25,13 @@
         >
           <el-form-item label="用户名" prop="username">
             <el-input
-              v-model="registerForm.username"
+              v-model="regUsername"
               placeholder="请输入用户名"
             />
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input
-              v-model="registerForm.password"
+              v-model="regPassword"
               placeholder="请输入密码"
               show-password
             />
@@ -91,6 +91,7 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
+import trim from 'lodash/trim'
 import {
   validUserName,
   validPhone,
@@ -110,6 +111,8 @@ export default {
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
         callback(new Error('请输入长度不少于6位的密码'))
+      } else if (value === this.registerForm.username) {
+        callback(new Error('请输入与用户名不一致的密码'))
       } else {
         callback()
       }
@@ -159,6 +162,22 @@ export default {
     }
   },
   computed: {
+    regUsername: {
+      get() {
+        return this.registerForm.username
+      },
+      set(value) {
+        this.registerForm.username = trim(value)
+      }
+    },
+    regPassword: {
+      get() {
+        return this.registerForm.password
+      },
+      set(value) {
+        this.registerForm.password = trim(value)
+      }
+    },
     codeButtonLabel() {
       return this.timedOut < 60 ? `${this.timedOut} 秒` : '获取验证码'
     }

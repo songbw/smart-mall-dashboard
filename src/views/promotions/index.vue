@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :inline="true" :model="query">
       <el-form-item label="活动名称">
-        <el-input v-model="query.name" placeholder="输入名称关键字" clearable />
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
       <el-form-item label="活动状态">
         <el-select v-model="query.status">
@@ -140,7 +140,7 @@
       :total="promotionTotal"
       :page.sync="query.offset"
       :limit.sync="query.limit"
-      :page-sizes="[20, 40, 80, 100]"
+      :page-sizes="[10, 20, 60, 100]"
       @pagination="getPromotionData"
     />
   </div>
@@ -149,6 +149,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import memont from 'moment'
+import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import {
   getPromotionsApi,
@@ -202,7 +203,15 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser'
-    })
+    }),
+    queryName: {
+      get() {
+        return this.query.name
+      },
+      set(value) {
+        this.query.name = trim(value)
+      }
+    }
   },
   created() {
     this.getPromotionData()
@@ -231,8 +240,8 @@ export default {
     getFilterParams() {
       const params = {}
       let needFilter = false
-      if (this.query.name && this.query.name.trim()) {
-        params.name = this.query.name.trim()
+      if (this.query.name) {
+        params.name = this.query.name
         needFilter = true
       }
       if (this.query.status !== 0) {
@@ -337,6 +346,9 @@ export default {
         const params = { id: id }
         deletePromotionApi(params).then(() => {
           this.$message({ message: '活动删除成功！', type: 'success' })
+          if (this.promotionData.length === 1 && this.query.offset > 1) {
+            this.query.offset = this.query.offset - 1
+          }
           this.getPromotionData()
         }).catch(err => {
           console.log('Start Promotion: ' + err)

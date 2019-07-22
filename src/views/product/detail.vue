@@ -197,7 +197,7 @@
               :action="uploadUrl"
               :data="uploadIntroductionData"
               :auto-upload="false"
-              :limit="10"
+              :limit="30"
               :show-file-list="true"
               :before-upload="handleBeforeUpload"
               :on-success="handleUploadIntroductionSuccess"

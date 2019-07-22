@@ -27,7 +27,7 @@
               <div v-if="titleHasPromotionActivity">
                 <span>活动名称：</span>
                 <el-link
-                  :href="`#/marketing/viewPromotion/${titlePromotionActivityId}`"
+                  :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
                   target="_blank"
                   type="primary"
                 >
@@ -131,7 +131,7 @@
       />
       <el-table-column label="商品SKU" align="center" width="150">
         <template slot-scope="scope">
-          <el-link :href="'#/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+          <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
             {{ scope.row.skuid }}
           </el-link>
         </template>

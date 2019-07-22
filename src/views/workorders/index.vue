@@ -71,7 +71,7 @@
       </el-table-column>
       <el-table-column label="子订单编号" align="center">
         <template slot-scope="scope">
-          <el-link :href="'#/orders/viewSubOrder/' + scope.row.orderId" type="primary">
+          <el-link :href="'/orders/viewSubOrder/' + scope.row.orderId" type="primary">
             {{ scope.row.orderId }}
           </el-link>
         </template>
