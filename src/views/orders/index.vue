@@ -68,7 +68,6 @@
       border
       fit
       style="width: 100%;"
-      @selection-change="handleSelectionChange"
     >
       <el-table-column label="主订单编号" align="center" width="100">
         <template slot-scope="scope">
@@ -163,7 +162,8 @@ import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import {
   getOrderListApi,
-  updateOrderRemarkApi
+  updateOrderRemarkApi,
+  exportOrdersApi
 } from '@/api/orders'
 import {
   getVendorListApi
@@ -194,7 +194,7 @@ export default {
       listLoading: false,
       orderData: [],
       orderTotal: 0,
-      orderSelection: []
+      merchantName: ''
     }
   },
   computed: {
@@ -338,9 +338,6 @@ export default {
         this.listLoading = false
       }
     },
-    handleSelectionChange(selection) {
-      this.orderSelection = selection
-    },
     handleViewSubOrder(subOrderId) {
       this.$router.push({
         name: 'ViewSubOrder',
@@ -367,14 +364,21 @@ export default {
     },
     onQueryVendorChanged(value) {
       this.queryVendor = value
+      const vendor = this.vendors.find(item => item.value === value)
+      if (vendor) {
+        this.merchantName = vendor.label
+      } else {
+        this.merchantName = ''
+      }
     },
-    handleExportOrders() {
+    async handleExportOrders() {
       if (this.queryStartDate === null || this.queryEndDate === null) {
         this.$message.warning('请先选择导出订单的时间段！')
         return
       }
-      const startDate = moment(this.queryStartDate, 'YYYY-MM-DD')
-      const endDate = moment(this.queryEndDate, 'YYYY-MM-DD')
+      const format = 'YYYY-MM-DD'
+      const startDate = moment(this.queryStartDate, format)
+      const endDate = moment(this.queryEndDate, format)
       if (startDate.isAfter(endDate)) {
         this.$message.warning('导出订单的开始时间必须早于结束时间！')
         return
@@ -384,7 +388,30 @@ export default {
         this.$message.warning('导出订单的时间段不能大于一个自然月！')
         return
       }
-      console.debug(`Start export from ${startDate.format()} to ${endDate.format()}`)
+      if (this.queryVendor < 1) {
+        this.$message.warning('请先选择导出订单的供应商！')
+        return
+      }
+      const params = {
+        payStartDate: this.queryStartDate,
+        payEndDate: this.queryEndDate,
+        merchantId: this.queryVendor
+      }
+      try {
+        const data = await exportOrdersApi(params)
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        const filename = `Orders_${this.merchantName}_${this.queryStartDate}_${this.queryEndDate}.xls`
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+      }
     }
   }
 }

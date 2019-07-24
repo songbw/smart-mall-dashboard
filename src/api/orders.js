@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import axios from 'axios'
 
 export function getOrderListApi(params) {
   return Vue.axios('orders').request({
@@ -56,5 +57,14 @@ export function deliveryUploadApi(params) {
       total: params.total,
       logisticsList: params.list
     }
+  })
+}
+
+export function exportOrdersApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export',
+    method: 'get',
+    responseType: 'arraybuffer',
+    params
   })
 }

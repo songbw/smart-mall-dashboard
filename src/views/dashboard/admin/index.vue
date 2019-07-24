@@ -159,7 +159,13 @@ export default {
     orderGross: {
       get() {
         return this.summary.orderPaymentAmount > 0
-          ? (this.summary.orderPaymentAmount / 10000).toFixed(2) : 0
+          ? (this.summary.orderPaymentAmount / 10000).toFixed(4) : 0
+      }
+    },
+    totalCustomer: {
+      get() {
+        return this.summary.customerTotalNum > 0
+          ? (this.summary.customerTotalNum / 10000).toFixed(4) : 0
       }
     },
     perCustomerTransaction: {

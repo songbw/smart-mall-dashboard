@@ -40,7 +40,6 @@ function generateArray(table) {
         })
       }
 
-
       //Handle Value
       outRow.push(cellValue !== '' ? cellValue : null)
 
@@ -221,6 +220,7 @@ export function export_json_to_excel({
     type: 'binary'
   })
   saveAs(new Blob([s2ab(wbout)], {
-    type: "application/octet-stream"
-  }), `${filename}.${bookType}`);
+    type: 'application/octet-stream'
+  }), `${filename}.${bookType}`)
 }
+

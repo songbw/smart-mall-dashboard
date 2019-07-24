@@ -30,3 +30,13 @@ export function getPeriodDataApi(params) {
     params
   })
 }
+
+export function getBehaviorDataApi(params) {
+  return Vue.axios('statistics').request({
+    url: '/statistics/baidu_statis/query_urls_statis',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}

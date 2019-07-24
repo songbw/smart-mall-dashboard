@@ -46,7 +46,9 @@ export default {
     }
   },
   created() {
-    this.getPageInfo()
+    if (this.$route.name !== 'CreateAggregation') {
+      this.getPageInfo()
+    }
   },
   methods: {
     async getPageInfo() {

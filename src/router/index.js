@@ -266,6 +266,21 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/statistics',
+    component: Layout,
+    redirect: '/statistics/index',
+    name: 'StatisticsManager',
+    meta: { title: '统计', icon: 'statistics' },
+    children: [
+      {
+        path: 'index',
+        name: 'UserBehaviors',
+        component: () => import('@/views/statistics/behaviors'),
+        meta: { title: '行为分析', icon: 'behaviors' }
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
     redirect: '/vendorInfo/profile',

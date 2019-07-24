@@ -227,7 +227,6 @@ export default {
         }
         params.header = JSON.stringify(header)
       }
-      console.debug(JSON.stringify(params))
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.$emit('createPage', id)
       }).catch(err => {
