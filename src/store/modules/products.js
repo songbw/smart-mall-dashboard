@@ -8,6 +8,7 @@ const state = {
     query: '',
     skuid: '',
     brand: '',
+    mpu: '',
     state: -2,
     vendorId: -1,
     firstCategoryId: null,

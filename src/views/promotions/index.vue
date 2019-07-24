@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :inline="true" :model="query">
       <el-form-item label="活动名称">
-        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
       <el-form-item label="活动状态">
         <el-select v-model="query.status">

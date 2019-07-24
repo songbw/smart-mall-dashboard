@@ -1,5 +1,4 @@
 import Vue from 'vue'
-import axios from 'axios'
 
 export function getOrderListApi(params) {
   return Vue.axios('orders').request({

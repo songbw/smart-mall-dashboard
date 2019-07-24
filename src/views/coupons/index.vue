@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
       <el-form-item label="优惠券名称" class="form-item">
-        <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
+        <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
       <el-form-item label="优惠券状态" class="form-item">
         <el-select v-model="queryStatus">

@@ -31,9 +31,6 @@ export const ProductStateOptions = [
 ]
 
 export const OrderStatusDefinitions = [{
-  value: -1,
-  label: '已删除'
-}, {
   value: 0,
   label: '待付款'
 }, {

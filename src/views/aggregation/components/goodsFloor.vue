@@ -77,7 +77,7 @@
         </el-table-column>
         <el-table-column label="商品名" align="center">
           <template slot-scope="scope">
-            <span>{{ scope.row.name }}</span>
+            <span>{{ scope.row.nickname || scope.row.name }}</span>
           </template>
         </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="100">
@@ -85,7 +85,7 @@
             <span>{{ scope.row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="180">
+        <el-table-column label="操作" align="center" width="200">
           <template slot-scope="scope">
             <el-tooltip :open-delay="1000" content="上移" placement="top">
               <el-button
@@ -107,11 +107,20 @@
             </el-tooltip>
             <el-tooltip :open-delay="1000" content="置顶" placement="top">
               <el-button
-                icon="el-icon-upload2"
+                icon="el-icon-top"
                 type="primary"
                 size="mini"
                 circle
                 @click="handleSortTop(scope.$index)"
+              />
+            </el-tooltip>
+            <el-tooltip :open-delay="1000" content="编辑" placement="top">
+              <el-button
+                icon="el-icon-edit"
+                type="info"
+                size="mini"
+                circle
+                @click="handleEditRow(scope.$index)"
               />
             </el-tooltip>
             <el-tooltip :open-delay="1000" content="删除" placement="top">
@@ -137,6 +146,24 @@
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
     />
+    <el-dialog
+      :visible.sync="editDialogVisible"
+      title="修改商品促销名称"
+      center
+    >
+      <el-form label-width="80px">
+        <el-form-item label="商品名">
+          <el-input :value="editGoodName" readonly />
+        </el-form-item>
+        <el-form-item label="促销名">
+          <el-input v-model="editNickname" maxlength="50" clearable />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSetNickname">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -168,7 +195,11 @@ export default {
       floorTitle: this.title,
       selectedItems: [],
       tempSkuData: [],
-      fetchedCount: 0
+      fetchedCount: 0,
+      editDialogVisible: false,
+      editGoodIndex: -1,
+      editGoodName: '',
+      editNickname: ''
     }
   },
   computed: {
@@ -278,6 +309,22 @@ export default {
         console.warn('Goods delete row error:' + e)
       }
     },
+    handleEditRow(index) {
+      this.editGoodIndex = index
+      this.editGoodName = this.skuData[index].name
+      this.editNickname = this.skuData[index].nickname
+      this.editDialogVisible = true
+    },
+    handleSetNickname() {
+      this.editDialogVisible = false
+      if (this.editGoodIndex >= 0 &&
+        this.editNickname !== this.skuData[this.editGoodIndex].nickname) {
+        this.$emit('changeContent', this.index, { index: this.editGoodIndex, nickname: this.editNickname })
+      }
+      this.editGoodIndex = -1
+      this.editGoodName = ''
+      this.editNickname = ''
+    },
     handleSortRow(up, index) {
       if ((up && index > 0) || (!up && index < (this.skuData.length - 1))) {
         this.$emit('sortContent', this.index, { up: up, index: index, distance: 1 })
@@ -290,14 +337,14 @@ export default {
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
-      this.$emit('contentAdded', this.index, skus)
+      this.$emit('addContent', this.index, skus)
     },
     onGoodsSelectionCancelled() {
       this.dialogSelectionVisible = false
     },
     onGoodsImportConfirmed(skus) {
       this.dialogImportVisible = false
-      this.$emit('contentAdded', this.index, skus)
+      this.$emit('addContent', this.index, skus)
     },
     onGoodsImportCancelled() {
       this.dialogImportVisible = false

@@ -8,6 +8,7 @@
           style="max-width: 400px;"
           class="filter-item"
           clearable
+          maxlength="10"
           @keyup.enter.native="handleSearch"
         />
       </el-form-item>

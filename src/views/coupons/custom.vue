@@ -19,7 +19,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="优惠券名称" prop="name">
-        <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" />
+        <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" maxlength="20" />
       </el-form-item>
       <el-form-item label="优惠券编码" prop="code">
         <div v-if="createCoupon">
@@ -201,7 +201,15 @@
         />
       </el-form-item>
       <el-form-item label="优惠券描述" prop="description" class="form-item">
-        <el-input v-model="formData.description" type="textarea" resize="none" :rows="4" :readonly="viewOnly" />
+        <el-input
+          v-model="formData.description"
+          type="textarea"
+          resize="none"
+          :rows="4"
+          :readonly="viewOnly"
+          maxlength="50"
+          show-word-limit
+        />
       </el-form-item>
       <el-divider content-position="left"><span class="divider-text">规则设置</span></el-divider>
       <el-form-item label="每人限领数量" required>
@@ -376,6 +384,8 @@
           resize="none"
           :rows="4"
           :readonly="viewOnly"
+          maxlength="50"
+          show-word-limit
         />
       </el-form-item>
       <el-form-item label="优惠券概述" class="form-item">

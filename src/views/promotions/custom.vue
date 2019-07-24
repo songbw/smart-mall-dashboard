@@ -6,7 +6,7 @@
     status-icon
   >
     <el-form-item label="活动名称" required>
-      <el-input v-model="promotionName" />
+      <el-input v-model="promotionName" maxlength="20" placeholder="请输入活动名称" />
     </el-form-item>
     <el-form-item label="活动标签" required>
       <el-select :value="promotionTagValue" @change="value => promotionTagValue = value">

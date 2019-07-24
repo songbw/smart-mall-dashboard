@@ -271,7 +271,8 @@ export default {
             price: item.price,
             imagePath: item.image,
             brand: item.brand,
-            name: item.name
+            name: item.name,
+            nickname: ''
           }
           if (this.hasPromotion) {
             selectItem.discount = item.discount

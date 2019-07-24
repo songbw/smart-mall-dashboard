@@ -14,10 +14,22 @@
           label-width="100px"
         >
           <el-form-item label="商户名" prop="name">
-            <el-input v-model="vendorName" :readonly="couldEdit === false" class="item-input" />
+            <el-input
+              v-model="vendorName"
+              :readonly="!couldEdit"
+              :show-word-limit="!couldEdit"
+              class="item-input"
+              maxlength="30"
+            />
           </el-form-item>
           <el-form-item label="商户地址" prop="address">
-            <el-input v-model="vendorAddress" :readonly="couldEdit === false" class="item-input" />
+            <el-input
+              v-model="vendorAddress"
+              :readonly="!couldEdit"
+              :show-word-limit="!couldEdit"
+              class="item-input"
+              maxlength="50"
+            />
           </el-form-item>
           <el-form-item label="商户行业" prop="industry">
             <el-select

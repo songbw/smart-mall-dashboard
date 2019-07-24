@@ -400,7 +400,6 @@ export default {
       this.getListData()
     },
     createPage() {
-      this.$store.commit('aggregations/RESET_CURRENT_DATA')
       this.$router.push({
         name: 'CreateAggregation'
       })

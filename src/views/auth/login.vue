@@ -23,7 +23,7 @@
           @keyup.enter.native="handleLogin"
         >
           <el-form-item label="用户名" prop="username">
-            <el-input v-model="loginName" placeholder="请输入用户名" />
+            <el-input v-model="loginName" placeholder="请输入用户名" maxlength="20" />
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input

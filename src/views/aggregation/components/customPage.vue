@@ -107,7 +107,8 @@
     <el-footer align="center">
       <div class="footer-container">
         <el-button @click="$emit('prevStep')">上一步</el-button>
-        <el-button type="primary" @click="previewPage">保存并预览</el-button>
+        <el-button type="primary" @click="savePage(false)">保存</el-button>
+        <el-button type="info" @click="savePage(true)">保存并预览</el-button>
       </div>
     </el-footer>
   </el-container>
@@ -203,15 +204,15 @@ export default {
       const option = this.options.find(option => option.type === type)
       return option.image
     },
-    async previewPage() {
+    async savePage(preview) {
       try {
-        await this.$confirm('保存此次修改，并开始预览聚合页，是否继续？', '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
+        await this.$confirm(preview ? '保存此次修改，并开始预览聚合页，是否继续？' : '保存此次修改，是否继续？',
+          '警告',
+          { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
         this.$store.dispatch('aggregations/savePageContent').then(() => {
-          this.$emit('nextStep')
+          if (preview) {
+            this.$emit('nextStep')
+          }
         }).catch(error => {
           console.warn('Save aggregation page error: ' + error)
           this.$message.warning('聚合页保存失败，请稍后重试！')

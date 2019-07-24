@@ -3,10 +3,10 @@
     <div>
       <el-form :inline="true">
         <el-form-item label="商品名称">
-          <el-input v-model="listQuery" placeholder="输入商品名" clearable />
+          <el-input v-model="listQuery" placeholder="输入商品名" clearable maxlength="30" />
         </el-form-item>
         <el-form-item label="商品SKU">
-          <el-input v-model="listSkuId" placeholder="输入商品SKU" clearable />
+          <el-input v-model="listSkuId" placeholder="输入商品SKU" clearable maxlength="20" />
         </el-form-item>
         <el-form-item label="商品状态">
           <el-select :value="listState" @change="handleStateChanged">
@@ -21,7 +21,10 @@
       </el-form>
       <el-form :inline="true">
         <el-form-item label="商品品牌">
-          <el-input v-model="listBrand" placeholder="输入品牌关键字" clearable />
+          <el-input v-model="listBrand" placeholder="输入品牌关键字" clearable maxlength="10" />
+        </el-form-item>
+        <el-form-item label="商品MPU">
+          <el-input v-model="listMpu" placeholder="输入商品MPU" clearable maxlength="20" />
         </el-form-item>
         <el-form-item label="供应商名">
           <el-select :value="listVendor" @change="handleVendorChanged">
@@ -301,6 +304,7 @@ export default {
         query: '',
         skuid: '',
         brand: '',
+        mpu: '',
         vendorId: null,
         categoryID: null
       },
@@ -393,6 +397,14 @@ export default {
       },
       set(value) {
         this.$store.commit('products/SET_SEARCH_DATA', { brand: value })
+      }
+    },
+    listMpu: {
+      get() {
+        return this.productQuery.mpu
+      },
+      set(value) {
+        this.$store.commit('products/SET_SEARCH_DATA', { mpu: value })
       }
     },
     listState: {
@@ -502,6 +514,10 @@ export default {
       if (!isEmpty(this.listSkuId)) {
         this.searchParams.skuid = this.listSkuId
         params.skuid = this.listSkuId
+        filter = true
+      } else if (!isEmpty(this.listMpu)) {
+        this.searchParams.mpu = this.listMpu
+        params.mpu = this.listMpu
         filter = true
       } else {
         if (!isEmpty(this.listQuery)) {

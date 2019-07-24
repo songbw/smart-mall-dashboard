@@ -9,8 +9,9 @@
         @sortFloor="onSortGoodsFloor"
         @deleteFloor="onDeleteGoodsFloor"
         @titleChanged="onGoodsFloorTitleChanged"
-        @contentAdded="onGoodsFloorContentChanged"
+        @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
+        @changeContent="onGoodsFloorContentChanged"
         @deleteSelection="onGoodsFloorDeleteSelection"
       />
     </div>
@@ -195,7 +196,7 @@ export default {
       const floor = { title: title }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
-    onGoodsFloorContentChanged(floorIndex, skus) {
+    onGoodsFloorContentAdded(floorIndex, skus) {
       const floor = {}
       const mpus = this.goodsList[floorIndex].skus.map(sku => sku.mpu)
       const skuArray = []
@@ -208,6 +209,12 @@ export default {
         floor.skus = this.goodsList[floorIndex].skus.concat(skuArray)
         this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
       }
+    },
+    onGoodsFloorContentChanged(floorIndex, params) {
+      const floor = {}
+      floor.skus = this.goodsList[floorIndex].skus.concat([])
+      floor.skus[params.index].nickname = params.nickname
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentSort(floorIndex, params) {
       const skuIndex = params.index

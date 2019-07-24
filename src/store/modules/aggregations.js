@@ -152,6 +152,13 @@ const mutations = {
       template.data.list.push({ ...item })
     })
   },
+  SET_PROMOTION_LIST_CONTENT: (state, params) => {
+    const template = state.aggregation.content[state.contentIndex]
+    const len = template.data.list.length
+    if (params.index < len) {
+      template.data.list[params.index].nickname = params.nickname
+    }
+  },
   SET_GROUP_LIST: (state, list) => {
     state.groups = list
   },

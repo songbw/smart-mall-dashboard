@@ -318,7 +318,8 @@ export default {
                   price: product.price,
                   name: product.name,
                   brand: product.brand,
-                  imagePath: product.image
+                  imagePath: product.image,
+                  nickname: ''
                 }
                 fetchedSkus.push(item)
               }

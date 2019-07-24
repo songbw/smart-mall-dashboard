@@ -36,14 +36,14 @@
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
         <span v-if="viewProduct">{{ productForm.skuid }}</span>
-        <el-input v-else v-model="productForm.skuid" />
+        <el-input v-else v-model="productForm.skuid" maxlength="20" />
       </el-form-item>
       <el-form-item v-if="!createProduct" label="商品状态">
         <span>{{ productForm.state | productState }}</span>
       </el-form-item>
       <el-form-item label="商品名称" prop="name">
         <span v-if="viewProduct">{{ productForm.name }}</span>
-        <el-input v-else v-model="productForm.name" />
+        <el-input v-else v-model="productForm.name" maxlength="100" />
       </el-form-item>
       <el-form-item label="商品品牌" prop="brand">
         <span v-if="productForm.brand" style="margin-right: 10px">{{ productForm.brand }}</span>
@@ -77,11 +77,11 @@
       </el-form-item>
       <el-form-item label="商品型号" prop="model">
         <span v-if="viewProduct"> {{ productForm.model }}</span>
-        <el-input v-else v-model="productForm.model" />
+        <el-input v-else v-model="productForm.model" maxlength="50" />
       </el-form-item>
       <el-form-item label="商品重量">
         <span v-if="viewProduct"> {{ productForm.weight }}</span>
-        <el-input v-else v-model="productForm.weight" />
+        <el-input v-else v-model="productForm.weight" maxlength="10" />
       </el-form-item>
       <el-form-item label="商品封面图">
         <template>
@@ -114,11 +114,11 @@
       </el-form-item>
       <el-form-item label="商品条形码">
         <span v-if="viewProduct"> {{ productForm.upc }}</span>
-        <el-input v-else v-model="productForm.upc" />
+        <el-input v-else v-model="productForm.upc" maxlength="50" />
       </el-form-item>
       <el-form-item label="销售单位">
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
-        <el-input v-else v-model="productForm.saleunit" />
+        <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
       <el-form-item label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>

@@ -8,6 +8,7 @@
           style="width: 300px;"
           class="filter-item"
           clearable
+          maxlength="10"
           @keyup.enter.native="handleFilter"
         />
       </el-form-item>
@@ -139,6 +140,7 @@
           <el-input
             v-model="dialogValue.categoryName"
             :readonly="editCategory && dialogValue.idate === null"
+            maxlength="10"
             class="dialog-form-item"
           />
         </el-form-item>

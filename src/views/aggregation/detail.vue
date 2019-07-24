@@ -48,6 +48,8 @@ export default {
   created() {
     if (this.$route.name !== 'CreateAggregation') {
       this.getPageInfo()
+    } else {
+      this.$store.commit('aggregations/RESET_CURRENT_DATA')
     }
   },
   methods: {
@@ -72,13 +74,14 @@ export default {
       if (this.activeStep > 0) {
         this.activeStep -= 1
       } else {
-        this.$router.replace({ name: 'Aggregations' })
+        this.gotoPageList()
       }
     },
     handlePreviewPage() {
       this.activeStep = 2
     },
     gotoPageList() {
+      this.$store.commit('aggregations/RESET_CURRENT_DATA')
       this.$router.replace({ name: 'Aggregations' })
     }
   }

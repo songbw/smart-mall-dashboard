@@ -138,7 +138,7 @@
       </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.name }}</span>
+          <span>{{ scope.row.nickname || scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品价格(元)" align="center" width="100">
@@ -146,7 +146,7 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="180">
+      <el-table-column label="操作" align="center" width="200">
         <template slot-scope="scope">
           <el-tooltip :open-delay="1000" content="上移" placement="top">
             <el-button
@@ -168,15 +168,30 @@
           </el-tooltip>
           <el-tooltip :open-delay="1000" content="置顶" placement="top">
             <el-button
-              icon="el-icon-upload2"
+              icon="el-icon-top"
               type="primary"
               size="mini"
               circle
               @click="handleSortTop(scope.$index)"
             />
           </el-tooltip>
+          <el-tooltip :open-delay="1000" content="编辑" placement="top">
+            <el-button
+              icon="el-icon-edit"
+              type="info"
+              size="mini"
+              circle
+              @click="handleEditRow(scope.$index)"
+            />
+          </el-tooltip>
           <el-tooltip :open-delay="1000" content="删除" placement="top">
-            <el-button icon="el-icon-delete" type="danger" size="mini" circle @click="handleDeleteRow(scope.$index)" />
+            <el-button
+              icon="el-icon-delete"
+              type="danger"
+              size="mini"
+              circle
+              @click="handleDeleteRow(scope.$index)"
+            />
           </el-tooltip>
         </template>
       </el-table-column>
@@ -209,6 +224,24 @@
         <el-progress :percentage="uploadPercentage" type="circle" status="success" />
       </div>
     </el-dialog>
+    <el-dialog
+      :visible.sync="editDialogVisible"
+      title="修改商品促销名称"
+      center
+    >
+      <el-form label-width="80px">
+        <el-form-item label="商品名">
+          <el-input :value="editGoodName" readonly />
+        </el-form-item>
+        <el-form-item label="促销名">
+          <el-input v-model="editNickname" maxlength="50" clearable />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSetNickname">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -236,7 +269,11 @@ export default {
       uploadPercentage: 0,
       dialogSelectionVisible: false,
       selectedItems: [],
-      originalImageProp: null
+      originalImageProp: null,
+      editDialogVisible: false,
+      editGoodIndex: -1,
+      editGoodName: '',
+      editNickname: ''
     }
   },
   computed: {
@@ -547,6 +584,25 @@ export default {
       if (index > 0) {
         this.$store.commit('aggregations/SORT_ITEM_IN_CONTENT', { up: true, index: index, distance: index })
       }
+    },
+    handleEditRow(index) {
+      this.editGoodIndex = index
+      this.editGoodName = this.skuData[index].name
+      this.editNickname = this.skuData[index].nickname
+      this.editDialogVisible = true
+    },
+    handleSetNickname() {
+      this.editDialogVisible = false
+      if (this.editGoodIndex >= 0 &&
+        this.editNickname !== this.skuData[this.editGoodIndex].nickname) {
+        this.$store.commit('aggregations/SET_PROMOTION_LIST_CONTENT', {
+          index: this.editGoodIndex,
+          nickname: this.editNickname
+        })
+      }
+      this.editGoodIndex = -1
+      this.editGoodName = ''
+      this.editNickname = ''
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false

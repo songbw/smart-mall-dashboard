@@ -1,15 +1,16 @@
 export const coupon_status_init = 1
 export const coupon_status_published = 2
-export const coupon_status_on_sale = 3
-export const coupon_status_off_shelves = 4
-export const coupon_status_distributing = 5
+export const coupon_status_ready_for_sale = 3
+export const coupon_status_on_sale = 4
+export const coupon_status_off_shelves = 5
+export const coupon_status_distributing = 6
 
 export const CouponStatusDefinition = [{
   value: coupon_status_init,
-  label: '未开始'
+  label: '编辑中'
 }, {
-  value: coupon_status_published,
-  label: '已发布'
+  value: coupon_status_ready_for_sale,
+  label: '未开始'
 }, {
   value: coupon_status_on_sale,
   label: '进行中'

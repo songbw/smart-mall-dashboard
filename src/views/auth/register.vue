@@ -27,6 +27,7 @@
             <el-input
               v-model="regUsername"
               placeholder="请输入用户名"
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item label="密码" prop="password">
