@@ -156,7 +156,7 @@ const mutations = {
     const template = state.aggregation.content[state.contentIndex]
     const len = template.data.list.length
     if (params.index < len) {
-      template.data.list[params.index].nickname = params.nickname
+      template.data.list[params.index].intro = params.intro
     }
   },
   SET_GROUP_LIST: (state, list) => {

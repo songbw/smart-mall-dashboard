@@ -24,6 +24,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { PromotionStatusDefinition } from './constants'
 
 export default {
   name: 'PromotionInfo',
@@ -39,16 +40,8 @@ export default {
     status: {
       get() {
         const status = this.promotionData.status
-        switch (status) {
-          case 1:
-            return '未开始'
-          case 2:
-            return '进行中'
-          case 3:
-            return '已结束'
-          default:
-            return ''
-        }
+        const find = PromotionStatusDefinition.find(item => item.value === status)
+        return find ? find.label : status
       }
     },
     tag: {

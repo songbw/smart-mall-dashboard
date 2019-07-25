@@ -202,8 +202,7 @@ export default {
         name: this.promotionName,
         tag: this.promotionData.tag,
         startDate: this.promotionStartDate,
-        endDate: this.promotionEndDate,
-        status: 1
+        endDate: this.promotionEndDate
       }
       this.$store.dispatch('promotions/create', params).then((id) => {
         this.handleSetPromotionType(id)

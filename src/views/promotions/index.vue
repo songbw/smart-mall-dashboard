@@ -94,7 +94,7 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
                 :command="`start:${scope.$index}`"
-                :disabled="scope.row.status !== 1"
+                :disabled="scope.row.status !== statusInit"
                 icon="el-icon-time"
               >
                 立即开始
@@ -108,14 +108,14 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
-                :disabled="scope.row.status !== 1"
+                :disabled="scope.row.status !== statusInit"
                 icon="el-icon-edit"
               >
                 修改活动
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`stop:${scope.$index}`"
-                :disabled="scope.row.status === 3"
+                :disabled="scope.row.status === statusInit"
                 icon="el-icon-sold-out"
                 divided
               >
@@ -123,7 +123,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`delete:${scope.$index}`"
-                :disabled="scope.row.status === 2"
+                :disabled="scope.row.status !== statusInit"
                 icon="el-icon-delete"
               >
                 删除活动
@@ -148,7 +148,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import memont from 'moment'
+import moment from 'moment'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import {
@@ -158,36 +158,31 @@ import {
   deletePromotionApi
 } from '@/api/promotions'
 
+import {
+  promotion_status_init,
+  promotion_status_published,
+  promotion_status_off_shelves,
+  promotion_status_ready_for_sale,
+  promotion_status_on_sale,
+  PromotionStatusDefinition
+} from './constants'
+
 export default {
   name: 'PromotionActivity',
   components: { Pagination },
   filters: {
     promotionStatus: (status) => {
-      switch (status) {
-        case 1:
-          return '未开始'
-        case 2:
-          return '进行中'
-        case 3:
-          return '已结束'
-      }
+      const find = PromotionStatusDefinition.find(item => item.value === status)
+      return find ? find.label : status
     }
   },
   data() {
     return {
+      statusInit: promotion_status_init,
       statusOptions: [{
         value: 0,
         label: '全部'
-      }, {
-        value: 1,
-        label: '未开始'
-      }, {
-        value: 2,
-        label: '进行中'
-      }, {
-        value: 3,
-        label: '已结束'
-      }],
+      }].concat(PromotionStatusDefinition),
       query: {
         name: '',
         status: 0,
@@ -287,10 +282,10 @@ export default {
         type: 'warning'
       }).then(async() => {
         const id = this.promotionData[index].id
-        const dateNow = memont()
+        const dateNow = moment()
         dateNow.minute(0)
         dateNow.second(0)
-        const params = { id: id, status: 2 }
+        const params = { id: id, status: promotion_status_published }
         params.startDate = dateNow.format('YYYY-MM-DD HH:mm:ss')
         try {
           await updatePromotionApi(params)
@@ -324,7 +319,7 @@ export default {
         type: 'warning'
       }).then(async() => {
         const id = this.promotionData[index].id
-        const params = { id: id, status: 3 }
+        const params = { id: id, status: promotion_status_off_shelves }
         try {
           await updatePromotionApi(params)
           this.$message({ message: '活动结束成功！', type: 'success' })
@@ -386,8 +381,8 @@ export default {
       }).then(() => {
         const promises = []
         for (const item of this.promotionSelection) {
-          if (item.status !== 3) {
-            const params = { id: item.id, status: 3 }
+          if (item.status === promotion_status_ready_for_sale || item.status === promotion_status_on_sale) {
+            const params = { id: item.id, status: promotion_status_off_shelves }
             promises.push(updatePromotionApi(params))
           }
         }

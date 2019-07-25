@@ -2,14 +2,14 @@
   <div class="app-container">
     <el-row v-loading="summaryLoading">
       <el-col :span="4" class="panel-item">
-        <div class="panel-title">订单支付总额<span class="panel-annotation">（万元）</span></div>
+        <div class="panel-title">订单支付总额<span class="panel-annotation">（元）</span></div>
         <el-divider />
         <div class="panel-value">{{ orderGross }}</div>
       </el-col>
       <el-col :span="3" class="panel-item">
-        <div class="panel-title">用户总数<span class="panel-annotation">（万人）</span></div>
+        <div class="panel-title">用户总数<span class="panel-annotation">（人）</span></div>
         <el-divider />
-        <div class="panel-value">{{ summary.customerTotalNum }}</div>
+        <div class="panel-value">{{ totalCustomer }}</div>
       </el-col>
       <el-col :span="3" class="panel-item">
         <div class="panel-title">订单总量<span class="panel-annotation">（单）</span></div>
@@ -158,14 +158,24 @@ export default {
   computed: {
     orderGross: {
       get() {
-        return this.summary.orderPaymentAmount > 0
-          ? (this.summary.orderPaymentAmount / 10000).toFixed(4) : 0
+        if (this.summary.orderPaymentAmount > 10000) {
+          return Number.parseFloat(this.summary.orderPaymentAmount / 10000).toFixed(2) + ' 万'
+        } else if (this.summary.orderPaymentAmount > 0) {
+          return this.summary.orderPaymentAmount
+        } else {
+          return 0
+        }
       }
     },
     totalCustomer: {
       get() {
-        return this.summary.customerTotalNum > 0
-          ? (this.summary.customerTotalNum / 10000).toFixed(4) : 0
+        if (this.summary.customerTotalNum > 10000) {
+          return Number.parseFloat(this.summary.customerTotalNum / 10000).toFixed(2) + ' 万'
+        } else if (this.summary.customerTotalNum > 0) {
+          return this.summary.customerTotalNum
+        } else {
+          return 0
+        }
       }
     },
     perCustomerTransaction: {

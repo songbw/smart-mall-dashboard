@@ -77,7 +77,7 @@
         </el-table-column>
         <el-table-column label="商品名" align="center">
           <template slot-scope="scope">
-            <span>{{ scope.row.nickname || scope.row.name }}</span>
+            <span>{{ scope.row.intro || scope.row.name }}</span>
           </template>
         </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="100">
@@ -156,12 +156,12 @@
           <el-input :value="editGoodName" readonly />
         </el-form-item>
         <el-form-item label="促销名">
-          <el-input v-model="editNickname" maxlength="50" clearable />
+          <el-input v-model="editIntro" maxlength="50" clearable />
         </el-form-item>
       </el-form>
       <div slot="footer">
         <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSetNickname">确定</el-button>
+        <el-button type="primary" @click="handleSetIntro">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -199,7 +199,7 @@ export default {
       editDialogVisible: false,
       editGoodIndex: -1,
       editGoodName: '',
-      editNickname: ''
+      editIntro: ''
     }
   },
   computed: {
@@ -312,18 +312,18 @@ export default {
     handleEditRow(index) {
       this.editGoodIndex = index
       this.editGoodName = this.skuData[index].name
-      this.editNickname = this.skuData[index].nickname
+      this.editIntro = this.skuData[index].intro
       this.editDialogVisible = true
     },
-    handleSetNickname() {
+    handleSetIntro() {
       this.editDialogVisible = false
       if (this.editGoodIndex >= 0 &&
-        this.editNickname !== this.skuData[this.editGoodIndex].nickname) {
-        this.$emit('changeContent', this.index, { index: this.editGoodIndex, nickname: this.editNickname })
+        this.editIntro !== this.skuData[this.editGoodIndex].intro) {
+        this.$emit('changeContent', this.index, { index: this.editGoodIndex, intro: this.editIntro })
       }
       this.editGoodIndex = -1
       this.editGoodName = ''
-      this.editNickname = ''
+      this.editIntro = ''
     },
     handleSortRow(up, index) {
       if ((up && index > 0) || (!up && index < (this.skuData.length - 1))) {

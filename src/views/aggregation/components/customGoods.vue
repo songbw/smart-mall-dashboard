@@ -213,7 +213,7 @@ export default {
     onGoodsFloorContentChanged(floorIndex, params) {
       const floor = {}
       floor.skus = this.goodsList[floorIndex].skus.concat([])
-      floor.skus[params.index].nickname = params.nickname
+      floor.skus[params.index].intro = params.intro
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentSort(floorIndex, params) {

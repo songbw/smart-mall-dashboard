@@ -319,7 +319,7 @@ export default {
                   name: product.name,
                   brand: product.brand,
                   imagePath: product.image,
-                  nickname: ''
+                  intro: ''
                 }
                 fetchedSkus.push(item)
               }
