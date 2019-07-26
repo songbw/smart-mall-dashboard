@@ -14,7 +14,7 @@
   "dependencies": {
     "axios": "^0.19.0",
     "echarts": "^4.2.1",
-    "element-ui": "^2.10.1",
+    "element-ui": "^2.11.0",
     "file-saver": "^2.0.2",
     "js-cookie": "^2.2.0",
     "localforage": "^1.7.3",
@@ -33,6 +33,7 @@
     "vue-hotzone": "^1.1.0",
     "vue-qriously": "^1.1.1",
     "vue-router": "^3.0.7",
+    "vue-scrollto": "^2.15.0",
     "vuex": "^3.1.1",
     "xlsx": "^0.14.4"
   },
@@ -41,9 +42,9 @@
     "@vue/cli-plugin-eslint": "^3.9.2",
     "@vue/cli-service": "^3.9.3",
     "babel-eslint": "^10.0.2",
-    "eslint": "^6.1.0",
+    "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
-    "sass": "^1.22.8",
+    "sass": "^1.22.7",
     "sass-loader": "^7.1.0",
     "serve": "^11.1.0",
     "svg-sprite-loader": "^4.1.6",

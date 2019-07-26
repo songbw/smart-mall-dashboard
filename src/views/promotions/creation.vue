@@ -4,9 +4,10 @@
       <el-step title="活动基本信息" />
       <el-step title="活动优惠信息" />
     </el-steps>
-    <div>
+    <div v-if="promotionReady">
       <custom-promotion
         v-if="activeStep === 0"
+        :promotion-data="promotionData"
         class="creation-container"
         @cancelCreation="handlePrevStep"
         @onPromotionCreated="handlePromotionCreated"
@@ -23,6 +24,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import CustomPromotion from './custom'
 import SelectGoods from './selectGoods'
 
@@ -32,12 +34,23 @@ export default {
   data() {
     return {
       dataLoading: false,
+      promotionReady: false,
       activeStep: 0,
       viewOnly: false
     }
   },
+  computed: {
+    ...mapGetters({
+      promotionData: 'currentPromotion'
+    })
+  },
   created() {
-    this.getPromotionData()
+    if (this.$route.name === 'CreatePromotion') {
+      this.$store.commit('promotions/RESET_DATA')
+      this.promotionReady = true
+    } else {
+      this.getPromotionData()
+    }
   },
   methods: {
     getPromotionData() {
@@ -50,14 +63,13 @@ export default {
       if (Number.isSafeInteger(id) && id !== -1) {
         this.dataLoading = true
         this.$store.dispatch('promotions/findById', { id: id }).then(() => {
-          this.dataLoading = false
+          this.promotionReady = true
         }).catch(err => {
           console.warn('getPromotionData:' + err)
           this.$message.warning('获取促销活动失败，请稍后重试！')
+        }).finally(() => {
           this.dataLoading = false
         })
-      } else {
-        this.$store.commit('promotions/RESET_DATA')
       }
     },
     handlePrevStep() {
@@ -83,8 +95,8 @@ export default {
 
 <style scoped>
   .creation-container {
+    width: 600px;
     margin: 40px auto 0 auto;
-    width: 40%;
   }
 
   .goods-container {

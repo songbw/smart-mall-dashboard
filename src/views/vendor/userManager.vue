@@ -77,8 +77,8 @@
       :company="currentVendor"
       @onConfirmed="vendorDialogVisible = false"
     />
-    <el-dialog v-loading="vendorLoading" title="修改用户" :visible.sync="userDialogVisible" width="30%">
-      <el-form :model="userForm">
+    <el-dialog title="修改用户" :visible.sync="userDialogVisible" width="30%">
+      <el-form v-loading="vendorLoading" :model="userForm">
         <el-form-item label="企业列表">
           <el-select :value="userForm.companyId" placeholder="请选择企业名称" @change="onVendorSelected">
             <el-option

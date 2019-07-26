@@ -152,7 +152,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="优惠券标签">
+      <el-form-item id="coupon-tags" label="优惠券标签">
         <span v-if="couponTags.length > 0">
           <el-tag
             v-for="tag in formData.tags"
@@ -181,7 +181,9 @@
         <el-button v-if="!viewOnly && tagInputVisible" class="button-tag" @click="tagInputVisible = false">
           取消
         </el-button>
-        <el-button v-else-if="!viewOnly" class="button-tag" @click="showTagInput">+ 新标签</el-button>
+        <el-button v-else-if="!viewOnly && formData.tags.length === 0" class="button-tag" @click="showTagInput">
+          + 新标签
+        </el-button>
       </el-form-item>
       <el-form-item label="优惠券图片">
         <image-upload
@@ -216,7 +218,7 @@
         <span v-if="viewOnly">{{ formData.rules.perLimited }}</span>
         <el-input-number v-else v-model="formData.rules.perLimited" :min="1" :max="1000000" />
       </el-form-item>
-      <el-form-item label="推广区域">
+      <el-form-item v-if="false" label="推广区域">
         <div v-if="viewOnly">
           <el-checkbox-group :value="formData.rules.scopes">
             <el-checkbox v-for="app in appScopes" :key="app.id" :label="app.id">
@@ -312,7 +314,7 @@
       </el-form-item>
       <el-form-item label="可用商品范围" required>
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
-        <el-select v-else v-model="formData.rules.scenario.type">
+        <el-select v-else :value="formData.rules.scenario.type" @change="onScenarioTypeChanged">
           <el-option
             v-for="item in scenarioOptions"
             :key="item.value"
@@ -506,6 +508,7 @@ export default {
       tagInputValue: '',
       tagSelected: null,
       couponData: null,
+      originalCategory: null,
       formData: {
         name: '',
         supplierMerchantId: null,
@@ -665,7 +668,12 @@ export default {
             if (value > 0) {
               callback()
             } else {
-              callback(new Error('请选择此优惠券的类别'))
+              // Check type 全场类
+              if (this.formData.rules.scenario.type !== 2) {
+                callback(new Error('请选择此优惠券的类别'))
+              } else {
+                callback()
+              }
             }
           }
         }],
@@ -1023,6 +1031,11 @@ export default {
       try {
         const valid = await this.$refs['couponForm'].validate()
         if (valid) {
+          if (this.formData.rules.scenario.type === 2 && this.formData.tags.length === 0) {
+            this.$message.warning('此优惠券为全场类，必须选择一个优惠券的标签！')
+            this.$scrollTo('#coupon-tags')
+            return
+          }
           if (this.formData.rules.collect.type === 4) {
             await this.$confirm('此优惠券的领取方式为人工分配，需要提前批量生成或导入用户券码。是否继续？', '提示', {
               confirmButtonText: '确定',
@@ -1106,6 +1119,16 @@ export default {
       } else {
         this.formData.category = id
         this.formData.rules.scenario.categories = []
+      }
+    },
+    onScenarioTypeChanged(value) {
+      this.formData.rules.scenario.type = value
+      if (value === 2) {
+        // 全场类, no category, should have tag
+        this.originalCategory = this.formData.category
+        this.formData.category = null
+      } else {
+        this.formData.category = this.originalCategory
       }
     }
   }

@@ -1,14 +1,15 @@
 <template>
   <el-form
-    v-loading="loadingData"
+    ref="promotionForm"
+    :model="formData"
+    :rules="formRules"
     label-position="right"
     label-width="120px"
-    status-icon
   >
-    <el-form-item label="活动名称" required>
-      <el-input v-model="promotionName" maxlength="20" placeholder="请输入活动名称" />
+    <el-form-item label="活动名称" prop="name">
+      <el-input v-model="formData.name" maxlength="20" placeholder="请输入活动名称" style="width: 300px" />
     </el-form-item>
-    <el-form-item label="活动标签" required>
+    <el-form-item label="活动标签" prop="tag">
       <el-select :value="promotionTagValue" @change="value => promotionTagValue = value">
         <el-option
           v-for="item in promotionOptions"
@@ -18,22 +19,36 @@
         />
       </el-select>
     </el-form-item>
-    <el-form-item label="开始时间" required>
+    <el-form-item label="开始时间" prop="startDate">
       <el-date-picker
-        v-model="promotionStartDate"
+        :value="startDate"
+        placeholder="选择开始日期"
+        type="date"
+        value-format="yyyy-MM-dd"
+        @input="onStartDateChanged"
+      />
+      <el-time-select
+        :value="startTime"
+        :picker-options="{start: '00:00', step: '01:00', end: '23:00'}"
         placeholder="选择开始时间"
-        type="datetime"
-        default-time="00:00:00"
-        value-format="yyyy-MM-dd HH:mm:ss"
+        style="margin-left: 10px"
+        @input="onStartTimeChanged"
       />
     </el-form-item>
-    <el-form-item label="结束时间" required>
+    <el-form-item label="结束时间" prop="endDate">
       <el-date-picker
-        v-model="promotionEndDate"
+        :value="endDate"
+        placeholder="选择结束日期"
+        type="date"
+        value-format="yyyy-MM-dd"
+        @input="onEndDateChanged"
+      />
+      <el-time-select
+        :value="endTime"
+        :picker-options="{start: '00:00', step: '01:00', end: '23:00'}"
         placeholder="选择结束时间"
-        type="datetime"
-        default-time="23:59:59"
-        value-format="yyyy-MM-dd HH:mm:ss"
+        style="margin-left: 10px"
+        @input="onEndTimeChanged"
       />
     </el-form-item>
     <el-form-item>
@@ -44,10 +59,19 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 
 export default {
   name: 'CustomPromotion',
+  props: {
+    promotionData: {
+      type: Object,
+      default: function() {
+        return {}
+      }
+    }
+  },
   data() {
     return {
       promotionOptions: [{
@@ -78,17 +102,71 @@ export default {
         value: 8,
         label: '限时抢'
       }],
-      loadingData: false,
-      originalName: null,
-      originalTag: null,
-      originalStartDate: null,
-      originalEndDate: null
+      startDate: null,
+      startTime: null,
+      endDate: null,
+      endTime: null,
+      formData: {
+        name: this.promotionData.name,
+        tag: this.promotionData.tag,
+        startDate: this.promotionData.startDate,
+        endDate: this.promotionData.endDate
+      },
+      formRules: {
+        name: [{
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
+            if (isEmpty(value)) {
+              callback(new Error('请输入有效的优惠券名称'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        tag: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (isEmpty(this.formData.tag)) {
+              callback(new Error('请选择有效的活动标签'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        startDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (isEmpty(this.formData.startDate)) {
+              callback(new Error('请选择有效的开始时间'))
+            } else {
+              const format = 'YYYY-MM-DD HH:mm:ss'
+              const startDate = moment(this.formData.startDate, format)
+              const now = moment()
+              if (startDate.isBefore(now)) {
+                callback(new Error('开始时间必须晚于当前时间'))
+              } else {
+                callback()
+              }
+            }
+          }
+        }],
+        endDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (isEmpty(this.formData.endDate)) {
+              callback(new Error('请选择有效的结束时间'))
+            } else {
+              const format = 'YYYY-MM-DD HH:mm:ss'
+              const startDate = moment(this.formData.startDate, format)
+              const endDate = moment(this.formData.endDate, format)
+              if (!isEmpty(startDate) && endDate.isBefore(startDate)) {
+                callback(new Error('结束时间必须晚于开始时间'))
+              } else {
+                callback()
+              }
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
-    ...mapGetters({
-      promotionData: 'currentPromotion'
-    }),
     saveButtonLabel() {
       if (this.promotionData && this.promotionData.id >= 0) {
         return '更新并修改商品'
@@ -96,22 +174,11 @@ export default {
         return '创建并选择商品'
       }
     },
-    promotionName: {
-      get() {
-        return this.promotionData ? this.promotionData.name : ''
-      },
-      set(value) {
-        if (this.originalName === null) {
-          this.originalName = this.promotionData.name
-        }
-        this.$store.commit('promotions/SET_DATA', { name: value })
-      }
-    },
     promotionTagValue: {
       get() {
-        if (this.promotionData) {
+        if (this.formData.tag) {
           for (const tag of this.promotionOptions) {
-            if (tag.label === this.promotionData.tag) {
+            if (tag.label === this.formData.tag) {
               return tag.value
             }
           }
@@ -119,73 +186,19 @@ export default {
         return null
       },
       set(value) {
-        if (this.promotionData) {
-          if (this.originalTag === null) {
-            this.originalTag = this.promotionData.tag
-          }
-          for (const tag of this.promotionOptions) {
-            if (tag.value === value) {
-              this.$store.commit('promotions/SET_DATA', { tag: tag.label })
-              break
-            }
+        for (const tag of this.promotionOptions) {
+          if (tag.value === value) {
+            this.formData.tag = tag.label
+            break
           }
         }
-      }
-    },
-    promotionStartDate: {
-      get() {
-        return this.promotionData ? this.promotionData.startDate : ''
-      },
-      set(value) {
-        if (this.originalStartDate === null) {
-          this.originalStartDate = this.promotionData.startDate
-        }
-        this.$store.commit('promotions/SET_DATA', { startDate: value })
-      }
-    },
-    promotionEndDate: {
-      get() {
-        return this.promotionData ? this.promotionData.endDate : ''
-      },
-      set(value) {
-        if (this.originalEndDate === null) {
-          this.originalEndDate = this.promotionData.endDate
-        }
-        this.$store.commit('promotions/SET_DATA', { endDate: value })
       }
     }
   },
+  created() {
+    this.setDateValue()
+  },
   methods: {
-    checkFormValidation() {
-      if (this.promotionName === null || this.promotionName.trim().length === 0) {
-        this.$message({ message: '请输入有效的活动名称！', type: 'error' })
-        return -1
-      }
-      if (this.promotionTagValue === null) {
-        this.$message({ message: '请选择有效的活动标签！', type: 'error' })
-        return -1
-      }
-      if (this.promotionStartDate === null || this.promotionStartDate.trim().length === 0) {
-        this.$message({ message: '请选择有效的开始时间！', type: 'error' })
-        return -1
-      }
-      const startDate = Date.parse(this.promotionStartDate)
-      const now = Date.now()
-      if (now > startDate) {
-        this.$message({ message: '开始时间必须晚于当前时间！', type: 'error' })
-        return -1
-      }
-      if (this.promotionEndDate === null || this.promotionEndDate.trim().length === 0) {
-        this.$message({ message: '请选择有效的结束时间！', type: 'error' })
-        return -1
-      }
-      const endDate = Date.parse(this.promotionEndDate)
-      if (endDate <= startDate) {
-        this.$message({ message: '请选择有效的结束时间！结束时间必须晚于开始时间！', type: 'error' })
-        return -1
-      }
-      return 0
-    },
     handleSetPromotionType(id) {
       const params = {
         id,
@@ -198,13 +211,7 @@ export default {
       })
     },
     handleCreatePromotion() {
-      const params = {
-        name: this.promotionName,
-        tag: this.promotionData.tag,
-        startDate: this.promotionStartDate,
-        endDate: this.promotionEndDate
-      }
-      this.$store.dispatch('promotions/create', params).then((id) => {
+      this.$store.dispatch('promotions/create', this.formData).then((id) => {
         this.handleSetPromotionType(id)
       }).catch(err => {
         console.warn('createPromotion:' + err)
@@ -213,22 +220,12 @@ export default {
     handleUpdatePromotion() {
       let changed = false
       const params = { id: this.promotionData.id }
-      if (this.originalName && this.promotionName !== this.originalName) {
-        params.name = this.promotionName
-        changed = true
-      }
-      if (this.originalTag && this.promotionData.tag !== this.originalTag) {
-        params.tag = this.promotionData.tag
-        changed = true
-      }
-      if (this.originalStartDate && this.promotionStartDate !== this.originalStartDate) {
-        params.startDate = this.promotionStartDate
-        changed = true
-      }
-      if (this.originalEndDate && this.promotionEndDate !== this.originalEndDate) {
-        params.endDate = this.promotionEndDate
-        changed = true
-      }
+      Object.keys(this.formData).forEach(key => {
+        if (this.promotionData[key] !== this.formData[key]) {
+          params[key] = this.formData[key]
+          changed = true
+        }
+      })
       if (changed) {
         this.$store.dispatch('promotions/update', params).then(() => {
           this.$emit('onPromotionCreated')
@@ -239,15 +236,79 @@ export default {
         this.$emit('onPromotionCreated')
       }
     },
-    savePromotion() {
-      const ret = this.checkFormValidation()
-      if (ret >= 0) {
-        if (this.promotionData.id >= 0) {
-          this.handleUpdatePromotion()
-        } else {
-          this.handleCreatePromotion()
+    async savePromotion() {
+      try {
+        const valid = await this.$refs['promotionForm'].validate()
+        if (valid) {
+          if (this.promotionData.id >= 0) {
+            this.handleUpdatePromotion()
+          } else {
+            this.handleCreatePromotion()
+          }
         }
+      } catch (e) {
+        console.warn('Save promotion :' + e)
       }
+    },
+    setDateValue() {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const dateFormat = 'YYYY-MM-DD'
+      const timeFormat = 'HH:mm'
+      if (!isEmpty(this.promotionData.startDate)) {
+        const startDate = moment(this.promotionData.startDate, format)
+        this.startDate = startDate.format(dateFormat)
+        this.startTime = startDate.format(timeFormat)
+      }
+      if (!isEmpty(this.promotionData.endDate)) {
+        const endDate = moment(this.promotionData.endDate, format)
+        this.endDate = endDate.format(dateFormat)
+        this.endTime = endDate.format(timeFormat)
+      }
+    },
+    parseDateFormat(date, time) {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const dateFormat = 'YYYY-MM-DD'
+      const timeFormat = 'HH:mm'
+      if (!isEmpty(date) && !isEmpty(time)) {
+        const dateMoment = moment(date, dateFormat)
+        const timeMoment = moment(time, timeFormat)
+        dateMoment.hour(timeMoment.hour())
+        dateMoment.minute(timeMoment.minute())
+        dateMoment.second(0)
+        return dateMoment.format(format)
+      } else {
+        return null
+      }
+    },
+    setPromotionStartDate() {
+      const date = this.parseDateFormat(this.startDate, this.startTime)
+      if (date) {
+        this.formData.startDate = date
+      }
+    },
+    onStartDateChanged(value) {
+      console.debug('start date ' + value)
+      this.startDate = value
+      this.setPromotionStartDate()
+    },
+    onStartTimeChanged(value) {
+      console.debug('start time ' + value)
+      this.startTime = value
+      this.setPromotionStartDate()
+    },
+    setPromotionEndDate() {
+      const date = this.parseDateFormat(this.endDate, this.endTime)
+      if (date) {
+        this.formData.endDate = date
+      }
+    },
+    onEndDateChanged(value) {
+      this.endDate = value
+      this.setPromotionEndDate()
+    },
+    onEndTimeChanged(value) {
+      this.endTime = value
+      this.setPromotionEndDate()
     }
   }
 }

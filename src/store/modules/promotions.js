@@ -70,11 +70,12 @@ const actions = {
   async create({ commit }, params) {
     const { data } = await createPromotionApi(params)
     const id = data.promotionId
-    commit('SET_DATA', { id })
+    commit('SET_DATA', { id, ...params })
     return id
   },
   async update({ commit }, params) {
     await updatePromotionApi(params)
+    commit('SET_DATA', params)
   },
   async addContent({ commit }, params) {
     const { data } = await addPromotionContentApi(params)

@@ -5,6 +5,7 @@ import './plugins/localforage'
 import './plugins/axios'
 import './plugins/qriously'
 import './plugins/v-charts'
+import './plugins/scroll-to'
 
 import App from './App'
 import store from './store'
