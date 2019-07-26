@@ -315,11 +315,6 @@ export default {
         }
       }
     },
-    goodsList: {
-      get() {
-        return this.promotionData.list
-      }
-    },
     titleForm: {
       get() {
         return {
@@ -542,7 +537,13 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item => item.mpu)
+        this.selectedItems = val.map(item => {
+          if ('mpu' in item) {
+            return this.skuData.findIndex(sku => sku.mpu === item.mpu)
+          } else {
+            return this.skuData.findIndex(sku => sku.skuid === item.skuid)
+          }
+        })
       } else {
         this.selectedItems = []
       }
@@ -555,7 +556,7 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
-          const skus = this.goodsList.filter(good => !this.selectedItems.includes(good.mpu))
+          const skus = this.skuData.filter((good, index) => !this.selectedItems.includes(index))
           this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
           this.$refs.skuTable.clearSelection()
         } catch (e) {
