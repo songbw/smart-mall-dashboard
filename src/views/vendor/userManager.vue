@@ -69,7 +69,6 @@
       :total="userTotal"
       :page.sync="queryOffset"
       :limit.sync="queryLimit"
-      :page-sizes="[20, 40, 80, 100]"
       @pagination="getUsersData"
     />
     <vendor-detail

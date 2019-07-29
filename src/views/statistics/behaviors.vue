@@ -56,7 +56,6 @@
           :total="behaviorTotal"
           :page.sync="queryOffset"
           :limit.sync="queryLimit"
-          :page-sizes="[10, 20, 40, 80]"
           @pagination="getBehaviorsData"
         />
       </el-col>

@@ -112,7 +112,6 @@
       :total="workOrderTotal"
       :page.sync="queryOffset"
       :limit.sync="queryLimit"
-      :page-sizes="[10, 20, 40, 80]"
       @pagination="getWorkOrderList"
     />
   </div>

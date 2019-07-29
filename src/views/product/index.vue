@@ -228,7 +228,6 @@
       :total="productsTotal"
       :page.sync="listOffset"
       :limit.sync="listLimit"
-      :page-sizes="[10, 20, 40, 80]"
       @pagination="getListData"
     />
     <el-dialog

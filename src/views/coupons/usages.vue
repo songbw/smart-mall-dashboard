@@ -122,7 +122,6 @@
       :total="couponUsageTotal"
       :page.sync="queryData.offset"
       :limit.sync="queryData.limit"
-      :page-sizes="[20, 40, 80, 100]"
       @pagination="getUsageData"
     />
     <el-dialog

@@ -15,7 +15,7 @@
         </div>
         <div class="header-ops-container">
           <span style="width: 100px;text-align: end">优惠价格：</span>
-          <el-input v-model="promotionValue" style="width: 100px" />
+          <el-input v-model="promotionValue" style="width: 100px" maxlength="10" />
           <el-button
             :disabled="selectedItems.length === 0"
             type="primary"
@@ -23,6 +23,12 @@
             @click="handleSetDiscount"
           >
             设置已选商品
+          </el-button>
+          <el-button
+            type="primary"
+            @click="handleSetAllDiscount"
+          >
+            设置全部商品
           </el-button>
         </div>
         <div class="header-ops-container">
@@ -116,7 +122,6 @@
         :total="skuTotal"
         :page.sync="offset"
         :limit.sync="limit"
-        :page-sizes="[20, 40, 80, 100]"
       />
       <goods-selection-dialog
         :dialog-visible="dialogSelectionVisible"
@@ -159,12 +164,12 @@ export default {
       typeOptions: [{
         value: 0,
         label: '减价'
-      }/*, {
-          value: 1,
-          label: '折扣'
-        }*/],
+      }, {
+        value: 1,
+        label: '折扣'
+      }],
       dataLoading: false,
-      promotionValue: null,
+      promotionValue: '',
       dialogSelectionVisible: false,
       dialogImportVisible: false,
       offset: 1,
@@ -209,7 +214,7 @@ export default {
           const skus = this.promotionData.promotionSkus.slice(begin, end)
           const newSkus = []
           skus.forEach(item => {
-            const newItem = Object.assign({}, item)
+            const newItem = { ...item }
             this.$set(newItem, 'editDiscount', false)
             this.$set(newItem, 'originalDiscount', item.discount)
             newSkus.push(newItem)
@@ -225,18 +230,25 @@ export default {
     productSelectable() {
       return this.viewOnly === false
     },
-    handleSetDiscount() {
+    getDiscountValue() {
       const discount = Number.parseFloat(this.promotionValue)
       if (this.skuTotal === 0) {
         this.$message({ message: '请先导入或者添加促销产品！', type: 'warning' })
-        return
+        return -1
       }
       if (Number.isNaN(discount) || discount <= 0) {
         this.$message({ message: '请输入有效的优惠信息！', type: 'error' })
-        return
+        return -1
       }
       if (this.promotionType === 1 && discount >= 1) {
         this.$message({ message: '请输入0~1之间的数字，0.8表示8折。', type: 'error' })
+        return -1
+      }
+      return discount
+    },
+    handleSetDiscount() {
+      const discount = this.getDiscountValue()
+      if (discount < 0) {
         return
       }
       let message = ''
@@ -250,12 +262,12 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.handleSetSelectedDiscount(discount)
+        this.handleSetSelectedDiscount(this.selectedItems, discount)
       }).catch(() => {
       })
     },
-    handleSetSelectedDiscount(discount) {
-      this.selectedItems.forEach(mpu => {
+    handleSetSelectedDiscount(items, discount) {
+      items.forEach(mpu => {
         const added = this.addedItems.find(item => item.mpu === mpu)
         if (added) {
           added.discount = discount
@@ -268,7 +280,27 @@ export default {
           }
         }
       })
-      this.$store.commit('promotions/SET_SKUS_DISCOUNT', { mpus: this.selectedItems, discount: discount })
+      this.$store.commit('promotions/SET_SKUS_DISCOUNT', { mpus: items, discount: discount })
+    },
+    handleSetAllDiscount() {
+      const discount = this.getDiscountValue()
+      if (discount > 0 && this.skuTotal > 0) {
+        let message = ''
+        if (this.promotionType === 0) {
+          message = `将对所有商品优惠${discount}元，请确认是否继续？`
+        } else {
+          message = `将对所有商品实施折扣${discount}，请确认是否继续？`
+        }
+        this.$confirm(message, '优惠设置', {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          const allItems = this.promotionData.promotionSkus.map(sku => sku.mpu)
+          this.handleSetSelectedDiscount(allItems, discount)
+        }).catch(() => {
+        })
+      }
     },
     handleSelectionChange(selection) {
       this.selectedItems = selection.map(item => item.mpu)

@@ -81,7 +81,6 @@
       :auto-scroll="false"
       :page.sync="offset"
       :limit.sync="limit"
-      :page-sizes="[20, 40, 80, 100]"
       @pagination="updatePageList"
     />
     <goods-selection-dialog

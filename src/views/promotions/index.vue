@@ -93,6 +93,13 @@
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
+                :command="`publish:${scope.$index}`"
+                :disabled="scope.row.status !== statusInit"
+                icon="el-icon-sell"
+              >
+                发布活动
+              </el-dropdown-item>
+              <el-dropdown-item
                 :command="`start:${scope.$index}`"
                 :disabled="scope.row.status !== statusInit"
                 icon="el-icon-time"
@@ -115,7 +122,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`stop:${scope.$index}`"
-                :disabled="scope.row.status === statusInit"
+                :disabled="scope.row.status === statusInit || scope.row.status === statusOffShelves"
                 icon="el-icon-sold-out"
                 divided
               >
@@ -140,7 +147,6 @@
       :total="promotionTotal"
       :page.sync="query.offset"
       :limit.sync="query.limit"
-      :page-sizes="[10, 20, 60, 100]"
       @pagination="getPromotionData"
     />
   </div>
@@ -179,6 +185,7 @@ export default {
   data() {
     return {
       statusInit: promotion_status_init,
+      statusOffShelves: promotion_status_off_shelves,
       statusOptions: [{
         value: 0,
         label: '全部'
@@ -276,7 +283,7 @@ export default {
       })
     },
     async handleStartPromotion(index) {
-      this.$confirm('请确认是否立即开始此优惠活动？', '优惠设置', {
+      this.$confirm('请确认是否立即开始此促销活动？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
@@ -313,7 +320,7 @@ export default {
       })
     },
     handleStopPromotion(index) {
-      this.$confirm('请确认是否结束此优惠活动？', '优惠设置', {
+      this.$confirm('请确认是否结束此促销活动？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
@@ -332,7 +339,7 @@ export default {
       })
     },
     handleDeletePromotion(index) {
-      this.$confirm('请确认是否删除此优惠活动？', '优惠设置', {
+      this.$confirm('请确认是否删除此促销活动？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
@@ -349,6 +356,25 @@ export default {
           console.log('Start Promotion: ' + err)
           this.$message({ message: '活动删除失败！', type: 'error' })
         })
+      }).catch(() => {
+      })
+    },
+    handlePublishPromotion(index) {
+      this.$confirm('请确认是否发布此促销活动，发布后将不能修改？', '警告', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        const id = this.promotionData[index].id
+        const params = { id: id, status: promotion_status_published }
+        try {
+          await updatePromotionApi(params)
+          this.$message({ message: '活动发布成功！', type: 'success' })
+          this.getPromotionData()
+        } catch (e) {
+          console.warn('Start Promotion: ' + e)
+          this.$message({ message: '活动发布失败！', type: 'error' })
+        }
       }).catch(() => {
       })
     },
@@ -371,10 +397,15 @@ export default {
         case 'delete':
           this.handleDeletePromotion(index)
           break
+        case 'publish':
+          this.handlePublishPromotion(index)
+          break
+        default:
+          break
       }
     },
     handleBatchStopPromotions() {
-      this.$confirm('请确认是否结束所选的优惠活动？', '优惠设置', {
+      this.$confirm('请确认是否结束所选的促销活动？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'

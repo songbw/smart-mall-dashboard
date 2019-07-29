@@ -96,7 +96,6 @@
       :total="total"
       :page.sync="offset"
       :limit.sync="limit"
-      :page-sizes="[20, 50, 80, 100]"
       @pagination="getContentData"
     />
     <span slot="footer">

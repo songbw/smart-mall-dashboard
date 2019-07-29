@@ -148,7 +148,6 @@
       :total="orderTotal"
       :page.sync="queryOffset"
       :limit.sync="queryLimit"
-      :page-sizes="[10, 20, 40, 80]"
       @pagination="getOrderList"
     />
   </div>
@@ -388,14 +387,13 @@ export default {
         this.$message.warning('导出订单的时间段不能大于一个自然月！')
         return
       }
-      if (this.queryVendor < 1) {
-        this.$message.warning('请先选择导出订单的供应商！')
-        return
-      }
+
       const params = {
         payStartDate: this.queryStartDate,
-        payEndDate: this.queryEndDate,
-        merchantId: this.queryVendor
+        payEndDate: this.queryEndDate
+      }
+      if (this.queryVendor >= 0) {
+        params.merchantId = this.queryVendor
       }
       try {
         const data = await exportOrdersApi(params)

@@ -108,7 +108,7 @@
               <el-dropdown-item
                 :command="`start:${scope.$index}`"
                 :disabled="scope.row.status !== initStatus"
-                icon="el-icon-time"
+                icon="el-icon-sell"
               >
                 发布优惠券
               </el-dropdown-item>
@@ -159,7 +159,6 @@
       :total="couponTotal"
       :page.sync="queryOffset"
       :limit.sync="queryLimit"
-      :page-sizes="[20, 40, 80, 100]"
       @pagination="getCouponData"
     />
   </div>
