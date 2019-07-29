@@ -16,6 +16,9 @@
         <el-button type="primary" icon="el-icon-search" @click="handleSearch">
           搜索
         </el-button>
+        <el-button type="info" icon="el-icon-edit" @click="handleCreate">
+          新建品牌
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -58,9 +61,17 @@
           <el-button
             type="warning"
             size="mini"
-            @click="handleEdit(scope.row)"
+            @click="handleEdit(scope.$index)"
           >
             编辑
+          </el-button>
+          <el-button
+            type="danger"
+            size="mini"
+            :disabled="scope.row.addTime === null"
+            @click="handleDelete(scope.$index)"
+          >
+            删除
           </el-button>
         </template>
       </el-table-column>
@@ -73,17 +84,17 @@
     />
 
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :model="dialogValue" label-position="right" label-width="120">
-        <el-form-item label="品牌全称">
-          <el-input v-model="dialogValue.brandName" readonly class="dialog-form-item" />
+      <el-form ref="brandForm" :model="dialogValue" :rules="dialogRules" label-width="120">
+        <el-form-item label="品牌全称" prop="brandName">
+          <el-input v-model="dialogValue.brandName" :readonly="noEditPermission" class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="中文名称">
+        <el-form-item label="中文名称" prop="brandCname">
           <el-input v-model="dialogValue.brandCname" :readonly="noEditPermission" class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="英文名称">
           <el-input v-model="dialogValue.brandEname" :readonly="noEditPermission" class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="品牌图标">
+        <el-form-item label="品牌图标" prop="brandLogo">
           <image-upload
             :image-url="dialogValue.brandLogo"
             :view-only="noEditPermission"
@@ -95,8 +106,8 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleBtnUpdateBrand">确定</el-button>
+        <el-button @click="handleCancel">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
       </div>
     </el-dialog>
 
@@ -105,20 +116,38 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import ImageUpload from '@/components/ImageUpload'
 import {
   getBrandListApi,
   searchBrandsApi,
-  updateBrandApi
+  updateBrandApi,
+  createBrandApi,
+  deleteBrandApi
 } from '@/api/brands'
 import { app_upload_url } from '@/utils/constants'
+import { validateURL } from '@/utils/validate'
 
 export default {
   name: 'Brand',
   components: { Pagination, ImageUpload },
   data() {
+    const validateName = (rule, value, callback) => {
+      if (isEmpty(value)) {
+        callback(new Error('请输入品牌名称'))
+      } else {
+        callback()
+      }
+    }
+    const validateLogo = (rule, value, callback) => {
+      if (validateURL(value)) {
+        callback()
+      } else {
+        callback(new Error('请选择品牌图标文件'))
+      }
+    }
     return {
       uploadUrl: app_upload_url,
       uploadData: {
@@ -128,10 +157,14 @@ export default {
       dialogFormVisible: false,
       dialogValue: {
         brandId: 0,
-        brandName: null,
-        brandCname: null,
-        brandEname: null,
-        brandLogo: null
+        brandName: '',
+        brandCname: '',
+        brandEname: '',
+        brandLogo: ''
+      },
+      dialogRules: {
+        brandName: [{ required: true, trigger: 'blur', validator: validateName }],
+        brandLogo: [{ required: true, trigger: 'blur', validator: validateLogo }]
       },
       listQuery: {
         offset: 1,
@@ -142,10 +175,7 @@ export default {
       brandTotal: 0,
       listData: [],
       filterTitle: null,
-      updateValue: {
-        brandId: 0,
-        brandLogo: null
-      }
+      editIndex: -1
     }
   },
   computed: {
@@ -203,28 +233,103 @@ export default {
         this.getListData()
       }
     },
-    handleEdit(row) {
-      this.dialogValue = row
+    handleDelete(index) {
+      const that = this
+      this.$confirm('是否继续删除此品牌？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const id = that.listData[index].brandId
+          const params = {
+            id
+          }
+          await deleteBrandApi(params)
+          this.$message({ message: '品牌删除成功！', type: 'success' })
+          if (this.listData.length === 1 && this.listQuery.offset > 1) {
+            this.listQuery.offset = this.listQuery.offset - 1
+          }
+          that.getListData()
+        } catch (e) {
+          console.warn(`Delete Brand error: ${e}`)
+        }
+      }).catch(() => {
+      })
+    },
+    handleEdit(index) {
+      this.editIndex = index
+      const row = this.listData[index]
+      Object.keys(this.dialogValue).forEach(key => {
+        this.dialogValue[key] = row[key]
+      })
       this.dialogFormTitle = `编辑 ${row.brandName}`
       this.dialogFormVisible = true
     },
     handleUploadImageSuccess(url) {
       this.dialogValue.brandLogo = url
-      this.updateValue.brandLogo = url
     },
-    handleBtnUpdateBrand() {
-      if (this.dialogFormVisible) {
-        this.dialogFormVisible = false
+    handleCancel() {
+      this.dialogFormVisible = false
+      this.$refs.brandForm.clearValidate()
+    },
+    handleSubmit() {
+      this.$refs.brandForm.validate(valid => {
+        if (valid) {
+          if (this.dialogFormVisible) {
+            this.dialogFormVisible = false
+          }
+          if (this.editIndex >= 0) {
+            this.handleUpdateBrand()
+          } else {
+            this.handleCreateBrand()
+          }
+        }
+      })
+    },
+    handleUpdateBrand() {
+      let changed = false
+      const brand = this.listData[this.editIndex]
+      const params = {
+        brandId: brand.brandId
       }
-      if (this.updateValue.brandLogo) {
-        this.updateValue.brandId = this.dialogValue.brandId
-        updateBrandApi(this.updateValue).then(() => {
+      Object.keys(this.dialogValue).forEach(key => {
+        if (brand[key] !== this.dialogValue[key]) {
+          params[key] = this.dialogValue[key]
+          changed = true
+        }
+      })
+      if (changed) {
+        updateBrandApi(params).then(() => {
           this.$message.success('更新品牌信息成功！')
         }).catch((err) => {
-          console.log('handleBtnUpdateBrand:' + err)
+          console.log('Brand update error:' + err)
           this.$message.error('更新品牌信息失败，请稍后重试!')
         })
       }
+    },
+    handleCreateBrand() {
+      const params = {}
+      Object.keys(this.dialogValue).forEach(key => {
+        if (!isEmpty(this.dialogValue[key])) {
+          params[key] = this.dialogValue[key]
+        }
+      })
+      createBrandApi(params).then(() => {
+        this.$message.success('品牌创建成功！')
+      }).catch((err) => {
+        console.log('Brand create error:' + err)
+        this.$message.error('品牌创建成功失败，请稍后重试!')
+      })
+    },
+    handleCreate() {
+      Object.keys(this.dialogValue).forEach(key => {
+        this.dialogValue[key] = ''
+      })
+      this.editIndex = -1
+      this.dialogValue.brandId = 0
+      this.dialogFormTitle = `新建品牌`
+      this.dialogFormVisible = true
     }
   }
 }

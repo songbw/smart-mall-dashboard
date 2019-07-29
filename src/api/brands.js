@@ -25,3 +25,21 @@ export function updateBrandApi(params) {
     }
   })
 }
+
+export function createBrandApi(params) {
+  return Vue.axios('brands').request({
+    url: '/products/adminBrand',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function deleteBrandApi(params) {
+  return Vue.axios('brands').request({
+    url: '/products/adminBrand',
+    method: 'delete',
+    params
+  })
+}
