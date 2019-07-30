@@ -71,7 +71,7 @@
             <span>{{ scope.row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="promotionTypeLabel" align="center" width="250">
+        <el-table-column :label="discountTypeLabel" align="center" width="250">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
               <el-input v-model="scope.row.discount" size="small" style="width:80px; margin-right: 10px" />
@@ -184,17 +184,17 @@ export default {
     ...mapGetters({
       promotionData: 'currentPromotion'
     }),
-    promotionType: {
+    discountType: {
       get() {
-        return this.promotionData.promotionType
+        return this.promotionData.discountType
       },
       set(value) {
-        this.$store.commit('setPromotionType', value)
+        this.$store.commit('setDiscountType', value)
       }
     },
-    promotionTypeLabel: {
+    discountTypeLabel: {
       get() {
-        if (this.promotionType === 0) {
+        if (this.discountType === 0) {
           return '减价(元)'
         } else {
           return '折扣'
@@ -240,7 +240,7 @@ export default {
         this.$message({ message: '请输入有效的优惠信息！', type: 'error' })
         return -1
       }
-      if (this.promotionType === 1 && discount >= 1) {
+      if (this.discountType === 1 && discount >= 1) {
         this.$message({ message: '请输入0~1之间的数字，0.8表示8折。', type: 'error' })
         return -1
       }
@@ -252,7 +252,7 @@ export default {
         return
       }
       let message = ''
-      if (this.promotionType === 0) {
+      if (this.discountType === 0) {
         message = `将对所有选择的商品优惠${discount}元，请确认是否继续？`
       } else {
         message = `将对所有选择的商品实施折扣${discount}，请确认是否继续？`
@@ -286,7 +286,7 @@ export default {
       const discount = this.getDiscountValue()
       if (discount > 0 && this.skuTotal > 0) {
         let message = ''
-        if (this.promotionType === 0) {
+        if (this.discountType === 0) {
           message = `将对所有商品优惠${discount}元，请确认是否继续？`
         } else {
           message = `将对所有商品实施折扣${discount}，请确认是否继续？`
@@ -424,7 +424,7 @@ export default {
     handleUpdatePromotion() {
       const params = {
         id: this.promotionData.id,
-        promotionType: this.promotionType
+        discountType: this.discountType
       }
       this.$store.dispatch('promotions/update', params).then(() => {
         this.handleUpdateGoods()

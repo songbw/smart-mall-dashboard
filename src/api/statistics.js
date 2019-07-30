@@ -7,9 +7,9 @@ export function getSummaryDataApi() {
   })
 }
 
-export function getPromotionDataApi(params) {
+export function getCategoryDataApi(params) {
   return Vue.axios('statistics').request({
-    url: '/statistics/overview/promotion/list',
+    url: '/statistics/overview/category/sum',
     method: 'get',
     params
   })
@@ -18,6 +18,14 @@ export function getPromotionDataApi(params) {
 export function getMerchantDataApi(params) {
   return Vue.axios('statistics').request({
     url: '/statistics/overview/merchant/sum',
+    method: 'get',
+    params
+  })
+}
+
+export function getPromotionDataApi(params) {
+  return Vue.axios('statistics').request({
+    url: '/statistics/overview/promotion/list',
     method: 'get',
     params
   })
@@ -38,5 +46,12 @@ export function getBehaviorDataApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function getMerchantSumDataApi() {
+  return Vue.axios('statistics').request({
+    url: '/statistics/overview/merchant/sum',
+    method: 'get'
   })
 }

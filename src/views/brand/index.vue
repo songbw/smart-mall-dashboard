@@ -9,11 +9,11 @@
           class="filter-item"
           clearable
           maxlength="10"
-          @keyup.enter.native="handleSearch"
+          @keyup.enter.native="getBrandData"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="handleSearch">
+        <el-button type="primary" icon="el-icon-search" @click="getBrandData">
           搜索
         </el-button>
         <el-button type="info" icon="el-icon-edit" @click="handleCreate">
@@ -80,7 +80,7 @@
       :total="brandTotal"
       :page.sync="listQuery.offset"
       :limit.sync="listQuery.limit"
-      @pagination="getListData"
+      @pagination="getBrandData"
     />
 
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
@@ -226,11 +226,11 @@ export default {
         this.listLoading = false
       }
     },
-    handleSearch() {
-      if (this.listQuery.query) {
-        this.handleFilter()
-      } else {
+    getBrandData() {
+      if (isEmpty(this.listQuery.query)) {
         this.getListData()
+      } else {
+        this.handleFilter()
       }
     },
     handleDelete(index) {
@@ -250,7 +250,7 @@ export default {
           if (this.listData.length === 1 && this.listQuery.offset > 1) {
             this.listQuery.offset = this.listQuery.offset - 1
           }
-          that.getListData()
+          that.getBrandData()
         } catch (e) {
           console.warn(`Delete Brand error: ${e}`)
         }

@@ -39,7 +39,7 @@
     </el-row>
     <el-row style="margin-top: 20px">
       <el-col :span="22">
-        <el-radio-group v-model="chartDataType" @change="onDataTypeChanged">
+        <el-radio-group @change="onDataTypeChanged" v-model="chartDataType">
           <el-radio-button label="30">最近30天运营数据</el-radio-button>
           <el-radio-button label="7">最近7天运营数据</el-radio-button>
         </el-radio-group>
@@ -49,13 +49,13 @@
       <el-col :span="11">
         <div class="data-title">订单支付总额 / 按品类</div>
         <el-card shadow="never">
-          <ve-pie :data="chartCategoryData" :settings="chartPriceSettings" :loading="chartCategoryLoading" />
+          <ve-pie :data="chartCategoryData" :loading="chartCategoryLoading" :settings="chartPriceSettings" />
         </el-card>
       </el-col>
       <el-col :span="11">
         <div class="data-title">订单支付总额 / 按商户</div>
         <el-card shadow="never">
-          <ve-pie :data="chartMerchantData" :settings="chartPriceSettings" :loading="chartMerchantLoading" />
+          <ve-pie :data="chartMerchantData" :loading="chartMerchantLoading" :settings="chartPriceSettings" />
         </el-card>
       </el-col>
     </el-row>
@@ -63,13 +63,23 @@
       <el-col :span="11">
         <div class="data-title">订单支付趋势 / 按活动</div>
         <el-card shadow="never">
-          <ve-line :data="chartPromotionData" :settings="chartPriceSettings" :loading="chartPromotionLoading" />
+          <ve-line
+            :data="chartPromotionData"
+            :data-empty="chartPromotionData.rows.length === 0"
+            :loading="chartPromotionLoading"
+            :settings="chartPriceSettings"
+          />
         </el-card>
       </el-col>
       <el-col :span="11">
         <div class="data-title">订单支付趋势 / 按时间</div>
         <el-card shadow="never">
-          <ve-line :data="chartPeriodData" :settings="chartPriceSettings" :loading="chartPeriodLoading" />
+          <ve-line
+            :data="chartPeriodData"
+            :data-empty="chartPeriodData.rows.length === 0"
+            :loading="chartPeriodLoading"
+            :settings="chartPriceSettings"
+          />
         </el-card>
       </el-col>
     </el-row>
@@ -79,10 +89,11 @@
 <script>
 import moment from 'moment'
 import {
-  getSummaryDataApi,
-  getPromotionDataApi,
+  getCategoryDataApi,
   getMerchantDataApi,
-  getPeriodDataApi
+  getPeriodDataApi,
+  getPromotionDataApi,
+  getSummaryDataApi
 } from '@/api/statistics'
 
 export default {
@@ -103,16 +114,12 @@ export default {
         returnOrderTotalNum: 0
       },
       chartPriceSettings: {
-        dataType: 'normal',
+        dataType: 'KMB',
         labelMap: {
           category: '类别',
           merchant: '商户',
           total: '支付总额',
           date: '日期',
-          secKill: '秒杀',
-          premium: '精品',
-          normal: '普通',
-          others: '其它',
           earlyMorning: '凌晨',
           morning: '上午',
           noon: '中午',
@@ -123,31 +130,15 @@ export default {
       },
       chartCategoryData: {
         columns: ['category', 'total'],
-        rows: [
-          { category: '美妆', total: 230 },
-          { category: '食品', total: 220 },
-          { category: '母婴', total: 150 },
-          { category: '家电', total: 150 },
-          { category: '粮油', total: 20 }
-        ]
+        rows: []
       },
       chartMerchantData: {
         columns: ['merchant', 'total'],
-        rows: [
-          { merchant: '奥弋', total: 400 },
-          { merchant: '嘉浦', total: 220 },
-          { merchant: '红叶', total: 150 }
-        ]
+        rows: []
       },
       chartPromotionData: {
-        columns: ['date', 'secKill', 'premium', 'normal', 'others'],
-        rows: [
-          { date: '2019/6/1', secKill: 80, premium: 30, normal: 20, others: 10 },
-          { date: '2019/6/2', secKill: 20, premium: 60, normal: 50, others: 110 },
-          { date: '2019/6/3', secKill: 50, premium: 90, normal: 10, others: 80 },
-          { date: '2019/6/4', secKill: 120, premium: 10, normal: 30, others: 50 },
-          { date: '2019/6/5', secKill: 90, premium: 200, normal: 80, others: 20 }
-        ]
+        columns: [],
+        rows: []
       },
       chartPeriodData: {
         columns: ['date', 'earlyMorning', 'morning', 'noon', 'afternoon', 'night', 'lateAtNight'],
@@ -159,7 +150,7 @@ export default {
     orderGross: {
       get() {
         if (this.summary.orderPaymentAmount > 10000) {
-          return Number.parseFloat(this.summary.orderPaymentAmount / 10000).toFixed(2) + ' 万'
+          return (this.summary.orderPaymentAmount / 10000).toFixed(2) + ' 万'
         } else if (this.summary.orderPaymentAmount > 0) {
           return this.summary.orderPaymentAmount
         } else {
@@ -215,7 +206,9 @@ export default {
     },
     getChartData() {
       const params = this.getParameters()
+      this.getCategoryData(params)
       this.getMerchantData(params)
+      this.getPromotionData(params)
       this.getPeriodData(params)
     },
     getParameters() {
@@ -225,17 +218,35 @@ export default {
       const endDate = moment().format(format)
       return { startDate, endDate }
     },
+    async getCategoryData(params) {
+      try {
+        this.chartCategoryLoading = true
+        const { data } = await getCategoryDataApi(params)
+        if (data && Array.isArray(data)) {
+          this.chartCategoryData.rows = data
+            .map(item => {
+              return {
+                category: item.categoryName,
+                total: item.orderAmount
+              }
+            })
+        }
+      } catch (e) {
+        console.warn('Dashboard get category error:' + e)
+      } finally {
+        this.chartCategoryLoading = false
+      }
+    },
     async getMerchantData(params) {
       try {
         this.chartMerchantLoading = true
         const { data } = await getMerchantDataApi(params)
-        const list = data.result
-        if (Array.isArray(list)) {
-          this.chartMerchantData.rows = list
+        if (Array.isArray(data)) {
+          this.chartMerchantData.rows = data
             .map(item => {
               return {
                 merchant: item.merchantName,
-                total: item.orderPaymentAmount
+                total: item.orderAmount
               }
             })
         }
@@ -249,20 +260,19 @@ export default {
       try {
         this.chartPromotionLoading = true
         const { data } = await getPromotionDataApi(params)
-        const list = data.result
-        if (Array.isArray(list)) {
-          this.chartPromotionData.rows = list
-            .filter(item => moment(item.statisticsDate).isValid())
+        if (Array.isArray(data) && data.length > 0) {
+          this.chartPromotionData.columns = Object.keys(data[0])
+          this.chartPromotionData.rows = data
             .map(item => {
               const format = 'YYYY/MM/DD'
-              const date = moment(item.statisticsDate).format(format)
-              return {
-                date
-              }
+              const { date, ...others } = item
+              const dataFormat = moment(date).format(format)
+              return { date: dataFormat, ...others }
             })
         }
       } catch (e) {
         console.warn('Dashboard get promotion error:' + e)
+        this.chartPromotionData.rows = []
       } finally {
         this.chartPromotionLoading = false
       }

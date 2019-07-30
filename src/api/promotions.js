@@ -71,3 +71,35 @@ export function deletePromotionContentApi(params) {
     data: { ...params }
   })
 }
+
+export function getPromotionTypesApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/type/findPage',
+    method: 'get',
+    params
+  })
+}
+
+export function createPromotionTypeApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/type/create',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function updatePromotionTypeApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/type/update',
+    method: 'put',
+    data: { ...params }
+  })
+}
+
+export function deletePromotionTypeApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/type/remove',
+    method: 'delete',
+    params
+  })
+}

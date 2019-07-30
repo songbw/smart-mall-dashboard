@@ -9,15 +9,23 @@
     <el-form-item label="活动名称" prop="name">
       <el-input v-model="formData.name" maxlength="20" placeholder="请输入活动名称" style="width: 300px" />
     </el-form-item>
-    <el-form-item label="活动标签" prop="tag">
-      <el-select :value="promotionTagValue" @change="value => promotionTagValue = value">
+    <el-form-item label="活动类型" prop="type">
+      <el-select v-model="formData.promotionTypeId">
         <el-option
-          v-for="item in promotionOptions"
+          v-for="item in tabOptions"
           :key="item.value"
           :label="item.label"
           :value="item.value"
         />
       </el-select>
+    </el-form-item>
+    <el-form-item label="活动标签" prop="tag">
+      <el-autocomplete
+        v-model="formData.tag"
+        :fetch-suggestions="queryTags"
+        :maxlength="10"
+        placeholder="请输入活动标签"
+      />
     </el-form-item>
     <el-form-item label="开始时间" prop="startDate">
       <el-date-picker
@@ -59,6 +67,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 
@@ -74,40 +83,13 @@ export default {
   },
   data() {
     return {
-      promotionOptions: [{
-        value: 0,
-        label: '当季新品'
-      }, {
-        value: 1,
-        label: '新品特价'
-      }, {
-        value: 2,
-        label: '爆款推荐'
-      }, {
-        value: 3,
-        label: '人气热卖'
-      }, {
-        value: 4,
-        label: '限时特价'
-      }, {
-        value: 5,
-        label: '超值优惠'
-      }, {
-        value: 6,
-        label: '惊喜价'
-      }, {
-        value: 7,
-        label: '冰点价'
-      }, {
-        value: 8,
-        label: '限时抢'
-      }],
       startDate: null,
       startTime: null,
       endDate: null,
       endTime: null,
       formData: {
         name: this.promotionData.name,
+        promotionTypeId: this.promotionData.promotionTypeId,
         tag: this.promotionData.tag,
         startDate: this.promotionData.startDate,
         endDate: this.promotionData.endDate
@@ -122,10 +104,19 @@ export default {
             }
           }
         }],
-        tag: [{
+        type: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.formData.promotionTypeId === null) {
+              callback(new Error('请选择有效的活动类型'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        tag: [{
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (isEmpty(this.formData.tag)) {
-              callback(new Error('请选择有效的活动标签'))
+              callback(new Error('请输入有效的活动标签'))
             } else {
               callback()
             }
@@ -139,7 +130,7 @@ export default {
               const format = 'YYYY-MM-DD HH:mm:ss'
               const startDate = moment(this.formData.startDate, format)
               const now = moment()
-              if (startDate.isBefore(now)) {
+              if (startDate.isSameOrBefore(now)) {
                 callback(new Error('开始时间必须晚于当前时间'))
               } else {
                 callback()
@@ -155,7 +146,7 @@ export default {
               const format = 'YYYY-MM-DD HH:mm:ss'
               const startDate = moment(this.formData.startDate, format)
               const endDate = moment(this.formData.endDate, format)
-              if (!isEmpty(startDate) && endDate.isBefore(startDate)) {
+              if (!isEmpty(startDate) && endDate.isSameOrBefore(startDate)) {
                 callback(new Error('结束时间必须晚于开始时间'))
               } else {
                 callback()
@@ -167,6 +158,10 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      promotionTypes: 'promotionTypes',
+      promotionTypeId: 'promotionTypeId'
+    }),
     saveButtonLabel() {
       if (this.promotionData && this.promotionData.id >= 0) {
         return '更新并修改商品'
@@ -174,24 +169,9 @@ export default {
         return '创建并选择商品'
       }
     },
-    promotionTagValue: {
+    tabOptions: {
       get() {
-        if (this.formData.tag) {
-          for (const tag of this.promotionOptions) {
-            if (tag.label === this.formData.tag) {
-              return tag.value
-            }
-          }
-        }
-        return null
-      },
-      set(value) {
-        for (const tag of this.promotionOptions) {
-          if (tag.value === value) {
-            this.formData.tag = tag.label
-            break
-          }
-        }
+        return this.promotionTypes.map(type => ({ value: type.id, label: type.typeName }))
       }
     }
   },
@@ -199,10 +179,10 @@ export default {
     this.setDateValue()
   },
   methods: {
-    handleSetPromotionType(id) {
+    handleSetDiscountType(id) {
       const params = {
         id,
-        promotionType: 0
+        discountType: 0
       }
       this.$store.dispatch('promotions/update', params).then(() => {
         this.$emit('onPromotionCreated')
@@ -212,7 +192,7 @@ export default {
     },
     handleCreatePromotion() {
       this.$store.dispatch('promotions/create', this.formData).then((id) => {
-        this.handleSetPromotionType(id)
+        this.handleSetDiscountType(id)
       }).catch(err => {
         console.warn('createPromotion:' + err)
       })
@@ -287,12 +267,10 @@ export default {
       }
     },
     onStartDateChanged(value) {
-      console.debug('start date ' + value)
       this.startDate = value
       this.setPromotionStartDate()
     },
     onStartTimeChanged(value) {
-      console.debug('start time ' + value)
       this.startTime = value
       this.setPromotionStartDate()
     },
@@ -309,6 +287,29 @@ export default {
     onEndTimeChanged(value) {
       this.endTime = value
       this.setPromotionEndDate()
+    },
+    queryTags(queryString, cb) {
+      const options = [{
+        value: '当季新品'
+      }, {
+        value: '新品特价'
+      }, {
+        value: '爆款推荐'
+      }, {
+        value: '人气热卖'
+      }, {
+        value: '限时特价'
+      }, {
+        value: '超值优惠'
+      }, {
+        value: '惊喜价'
+      }, {
+        value: '冰点价'
+      }, {
+        value: '限时抢'
+      }]
+      const results = isEmpty(queryString) ? options : options.filter(option => option.value.indexOf(queryString) >= 0)
+      cb(results)
     }
   }
 }

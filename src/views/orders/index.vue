@@ -2,33 +2,33 @@
   <div class="app-container">
     <el-form :inline="true">
       <el-form-item label="主订单号">
-        <el-input v-model="queryTradeNo" placeholder="输入主订单后8位" clearable />
+        <el-input clearable placeholder="输入主订单后8位" v-model="queryTradeNo" />
       </el-form-item>
       <el-form-item label="子订单号">
-        <el-input v-model="querySubOrderId" placeholder="输入子订单编号" clearable />
+        <el-input clearable placeholder="输入子订单编号" v-model="querySubOrderId" />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
       <el-form-item label="电话号码">
-        <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
+        <el-input clearable placeholder="输入收货人电话号码" v-model="queryMobile" />
       </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="queryStatus" @change="onQueryStatusChanged">
           <el-option
-            v-for="item in statusOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
+            v-for="item in statusOptions"
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="isAdminUser" label="供应商名">
+      <el-form-item label="供应商名" v-if="isAdminUser">
         <el-select :value="queryVendor" @change="onQueryVendorChanged">
           <el-option
-            v-for="item in vendorOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
+            v-for="item in vendorOptions"
           >
             <span>{{ item.label }}</span>
           </el-option>
@@ -38,64 +38,64 @@
     <el-form :inline="true">
       <el-form-item label="支付开始日期">
         <el-date-picker
-          v-model="queryStartDate"
-          type="date"
-          value-format="yyyy-MM-dd"
           placeholder="选择开始日期"
+          type="date"
+          v-model="queryStartDate"
+          value-format="yyyy-MM-dd"
         />
       </el-form-item>
       <el-form-item label="支付结束日期">
         <el-date-picker
-          v-model="queryEndDate"
-          type="date"
-          value-format="yyyy-MM-dd"
           placeholder="选择结束日期"
+          type="date"
+          v-model="queryEndDate"
+          value-format="yyyy-MM-dd"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="getOrderList">
+        <el-button @click="getOrderList" icon="el-icon-search" type="primary">
           搜索
         </el-button>
-        <el-button type="success" icon="el-icon-download" @click="handleExportOrders">
+        <el-button @click="handleExportOrders" icon="el-icon-download" type="success">
           导出全部订单
         </el-button>
       </el-form-item>
     </el-form>
     <el-table
-      ref="ordersTable"
-      v-loading="listLoading"
       :data="orderData"
       border
       fit
+      ref="ordersTable"
       style="width: 100%;"
+      v-loading="listLoading"
     >
-      <el-table-column label="主订单编号" align="center" width="100">
+      <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
           <el-link :href="'/orders/viewMainOrder/' + scope.row.id" type="primary">
             {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="子订单编号" align="center" width="200">
+      <el-table-column align="center" label="子订单编号" width="200">
         <template slot-scope="scope">
           <el-link :href="'/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
             {{ scope.row.subOrderId }}
           </el-link>
         </template>
       </el-table-column>
-      <el-table-column label="商品" align="center">
+      <el-table-column align="center" label="商品">
         <template slot-scope="scope">
           <order-product
+            :count="scope.row.num"
             :image-url="scope.row.image"
+            :mpu="scope.row.mpu"
             :name="scope.row.name"
             :price="scope.row.unitPrice"
-            :count="scope.row.num"
             :sku-id="scope.row.skuId"
-            :mpu="scope.row.mpu"
           />
         </template>
       </el-table-column>
-      <el-table-column label="收货人" align="center" width="160">
+      <el-table-column align="center" label="收货人" width="160">
         <template slot-scope="scope">
           <div>
             <div class="text-item">{{ '姓名：' + scope.row.receiverName }}</div>
@@ -103,7 +103,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="订单时间" align="center" width="200">
+      <el-table-column align="center" label="订单时间" width="200">
         <template slot-scope="scope">
           <div>
             <div class="text-item">
@@ -115,29 +115,29 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="订单状态" align="center" width="80">
+      <el-table-column align="center" label="订单状态" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.status | OrderStatus }}</span>
         </template>
       </el-table-column>
       <el-table-column
-        label="操作"
         align="center"
-        width="160"
         class-name="small-padding fixed-width"
+        label="操作"
+        width="160"
       >
         <template slot-scope="scope">
           <el-button
-            type="primary"
-            size="mini"
             @click="handleViewSubOrder(scope.row.subOrderId)"
+            size="mini"
+            type="primary"
           >
             查看
           </el-button>
           <el-button
-            type="info"
-            size="mini"
             @click="handleEditOrderRemark(scope.row.id)"
+            size="mini"
+            type="info"
           >
             备注
           </el-button>
@@ -145,9 +145,9 @@
       </el-table-column>
     </el-table>
     <pagination
-      :total="orderTotal"
-      :page.sync="queryOffset"
       :limit.sync="queryLimit"
+      :page.sync="queryOffset"
+      :total="orderTotal"
       @pagination="getOrderList"
     />
   </div>
@@ -159,14 +159,8 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
-import {
-  getOrderListApi,
-  updateOrderRemarkApi,
-  exportOrdersApi
-} from '@/api/orders'
-import {
-  getVendorListApi
-} from '@/api/vendor'
+import { exportOrdersApi, getOrderListApi, updateOrderRemarkApi } from '@/api/orders'
+import { getVendorListApi } from '@/api/vendor'
 import { OrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
 
 export default {
@@ -395,6 +389,7 @@ export default {
       if (this.queryVendor >= 0) {
         params.merchantId = this.queryVendor
       }
+      this.getOrderList()
       try {
         const data = await exportOrdersApi(params)
         const blob = new Blob([data])
@@ -409,6 +404,7 @@ export default {
         window.URL.revokeObjectURL(url)
       } catch (e) {
         console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的订单数据！')
       }
     }
   }

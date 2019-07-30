@@ -20,24 +20,62 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="isAdminUser" class="ops-button-group">
-      <el-button
-        type="primary"
-        icon="el-icon-edit"
-        class="ops-button"
-        @click="handleCreatePromotion"
-      >
-        创建促销活动
-      </el-button>
-      <el-button
-        :disabled="promotionSelection.length === 0"
-        type="danger"
-        icon="el-icon-sold-out"
-        class="ops-button"
-        @click="handleBatchStopPromotions"
-      >
-        批量结束活动
-      </el-button>
+    <div>
+      <el-tabs v-model="currentType" type="card" @tab-click="onTypeClicked">
+        <el-tab-pane
+          v-for="item in typeTabs"
+          :key="item.label"
+          :label="item.label"
+          :name="item.name"
+        >
+          <div style="display: flex;justify-content: space-between">
+            <el-button-group v-if="isAdminUser">
+              <el-button
+                type="primary"
+                icon="el-icon-edit"
+                class="ops-button"
+                @click="handleCreatePromotion"
+              >
+                创建促销活动
+              </el-button>
+              <el-button
+                :disabled="promotionSelection.length === 0"
+                type="warning"
+                icon="el-icon-sold-out"
+                class="ops-button"
+                @click="handleBatchStopPromotions"
+              >
+                批量结束活动
+              </el-button>
+            </el-button-group>
+            <el-button-group v-if="isAdminUser">
+              <el-button
+                type="info"
+                icon="el-icon-folder"
+                @click="handleCreateType"
+              >
+                创建活动类
+              </el-button>
+              <el-button
+                :disabled="item.name === '-1'"
+                type="success"
+                icon="el-icon-edit"
+                @click="handleUpdateType"
+              >
+                修改活动类名
+              </el-button>
+              <el-button
+                :disabled="item.name === '-1'"
+                type="danger"
+                icon="el-icon-delete"
+                @click="handleDeleteType"
+              >
+                删除活动类
+              </el-button>
+            </el-button-group>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
     <el-table
       ref="productsTable"
@@ -47,7 +85,7 @@
       fit
       stripe
       highlight-current-row
-      style="width: 100%;"
+      style="width: 100%; margin-top: 20px"
       @selection-change="handleSelectionChange"
     >
       <el-table-column
@@ -199,12 +237,15 @@ export default {
       dataLoading: false,
       promotionSelection: [],
       promotionData: [],
-      promotionTotal: 0
+      promotionTotal: 0,
+      queryTypeId: '-1'
     }
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      isAdminUser: 'isAdminUser',
+      promotionTypes: 'promotionTypes',
+      promotionTypeId: 'promotionTypeId'
     }),
     queryName: {
       get() {
@@ -213,12 +254,36 @@ export default {
       set(value) {
         this.query.name = trim(value)
       }
+    },
+    typeTabs: {
+      get() {
+        return [{
+          name: '-1',
+          label: '全部'
+        }].concat(this.promotionTypes.map(type => ({ name: type.id.toString(), label: type.typeName })))
+      }
+    },
+    currentType: {
+      get() {
+        return this.promotionTypeId.toString()
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_CURRENT_TYPE', Number.parseInt(value))
+      }
     }
   },
   created() {
+    this.getPromotionTypes()
     this.getPromotionData()
   },
   methods: {
+    async getPromotionTypes() {
+      try {
+        await this.$store.dispatch('promotions/getTypes', { pageNo: 1, pageSize: 100 })
+      } catch (e) {
+        console.warn('getPromotionTypes:' + e)
+      }
+    },
     getPromotionData() {
       const params = this.getFilterParams()
       if (params !== null) {
@@ -235,6 +300,8 @@ export default {
         this.promotionTotal = data.result.total
       } catch (e) {
         console.warn('Get all promotions error: ' + e)
+        this.promotionTotal = 0
+        this.promotionData = []
       } finally {
         this.dataLoading = false
       }
@@ -249,6 +316,13 @@ export default {
       if (this.query.status !== 0) {
         params.status = this.query.status
         needFilter = true
+      }
+      if (this.promotionTypeId >= 0) {
+        this.queryTypeId = this.promotionTypeId.toString()
+        params.promotionTypeId = this.promotionTypeId
+        needFilter = true
+      } else {
+        this.queryTypeId = '-1'
       }
       if (needFilter) {
         params.offset = this.query.offset
@@ -266,6 +340,8 @@ export default {
         this.promotionTotal = data.result.total
       } catch (e) {
         console.warn('Search all promotions error: ' + e)
+        this.promotionTotal = 0
+        this.promotionData = []
       } finally {
         this.dataLoading = false
       }
@@ -292,7 +368,7 @@ export default {
         const dateNow = moment()
         dateNow.minute(0)
         dateNow.second(0)
-        const params = { id: id, status: promotion_status_published }
+        const params = { id: id, status: promotion_status_on_sale }
         params.startDate = dateNow.format('YYYY-MM-DD HH:mm:ss')
         try {
           await updatePromotionApi(params)
@@ -428,15 +504,68 @@ export default {
         }
       }).catch(() => {
       })
+    },
+    onTypeClicked(type) {
+      if (this.queryTypeId !== type.name) {
+        this.getPromotionData()
+      }
+    },
+    handleChangeType(name) {
+      this.currentType = name
+      this.getPromotionData()
+    },
+    async handleCreateType() {
+      try {
+        const action = await this.$prompt('请输入活动类的名称', '创建活动类', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        })
+        await this.$store.dispatch('promotions/createType', { typeName: action.value })
+        this.handleChangeType(this.typeTabs[this.typeTabs.length - 1].name)
+      } catch (e) {
+        console.warn('Crete prmotion type: ' + e)
+      }
+    },
+    async handleUpdateType() {
+      try {
+        const action = await this.$prompt('请输入活动类的名称', '更改活动类', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        })
+        await this.$store.dispatch('promotions/updateType',
+          { id: this.promotionTypeId, typeName: action.value })
+      } catch (e) {
+        console.warn('Crete promotion type: ' + e)
+      }
+    },
+    async handleDeleteType() {
+      if (this.listLoading) {
+        this.$message.warning('正在加载活动列表，请稍后操作！')
+        return
+      }
+      if (this.promotionTotal > 0) {
+        this.$message.warning('请删除此组内所有活动！')
+        return
+      }
+      try {
+        await this.$confirm('是否要删除此活动类？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        const index = this.typeTabs.findIndex(type => type.name === this.currentType)
+        const nextIndex = index > 1 ? index - 1 : 0
+        await this.$store.dispatch('promotions/deleteType', { promotionTypeId: this.promotionTypeId })
+        this.handleChangeType(this.typeTabs[nextIndex].name)
+      } catch (e) {
+        console.warn('Delete promotion type:' + e)
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-  .ops-button-group {
-    margin: 10px 0;
-  }
 
   .ops-button {
     margin: 0 10px;

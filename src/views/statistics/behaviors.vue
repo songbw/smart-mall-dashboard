@@ -98,7 +98,7 @@ export default {
         value: 'total_uv',
         label: '访问人数'
       }],
-      sortKey: 'avg_stop_time',
+      sortKey: 'total_pv',
       dataLoading: false,
       behaviorData: [],
       behaviorTotal: 0,

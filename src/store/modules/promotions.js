@@ -4,31 +4,39 @@ import {
   updatePromotionApi,
   addPromotionContentApi,
   updatePromotionContentApi,
-  deletePromotionContentApi
+  deletePromotionContentApi,
+  getPromotionTypesApi,
+  createPromotionTypeApi,
+  updatePromotionTypeApi,
+  deletePromotionTypeApi
 } from '@/api/promotions'
 
 const promotionTemplate = {
   id: -1,
   name: '',
+  promotionTypeId: null,
   tag: '',
   startDate: '',
   endDate: '',
-  promotionType: 0,
+  discountType: 0,
   status: 1,
   promotionSkus: []
 }
 
 const state = {
-  promotion: { ...promotionTemplate }
+  promotion: { ...promotionTemplate },
+  promotionTypes: [],
+  promotionTypeId: -1
 }
 
 const mutations = {
   RESET_DATA: state => {
     state.promotion = { ...promotionTemplate }
+    state.promotion.promotionTypeId = state.promotionTypeId >= 0 ? state.promotionTypeId : null
     state.promotion.promotionSkus = []
   },
   SET_DATA: (state, params) => {
-    const keys = ['id', 'name', 'tag', 'startDate', 'endDate', 'promotionType', 'status', 'promotionSkus']
+    const keys = Object.keys(promotionTemplate)
     keys.forEach(key => {
       if (key in params) {
         state.promotion[key] = params[key]
@@ -59,6 +67,12 @@ const mutations = {
   DELETE_SKUS: (state, mpus) => {
     const current = state.promotion.promotionSkus
     state.promotion.promotionSkus = current.filter(item => !mpus.includes(item.mpu))
+  },
+  SET_TYPE_LIST: (state, types) => {
+    state.promotionTypes = types
+  },
+  SET_CURRENT_TYPE: (state, typeId) => {
+    state.promotionTypeId = typeId
   }
 }
 
@@ -88,6 +102,29 @@ const actions = {
   async deleteContent({ commit }, params) {
     const { data } = await deletePromotionContentApi(params)
     return data.result
+  },
+  async getTypes({ commit }, params) {
+    const { data } = await getPromotionTypesApi(params)
+    commit('SET_TYPE_LIST', data.result.list)
+    return data.result.total
+  },
+  async createType({ commit, state }, params) {
+    const { data } = await createPromotionTypeApi(params)
+    const id = data.id
+    const list = state.promotionTypes.concat([{ id: id, typeName: params.typeName }])
+    commit('SET_TYPE_LIST', list)
+  },
+  async updateType({ commit, state }, params) {
+    await updatePromotionTypeApi(params)
+    const list = state.promotionTypes.map(
+      type => type.id === params.id ? { ...params } : { ...type }
+    )
+    commit('SET_TYPE_LIST', list)
+  },
+  async deleteType({ commit, state }, params) {
+    await deletePromotionTypeApi(params)
+    const list = state.promotionTypes.filter(type => type.id !== params.promotionTypeId)
+    commit('SET_TYPE_LIST', list)
   }
 }
 

@@ -2,21 +2,24 @@
   <div>
     <el-form inline>
       <el-form-item label="活动名称">
-        <el-input v-model="name" readonly />
+        <el-input :value="name" readonly />
       </el-form-item>
-      <el-form-item label="活动状态">
-        <el-input v-model="status" readonly />
+      <el-form-item label="活动类型">
+        <el-input :value="type" readonly />
       </el-form-item>
       <el-form-item label="活动标签">
-        <el-input v-model="tag" readonly />
+        <el-input :value="tag" readonly />
       </el-form-item>
     </el-form>
     <el-form inline>
+      <el-form-item label="活动状态">
+        <el-input :value="status" readonly />
+      </el-form-item>
       <el-form-item label="开始时间">
-        <el-input v-model="startDate" readonly />
+        <el-input :value="startDate" readonly />
       </el-form-item>
       <el-form-item label="结束时间">
-        <el-input v-model="endDate" readonly />
+        <el-input :value="endDate" readonly />
       </el-form-item>
     </el-form>
   </div>
@@ -30,6 +33,7 @@ export default {
   name: 'PromotionInfo',
   computed: {
     ...mapGetters({
+      promotionTypes: 'promotionTypes',
       promotionData: 'currentPromotion'
     }),
     name: {
@@ -42,6 +46,12 @@ export default {
         const status = this.promotionData.status
         const find = PromotionStatusDefinition.find(item => item.value === status)
         return find ? find.label : status
+      }
+    },
+    type: {
+      get() {
+        const found = this.promotionTypes.find(type => type.id === this.promotionData.promotionTypeId)
+        return found ? found.typeName : ''
       }
     },
     tag: {
