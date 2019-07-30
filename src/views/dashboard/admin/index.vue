@@ -39,7 +39,7 @@
     </el-row>
     <el-row style="margin-top: 20px">
       <el-col :span="22">
-        <el-radio-group @change="onDataTypeChanged" v-model="chartDataType">
+        <el-radio-group v-model="chartDataType" @change="onDataTypeChanged">
           <el-radio-button label="30">最近30天运营数据</el-radio-button>
           <el-radio-button label="7">最近7天运营数据</el-radio-button>
         </el-radio-group>

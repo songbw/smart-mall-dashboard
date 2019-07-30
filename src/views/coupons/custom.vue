@@ -19,7 +19,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="优惠券名称" prop="name">
-        <el-input v-model="formData.name" :readonly="viewOnly" style="width: 350px" maxlength="20" />
+        <el-input v-model="formData.name" :readonly="viewOnly" maxlength="20" style="width: 350px" />
       </el-form-item>
       <el-form-item label="优惠券编码" prop="code">
         <div v-if="createCoupon">
@@ -33,10 +33,10 @@
           <el-form-item prop="releaseStartDate">
             <el-date-picker
               v-model="formData.releaseStartDate"
-              type="datetime"
               :readonly="viewOnly"
-              placeholder="选择开始日期和时间"
               default-time="00:00:00"
+              placeholder="选择开始日期和时间"
+              type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
@@ -44,10 +44,10 @@
           <el-form-item prop="releaseEndDate">
             <el-date-picker
               v-model="formData.releaseEndDate"
-              type="datetime"
               :readonly="viewOnly"
-              placeholder="选择结束日期和时间"
               default-time="23:59:59"
+              placeholder="选择结束日期和时间"
+              type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
@@ -56,17 +56,17 @@
       </el-form-item>
       <el-form-item label="发放总数" required>
         <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
-        <el-input-number v-else v-model="formData.releaseTotal" :min="1" :max="1000000" />
+        <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" />
       </el-form-item>
       <el-form-item label="有效日期" required>
         <div style="display: flex; justify-content: start">
           <el-form-item prop="effectiveStartDate">
             <el-date-picker
               v-model="formData.effectiveStartDate"
-              type="datetime"
               :readonly="viewOnly"
-              placeholder="选择开始日期和时间"
               default-time="00:00:00"
+              placeholder="选择开始日期和时间"
+              type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
@@ -74,10 +74,10 @@
           <el-form-item prop="effectiveEndDate">
             <el-date-picker
               v-model="formData.effectiveEndDate"
-              type="datetime"
               :readonly="viewOnly"
-              placeholder="选择结束日期和时间"
               default-time="23:59:59"
+              placeholder="选择结束日期和时间"
+              type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
@@ -95,10 +95,10 @@
             <el-form-item>
               <el-date-picker
                 v-model="exclude.start"
-                type="datetime"
                 :readonly="viewOnly"
-                placeholder="选择开始日期和时间"
                 default-time="00:00:00"
+                placeholder="选择开始日期和时间"
+                type="datetime"
                 value-format="yyyy-MM-dd HH:mm:ss"
               />
             </el-form-item>
@@ -106,18 +106,18 @@
             <el-form-item>
               <el-date-picker
                 v-model="exclude.end"
-                type="datetime"
                 :readonly="viewOnly"
-                placeholder="选择结束日期和时间"
                 default-time="23:59:59"
+                placeholder="选择结束日期和时间"
+                type="datetime"
                 value-format="yyyy-MM-dd HH:mm:ss"
               />
             </el-form-item>
             <el-button
               v-if="!viewOnly"
-              type="danger"
               icon="el-icon-delete"
               style="margin-left: 10px"
+              type="danger"
               @click="handleDeleteExcludeDate(index)"
             >
               删除
@@ -127,8 +127,8 @@
             <el-button
               v-if="!viewOnly"
               :disabled="formData.excludeDates.length >= 5"
-              type="primary"
               icon="el-icon-edit"
+              type="primary"
               @click="handleAddExcludeDate"
             >
               添加
@@ -138,8 +138,8 @@
       </el-form-item>
       <el-form-item label="优惠券类别" prop="category">
         <el-select
-          :value="formData.category"
           :disabled="viewOnly"
+          :value="formData.category"
           clearable
           placeholder="选择类别"
           @change="onCategoryChanged"
@@ -157,8 +157,8 @@
           <el-tag
             v-for="tag in formData.tags"
             :key="tag"
-            :disable-transitions="false"
             :closable="!viewOnly"
+            :disable-transitions="false"
             @close="handleCloseTag(tag)"
           >
             {{ getCouponTagName(tag) }}
@@ -167,8 +167,8 @@
         <el-select
           v-if="!viewOnly && tagInputVisible"
           :value="tagSelected"
-          placeholder="选择标签"
           class="input-new-select"
+          placeholder="选择标签"
           @change="handleTagSelected"
         >
           <el-option
@@ -187,36 +187,36 @@
       </el-form-item>
       <el-form-item label="优惠券图片">
         <image-upload
-          path-name="coupons"
-          image-width="200px"
           :image-url="formData.imageUrl"
           :view-only="viewOnly"
+          image-width="200px"
+          path-name="coupons"
           @success="handleImageUrlChanged"
         />
       </el-form-item>
-      <el-form-item label="优惠券链接" class="form-item" prop="url">
+      <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
-          :url="formData.url"
-          :read-only="viewOnly"
           :first-class-category="formData.category"
+          :read-only="viewOnly"
+          :url="formData.url"
           @urlChanged="handleCouponUrlChanged"
         />
       </el-form-item>
-      <el-form-item label="优惠券描述" prop="description" class="form-item">
+      <el-form-item class="form-item" label="优惠券描述" prop="description">
         <el-input
           v-model="formData.description"
-          type="textarea"
-          resize="none"
-          :rows="4"
           :readonly="viewOnly"
+          :rows="4"
           maxlength="50"
+          resize="none"
           show-word-limit
+          type="textarea"
         />
       </el-form-item>
       <el-divider content-position="left"><span class="divider-text">规则设置</span></el-divider>
       <el-form-item label="每人限领数量" required>
         <span v-if="viewOnly">{{ formData.rules.perLimited }}</span>
-        <el-input-number v-else v-model="formData.rules.perLimited" :min="1" :max="1000000" />
+        <el-input-number v-else v-model="formData.rules.perLimited" :max="1000000" :min="1" />
       </el-form-item>
       <el-form-item v-if="false" label="推广区域">
         <div v-if="viewOnly">
@@ -265,8 +265,8 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.fullReduceCoupon.reducePrice"
-              :min="1"
               :max="formData.rules.couponRules.fullReduceCoupon.fullPrice"
+              :min="1"
             />
           </el-form-item>
           <span style="margin: 0 10px">元</span>
@@ -289,10 +289,10 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.discountCoupon.discountRatio"
-              :precision="2"
-              :min="0"
-              :step="0.05"
               :max="1"
+              :min="0"
+              :precision="2"
+              :step="0.05"
             />
           </el-form-item>
         </div>
@@ -323,18 +323,18 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" required>
+      <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" prop="couponMpus">
         <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
         <coupon-goods
           key="include"
-          :mpu-list="formData.rules.scenario.couponMpus"
           :first-class-category="formData.category"
+          :mpu-list="formData.rules.scenario.couponMpus"
           :view-only="viewOnly"
           @contentAdd="handleAddCouponMpus"
           @contentDelete="handleDeleteCouponMpus"
         />
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.scenario.type === 2" label="排除商品" required>
+      <el-form-item v-else-if="formData.rules.scenario.type === 2" label="排除商品">
         <p>请确认是否要创建全场通用券,该券创建后可用于您发布的任何商品(排除商品除外)</p>
         <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
         <coupon-goods
@@ -345,22 +345,22 @@
           @contentDelete="handleDeleteExcludeMpus"
         />
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.scenario.type === 3" label="活动类别" required>
+      <el-form-item v-else-if="formData.rules.scenario.type === 3" label="活动类别" prop="couponCategories">
         <div v-if="categoriesLoaded">
           <coupon-category
             v-for="(category, index) in formData.rules.scenario.categories"
             :key="'category-' + index"
-            :view-only="viewOnly"
-            :preset-first-category="formData.category"
             :category-value="category"
             :index="index"
-            @categorySet="handleSetCategory"
+            :preset-first-category="formData.category"
+            :view-only="viewOnly"
             @categoryDelete="handleDeleteCategory"
+            @categorySet="handleSetCategory"
           />
           <el-button
-            type="primary"
-            icon="el-icon-edit"
             :disabled="viewOnly"
+            icon="el-icon-edit"
+            type="primary"
             @click="handleNewCategory"
           >
             添加类别
@@ -368,8 +368,8 @@
           <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods
             key="exclude"
-            :mpu-list="formData.rules.scenario.excludeMpus"
             :first-class-category="formData.category"
+            :mpu-list="formData.rules.scenario.excludeMpus"
             :view-only="viewOnly"
             @contentAdd="handleAddExcludeMpus"
             @contentDelete="handleDeleteExcludeMpus"
@@ -379,18 +379,18 @@
           <span>正在加载类别...</span>
         </div>
       </el-form-item>
-      <el-form-item label="使用规则" class="form-item">
+      <el-form-item class="form-item" label="使用规则">
         <el-input
           v-model="formData.rules.rulesDescription"
-          type="textarea"
-          resize="none"
-          :rows="4"
           :readonly="viewOnly"
+          :rows="4"
           maxlength="50"
+          resize="none"
           show-word-limit
+          type="textarea"
         />
       </el-form-item>
-      <el-form-item label="优惠券概述" class="form-item">
+      <el-form-item class="form-item" label="优惠券概述">
         <ul style="list-style-type: decimal">
           <li>本券有效期为
             <span class="data-text">
@@ -454,20 +454,10 @@ import CouponGoods from './goods'
 import CouponCategory from './category'
 import CouponUrl from './couponUrl'
 import ImageUpload from '@/components/ImageUpload'
-import {
-  getCouponTagsApi,
-  getCouponByIdApi,
-  createCouponApi,
-  updateCouponApi
-} from '@/api/coupons'
+import { createCouponApi, getCouponByIdApi, getCouponTagsApi, updateCouponApi } from '@/api/coupons'
 import { getVendorListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
-import {
-  CouponAppScopes,
-  CouponTypeOptions,
-  CouponCollectOptions,
-  CouponScenarioOptions
-} from './constants'
+import { CouponAppScopes, CouponCollectOptions, CouponScenarioOptions, CouponTypeOptions } from './constants'
 
 export default {
   name: 'CustomCoupon',
@@ -674,6 +664,28 @@ export default {
               } else {
                 callback()
               }
+            }
+          }
+        }],
+        couponMpus: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            // Check type 全场类
+            if (this.formData.rules.scenario.type === 1 &&
+              this.formData.rules.scenario.couponMpus.length === 0) {
+              callback(new Error('请选择此优惠券的活动商品'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        couponCategories: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            // Check type 全场类
+            if (this.formData.rules.scenario.type === 3 &&
+              this.formData.rules.scenario.categories.length === 0) {
+              callback(new Error('请选择此优惠券的活动类别'))
+            } else {
+              callback()
             }
           }
         }],

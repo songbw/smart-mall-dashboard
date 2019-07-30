@@ -2,33 +2,33 @@
   <div class="app-container">
     <el-form :inline="true">
       <el-form-item label="主订单号">
-        <el-input clearable placeholder="输入主订单后8位" v-model="queryTradeNo" />
+        <el-input v-model="queryTradeNo" clearable placeholder="输入主订单后8位" />
       </el-form-item>
       <el-form-item label="子订单号">
-        <el-input clearable placeholder="输入子订单编号" v-model="querySubOrderId" />
+        <el-input v-model="querySubOrderId" clearable placeholder="输入子订单编号" />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
       <el-form-item label="电话号码">
-        <el-input clearable placeholder="输入收货人电话号码" v-model="queryMobile" />
+        <el-input v-model="queryMobile" clearable placeholder="输入收货人电话号码" />
       </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="queryStatus" @change="onQueryStatusChanged">
           <el-option
+            v-for="item in statusOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
-            v-for="item in statusOptions"
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="供应商名" v-if="isAdminUser">
+      <el-form-item v-if="isAdminUser" label="供应商名">
         <el-select :value="queryVendor" @change="onQueryVendorChanged">
           <el-option
+            v-for="item in vendorOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
-            v-for="item in vendorOptions"
           >
             <span>{{ item.label }}</span>
           </el-option>
@@ -38,36 +38,36 @@
     <el-form :inline="true">
       <el-form-item label="支付开始日期">
         <el-date-picker
+          v-model="queryStartDate"
           placeholder="选择开始日期"
           type="date"
-          v-model="queryStartDate"
           value-format="yyyy-MM-dd"
         />
       </el-form-item>
       <el-form-item label="支付结束日期">
         <el-date-picker
+          v-model="queryEndDate"
           placeholder="选择结束日期"
           type="date"
-          v-model="queryEndDate"
           value-format="yyyy-MM-dd"
         />
       </el-form-item>
       <el-form-item>
-        <el-button @click="getOrderList" icon="el-icon-search" type="primary">
+        <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
-        <el-button @click="handleExportOrders" icon="el-icon-download" type="success">
+        <el-button icon="el-icon-download" type="success" @click="handleExportOrders">
           导出全部订单
         </el-button>
       </el-form-item>
     </el-form>
     <el-table
+      ref="ordersTable"
+      v-loading="listLoading"
       :data="orderData"
       border
       fit
-      ref="ordersTable"
       style="width: 100%;"
-      v-loading="listLoading"
     >
       <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
@@ -128,16 +128,16 @@
       >
         <template slot-scope="scope">
           <el-button
-            @click="handleViewSubOrder(scope.row.subOrderId)"
             size="mini"
             type="primary"
+            @click="handleViewSubOrder(scope.row.subOrderId)"
           >
             查看
           </el-button>
           <el-button
-            @click="handleEditOrderRemark(scope.row.id)"
             size="mini"
             type="info"
+            @click="handleEditOrderRemark(scope.row.id)"
           >
             备注
           </el-button>
