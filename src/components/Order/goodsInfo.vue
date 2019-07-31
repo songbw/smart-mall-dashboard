@@ -3,7 +3,7 @@
     <el-col :span="24">
       <el-card shadow="never">
         <div slot="header">
-          <span class="card-header-text">商品信息</span>
+          <span class="card-header-text">子订单信息</span>
         </div>
         <el-table
           ref="SkuTable"
@@ -14,7 +14,10 @@
         >
           <el-table-column type="expand">
             <template slot-scope="props">
-              <div><span class="item-label">子订单号：</span> {{ props.row.subOrderId }}</div>
+              <div style="display: flex;justify-content: space-between">
+                <div><span class="item-label">子订单状态：</span> {{ getSubStatus(props.row) | statusFilter }}</div>
+                <div><span class="item-label">子订单号：</span> {{ props.row.subOrderId }}</div>
+              </div>
               <div v-if="logisticsTimeline.length" style="margin-top: 10px">
                 <div class="item-label">物流信息：</div>
                 <el-timeline style="margin-top: 10px">
@@ -51,7 +54,7 @@
               <span>{{ scope.row.num }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="原价(元)" align="center" width="80">
+          <el-table-column label="价格(元)" align="center" width="80">
             <template slot-scope="scope">
               <span>{{ scope.row.unitPrice }}</span>
             </template>
@@ -61,9 +64,14 @@
               <span>{{ scope.row.salePrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="促销减价(元)" align="center" width="110">
+          <el-table-column label="活动减价(元)" align="center" width="110">
             <template slot-scope="scope">
               <span>{{ scope.row.promotionDiscount }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="优惠券减价(元)" align="center" width="120">
+            <template slot-scope="scope">
+              <span>{{ scope.row.skuCouponDiscount | centFilter }}</span>
             </template>
           </el-table-column>
           <el-table-column label="物流单号" align="center" width="180">
@@ -80,9 +88,24 @@
 <script>
 import isEmpty from 'lodash/isEmpty'
 import { getLogisticsInfoApi } from '@/api/orders'
+import { SubOrderStatusDefinitions } from '@/utils/constants'
 
 export default {
   name: 'GoodsInfo',
+  filters: {
+    centFilter: cent => {
+      const yuan = Number.parseFloat(cent)
+      if (Number.isNaN(yuan)) {
+        return ''
+      } else {
+        return (yuan / 100).toFixed(2)
+      }
+    },
+    statusFilter: status => {
+      const find = SubOrderStatusDefinitions.find(option => option.value === status)
+      return find ? find.label : status
+    }
+  },
   props: {
     skuList: {
       type: Array,
@@ -115,6 +138,9 @@ export default {
           })
         }
       })
+    },
+    getSubStatus(row) {
+      return row.subStatus ? row.subStatus : row.status
     }
   }
 }

@@ -3,7 +3,7 @@
     <el-col :span="24">
       <el-card shadow="never">
         <div slot="header">
-          <span class="card-header-text">订单信息</span>
+          <span class="card-header-text">主订单信息</span>
         </div>
         <el-row class="item-row">
           <el-col :span="12">
@@ -16,9 +16,9 @@
             <span class="item-label">主订单号：</span>
             <span class="item-text">{{ tradeNo }}</span>
           </el-col>
-          <el-col v-if="subOrderId" :span="12">
-            <span class="item-label">子订单号：</span>
-            <span class="item-text">{{ subOrderId }}</span>
+          <el-col :span="12">
+            <span class="item-label">供应商名：</span>
+            <span class="item-text">{{ merchantName }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -68,7 +68,7 @@ export default {
       type: String,
       default: ''
     },
-    subOrderId: {
+    merchantName: {
       type: String,
       default: ''
     },

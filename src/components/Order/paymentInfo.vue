@@ -17,18 +17,18 @@
             <span class="item-text">{{ paymentNo }}</span>
           </el-col>
           <el-col :span="12">
-            <span class="item-label">支付时间：</span>
-            <span class="item-text">{{ paymentAt | timeFilter }}</span>
+            <span class="item-label">商户编号：</span>
+            <span class="item-text">{{ outTradeNo }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
           <el-col :span="12">
             <span class="item-label">支付金额：</span>
-            <span class="item-text">{{ paymentTotalFee | centFilter }}</span>
+            <span class="item-text">{{ paymentAmount | centFilter }}</span>
           </el-col>
           <el-col :span="12">
-            <span class="item-label">订单金额：</span>
-            <span class="item-text">{{ paymentAmount | centFilter }}</span>
+            <span class="item-label">支付时间：</span>
+            <span class="item-text">{{ paymentAt | timeFilter }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -36,19 +36,19 @@
             <span class="item-label">支付类型：</span>
             <span class="item-text">{{ payType }}</span>
           </el-col>
-          <el-col v-if="refundFee > 0" :span="12">
+          <el-col :span="12">
             <span class="item-label">退款金额：</span>
             <span class="item-text">{{ refundFee | centFilter }}</span>
           </el-col>
         </el-row>
-        <el-row v-if="couponCode" class="item-row">
+        <el-row class="item-row">
           <el-col :span="12">
             <span class="item-label">优惠券码：</span>
-            <span class="item-text">{{ couponCode }}</span>
+            <span class="item-text">{{ couponCode || '无' }}</span>
           </el-col>
           <el-col :span="12">
             <span class="item-label">优惠金额：</span>
-            <span class="item-text">{{ `￥ -${couponDiscount}` }}</span>
+            <span class="item-text">￥ {{ couponDiscount || `0.00` }}</span>
           </el-col>
         </el-row>
       </el-card>
@@ -94,13 +94,13 @@ export default {
       type: String,
       default: ''
     },
-    paymentAt: {
+    outTradeNo: {
       type: String,
       default: ''
     },
-    paymentTotalFee: {
-      type: Number,
-      default: 0
+    paymentAt: {
+      type: String,
+      default: ''
     },
     paymentAmount: {
       type: Number,

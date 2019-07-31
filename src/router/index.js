@@ -232,7 +232,7 @@ export const constantRoutes = [
         path: 'delivery',
         name: 'OrderDelivery',
         component: () => import('@/views/orders/delivery'),
-        meta: { title: '订单物流', icon: 'delivery' }
+        meta: { title: '物流发货', icon: 'delivery' }
       }
     ]
   },

@@ -31,6 +31,9 @@ export const ProductStateOptions = [
 ]
 
 export const OrderStatusDefinitions = [{
+  value: -1,
+  label: '已删除'
+}, {
   value: 0,
   label: '待付款'
 }, {
@@ -42,6 +45,26 @@ export const OrderStatusDefinitions = [{
 }, {
   value: 3,
   label: '已取消'
+}]
+
+export const SubOrderStatusDefinitions = [{
+  value: 0,
+  label: '待付款' // 已下单
+}, {
+  value: 1,
+  label: '待发货'
+}, {
+  value: 2,
+  label: '已发货'
+}, {
+  value: 3,
+  label: '已完成'
+}, {
+  value: 4,
+  label: '已取消'
+}, {
+  value: 5,
+  label: '已失败'
 }]
 
 export const PaymentStatusDefinitions = [{

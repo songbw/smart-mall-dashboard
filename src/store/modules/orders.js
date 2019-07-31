@@ -10,7 +10,7 @@ const state = {
     mobile: '',
     payDateStart: null,
     payDateEnd: null,
-    status: -2,
+    subStatus: -1,
     merchantId: -1
   }
 }

@@ -54,16 +54,8 @@
       :data="workOrderData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%;"
-      @selection-change="handleSelectionChange"
     >
-      <el-table-column
-        type="selection"
-        align="center"
-        width="55"
-      />
       <el-table-column label="工单编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
@@ -257,9 +249,6 @@ export default {
       } finally {
         this.listLoading = false
       }
-    },
-    handleSelectionChange(selection) {
-      this.wokorderSelection = selection
     },
     handleViewWorkOrder(id) {
       this.$router.push({

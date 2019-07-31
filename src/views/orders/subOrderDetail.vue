@@ -3,7 +3,7 @@
     <order-info
       :status="orderData.status"
       :trade-no="orderData.tradeNo"
-      :sub-order-id="orderData.subOrderId"
+      :merchant-name="merchantName"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
       :remark="orderData.remark"
@@ -23,8 +23,8 @@
     <payment-info
       :pay-status="orderData.payStatus"
       :payment-no="orderData.paymentNo"
+      :out-trade-no="orderData.outTradeNo"
       :payment-at="orderData.paymentAt"
-      :payment-total-fee="orderData.paymentTotalFee"
       :payment-amount="orderData.paymentAmount"
       :pay-type="orderData.payType"
       :refund-fee="orderData.refundFee"
@@ -43,6 +43,10 @@
 import {
   getOrderListApi
 } from '@/api/orders'
+import {
+  getVendorProfileApi
+} from '@/api/vendor'
+
 import OrderInfo from '@/components/Order/orderInfo'
 import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
@@ -59,6 +63,7 @@ export default {
   data() {
     return {
       dataLoading: false,
+      merchantName: '',
       orderData: {}
     }
   },
@@ -73,11 +78,22 @@ export default {
         const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
         if (data.result.list.length > 0) {
           this.orderData = data.result.list[0]
+          this.getMerchantName(this.orderData.merchantId)
         }
       } catch (e) {
         console.warn('Get order detail error:' + e)
       } finally {
         this.dataLoading = false
+      }
+    },
+    async getMerchantName(id) {
+      try {
+        const { data } = await getVendorProfileApi({ id })
+        if (data && data.company) {
+          this.merchantName = data.company.name
+        }
+      } catch (e) {
+        console.warn('Sub order detail vendor profile error:' + e)
       }
     },
     goBack() {

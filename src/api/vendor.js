@@ -74,3 +74,10 @@ export function setUserVendorApi(params) {
     }
   })
 }
+
+export function getVendorProfileApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/vendors/${params.id}`,
+    method: 'get'
+  })
+}

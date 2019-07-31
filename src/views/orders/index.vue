@@ -13,7 +13,7 @@
         <el-input v-model="queryMobile" clearable placeholder="输入收货人电话号码" />
       </el-form-item>
       <el-form-item label="订单状态">
-        <el-select :value="queryStatus" @change="onQueryStatusChanged">
+        <el-select :value="querySubStatus" @change="onQueryStatusChanged">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -90,7 +90,7 @@
             :image-url="scope.row.image"
             :mpu="scope.row.mpu"
             :name="scope.row.name"
-            :price="scope.row.unitPrice"
+            :price="scope.row.salePrice"
             :sku-id="scope.row.skuId"
           />
         </template>
@@ -117,7 +117,7 @@
       </el-table-column>
       <el-table-column align="center" label="订单状态" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.status | OrderStatus }}</span>
+          <span>{{ scope.row.subStatus | OrderStatus }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -161,14 +161,14 @@ import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import { exportOrdersApi, getOrderListApi, updateOrderRemarkApi } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
-import { OrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
+import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
 
 export default {
   name: 'Orders',
   components: { Pagination, OrderProduct },
   filters: {
     OrderStatus: status => {
-      const find = OrderStatusDefinitions.find(option => option.value === status)
+      const find = SubOrderStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
     },
     timeFilter: date => {
@@ -180,9 +180,9 @@ export default {
   data() {
     return {
       statusOptions: [{
-        value: -2,
+        value: -1,
         label: '全部'
-      }].concat(OrderStatusDefinitions),
+      }].concat(SubOrderStatusDefinitions),
       vendors: [],
       listLoading: false,
       orderData: [],
@@ -223,12 +223,12 @@ export default {
         this.$store.commit('orders/SET_SEARCH_DATA', { mobile: value })
       }
     },
-    queryStatus: {
+    querySubStatus: {
       get() {
-        return this.orderQuery.status
+        return this.orderQuery.subStatus
       },
       set(value) {
-        this.$store.commit('orders/SET_SEARCH_DATA', { status: value })
+        this.$store.commit('orders/SET_SEARCH_DATA', { subStatus: value })
       }
     },
     queryVendor: {
@@ -308,8 +308,8 @@ export default {
           params[key] = this.orderQuery[key]
         }
       })
-      if (this.queryStatus > -2) {
-        params.status = this.queryStatus
+      if (this.querySubStatus >= 0) {
+        params.subStatus = this.querySubStatus
       }
       return params
     },
@@ -353,7 +353,7 @@ export default {
       })
     },
     onQueryStatusChanged(value) {
-      this.queryStatus = value
+      this.querySubStatus = value
     },
     onQueryVendorChanged(value) {
       this.queryVendor = value

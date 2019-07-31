@@ -1,193 +1,224 @@
 <template>
   <div class="app-container">
-    <el-form
-      ref="deliveryForm"
-      v-loading="loading"
-      :model="form"
-      :rules="formRules"
-      label-position="right"
-      label-width="150px"
-      class="form"
-    >
-      <el-form-item label="订单编号" prop="orderId">
-        <el-input v-model="form.orderId" name="orderId" class="form_input" />
+    <el-form :inline="true">
+      <el-form-item label="电话号码">
+        <el-input v-model="orderQuery.mobile" clearable placeholder="输入收货人电话号码" />
       </el-form-item>
-      <el-form-item label="子订单号" prop="skuId">
-        <el-input v-model="form.skuId" name="skuId" class="form_input" />
+      <el-form-item label="订单状态">
+        <el-select :value="orderQuery.subStatus" @change="onQueryStatusChanged">
+          <el-option
+            v-for="item in statusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="快递单号" prop="deliveryId">
-        <el-input v-model="form.deliveryId" name="deliveryId" class="form_input" />
+    </el-form>
+    <el-form :inline="true">
+      <el-form-item label="支付开始日期">
+        <el-date-picker
+          v-model="orderQuery.payDateStart"
+          placeholder="选择开始日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+        />
       </el-form-item>
-      <el-form-item label="备注" prop="notes">
-        <el-input
-          v-model="form.notes"
-          :rows="2"
-          type="textarea"
-          placeholder="请输入内容"
-          class="form_input"
+      <el-form-item label="支付结束日期">
+        <el-date-picker
+          v-model="orderQuery.payDateEnd"
+          placeholder="选择结束日期"
+          type="date"
+          value-format="yyyy-MM-dd"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" style="font-size:16px;" @click="formSubmit">
-          确定
-        </el-button>
-        <el-button type="warning" style="font-size:16px;" @click="formCancel">
-          重置
-        </el-button>
-        <el-button type="success" style="font-size:16px;" @click="deliveryImportExcel">
-          导入EXCEL
-        </el-button>
-        <el-button type="primary" style="font-size:16px;" @click="downTemplate">
-          下载模板文件
+        <el-button icon="el-icon-search" type="primary" @click="getOrderList">
+          搜索
         </el-button>
       </el-form-item>
     </el-form>
-    <import-excel
-      v-if="isVisibleDialog"
-      @close="deliveryCloseImport"
+    <el-table
+      ref="ordersTable"
+      v-loading="listLoading"
+      :data="orderData"
+      border
+      fit
+      style="width: 100%;"
+    >
+      <el-table-column align="center" label="主订单编号" width="100">
+        <template slot-scope="scope">
+          <el-link :href="'/orders/viewMainOrder/' + scope.row.id" type="primary">
+            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="子订单编号" width="200">
+        <template slot-scope="scope">
+          <el-link :href="'/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
+            {{ scope.row.subOrderId }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="商品">
+        <template slot-scope="scope">
+          <order-product
+            :count="scope.row.num"
+            :image-url="scope.row.image"
+            :mpu="scope.row.mpu"
+            :name="scope.row.name"
+            :price="scope.row.salePrice"
+            :sku-id="scope.row.skuId"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="收货人" width="160">
+        <template slot-scope="scope">
+          <div>
+            <div class="text-item">{{ '姓名：' + scope.row.receiverName }}</div>
+            <div class="text-item">{{ '电话：' + scope.row.mobile }}</div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="订单时间" width="200">
+        <template slot-scope="scope">
+          <div>
+            <div class="text-item">
+              下单：<span>{{ scope.row.createdAt | timeFilter }}</span>
+            </div>
+            <div class="text-item">
+              支付：<span>{{ scope.row.paymentAt | timeFilter }}</span>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="订单状态" width="80">
+        <template slot-scope="scope">
+          <span>{{ scope.row.subStatus | OrderStatus }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        class-name="small-padding fixed-width"
+        label="操作"
+        width="160"
+      >
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="primary"
+            @click="handleDeliverSubOrder(scope.row.subOrderId)"
+          >
+            发货
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <pagination
+      :limit.sync="orderQuery.pageSize"
+      :page.sync="orderQuery.pageIndex"
+      :total="orderTotal"
+      @pagination="getOrderList"
     />
   </div>
 </template>
 
 <script>
-import { deliveryUploadApi } from '@/api/orders'
-import ImportExcel from './importExcel'
+import { mapGetters } from 'vuex'
+import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
+import Pagination from '@/components/Pagination'
+import OrderProduct from './OrderProduct'
+import { getOrderListApi } from '@/api/orders'
+import { SubOrderStatusDefinitions } from '@/utils/constants'
 
 export default {
-  components: {
-    ImportExcel
+  name: 'Orders',
+  components: { Pagination, OrderProduct },
+  filters: {
+    OrderStatus: status => {
+      const find = SubOrderStatusDefinitions.find(option => option.value === status)
+      return find ? find.label : status
+    },
+    timeFilter: date => {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const momentDate = moment(date)
+      return momentDate.isValid() ? momentDate.format(format) : ''
+    }
   },
   data() {
-    const ruleValidateNumber = (rule, value, callback) => {
-      const reg = /^[0-9]+$/
-      if (value.length < 1 || !reg.test(value)) {
-        callback(new Error('请输入正确的单号'))
-      } else {
-        callback()
-      }
-    }
-    const ruleValidateName = (rule, value, callback) => {
-      if (value.length < 1) {
-        callback(new Error('请输入正确的单号'))
-      } else {
-        callback()
-      }
-    }
     return {
-      form: {
-        orderId: '',
-        skuId: '',
-        deliveryId: '',
-        notes: '',
+      statusOptions: [{
+        value: 1,
+        label: '待发货'
+      }, {
+        value: 2,
+        label: '已发货'
+      }],
+      listLoading: false,
+      orderQuery: {
+        mobile: '',
+        subStatus: 1,
+        payDateStart: null,
+        payDateEnd: null,
         pageIndex: 1,
-        pageSize: 10
+        pageSize: 20
       },
-      formRules: {
-        orderId: [{ required: true, trigger: 'blur', validator: ruleValidateNumber }],
-        skuId: [{ required: true, trigger: 'blur', validator: ruleValidateName }],
-        deliveryId: [{ required: true, trigger: 'blur', validator: ruleValidateName }]
-      },
-      list: [],
-      totalNum: 1,
-      isVisibleDialog: false,
-      loading: false
+      orderData: [],
+      orderTotal: 0,
+      merchantName: ''
     }
   },
+  computed: {
+    ...mapGetters({
+      vendorApproved: 'vendorApproved'
+    })
+  },
+  created() {
+    this.getOrderList()
+  },
   methods: {
-    clearForm() {
-      this.form.orderId = ''
-      this.form.skuId = ''
-      this.form.deliveryId = ''
-      this.form.notes = ''
-
-      this.form.pageIndex = 1
-      this.form.pageSize = 10
-      this.$refs.deliveryForm.resetFields()
-    },
-    formSubmit() {
-      this.form.pageIndex = 1
-      this.deliveryUploading()
-    },
-    formCancel() {
-      this.clearForm()
-    },
-    deliveryImportExcel() {
-      this.isVisibleDialog = true
-    },
-    deliveryCloseImport() {
-      this.isVisibleDialog = false
-    },
-    delivery_setCellStyle(row, column, rowIndex, columnIndex) {
-      return 'border-style:outset;'
-    },
-    delivery_setRowStyle(row, rowIndex) {
-      return 'background-color: #f7f6f5; border: 1px; solid #0094ff; border-collapse: collapse;'
-    },
-    delivery_setHeadStyle(row, column, rowIndex, columnIndex) {
-      return 'background-color:#b0c4de; color:#565552;border-style:outset;'
-    },
-    downTemplate() {
-      import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['orderId', 'subOrderId', 'logisticsId', 'logisticsContent']
-        const data = []
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'deliveryTemplate'
-        })
-      })
-    },
-    deliveryUploading() {
-      this.loading = true
-      if (this.form.orderId !== null) {
-        this.form.orderId = this.form.orderId.trim()
+    getSearchParams() {
+      const params = {
+        subStatus: this.orderQuery.subStatus,
+        pageIndex: this.orderQuery.pageIndex,
+        pageSize: this.orderQuery.pageSize
       }
-      if (this.form.skuId !== null) {
-        this.form.skuId = this.form.skuId.trim()
-      }
-      if (this.form.deliveryId !== null) {
-        this.form.deliveryid = this.form.deliveryId.trim()
-      }
-      this.$refs.deliveryForm.validate(valid => {
-        if (valid) {
-          this.list = [{
-            orderId: Number(this.form.orderId),
-            subOrderId: this.form.skuId,
-            logisticsId: this.form.deliveryId,
-            logisticsContent: this.form.notes
-          }]
-          deliveryUploadApi(this.totalNum, this.list).then(response => {
-            this.loading = false
-            this.$alert('添加成功', {
-              confirmButtonText: '确定',
-              type: 'success',
-              title: '物流信息添加',
-              callback: action => {
-                this.clearForm()
-              }
-            })
-          }).catch(_ => {
-            this.loading = false
-            this.$alert('添加失败', {
-              confirmButtonText: '确定',
-              type: 'warn',
-              title: '物流信息添加'
-            })
-          })
-        } else {
-          // console.log('error submit!!')
-          this.loading = false
-          return false
+      const keys = ['mobile', 'payDateStart', 'payDateEnd']
+      keys.forEach(key => {
+        if (!isEmpty(this.orderQuery[key])) {
+          params[key] = this.orderQuery[key]
         }
       })
+      return params
+    },
+    async getOrderList() {
+      try {
+        if (this.vendorApproved) {
+          this.listLoading = true
+          const params = this.getSearchParams()
+          const { data } = await getOrderListApi(params)
+          this.orderTotal = data.result.total
+          this.orderData = data.result.list
+        }
+      } catch (e) {
+        console.warn('Orders List error: ' + e)
+      } finally {
+        this.listLoading = false
+      }
+    },
+    handleDeliverSubOrder(subOrderId) {
+    },
+    onQueryStatusChanged(value) {
+      this.orderQuery.subStatus = value
+      this.getOrderList()
     }
   }
 }
 </script>
 
 <style scoped>
-  .form_input {
-    width: 50%;
+  .text-item {
+    text-align: start
   }
 </style>
-
