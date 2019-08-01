@@ -67,3 +67,23 @@ export function exportOrdersApi(params) {
     params
   })
 }
+
+export function getExpressCompanyApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/kuaidi/all',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function uploadLogisticsApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/order/uploadLogistics',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}

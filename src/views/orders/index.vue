@@ -2,15 +2,15 @@
   <div class="app-container">
     <el-form :inline="true">
       <el-form-item label="主订单号">
-        <el-input v-model="queryTradeNo" clearable placeholder="输入主订单后8位" />
+        <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" />
       </el-form-item>
       <el-form-item label="子订单号">
-        <el-input v-model="querySubOrderId" clearable placeholder="输入子订单编号" />
+        <el-input v-model="querySubOrderId" :clearable="true" placeholder="输入子订单编号" />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
       <el-form-item label="电话号码">
-        <el-input v-model="queryMobile" clearable placeholder="输入收货人电话号码" />
+        <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" />
       </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="querySubStatus" @change="onQueryStatusChanged">
@@ -65,8 +65,8 @@
       ref="ordersTable"
       v-loading="listLoading"
       :data="orderData"
+      :fit="true"
       border
-      fit
       style="width: 100%;"
     >
       <el-table-column align="center" label="主订单编号" width="100">
@@ -76,7 +76,7 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="子订单编号" width="200">
+      <el-table-column align="center" label="子订单编号" width="160">
         <template slot-scope="scope">
           <span>{{ scope.row.subOrderId }}</span>
         </template>

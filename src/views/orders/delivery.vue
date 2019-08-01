@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :inline="true">
       <el-form-item label="电话号码">
-        <el-input v-model="orderQuery.mobile" clearable placeholder="输入收货人电话号码" />
+        <el-input v-model="orderQuery.mobile" :clearable="true" placeholder="输入收货人电话号码" />
       </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="orderQuery.subStatus" @change="onQueryStatusChanged">
@@ -42,8 +42,8 @@
       ref="ordersTable"
       v-loading="listLoading"
       :data="orderData"
+      :fit="true"
       border
-      fit
       style="width: 100%;"
     >
       <el-table-column align="center" label="主订单编号" width="100">
@@ -51,7 +51,7 @@
           <span>{{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="子订单编号" width="200">
+      <el-table-column align="center" label="子订单编号" width="160">
         <template slot-scope="scope">
           <span>{{ scope.row.subOrderId }}</span>
         </template>
@@ -68,11 +68,15 @@
           />
         </template>
       </el-table-column>
-      <el-table-column align="center" label="收货人" width="160">
+      <el-table-column align="center" label="收货人">
         <template slot-scope="scope">
           <div>
             <div class="text-item">{{ '姓名：' + scope.row.receiverName }}</div>
             <div class="text-item">{{ '电话：' + scope.row.mobile }}</div>
+            <div class="text-item">
+              {{ '地址：' + scope.row.provinceName + ' ' + scope.row.cityName + ' ' + scope.row.countyName }}
+            </div>
+            <div class="text-item" style="margin-left: 2rem">{{ scope.row.address }}</div>
           </div>
         </template>
       </el-table-column>
@@ -97,13 +101,14 @@
         align="center"
         class-name="small-padding fixed-width"
         label="操作"
-        width="160"
+        width="80"
       >
         <template slot-scope="scope">
           <el-button
+            :disabled="orderQuery.subStatus === 2"
             size="mini"
             type="primary"
-            @click="handleDeliverSubOrder(scope.row.subOrderId)"
+            @click="handleDeliverSubOrder(scope.row)"
           >
             发货
           </el-button>
@@ -116,6 +121,33 @@
       :total="orderTotal"
       @pagination="getOrderList"
     />
+    <el-dialog title="物流信息" :visible.sync="deliveryDialogVisible">
+      <el-form
+        ref="deliveryForm"
+        v-loading="expressLoading"
+        :model="deliveryData"
+        :rules="deliveryRules"
+        label-width="100px"
+      >
+        <el-form-item label="快递公司" prop="comCode">
+          <el-select :value="deliveryData.comCode" placeholder="请选择快递公司" @change="onExpressSelected">
+            <el-option
+              v-for="item in expressOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="快递单号" prop="logisticsId">
+          <el-input v-model="deliveryData.logisticsId" placeholder="请输入对应快递公司单号" maxlength="30" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelDeliver">取消</el-button>
+        <el-button type="primary" @click="handleSetDeliver">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -125,7 +157,11 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
-import { getOrderListApi } from '@/api/orders'
+import {
+  getOrderListApi,
+  getExpressCompanyApi,
+  uploadLogisticsApi
+} from '@/api/orders'
 import { SubOrderStatusDefinitions } from '@/utils/constants'
 
 export default {
@@ -151,6 +187,7 @@ export default {
         value: 2,
         label: '已发货'
       }],
+      expressOptions: [],
       listLoading: false,
       orderQuery: {
         mobile: '',
@@ -162,7 +199,36 @@ export default {
       },
       orderData: [],
       orderTotal: 0,
-      merchantName: ''
+      merchantName: '',
+      deliveryDialogVisible: false,
+      expressLoading: false,
+      deliveryData: {
+        orderId: null,
+        subOrderId: null,
+        logisticsId: null,
+        logisticsContent: null,
+        comCode: null
+      },
+      deliveryRules: {
+        comCode: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择快递公司'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        logisticsId: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请输入快递单号'))
+            } else {
+              callback()
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
@@ -203,11 +269,68 @@ export default {
         this.listLoading = false
       }
     },
-    handleDeliverSubOrder(subOrderId) {
+    async getExpressList() {
+      try {
+        if (this.expressOptions.length === 0) {
+          const params = { pageNo: 1, pageSize: 100 }
+          this.expressLoading = true
+          const { data } = await getExpressCompanyApi(params)
+          this.expressOptions = data.result.list.map(item => {
+            return {
+              value: item.code,
+              label: item.name
+            }
+          })
+        }
+      } catch (e) {
+        console.warn('Delivery get express error: ' + e)
+        this.$message.warning('获取快递公司列表失败，请联系管理员！')
+      } finally {
+        this.expressLoading = false
+      }
+    },
+    handleDeliverSubOrder(row) {
+      this.deliveryData.orderId = row.id
+      this.deliveryData.subOrderId = row.subOrderId
+      this.deliveryDialogVisible = true
+      this.getExpressList()
     },
     onQueryStatusChanged(value) {
       this.orderQuery.subStatus = value
       this.getOrderList()
+    },
+    onExpressSelected(value) {
+      this.deliveryData.comCode = value
+      this.deliveryData.logisticsContent = this.expressOptions.find(option => option.value === value).label
+    },
+    handleCancelDeliver() {
+      this.deliveryDialogVisible = false
+      this.$refs.deliveryForm.clearValidate()
+      Object.keys(this.deliveryData).forEach(key => {
+        this.deliveryData[key] = null
+      })
+    },
+    handleSetDeliver() {
+      this.$refs.deliveryForm.validate(async(valid) => {
+        if (valid) {
+          this.expressLoading = true
+          const params = {
+            total: 1,
+            logisticsList: [{ ...this.deliveryData }]
+          }
+          try {
+            uploadLogisticsApi(params)
+            this.$message.success('上传物流信息成功！')
+          } catch (e) {
+            console.warn('Delivery upload logistics error:' + e)
+            this.$message.error('上传物流信息失败，请联系管理员！')
+            this.getOrderList()
+          } finally {
+            this.expressLoading = false
+            this.deliveryDialogVisible = false
+          }
+        }
+      })
     }
   }
 }

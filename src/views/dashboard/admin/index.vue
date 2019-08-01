@@ -87,6 +87,7 @@
 </template>
 
 <script>
+import sortBy from 'lodash/sortBy'
 import moment from 'moment'
 import {
   getCategoryDataApi,
@@ -203,7 +204,7 @@ export default {
       const format = 'YYYY-MM-DD'
       const range = Number.parseInt(this.chartDataType)
       const startDate = moment().subtract(range, 'days').format(format)
-      const endDate = moment().format(format)
+      const endDate = moment().subtract(1, 'days').format(format)
       return { startDate, endDate }
     },
     async getCategoryData(params) {
@@ -250,13 +251,14 @@ export default {
         const { data } = await getPromotionDataApi(params)
         if (Array.isArray(data) && data.length > 0) {
           this.chartPromotionData.columns = Object.keys(data[0])
-          this.chartPromotionData.rows = data
+          const rows = data
             .map(item => {
               const format = 'YYYY/MM/DD'
               const { date, ...others } = item
               const dataFormat = moment(date).format(format)
               return { date: dataFormat, ...others }
             })
+          this.chartPromotionData.rows = sortBy(rows, ['date'])
         }
       } catch (e) {
         console.warn('Dashboard get promotion error:' + e)
@@ -270,7 +272,7 @@ export default {
         this.chartPeriodLoading = true
         const { data } = await getPeriodDataApi(params)
         if (Array.isArray(data)) {
-          this.chartPeriodData.rows = data
+          const rows = data
             .filter(item => moment(item.statisticsDate).isValid())
             .map(item => {
               const format = 'YYYY/MM/DD'
@@ -285,9 +287,11 @@ export default {
                 lateAtNight: item.lateAtNight
               }
             })
+          this.chartPeriodData.rows = sortBy(rows, ['date'])
         }
       } catch (e) {
         console.warn('Dashboard get period error:' + e)
+        this.chartPeriodData.rows = []
       } finally {
         this.chartPeriodLoading = false
       }
