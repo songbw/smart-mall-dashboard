@@ -71,16 +71,14 @@
     >
       <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
-          <el-link :href="'/orders/viewMainOrder/' + scope.row.id" type="primary">
+          <el-button type="text" @click="handleViewMainOrder(scope.row.id)">
             {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
-          </el-link>
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column align="center" label="子订单编号" width="200">
         <template slot-scope="scope">
-          <el-link :href="'/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
-            {{ scope.row.subOrderId }}
-          </el-link>
+          <span>{{ scope.row.subOrderId }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="商品">
@@ -330,6 +328,12 @@ export default {
       } finally {
         this.listLoading = false
       }
+    },
+    handleViewMainOrder(orderId) {
+      this.$router.push({
+        name: 'ViewMainOrder',
+        params: { mainId: orderId }
+      })
     },
     handleViewSubOrder(subOrderId) {
       this.$router.push({

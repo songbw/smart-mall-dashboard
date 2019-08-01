@@ -21,10 +21,10 @@
       </el-form>
       <el-form :inline="true">
         <el-form-item label="商品品牌">
-          <el-input v-model="listBrand" placeholder="输入品牌关键字" clearable maxlength="10" />
+          <el-input v-model="listBrand" :clearable="true" placeholder="输入品牌关键字" maxlength="10" />
         </el-form-item>
         <el-form-item label="商品MPU">
-          <el-input v-model="listMpu" placeholder="输入商品MPU" clearable maxlength="20" />
+          <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
         <el-form-item label="供应商名">
           <el-select :value="listVendor" @change="handleVendorChanged">
@@ -101,8 +101,6 @@
       :data="productsData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%;"
       @selection-change="handleSelectionChange"
     >
@@ -113,9 +111,9 @@
       />
       <el-table-column label="商品SKU" align="center" width="100">
         <template slot-scope="scope">
-          <el-link :href="'/goods/showProduct/' + scope.row.id" type="primary">
+          <el-button type="text" @click="handleViewProduct(scope.$index)">
             {{ scope.row.skuid }}
-          </el-link>
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">

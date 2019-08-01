@@ -1,5 +1,8 @@
 <template>
   <div v-loading="dataLoading" class="app-container">
+    <goods-info
+      :sku-list="[orderData]"
+    />
     <order-info
       :status="orderData.status"
       :trade-no="orderData.tradeNo"
@@ -31,9 +34,6 @@
       :coupon-id="orderData.couponId"
       :coupon-code="orderData.couponCode"
       :coupon-discount="orderData.couponDiscount"
-    />
-    <goods-info
-      :sku-list="[orderData]"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
   </div>

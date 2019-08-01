@@ -11,7 +11,7 @@
                 <el-radio label="center">居中</el-radio>
               </el-radio-group>
             </el-form-item>
-            <el-form-item label="标题" required>
+            <el-form-item label="标题">
               <el-input v-model="titleTextValue" />
             </el-form-item>
             <el-form-item label="链接促销活动">

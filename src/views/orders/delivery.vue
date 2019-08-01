@@ -48,16 +48,12 @@
     >
       <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
-          <el-link :href="'/orders/viewMainOrder/' + scope.row.id" type="primary">
-            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
-          </el-link>
+          <span>{{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="子订单编号" width="200">
         <template slot-scope="scope">
-          <el-link :href="'/orders/viewSubOrder/' + scope.row.subOrderId" type="primary">
-            {{ scope.row.subOrderId }}
-          </el-link>
+          <span>{{ scope.row.subOrderId }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="商品">

@@ -23,7 +23,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <el-form :inline="true">
+    <el-form v-if="false" inline>
       <el-form-item label="创建时间排列：">
         <el-select v-model="queryOrder" @change="onOrderChanged">
           <el-option
@@ -43,7 +43,7 @@
           :label="item.label"
           :name="item.name"
         >
-          <el-button-group>
+          <div style="display: flex;justify-content: space-between">
             <el-button
               :disabled="!vendorApproved"
               type="primary"
@@ -52,32 +52,33 @@
             >
               创建聚合页
             </el-button>
-            <el-button
-              v-if="item.name === '-1' || item.name === '0'"
-              :disabled="!vendorApproved"
-              type="info"
-              icon="el-icon-folder"
-              @click="handleCreateGroup"
-            >
-              创建组
-            </el-button>
-            <el-button
-              v-if="item.name !== '-1' && item.name !== '0'"
-              type="warning"
-              icon="el-icon-edit"
-              @click="handleUpdateGroup"
-            >
-              修改组名
-            </el-button>
-            <el-button
-              v-if="item.name !== '-1' && item.name !== '0'"
-              type="danger"
-              icon="el-icon-delete"
-              @click="handleDeleteGroup"
-            >
-              删除组
-            </el-button>
-          </el-button-group>
+            <el-button-group>
+              <el-button
+                :disabled="!vendorApproved"
+                type="info"
+                icon="el-icon-folder"
+                @click="handleCreateGroup"
+              >
+                创建组
+              </el-button>
+              <el-button
+                :disabled="item.name === '-1' || item.name === '0'"
+                type="warning"
+                icon="el-icon-edit"
+                @click="handleUpdateGroup"
+              >
+                修改组名
+              </el-button>
+              <el-button
+                :disabled="item.name === '-1' || item.name === '0'"
+                type="danger"
+                icon="el-icon-delete"
+                @click="handleDeleteGroup"
+              >
+                删除组
+              </el-button>
+            </el-button-group>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -514,7 +515,11 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
+        const index = this.groupTabs.findIndex(group => group.name === this.groupId.toString())
+        const nextIndex = index > 1 ? index - 1 : 0
         await this.$store.dispatch('aggregations/deleteGroup', { id: this.groupId })
+        this.currentGroup = this.groupTabs[nextIndex].name
+        this.getListData()
       } catch (e) {
         console.warn('Delete aggregation group:' + e)
       }

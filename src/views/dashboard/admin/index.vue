@@ -29,12 +29,12 @@
       <el-col :span="3" class="panel-item">
         <div class="panel-title">客单价<span class="panel-annotation">（元）</span></div>
         <el-divider />
-        <div class="panel-value">{{ perCustomerTransaction }}</div>
+        <div class="panel-value">{{ summary.perCustomerTransaction }}</div>
       </el-col>
       <el-col :span="3" class="panel-item">
         <div class="panel-title">订单均价<span class="panel-annotation">（元）</span></div>
         <el-divider />
-        <div class="panel-value">{{ orderAveragePrice }}</div>
+        <div class="panel-value">{{ summary.orderAveragePrice }}</div>
       </el-col>
     </el-row>
     <el-row style="margin-top: 20px">
@@ -161,26 +161,12 @@ export default {
     totalCustomer: {
       get() {
         if (this.summary.customerTotalNum > 10000) {
-          return Number.parseFloat(this.summary.customerTotalNum / 10000).toFixed(2) + ' 万'
+          return (this.summary.customerTotalNum / 10000).toFixed(2) + ' 万'
         } else if (this.summary.customerTotalNum > 0) {
           return this.summary.customerTotalNum
         } else {
           return 0
         }
-      }
-    },
-    perCustomerTransaction: {
-      get() {
-        return this.summary.orderCustomerTotalNum > 0
-          ? (this.summary.orderPaymentAmount / this.summary.orderCustomerTotalNum).toFixed(2)
-          : Number.parseFloat('0').toFixed(2)
-      }
-    },
-    orderAveragePrice: {
-      get() {
-        return this.summary.orderTotalNum > 0
-          ? (this.summary.orderPaymentAmount / this.summary.orderTotalNum).toFixed(2)
-          : Number.parseFloat('0').toFixed(2)
       }
     }
   },
@@ -193,11 +179,13 @@ export default {
       try {
         this.summaryLoading = true
         const { data } = await getSummaryDataApi()
-        this.summary.orderPaymentAmount = data.result.orderPaymentAmount
-        this.summary.orderTotalNum = data.result.orderCount
-        this.summary.customerTotalNum = data.result.userNum
-        this.summary.orderCustomerTotalNum = data.result.orderPeopleNum
-        this.summary.returnOrderTotalNum = data.result.orderBackNum
+        this.summary.orderPaymentAmount = data.orderAmount
+        this.summary.orderTotalNum = data.orderCount
+        this.summary.customerTotalNum = data.userCount
+        this.summary.orderCustomerTotalNum = data.orderUserCount
+        this.summary.returnOrderTotalNum = data.refundOrderCount
+        this.summary.perCustomerTransaction = data.perCustomerPrice
+        this.summary.orderAveragePrice = data.avgOrderPrice
       } catch (e) {
         console.warn('Dashboard get summary error:' + e)
       } finally {
@@ -281,9 +269,8 @@ export default {
       try {
         this.chartPeriodLoading = true
         const { data } = await getPeriodDataApi(params)
-        const list = data.result
-        if (Array.isArray(list)) {
-          this.chartPeriodData.rows = list
+        if (Array.isArray(data)) {
+          this.chartPeriodData.rows = data
             .filter(item => moment(item.statisticsDate).isValid())
             .map(item => {
               const format = 'YYYY/MM/DD'

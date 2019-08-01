@@ -63,9 +63,9 @@
       </el-table-column>
       <el-table-column label="子订单编号" align="center">
         <template slot-scope="scope">
-          <el-link :href="'/orders/viewSubOrder/' + scope.row.orderId" type="primary">
+          <el-button type="text" @click="handleViewSubOrder(scope.row.orderId)">
             {{ scope.row.orderId }}
-          </el-link>
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column label="申请时间" align="center" width="180">
@@ -254,6 +254,12 @@ export default {
       this.$router.push({
         name: 'ViewWorkOrder',
         params: { id }
+      })
+    },
+    handleViewSubOrder(subOrderId) {
+      this.$router.push({
+        name: 'ViewSubOrder',
+        params: { subId: subOrderId }
       })
     }
   }
