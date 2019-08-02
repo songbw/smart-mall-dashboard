@@ -45,10 +45,13 @@
         </el-card>
       </el-col>
     </el-row>
+    <goods-info
+      :sku-list="[orderData]"
+    />
     <order-info
       :status="orderData.status"
       :trade-no="orderData.tradeNo"
-      :sub-order-id="orderData.subOrderId"
+      :merchant-id="orderData.merchantId"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
       :remark="orderData.remark"
@@ -69,16 +72,13 @@
       :pay-status="orderData.payStatus"
       :payment-no="orderData.paymentNo"
       :payment-at="orderData.paymentAt"
-      :payment-total-fee="orderData.paymentTotalFee"
+      :out-trade-no="orderData.outTradeNo"
       :payment-amount="orderData.paymentAmount"
       :pay-type="orderData.payType"
       :refund-fee="orderData.refundFee"
       :coupon-id="orderData.couponId"
       :coupon-code="orderData.couponCode"
       :coupon-discount="orderData.couponDiscount"
-    />
-    <goods-info
-      :sku-list="[orderData]"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
 

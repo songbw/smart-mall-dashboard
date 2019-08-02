@@ -44,7 +44,11 @@
 
 <script>
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
+import {
+  getVendorProfileApi
+} from '@/api/vendor'
 
 export default {
   name: 'OrderInfo',
@@ -68,9 +72,9 @@ export default {
       type: String,
       default: ''
     },
-    merchantName: {
-      type: String,
-      default: ''
+    merchantId: {
+      type: Number,
+      default: -1
     },
     createdAt: {
       type: String,
@@ -83,6 +87,30 @@ export default {
     remark: {
       type: String,
       default: ''
+    }
+  },
+  data() {
+    return {
+      merchantName: ''
+    }
+  },
+  watch: {
+    merchantId: function(val, oldVal) {
+      this.getMerchantName()
+    }
+  },
+  methods: {
+    async getMerchantName() {
+      try {
+        if (this.merchantId >= 0) {
+          const { data } = await getVendorProfileApi({ id: this.merchantId })
+          if (data && data.company) {
+            this.merchantName = data.company.name
+          }
+        }
+      } catch (e) {
+        console.warn('Sub order detail vendor profile error:' + e)
+      }
     }
   }
 }

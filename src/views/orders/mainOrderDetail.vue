@@ -3,7 +3,7 @@
     <order-info
       :status="orderData.status"
       :trade-no="orderData.tradeNo"
-      :merchant-name="merchantName"
+      :merchant-id="orderData.merchantId"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
       :remark="orderData.remark"
@@ -43,9 +43,6 @@
 import {
   getMainOrderDetailApi
 } from '@/api/orders'
-import {
-  getVendorProfileApi
-} from '@/api/vendor'
 import OrderInfo from '@/components/Order/orderInfo'
 import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
@@ -62,7 +59,6 @@ export default {
   data() {
     return {
       dataLoading: false,
-      merchantName: '',
       orderData: {},
       skuList: []
     }
@@ -78,23 +74,10 @@ export default {
         const { data } = await getMainOrderDetailApi({ orderId, pageIndex: 1, pageSize: 100 })
         this.orderData = data.result
         this.skuList = this.orderData.skusPage.list
-        if (this.orderData.merchantId) {
-          this.getMerchantName(this.orderData.merchantId)
-        }
       } catch (e) {
         console.warn('Get main order detail error:' + e)
       } finally {
         this.dataLoading = false
-      }
-    },
-    async getMerchantName(id) {
-      try {
-        const { data } = await getVendorProfileApi({ id })
-        if (data && data.company) {
-          this.merchantName = data.company.name
-        }
-      } catch (e) {
-        console.warn('Sub order detail vendor profile error:' + e)
       }
     },
     goBack() {
