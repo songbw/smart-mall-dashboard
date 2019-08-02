@@ -27,6 +27,9 @@
         <el-button icon="el-icon-document" @click="handleTemplate">
           下载模板
         </el-button>
+        <el-button :loading="expressLoading" type="info" icon="el-icon-document" @click="handleDownloadExpress">
+          下载物流公司列表
+        </el-button>
       </el-form-item>
     </el-form>
 
@@ -79,7 +82,8 @@ import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import {
   getOrderListApi,
-  uploadLogisticsApi
+  uploadLogisticsApi,
+  getExpressCompanyApi
 } from '@/api/orders'
 import {
   suborder_status_waiting_deliver
@@ -104,6 +108,7 @@ export default {
     return {
       loading: false,
       fileName: null,
+      expressLoading: false,
       excelResults: []
     }
   },
@@ -228,6 +233,38 @@ export default {
         }
       } else {
         this.$message.info('请导入有效的物流信息！')
+      }
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v => filterVal.map(j => {
+        return v[j]
+      }))
+    },
+    async handleDownloadExpress() {
+      try {
+        const params = { pageNo: 1, pageSize: 100 }
+        this.expressLoading = true
+        const { data } = await getExpressCompanyApi(params)
+        const expressOption = data.result.list.map(item => {
+          return {
+            code: item.code,
+            name: item.name
+          }
+        })
+        const expressData = this.formatJson(['name', 'code'], expressOption)
+        import('@/utils/Export2Excel').then(excel => {
+          const header = ['物流公司名称', '物流公司编码']
+          excel.export_json_to_excel({
+            header,
+            data: expressData,
+            filename: '物流公司列表'
+          })
+        })
+      } catch (e) {
+        console.warn('Delivery import get express error: ' + e)
+        this.$message.warning('获取物流公司列表失败，请联系管理员！')
+      } finally {
+        this.expressLoading = false
       }
     }
   }
