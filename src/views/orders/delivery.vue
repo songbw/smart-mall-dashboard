@@ -36,6 +36,9 @@
         <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
+        <el-button icon="el-icon-coin" type="info" @click="handleBatchDelivery">
+          批量发货
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -129,8 +132,8 @@
         :rules="deliveryRules"
         label-width="100px"
       >
-        <el-form-item label="快递公司" prop="comCode">
-          <el-select :value="deliveryData.comCode" placeholder="请选择快递公司" @change="onExpressSelected">
+        <el-form-item label="物流公司" prop="comCode">
+          <el-select :value="deliveryData.comCode" placeholder="请选择物流公司" @change="onExpressSelected">
             <el-option
               v-for="item in expressOptions"
               :key="item.value"
@@ -139,8 +142,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="快递单号" prop="logisticsId">
-          <el-input v-model="deliveryData.logisticsId" placeholder="请输入对应快递公司单号" maxlength="30" />
+        <el-form-item label="物流单号" prop="logisticsId">
+          <el-input v-model="deliveryData.logisticsId" placeholder="请输入对应物流公司单号" maxlength="30" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -148,6 +151,11 @@
         <el-button type="primary" @click="handleSetDeliver">确定</el-button>
       </div>
     </el-dialog>
+    <import-dialog
+      :dialog-visible="importDialogVisible"
+      @canceled="importDialogVisible = false"
+      @finished="onImportFinished"
+    />
   </div>
 </template>
 
@@ -162,11 +170,16 @@ import {
   getExpressCompanyApi,
   uploadLogisticsApi
 } from '@/api/orders'
-import { SubOrderStatusDefinitions } from '@/utils/constants'
+import {
+  suborder_status_waiting_deliver,
+  suborder_status_delivered,
+  SubOrderStatusDefinitions
+} from '@/utils/constants'
+import ImportDialog from './ImportDialog'
 
 export default {
   name: 'Orders',
-  components: { Pagination, OrderProduct },
+  components: { Pagination, OrderProduct, ImportDialog },
   filters: {
     OrderStatus: status => {
       const find = SubOrderStatusDefinitions.find(option => option.value === status)
@@ -180,13 +193,6 @@ export default {
   },
   data() {
     return {
-      statusOptions: [{
-        value: 1,
-        label: '待发货'
-      }, {
-        value: 2,
-        label: '已发货'
-      }],
       expressOptions: [],
       listLoading: false,
       orderQuery: {
@@ -202,6 +208,7 @@ export default {
       merchantName: '',
       deliveryDialogVisible: false,
       expressLoading: false,
+      importDialogVisible: false,
       deliveryData: {
         orderId: null,
         subOrderId: null,
@@ -213,7 +220,7 @@ export default {
         comCode: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value === null) {
-              callback(new Error('请选择快递公司'))
+              callback(new Error('请选择物流公司'))
             } else {
               callback()
             }
@@ -222,7 +229,7 @@ export default {
         logisticsId: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value === null) {
-              callback(new Error('请输入快递单号'))
+              callback(new Error('请输入物流单号'))
             } else {
               callback()
             }
@@ -234,7 +241,11 @@ export default {
   computed: {
     ...mapGetters({
       vendorApproved: 'vendorApproved'
-    })
+    }),
+    statusOptions() {
+      return SubOrderStatusDefinitions.filter(option =>
+        option.value === suborder_status_waiting_deliver || option.value === suborder_status_delivered)
+    }
   },
   created() {
     this.getOrderList()
@@ -284,7 +295,7 @@ export default {
         }
       } catch (e) {
         console.warn('Delivery get express error: ' + e)
-        this.$message.warning('获取快递公司列表失败，请联系管理员！')
+        this.$message.warning('获取物流公司列表失败，请联系管理员！')
       } finally {
         this.expressLoading = false
       }
@@ -331,6 +342,13 @@ export default {
           }
         }
       })
+    },
+    handleBatchDelivery() {
+      this.importDialogVisible = true
+    },
+    onImportFinished() {
+      this.importDialogVisible = false
+      this.getOrderList()
     }
   }
 }

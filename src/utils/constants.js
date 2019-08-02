@@ -30,40 +30,51 @@ export const ProductStateOptions = [
   }
 ]
 
+export const order_status_deleted = -1
+export const order_status_waiting_pay = 0
+export const order_status_waiting_receipt = 1
+export const order_status_completed = 2
+export const order_status_canceled = 3
 export const OrderStatusDefinitions = [{
-  value: -1,
+  value: order_status_deleted,
   label: '已删除'
 }, {
-  value: 0,
+  value: order_status_waiting_pay,
   label: '待付款'
 }, {
-  value: 1,
+  value: order_status_waiting_receipt,
   label: '待收货'
 }, {
-  value: 2,
+  value: order_status_completed,
   label: '已完成'
 }, {
-  value: 3,
+  value: order_status_canceled,
   label: '已取消'
 }]
 
+export const suborder_status_waiting_pay = 0
+export const suborder_status_waiting_deliver = 1
+export const suborder_status_delivered = 2
+export const suborder_status_completed = 3
+export const suborder_status_canceled = 4
+export const suborder_status_failed = 5
 export const SubOrderStatusDefinitions = [{
-  value: 0,
+  value: suborder_status_waiting_pay,
   label: '待付款' // 已下单
 }, {
-  value: 1,
+  value: suborder_status_waiting_deliver,
   label: '待发货'
 }, {
-  value: 2,
+  value: suborder_status_delivered,
   label: '已发货'
 }, {
-  value: 3,
+  value: suborder_status_completed,
   label: '已完成'
 }, {
-  value: 4,
+  value: suborder_status_canceled,
   label: '已取消'
 }, {
-  value: 5,
+  value: suborder_status_failed,
   label: '已失败'
 }]
 
