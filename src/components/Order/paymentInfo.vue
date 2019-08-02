@@ -51,6 +51,12 @@
             <span class="item-text">￥ {{ couponDiscount || `0.00` }}</span>
           </el-col>
         </el-row>
+        <el-row class="item-row">
+          <el-col :span="12">
+            <span class="item-label" style="margin-left: 2rem">运费：</span>
+            <span class="item-text">￥ {{ servFee || '0.00' }}</span>
+          </el-col>
+        </el-row>
       </el-card>
     </el-col>
   </el-row>
@@ -123,6 +129,10 @@ export default {
       default: ''
     },
     couponDiscount: {
+      type: Number,
+      default: 0
+    },
+    servFee: {
       type: Number,
       default: 0
     }

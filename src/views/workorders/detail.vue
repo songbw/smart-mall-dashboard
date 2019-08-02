@@ -79,6 +79,7 @@
       :coupon-id="orderData.couponId"
       :coupon-code="orderData.couponCode"
       :coupon-discount="orderData.couponDiscount"
+      :serv-fee="orderData.servFee"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
 

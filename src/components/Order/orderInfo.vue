@@ -44,7 +44,6 @@
 
 <script>
 import moment from 'moment'
-import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
 import {
   getVendorProfileApi
