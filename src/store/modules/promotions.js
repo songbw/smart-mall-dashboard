@@ -16,11 +16,13 @@ const promotionTemplate = {
   name: '',
   promotionTypeId: null,
   tag: '',
+  dailySchedule: false,
   startDate: '',
   endDate: '',
   discountType: 0,
   status: 1,
-  promotionSkus: []
+  promotionSkus: [],
+  promotionSchedules: []
 }
 
 const state = {
@@ -34,6 +36,7 @@ const mutations = {
     state.promotion = { ...promotionTemplate }
     state.promotion.promotionTypeId = state.promotionTypeId >= 0 ? state.promotionTypeId : null
     state.promotion.promotionSkus = []
+    state.promotion.promotionSchedules = []
   },
   SET_DATA: (state, params) => {
     const keys = Object.keys(promotionTemplate)
@@ -73,6 +76,13 @@ const mutations = {
   },
   SET_CURRENT_TYPE: (state, typeId) => {
     state.promotionTypeId = typeId
+  },
+  ADD_SCHEDULE: (state, params) => {
+    state.promotion.promotionSchedules.push(params)
+  },
+  DELETE_SCHEDULE: (state, id) => {
+    const schedules = state.promotion.promotionSchedules.filter(item => item.id === id)
+    state.promotion.promotionSchedules = schedules
   }
 }
 
@@ -123,8 +133,16 @@ const actions = {
   },
   async deleteType({ commit, state }, params) {
     await deletePromotionTypeApi(params)
-    const list = state.promotionTypes.filter(type => type.id !== params.promotionTypeId)
+    const list = state.promotionTypes.filter(type => type.id === params.promotionTypeId)
     commit('SET_TYPE_LIST', list)
+  },
+  async addScheduleTime({ commit }, params) {
+    const id = Math.floor(Math.random() * Math.floor(1000))
+    commit('ADD_SCHEDULE', { id, ...params })
+    return id
+  },
+  async deleteScheduleTime({ commit }, params) {
+    commit('DELETE_SCHEDULE', params.id)
   }
 }
 

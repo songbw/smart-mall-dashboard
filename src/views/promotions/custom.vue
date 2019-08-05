@@ -27,7 +27,20 @@
         placeholder="请输入活动标签"
       />
     </el-form-item>
-    <el-form-item label="开始时间" prop="startDate">
+    <el-form-item v-if="false" label="全天分时段">
+      <el-switch v-model="formData.dailySchedule" :disabled="scheduleDisabled" />
+      <span style="font-size: 12px;margin-left: 10px">创建后将不能修改</span>
+    </el-form-item>
+    <el-form-item v-if="formData.dailySchedule" label="活动日期" prop="scheduleDate">
+      <el-date-picker
+        :value="scheduleDate"
+        placeholder="选择活动日期"
+        type="date"
+        value-format="yyyy-MM-dd"
+        @input="onScheduleDateChanged"
+      />
+    </el-form-item>
+    <el-form-item v-if="!formData.dailySchedule" label="开始时间" prop="startDate">
       <el-date-picker
         :value="startDate"
         placeholder="选择开始日期"
@@ -43,7 +56,7 @@
         @input="onStartTimeChanged"
       />
     </el-form-item>
-    <el-form-item label="结束时间" prop="endDate">
+    <el-form-item v-if="!formData.dailySchedule" label="结束时间" prop="endDate">
       <el-date-picker
         :value="endDate"
         placeholder="选择结束日期"
@@ -83,6 +96,8 @@ export default {
   },
   data() {
     return {
+      scheduleDate: null,
+      scheduleDisabled: false,
       startDate: null,
       startTime: null,
       endDate: null,
@@ -91,6 +106,7 @@ export default {
         name: this.promotionData.name,
         promotionTypeId: this.promotionData.promotionTypeId,
         tag: this.promotionData.tag,
+        dailySchedule: this.promotionData.dailySchedule,
         startDate: this.promotionData.startDate,
         endDate: this.promotionData.endDate
       },
@@ -122,8 +138,32 @@ export default {
             }
           }
         }],
+        scheduleDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (!this.formData.dailySchedule) {
+              callback()
+              return
+            }
+            if (isEmpty(this.formData.startDate)) {
+              callback(new Error('请选择有效的活动日期'))
+            } else {
+              const format = 'YYYY-MM-DD HH:mm:ss'
+              const startDate = moment(this.formData.startDate, format)
+              const now = moment()
+              if (startDate.isSameOrBefore(now)) {
+                callback(new Error('活动日期必须晚于当前日期'))
+              } else {
+                callback()
+              }
+            }
+          }
+        }],
         startDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.formData.dailySchedule) {
+              callback()
+              return
+            }
             if (isEmpty(this.formData.startDate)) {
               callback(new Error('请选择有效的开始时间'))
             } else {
@@ -140,6 +180,10 @@ export default {
         }],
         endDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.formData.dailySchedule) {
+              callback()
+              return
+            }
             if (isEmpty(this.formData.endDate)) {
               callback(new Error('请选择有效的结束时间'))
             } else {
@@ -234,15 +278,25 @@ export default {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const dateFormat = 'YYYY-MM-DD'
       const timeFormat = 'HH:mm'
-      if (!isEmpty(this.promotionData.startDate)) {
-        const startDate = moment(this.promotionData.startDate, format)
-        this.startDate = startDate.format(dateFormat)
-        this.startTime = startDate.format(timeFormat)
+      if (this.promotionData.dailySchedule) {
+        if (!isEmpty(this.promotionData.startDate)) {
+          const startDate = moment(this.promotionData.startDate, format)
+          this.scheduleDate = startDate.format(dateFormat)
+        }
+      } else {
+        if (!isEmpty(this.promotionData.startDate)) {
+          const startDate = moment(this.promotionData.startDate, format)
+          this.startDate = startDate.format(dateFormat)
+          this.startTime = startDate.format(timeFormat)
+        }
+        if (!isEmpty(this.promotionData.endDate)) {
+          const endDate = moment(this.promotionData.endDate, format)
+          this.endDate = endDate.format(dateFormat)
+          this.endTime = endDate.format(timeFormat)
+        }
       }
-      if (!isEmpty(this.promotionData.endDate)) {
-        const endDate = moment(this.promotionData.endDate, format)
-        this.endDate = endDate.format(dateFormat)
-        this.endTime = endDate.format(timeFormat)
+      if (this.promotionData.id !== null && this.promotionData.id >= 0) {
+        this.scheduleDisabled = true
       }
     },
     parseDateFormat(date, time) {
@@ -310,6 +364,21 @@ export default {
       }]
       const results = isEmpty(queryString) ? options : options.filter(option => option.value.indexOf(queryString) >= 0)
       cb(results)
+    },
+    onScheduleDateChanged(date) {
+      this.scheduleDate = date
+      const startDate = this.parseDateFormat(date, '00:00')
+      if (startDate) {
+        this.startDate = date
+        this.startTime = '00:00'
+        this.formData.startDate = startDate
+      }
+      const endDate = this.parseDateFormat(date, '23:00')
+      if (endDate) {
+        this.endDate = date
+        this.endTime = '23:00'
+        this.formData.endDate = endDate
+      }
     }
   }
 }

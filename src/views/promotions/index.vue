@@ -62,7 +62,7 @@
                 icon="el-icon-edit"
                 @click="handleUpdateType"
               >
-                修改活动类名
+                修改活动类
               </el-button>
               <el-button
                 :disabled="item.name === '-1'"
@@ -83,8 +83,6 @@
       :data="promotionData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%; margin-top: 20px"
       @selection-change="handleSelectionChange"
     >

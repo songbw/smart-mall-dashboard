@@ -4,6 +4,51 @@
       <promotion-info />
     </el-header>
     <el-main>
+      <div v-if="promotionData.dailySchedule">
+        <el-form v-if="!viewOnly" ref="scheduleForm" :model="scheduleData" :rules="scheduleRules" inline>
+          <el-form-item label="活动时段" prop="schedule">
+            <el-time-select
+              v-model="scheduleData.schedule"
+              :picker-options="{start: '00:00', step: '01:00', end: '23:00'}"
+              placeholder="选择时段开始时间"
+              @input="onScheduleTimeChanged"
+            />
+          </el-form-item>
+          <el-form-item label="开始时间">
+            <span>{{ scheduleData.startTime }}</span>
+          </el-form-item>
+          <el-form-item label="结束时间" prop="endTime">
+            <el-date-picker
+              v-model="scheduleData.endTime"
+              default-time="23:59:59"
+              placeholder="选择开始日期和时间"
+              type="datetime"
+              value-format="yyyy-MM-dd HH:mm:ss"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleAddScheduleTime">添加活动时段</el-button>
+          </el-form-item>
+        </el-form>
+        <el-tabs
+          v-model="currentScheduleId"
+          :closable="!viewOnly"
+          type="card"
+          @tab-remove="onScheduleTabRemove"
+        >
+          <el-tab-pane
+            v-for="item in scheduleTabs"
+            :key="item.label"
+            :label="item.label"
+            :name="item.name"
+          >
+            <el-form inline>
+              <el-form-item label="场次开始时间"><span>{{ item.startTime }}</span></el-form-item>
+              <el-form-item label="场次结束时间"><span>{{ item.endTime }}</span></el-form-item>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
       <div v-if="viewOnly === false" class="header-container">
         <div class="header-ops-container">
           <el-button @click="dialogImportVisible = true">
@@ -144,7 +189,8 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
@@ -157,6 +203,12 @@ export default {
     viewOnly: {
       type: Boolean,
       default: false
+    },
+    promotionData: {
+      type: Object,
+      default: function() {
+        return {}
+      }
     }
   },
   data() {
@@ -169,6 +221,12 @@ export default {
         label: '折扣'
       }],
       dataLoading: false,
+      scheduleData: {
+        schedule: null,
+        startTime: '0000-00-00 00:00:00',
+        endTime: null
+      },
+      currentScheduleId: null,
       promotionValue: '',
       dialogSelectionVisible: false,
       dialogImportVisible: false,
@@ -177,13 +235,45 @@ export default {
       selectedItems: [],
       addedItems: [],
       updateItems: [],
-      deleteItems: []
+      deleteItems: [],
+      scheduleRules: {
+        schedule: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择此活动场次的开始时间'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        endTime: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            const format = 'YYYY-MM-DD HH:mm:ss'
+            const startDate = moment(this.scheduleData.startTime, format)
+            const endDate = moment(this.scheduleData.endTime, format)
+            if (endDate.isSameOrBefore(startDate)) {
+              callback(new Error('结束时间必须晚于开始时间'))
+            } else {
+              callback()
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
-    ...mapGetters({
-      promotionData: 'currentPromotion'
-    }),
+    scheduleTabs: {
+      get() {
+        return this.promotionData.promotionSchedules
+          ? this.promotionData.promotionSchedules.map(item => ({
+            name: item.id.toString(),
+            label: item.schedule + '点场',
+            startTime: item.startTime,
+            endTime: item.endTime
+          }))
+          : []
+      }
+    },
     discountType: {
       get() {
         return this.promotionData.discountType
@@ -203,7 +293,18 @@ export default {
     },
     skuTotal: {
       get() {
-        return this.promotionData.promotionSkus ? this.promotionData.promotionSkus.length : 0
+        return this.scheduleSkus.length
+      }
+    },
+    scheduleSkus: {
+      get() {
+        if (this.promotionData.dailySchedule) {
+          const skus = this.promotionData.promotionSkus || []
+          const scheduleId = Number.parseInt(this.currentScheduleId)
+          return skus.filter(sku => sku.scheduleId === scheduleId)
+        } else {
+          return this.promotionData.promotionSkus || []
+        }
       }
     },
     skuData: {
@@ -211,7 +312,7 @@ export default {
         if (this.skuTotal > 0) {
           const begin = (this.offset > 1 ? (this.offset - 1) : 0) * this.limit
           const end = begin + this.limit
-          const skus = this.promotionData.promotionSkus.slice(begin, end)
+          const skus = this.scheduleSkus.slice(begin, end)
           const newSkus = []
           skus.forEach(item => {
             const newItem = { ...item }
@@ -226,14 +327,31 @@ export default {
       }
     }
   },
+  created() {
+    this.initData()
+  },
   methods: {
+    initData() {
+      if (this.scheduleTabs.length > 0) {
+        this.currentScheduleId = this.scheduleTabs[0].name
+      }
+      if (!isEmpty(this.promotionData.startDate)) {
+        const format = 'YYYY-MM-DD HH:mm:ss'
+        const startDateTime = moment(this.promotionData.startDate, format)
+        startDateTime.hour(0)
+        startDateTime.minute(0)
+        startDateTime.second(0)
+        this.scheduleData.startTime = startDateTime.format(format)
+        this.scheduleData.endTime = startDateTime.add(1, 'days').format(format)
+      }
+    },
     productSelectable() {
       return this.viewOnly === false
     },
     getDiscountValue() {
       const discount = Number.parseFloat(this.promotionValue)
       if (this.skuTotal === 0) {
-        this.$message({ message: '请先导入或者添加促销产品！', type: 'warning' })
+        this.$message({ message: '请先导入或者添加促销商品！', type: 'warning' })
         return -1
       }
       if (Number.isNaN(discount) || discount <= 0) {
@@ -360,7 +478,7 @@ export default {
     handleAddSkus(skus) {
       this.dataLoading = true
       this.offset = 1
-      this.addPromotionContentAsync(skus).then(count => {
+      this.addPromotionContentAsync(skus).then(_ => {
         this.dataLoading = false
       }).catch(() => {
         this.dataLoading = false
@@ -503,6 +621,51 @@ export default {
         }
       }
       this.handleUpdateGoods()
+    },
+    onScheduleTimeChanged(value) {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const timeFormat = 'HH:mm'
+      if (!isEmpty(this.promotionData.startDate)) {
+        const startDateTime = moment(this.promotionData.startDate, format)
+        const timeMoment = moment(value, timeFormat)
+        startDateTime.hour(timeMoment.hour())
+        startDateTime.minute(timeMoment.minute())
+        startDateTime.second(0)
+        this.scheduleData.startTime = startDateTime.format(format)
+        this.scheduleData.endTime = startDateTime.add(1, 'days').format(format)
+      }
+    },
+    onScheduleTabRemove(tab) {
+      this.$confirm('请确认是否立即此场次活动？', '警告', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const index = this.scheduleTabs.findIndex(item => item.name === tab)
+          const nextIndex = index > 1 ? index - 1 : 0
+          await this.$store.dispatch('promotions/deleteScheduleTime', { id: Number.parseInt(tab) })
+          if (this.scheduleTabs > 0) {
+            this.currentScheduleId = this.scheduleTabs[nextIndex].name
+          } else {
+            this.currentScheduleId = null
+          }
+        } catch (e) {
+          console.warn('Promotion delete schedule error:' + e)
+        }
+      })
+    },
+    handleAddScheduleTime() {
+      this.$refs.scheduleForm.validate(async(valid) => {
+        if (valid) {
+          try {
+            const id = await this.$store.dispatch('promotions/addScheduleTime', this.scheduleData)
+            this.currentScheduleId = id.toString()
+          } catch (e) {
+            console.debug('Promotion add schedule error:' + e)
+          }
+        }
+      })
     }
   }
 }

@@ -14,6 +14,7 @@
       />
       <select-goods
         v-else-if="activeStep === 1"
+        :promotion-data="promotionData"
         :view-only="viewOnly"
         class="goods-container"
         @prevStep="handlePrevStep"
@@ -45,8 +46,8 @@ export default {
     })
   },
   created() {
+    this.$store.commit('promotions/RESET_DATA')
     if (this.$route.name === 'CreatePromotion') {
-      this.$store.commit('promotions/RESET_DATA')
       this.promotionReady = true
     } else {
       this.getPromotionData()
@@ -76,15 +77,17 @@ export default {
       if (this.activeStep > 0) {
         this.activeStep -= 1
       } else {
-        window.history.length > 1
-          ? this.$router.go(-1)
-          : this.$router.replace({ name: 'Promotions' })
+        this.gotoPromotionList()
       }
     },
     handlePromotionCreated() {
       this.activeStep += 1
     },
     handlePromotionUpdated() {
+      this.gotoPromotionList()
+    },
+    gotoPromotionList() {
+      this.$store.commit('promotions/RESET_DATA')
       window.history.length > 1
         ? this.$router.go(-1)
         : this.$router.replace({ name: 'Promotions' })

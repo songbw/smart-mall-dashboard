@@ -112,7 +112,9 @@ export default {
         customerTotalNum: 0,
         orderTotalNum: 0,
         orderCustomerTotalNum: 0,
-        returnOrderTotalNum: 0
+        returnOrderTotalNum: 0,
+        perCustomerTransaction: 0,
+        orderAveragePrice: 0
       },
       chartPriceSettings: {
         dataType: 'KMB',

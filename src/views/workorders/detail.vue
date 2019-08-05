@@ -135,17 +135,15 @@ import { WorkOrderStatus, WorkOrderTypes } from './constants'
 
 const FlowStatusOptions = [
   {
-    value: 2, label: '同意退货'
+    value: 2, label: '收到审核'
   }, {
-    value: 3, label: '收到退货'
+    value: 3, label: '通过审核'
   }, {
-    value: 4, label: '同意退款'
+    value: 4, label: '审核失败'
   }, {
-    value: 5, label: '退款成功'
+    value: 5, label: '开始处理'
   }, {
-    value: 6, label: '退款失败'
-  }, {
-    value: 7, label: '拒绝申请'
+    value: 6, label: '处理完成'
   }]
 export default {
   name: 'WorkOrderDetail',
@@ -225,13 +223,13 @@ export default {
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
-        options = [2, 4, 7]
+        options = [3, 4]
       } else if (this.workOrderData.status === 2) {
-        options = [3]
+        options = [3, 4]
       } else if (this.workOrderData.status === 3) {
-        options = [4]
-      } else if (this.workOrderData.status === 4) {
         options = [5, 6]
+      } else if (this.workOrderData.status === 5) {
+        options = [6]
       }
       return FlowStatusOptions.filter(option => options.includes(option.value))
     }
@@ -297,7 +295,8 @@ export default {
         if (valid) {
           this.dialogFlowVisible = false
           try {
-            await createWorkOrderFlowApi({ workOrderId: this.workOrderData.id, ...this.flowForm })
+            const operator = this.$store.state.user.name
+            await createWorkOrderFlowApi({ workOrderId: this.workOrderData.id, operator, ...this.flowForm })
             this.$message.success('处理工单成功！')
             this.getWorkOrderData()
           } catch (e) {
