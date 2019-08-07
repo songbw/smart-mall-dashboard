@@ -47,6 +47,14 @@
       >
         新建优惠券
       </el-button>
+      <el-button
+        type="info"
+        icon="el-icon-scissors"
+        class="ops-button"
+        @click="handleConsumeCoupon"
+      >
+        核销优惠券
+      </el-button>
     </div>
     <el-table
       ref="productsTable"
@@ -179,7 +187,8 @@ import {
   getCouponsApi,
   searchCouponsApi,
   updateCouponApi,
-  deleteCouponApi
+  deleteCouponApi,
+  consumeCouponApi
 } from '@/api/coupons'
 
 export default {
@@ -356,7 +365,7 @@ export default {
         params: { id: this.couponData[index].id, readOnly: false }
       })
     },
-    async handleStartCoupon(index) {
+    async handleStartCoupon(id) {
       try {
         await this.$confirm('上线此优惠券将导致活动立即开始，请确认是否要继续？', '警告', {
           confirmButtonText: '确定',
@@ -364,25 +373,25 @@ export default {
           type: 'warning',
           center: true
         })
-        await updateCouponApi({ id: this.couponData[index].id, status: coupon_status_published })
+        await updateCouponApi({ id, status: coupon_status_published })
         this.getCouponData()
       } catch (e) {
         console.warn('Update coupon ' + e)
       }
     },
-    handleViewCoupon(index) {
+    handleViewCoupon(id) {
       this.$router.push({
         name: 'CouponDetail',
-        params: { id: this.couponData[index].id, readOnly: true }
+        params: { id, readOnly: true }
       })
     },
-    handleViewUsageCoupon(index) {
+    handleViewUsageCoupon(id) {
       this.$router.push({
         name: 'CouponUsages',
-        params: { id: this.couponData[index].id }
+        params: { id }
       })
     },
-    async handleStopCoupon(index) {
+    async handleStopCoupon(id) {
       try {
         await this.$confirm('下线此优惠券将导致活动停止，请确认是否要继续？', '警告', {
           confirmButtonText: '确定',
@@ -390,13 +399,13 @@ export default {
           type: 'warning',
           center: true
         })
-        await updateCouponApi({ id: this.couponData[index].id, status: coupon_status_off_shelves })
+        await updateCouponApi({ id, status: coupon_status_off_shelves })
         this.getCouponData()
       } catch (e) {
         console.warn('Stop coupon:' + e)
       }
     },
-    async handleDeleteCoupon(index) {
+    async handleDeleteCoupon(id) {
       try {
         await this.$confirm('删除此优惠券将不会再恢复，请确认是否要继续？', '警告', {
           confirmButtonText: '删除',
@@ -404,7 +413,7 @@ export default {
           type: 'warning',
           center: true
         })
-        await deleteCouponApi({ id: this.couponData[index].id })
+        await deleteCouponApi({ id })
         if (this.couponData.length === 1 && this.queryOffset > 1) {
           this.queryOffset = this.queryOffset - 1
         }
@@ -416,25 +425,44 @@ export default {
     handleOpsAction(action) {
       const cmd = action.split(':')[0]
       const index = Number.parseInt(action.split(':')[1])
+      const id = this.couponData[index].id
       switch (cmd) {
         case 'start':
-          this.handleStartCoupon(index)
+          this.handleStartCoupon(id)
           break
         case 'view':
-          this.handleViewCoupon(index)
+          this.handleViewCoupon(id)
           break
         case 'edit':
-          this.handleEditCoupon(index)
+          this.handleEditCoupon(id)
           break
         case 'usage':
-          this.handleViewUsageCoupon(index)
+          this.handleViewUsageCoupon(id)
           break
         case 'stop':
-          this.handleStopCoupon(index)
+          this.handleStopCoupon(id)
           break
         case 'delete':
-          this.handleDeleteCoupon(index)
+          this.handleDeleteCoupon(id)
           break
+      }
+    },
+    async handleConsumeCoupon() {
+      try {
+        const action = await this.$prompt('请输入待核销券码', '核销优惠券', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        })
+        const response = await consumeCouponApi({ userCouponCode: action.value })
+        if (response.code === 200) {
+          this.$message.success('核销优惠券码成功！')
+          const id = response.data.id
+          this.handleViewUsageCoupon(id)
+        } else {
+          this.$message.error('核销优惠券码失败！')
+        }
+      } catch (e) {
+        console.warn('Consume coupon user code: ' + e)
       }
     }
   }

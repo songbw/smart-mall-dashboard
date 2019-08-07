@@ -94,3 +94,11 @@ export function deleteCouponTagApi(params) {
     method: 'delete'
   })
 }
+
+export function consumeCouponApi(params) {
+  return Vue.axios('coupons')({
+    url: '/equities/adminCoupon/consume',
+    method: 'post',
+    data: { ...params }
+  })
+}

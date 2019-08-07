@@ -77,8 +77,11 @@ export const UsageStatusOptions = [{
   label: '未使用'
 }, {
   value: 2,
-  label: '已使用'
+  label: '已占用'
 }, {
   value: 3,
+  label: '已使用'
+}, {
+  value: 4,
   label: '已失效'
 }]
