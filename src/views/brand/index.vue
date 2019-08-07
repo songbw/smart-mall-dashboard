@@ -7,7 +7,7 @@
           placeholder="输入品牌名"
           style="max-width: 400px;"
           class="filter-item"
-          clearable
+          :clearable="true"
           maxlength="10"
           @keyup.enter.native="getBrandData"
         />
@@ -16,7 +16,7 @@
         <el-button type="primary" icon="el-icon-search" @click="getBrandData">
           搜索
         </el-button>
-        <el-button type="info" icon="el-icon-edit" @click="handleCreate">
+        <el-button v-if="isAdminUser" type="info" icon="el-icon-edit" @click="handleCreate">
           新建品牌
         </el-button>
       </el-form-item>
@@ -26,8 +26,6 @@
       :data="listData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%; margin-top: 20px"
     >
       <el-table-column label="品牌编号" align="center" width="100">
@@ -63,7 +61,7 @@
             size="mini"
             @click="handleEdit(scope.$index)"
           >
-            编辑
+            {{ isAdminUser ? '编辑' : '查看' }}
           </el-button>
           <el-button
             type="danger"

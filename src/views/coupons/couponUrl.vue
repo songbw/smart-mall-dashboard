@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-select :disabled="readOnly" :value="displayType" @change="value => displayType = value">
+    <el-select v-model="displayType" :disabled="readOnly">
       <el-option
         v-for="item in typeOptions"
         :key="item.value"
@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import isEmpty from 'lodash/isEmpty'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
 
@@ -70,7 +71,10 @@ export default {
         label: '商品列表'
       }, {
         value: 'external',
-        label: '特定链接'
+        label: '外部链接'
+      }, {
+        value: 'blank',
+        label: '无链接'
       }],
       dialogAggregationVisible: false,
       dialogSelectionVisible: false
@@ -79,14 +83,20 @@ export default {
   computed: {
     displayType: {
       get() {
-        if (this.url.startsWith('aggregation://')) {
-          return 'aggregation'
-        } else if (this.url.startsWith('route://commodity')) {
-          return 'commodity'
-        } else if (this.url.startsWith('route://listing')) {
-          return 'listing'
+        if (this.url && !isEmpty(this.url)) {
+          if (this.url.startsWith('aggregation://')) {
+            return 'aggregation'
+          } else if (this.url.startsWith('route://commodity')) {
+            return 'commodity'
+          } else if (this.url.startsWith('route://listing')) {
+            return 'listing'
+          } else if (this.url.startsWith('about:blank')) {
+            return 'blank'
+          } else {
+            return 'external'
+          }
         } else {
-          return 'external'
+          return 'blank'
         }
       },
       set(value) {
@@ -100,6 +110,9 @@ export default {
             break
           case 'listing':
             url = 'route://listing'
+            break
+          case 'blank':
+            url = 'about:blank'
             break
           default:
             break
@@ -117,9 +130,9 @@ export default {
     },
     displayName: {
       get() {
-        if (this.url.startsWith('aggregation://')) {
+        if (this.url && this.url.startsWith('aggregation://')) {
           return '聚合页ID:' + this.url.substring('aggregation://'.length)
-        } else if (this.url.startsWith('route://commodity')) {
+        } else if (this.url && this.url.startsWith('route://commodity')) {
           return '商品SkuID:' + this.url.substring('route://commodity/'.length)
         } else {
           return ''

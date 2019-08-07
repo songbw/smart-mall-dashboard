@@ -307,7 +307,7 @@ export default {
           try {
             const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
             fetchedNum++
-            this.percentage = Number.parseInt(fetchedNum * 100 / results.length)
+            this.percentage = Math.round(fetchedNum * 100 / results.length)
             const data = response.data.result
             if (data.total > 0) {
               const product = data.list[0]

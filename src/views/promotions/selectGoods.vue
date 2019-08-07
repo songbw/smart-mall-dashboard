@@ -43,8 +43,8 @@
             :name="item.name"
           >
             <el-form inline>
-              <el-form-item label="场次开始时间"><span>{{ item.startTime }}</span></el-form-item>
-              <el-form-item label="场次结束时间"><span>{{ item.endTime }}</span></el-form-item>
+              <el-form-item label="场次开始时间"><span>{{ item.startTime | dateFilter }}</span></el-form-item>
+              <el-form-item label="场次结束时间"><span>{{ item.endTime | dateFilter }}</span></el-form-item>
             </el-form>
           </el-tab-pane>
         </el-tabs>
@@ -199,6 +199,13 @@ import PromotionInfo from './promotionInfo'
 export default {
   name: 'SelectGoods',
   components: { PromotionInfo, GoodsSelectionDialog, GoodsImportDialog, Pagination },
+  filters: {
+    dateFilter: date => {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const momentDate = moment(date)
+      return momentDate.isValid() ? momentDate.format(format) : ''
+    }
+  },
   props: {
     viewOnly: {
       type: Boolean,
@@ -231,7 +238,7 @@ export default {
       dialogSelectionVisible: false,
       dialogImportVisible: false,
       offset: 1,
-      limit: 20,
+      limit: 80,
       selectedItems: [],
       addedItems: [],
       updateItems: [],
@@ -296,12 +303,21 @@ export default {
         return this.scheduleSkus.length
       }
     },
+    scheduleId: {
+      get() {
+        if (this.promotionData.dailySchedule) {
+          const scheduleId = Number.parseInt(this.currentScheduleId)
+          return Number.isNaN(scheduleId) ? -1 : scheduleId
+        } else {
+          return -1
+        }
+      }
+    },
     scheduleSkus: {
       get() {
         if (this.promotionData.dailySchedule) {
           const skus = this.promotionData.promotionSkus || []
-          const scheduleId = Number.parseInt(this.currentScheduleId)
-          return skus.filter(sku => sku.scheduleId === scheduleId)
+          return skus.filter(sku => sku.scheduleId === this.scheduleId)
         } else {
           return this.promotionData.promotionSkus || []
         }
@@ -476,48 +492,36 @@ export default {
       this.dialogImportVisible = false
     },
     handleAddSkus(skus) {
-      this.dataLoading = true
       this.offset = 1
-      this.addPromotionContentAsync(skus).then(_ => {
-        this.dataLoading = false
-      }).catch(() => {
-        this.dataLoading = false
-        console.log('no skus added')
-      }).finally(() => {
-      })
+      this.addPromotionContent(skus)
     },
-    addPromotionContentAsync(skus) {
-      return new Promise((resolve, reject) => {
-        let total = 0
-        const toAdd = []
-        for (const sku of skus) {
-          const found = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
-          if (found < 0) {
-            const deleteIndex = this.deleteItems.findIndex(item => item.mpu === sku.mpu)
-            if (deleteIndex >= 0) {
-              this.deleteItems.splice(deleteIndex, 1)
-              this.updateItems.push({ mpu: sku.mpu, discount: 0 })
-            } else {
-              this.addedItems.push({ skuid: sku.skuid, mpu: sku.mpu, discount: 0 })
-            }
-            toAdd.push({
-              skuid: sku.skuid,
-              mpu: sku.mpu,
-              name: sku.name,
-              brand: sku.brand,
-              price: sku.price,
-              discount: 0
-            })
-            total++
+    addPromotionContent(skus) {
+      let total = 0
+      const toAdd = []
+      for (const sku of skus) {
+        const found = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
+        if (found < 0) {
+          const addItem = { skuid: sku.skuid, mpu: sku.mpu, discount: 0, scheduleId: this.scheduleId }
+          const deleteIndex = this.deleteItems.findIndex(item => item.mpu === sku.mpu)
+          if (deleteIndex >= 0) {
+            this.deleteItems.splice(deleteIndex, 1)
+            this.updateItems.push({ mpu: sku.mpu, discount: 0 })
+          } else {
+            this.addedItems.push(addItem)
           }
+          toAdd.push({
+            ...addItem,
+            name: sku.name,
+            brand: sku.brand,
+            price: sku.price
+          })
+          total++
         }
-        if (total > 0) {
-          this.$store.commit('promotions/ADD_SKUS', toAdd)
-          resolve(total)
-        } else {
-          reject()
-        }
-      })
+      }
+      if (total > 0) {
+        this.$store.commit('promotions/ADD_SKUS', toAdd)
+      }
+      return total
     },
     handleCancelEditDiscount(row) {
       row.discount = row.originalDiscount
@@ -551,6 +555,25 @@ export default {
       })
     },
     async handleUpdateGoods() {
+      if (this.addedItems.length > 0 ||
+        this.updateItems.length > 0 ||
+        this.deleteItems.length > 0
+      ) {
+        try {
+          await this.$confirm('请确认是否保存此次促销活动的更改？', '保存活动', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          this.handleChangePromotion()
+        } catch (e) {
+          console.debug('Cancel update promotion')
+        }
+      } else {
+        this.$emit('onUpdateSuccess')
+      }
+    },
+    handleChangePromotion() {
       const promises = []
       if (this.addedItems.length > 0) {
         const params = { id: this.promotionData.id, promotionSkus: [] }
@@ -578,25 +601,14 @@ export default {
         }
       }
       if (promises.length > 0) {
-        try {
-          await this.$confirm('请确认是否保存此次促销活动的更改？', '保存活动', {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
-            type: 'warning'
-          })
-          this.dataLoading = true
-          Promise.all(promises).then(() => {
-            this.$emit('onUpdateSuccess')
-          }).catch(err => {
-            console.log('SavePromotion:' + err)
-          }).finally(() => {
-            this.dataLoading = false
-          })
-        } catch (_) {
-          console.debug('Cancel save promotion changes')
-        }
-      } else {
-        this.$emit('onUpdateSuccess')
+        this.dataLoading = true
+        Promise.all(promises).then(() => {
+          this.$emit('onUpdateSuccess')
+        }).catch(err => {
+          console.log('SavePromotion:' + err)
+        }).finally(() => {
+          this.dataLoading = false
+        })
       }
     },
     handleSaveGoods() {
@@ -636,7 +648,17 @@ export default {
       }
     },
     onScheduleTabRemove(tab) {
-      this.$confirm('请确认是否立即此场次活动？', '警告', {
+      const scheduleId = Number.parseInt(tab)
+      if (Number.isNaN(scheduleId)) {
+        return
+      }
+      const skus = this.promotionData.promotionSkus || []
+      const count = skus.filter(sku => sku.scheduleId === scheduleId).length
+      if (count > 0) {
+        this.$message.warning('请先删除此时段活动的全部商品！')
+        return
+      }
+      this.$confirm('请确认是否删除此场次活动？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
@@ -644,8 +666,8 @@ export default {
         try {
           const index = this.scheduleTabs.findIndex(item => item.name === tab)
           const nextIndex = index > 1 ? index - 1 : 0
-          await this.$store.dispatch('promotions/deleteScheduleTime', { id: Number.parseInt(tab) })
-          if (this.scheduleTabs > 0) {
+          await this.$store.dispatch('promotions/deleteScheduleTime', { id: scheduleId })
+          if (this.scheduleTabs.length > 0) {
             this.currentScheduleId = this.scheduleTabs[nextIndex].name
           } else {
             this.currentScheduleId = null
@@ -653,14 +675,22 @@ export default {
         } catch (e) {
           console.warn('Promotion delete schedule error:' + e)
         }
+      }).catch(_ => {
       })
     },
     handleAddScheduleTime() {
       this.$refs.scheduleForm.validate(async(valid) => {
         if (valid) {
           try {
-            const id = await this.$store.dispatch('promotions/addScheduleTime', this.scheduleData)
-            this.currentScheduleId = id.toString()
+            const index = this.promotionData.promotionSchedules
+              .findIndex(item => item.schedule === this.scheduleData.schedule)
+            if (index < 0) {
+              const id = await this.$store.dispatch('promotions/addScheduleTime',
+                { promotionId: this.promotionData.id, ...this.scheduleData })
+              this.currentScheduleId = id.toString()
+            } else {
+              this.$message.warning('此活动时段已添加，请选择其它的时段')
+            }
           } catch (e) {
             console.debug('Promotion add schedule error:' + e)
           }

@@ -9,16 +9,20 @@
     append-to-body
     center
   >
-    <category-selection
-      v-if="!hasPromotion"
-      :first-selectable="presetFirstCategory === null"
-      :first-value="presetFirstCategory || firstCategoryValue"
-      :seond-selectable="presetSecondCategory === null"
-      :second-value="presetSecondCategory || secondCategoryValue"
-      :third-selectable="presetThirdCategory === null"
-      :third-value="presetThirdCategory || thirdCategoryValue"
-      @changed="handleCategorySelectionChanged"
-    />
+    <el-form>
+      <el-form-item label="商品类别">
+        <category-selection
+          v-if="!hasPromotion"
+          :first-selectable="presetFirstCategory === null"
+          :first-value="presetFirstCategory || firstCategoryValue"
+          :seond-selectable="presetSecondCategory === null"
+          :second-value="presetSecondCategory || secondCategoryValue"
+          :third-selectable="presetThirdCategory === null"
+          :third-value="presetThirdCategory || thirdCategoryValue"
+          @changed="handleCategorySelectionChanged"
+        />
+      </el-form-item>
+    </el-form>
     <el-form v-if="hasPromotion" inline>
       <el-button type="primary" @click="handleDialogPromotionQuery">
         获取促销活动商品

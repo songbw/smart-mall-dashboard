@@ -27,7 +27,7 @@
         placeholder="请输入活动标签"
       />
     </el-form-item>
-    <el-form-item v-if="false" label="全天分时段">
+    <el-form-item label="全天分时段">
       <el-switch v-model="formData.dailySchedule" :disabled="scheduleDisabled" />
       <span style="font-size: 12px;margin-left: 10px">创建后将不能修改</span>
     </el-form-item>

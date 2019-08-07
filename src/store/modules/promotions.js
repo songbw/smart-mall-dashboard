@@ -1,3 +1,4 @@
+import sortBy from 'lodash/sortBy'
 import {
   getPromotionByIdApi,
   createPromotionApi,
@@ -8,7 +9,9 @@ import {
   getPromotionTypesApi,
   createPromotionTypeApi,
   updatePromotionTypeApi,
-  deletePromotionTypeApi
+  deletePromotionTypeApi,
+  createPromotionScheduleApi,
+  deletePromotionScheduleApi
 } from '@/api/promotions'
 
 const promotionTemplate = {
@@ -45,6 +48,14 @@ const mutations = {
         state.promotion[key] = params[key]
       }
     })
+    if (state.promotion.promotionSkus === null) {
+      state.promotion.promotionSkus = []
+    }
+    if (state.promotion.promotionSchedules === null) {
+      state.promotion.promotionSchedules = []
+    } else {
+      state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
+    }
   },
   SET_SKU_DISCOUNT: (state, params) => {
     const sku = state.promotion.promotionSkus.find(item => item.mpu === params.mpu)
@@ -79,10 +90,11 @@ const mutations = {
   },
   ADD_SCHEDULE: (state, params) => {
     state.promotion.promotionSchedules.push(params)
+    state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
   },
   DELETE_SCHEDULE: (state, id) => {
-    const schedules = state.promotion.promotionSchedules.filter(item => item.id === id)
-    state.promotion.promotionSchedules = schedules
+    const schedules = state.promotion.promotionSchedules
+    state.promotion.promotionSchedules = schedules.filter(item => item.id !== id)
   }
 }
 
@@ -102,16 +114,31 @@ const actions = {
     commit('SET_DATA', params)
   },
   async addContent({ commit }, params) {
-    const { data } = await addPromotionContentApi(params)
-    return data.result
+    return new Promise((resolve, reject) => {
+      addPromotionContentApi(params).then(response => {
+        resolve(response.data.result)
+      }).catch(error => {
+        reject(error)
+      })
+    })
   },
   async updateContent({ commit }, params) {
-    const { data } = await updatePromotionContentApi(params)
-    return data.result
+    return new Promise((resolve, reject) => {
+      updatePromotionContentApi(params).then(response => {
+        resolve(response.data.result)
+      }).catch(error => {
+        reject(error)
+      })
+    })
   },
   async deleteContent({ commit }, params) {
-    const { data } = await deletePromotionContentApi(params)
-    return data.result
+    return new Promise((resolve, reject) => {
+      deletePromotionContentApi(params).then(response => {
+        resolve(response.data.result)
+      }).catch(error => {
+        reject(error)
+      })
+    })
   },
   async getTypes({ commit }, params) {
     const { data } = await getPromotionTypesApi(params)
@@ -137,11 +164,12 @@ const actions = {
     commit('SET_TYPE_LIST', list)
   },
   async addScheduleTime({ commit }, params) {
-    const id = Math.floor(Math.random() * Math.floor(1000))
-    commit('ADD_SCHEDULE', { id, ...params })
-    return id
+    const { data } = await createPromotionScheduleApi(params)
+    commit('ADD_SCHEDULE', { id: data.scheduleId, ...params })
+    return data.scheduleId
   },
   async deleteScheduleTime({ commit }, params) {
+    await deletePromotionScheduleApi(params)
     commit('DELETE_SCHEDULE', params.id)
   }
 }

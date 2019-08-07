@@ -92,7 +92,7 @@
           <span>{{ scope.row.userCouponCode }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="用户OpenID" align="center">
+      <el-table-column label="用户OpenID" align="center" width="300">
         <template slot-scope="scope">
           <span>{{ scope.row.userOpenId }}</span>
         </template>

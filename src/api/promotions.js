@@ -103,3 +103,19 @@ export function deletePromotionTypeApi(params) {
     params
   })
 }
+
+export function createPromotionScheduleApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/schedule/create',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function deletePromotionScheduleApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/schedule/delete',
+    method: 'delete',
+    params
+  })
+}

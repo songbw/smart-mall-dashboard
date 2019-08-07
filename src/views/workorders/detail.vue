@@ -25,6 +25,12 @@
             <el-form-item label="申请时间:">
               <span>{{ workOrderData.createTime | timeFilter }}</span>
             </el-form-item>
+            <el-form-item label="申请数量:">
+              <span>{{ workOrderData.returnedNum }}</span>
+            </el-form-item>
+            <el-form-item label="退款金额:">
+              <span>￥ {{ workOrderData.refundAmount }}</span>
+            </el-form-item>
           </el-form>
         </el-card>
       </el-col>

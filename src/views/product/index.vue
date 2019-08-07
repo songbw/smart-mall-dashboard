@@ -175,7 +175,7 @@
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
-          <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
+          <el-dropdown placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>
@@ -195,14 +195,14 @@
                 编辑商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-if="!isProductOnSale(scope.row.state)"
+                v-if="isAdminUser && !isProductOnSale(scope.row.state)"
                 :command="`start:${scope.$index}`"
                 icon="el-icon-sell"
               >
                 上架商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-else
+                v-else-if="isAdminUser"
                 :command="`stop:${scope.$index}`"
                 icon="el-icon-sold-out"
               >

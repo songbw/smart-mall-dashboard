@@ -398,7 +398,8 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
-      vendorOptions: 'productVendors'
+      vendorOptions: 'productVendors',
+      vendorId: 'vendorId'
     }),
     loadingMessage: {
       get() {
@@ -641,6 +642,9 @@ export default {
             params[key] = this.productForm[key]
           }
         })
+        if (!this.isAdminUser) {
+          params.merchantId = this.vendorId
+        }
         await createProductApi(params)
         this.$message({ message: '创建产品信息成功。', type: 'success' })
         this.goBack()
