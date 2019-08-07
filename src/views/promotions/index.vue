@@ -207,7 +207,7 @@ import {
   promotion_status_ready_for_sale,
   promotion_status_on_sale,
   PromotionStatusDefinition
-} from './constants'
+} from '@/utils/constants'
 
 export default {
   name: 'PromotionActivity',
@@ -215,7 +215,7 @@ export default {
   filters: {
     promotionStatus: (status) => {
       const find = PromotionStatusDefinition.find(item => item.value === status)
-      return find ? find.label : status
+      return find ? find.label : ''
     }
   },
   data() {

@@ -57,11 +57,6 @@
           <span>{{ scope.row.tag }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优惠类型" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.promotionType | promotionTypeLabel }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="活动状态" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.status | promotionStatus }}</span>
@@ -83,7 +78,7 @@
       :total="total"
       :page.sync="query.offset"
       :limit.sync="query.limit"
-      @pagination="getContentData"
+      @pagination="getFilterData"
     />
     <span slot="footer">
       <el-button @click="handleDialogCancel">取消</el-button>
@@ -95,12 +90,13 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { searchPromotionsApi } from '@/api/promotions'
+import { PromotionStatusDefinition } from '@/utils/constants'
 
 export default {
   name: 'PromotionSelection',
   components: { Pagination },
   filters: {
-    promotionTypeLabel: (type) => {
+    discountTypeLabel: (type) => {
       if (type === 0) {
         return '减价'
       } else if (type === 1) {
@@ -108,14 +104,8 @@ export default {
       }
     },
     promotionStatus: (status) => {
-      switch (status) {
-        case 1:
-          return '未开始'
-        case 2:
-          return '进行中'
-        case 3:
-          return '已结束'
-      }
+      const found = PromotionStatusDefinition.find(item => item.value === status)
+      return found ? found.label : ''
     }
   },
   props: {
@@ -129,17 +119,8 @@ export default {
       statusOptions: [{
         value: 0,
         label: '全部'
-      }, {
-        value: 1,
-        label: '未开始'
-      }, {
-        value: 2,
-        label: '进行中'
-      }, {
-        value: 3,
-        label: '已结束'
-      }],
-      typeOptions: [{
+      }].concat(PromotionStatusDefinition),
+      discountTypeOptions: [{
         value: -1,
         label: '全部'
       }, {

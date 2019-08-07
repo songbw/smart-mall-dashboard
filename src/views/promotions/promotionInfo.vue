@@ -35,7 +35,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
-import { PromotionStatusDefinition } from './constants'
+import { PromotionStatusDefinition } from '@/utils/constants'
 
 export default {
   name: 'PromotionInfo',
@@ -48,7 +48,7 @@ export default {
       get() {
         const status = this.promotionData.status
         const find = PromotionStatusDefinition.find(item => item.value === status)
-        return find ? find.label : status
+        return find ? find.label : ''
       }
     },
     type: {
