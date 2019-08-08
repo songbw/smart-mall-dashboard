@@ -116,12 +116,17 @@
           </el-button>
         </template>
       </el-table-column>
+      <el-table-column label="商品图" align="center" width="140">
+        <template slot-scope="scope">
+          <el-image :src="scope.row.image" fit="contain" />
+        </template>
+      </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="品牌" align="center" width="150">
+      <el-table-column label="品牌" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.brand }}</span>
         </template>
@@ -158,7 +163,7 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column v-if="isAdminUser" label="供应商" align="center" width="200">
+      <el-table-column v-if="isAdminUser" label="供应商" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
@@ -297,14 +302,6 @@ export default {
         value: -2,
         label: '全部'
       }].concat(ProductStateOptions),
-      searchParams: {
-        query: '',
-        skuid: '',
-        brand: '',
-        mpu: '',
-        vendorId: null,
-        categoryID: null
-      },
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -461,16 +458,8 @@ export default {
         }
       }
     },
-    resetSearchParams() {
-      this.searchParams.query = ''
-      this.searchParams.skuid = ''
-      this.searchParams.brand = ''
-      this.searchParams.vendorId = null
-      this.searchParams.categoryID = null
-    },
     async getListData() {
       if (this.vendorApproved) {
-        this.resetSearchParams()
         const params = this.getFilterParams()
         if (params) {
           this.getFilterProducts(params)
@@ -504,44 +493,32 @@ export default {
       }
     },
     getFilterParams() {
-      let filter = false
       const params = {}
       params.offset = this.listOffset
       params.limit = this.listLimit
+      params.order = 'desc'
       if (!isEmpty(this.listSkuId)) {
-        this.searchParams.skuid = this.listSkuId
         params.skuid = this.listSkuId
-        filter = true
       } else if (!isEmpty(this.listMpu)) {
-        this.searchParams.mpu = this.listMpu
         params.mpu = this.listMpu
-        filter = true
       } else {
         if (!isEmpty(this.listQuery)) {
-          this.searchParams.query = this.listQuery
           params.query = this.listQuery
-          filter = true
         }
         if (!isEmpty(this.listBrand)) {
-          this.searchParams.brand = this.listBrand
           params.brand = this.listBrand
-          filter = true
         }
         if (this.listVendor > 0) {
-          this.searchParams.vendorId = this.listVendor
           params.merchantId = this.listVendor
-          filter = true
         }
         if (Number.isInteger(this.thirdCategoryValue)) {
-          this.searchParams.categoryID = this.thirdCategoryValue
           params.categoryID = this.thirdCategoryValue
-          filter = true
         }
       }
       if (this.listState !== -2) {
         params.state = this.listState
       }
-      return filter ? params : null
+      return params
     },
     async getFilterProducts(params) {
       try {

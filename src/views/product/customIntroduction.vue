@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="20" style="border: 1px solid #99a9bf;">
     <el-col :span="18">
-      <el-image :src="imageUrl" width="100%" style="margin: 10px" fit="contain" lazy />
+      <el-image :src="imageUrl" width="100%" style="margin: 10px" fit="contain" />
     </el-col>
     <el-col :span="6">
       <div v-if="couldEdit" style="padding: 14px;">

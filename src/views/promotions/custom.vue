@@ -366,19 +366,24 @@ export default {
       cb(results)
     },
     onScheduleDateChanged(date) {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const dateFormat = 'YYYY-MM-DD'
       this.scheduleDate = date
-      const startDate = this.parseDateFormat(date, '00:00')
-      if (startDate) {
-        this.startDate = date
-        this.startTime = '00:00'
-        this.formData.startDate = startDate
-      }
-      const endDate = this.parseDateFormat(date, '23:00')
-      if (endDate) {
-        this.endDate = date
-        this.endTime = '23:00'
-        this.formData.endDate = endDate
-      }
+
+      const dateMoment = moment(date, dateFormat)
+      dateMoment.hour(0)
+      dateMoment.minute(0)
+      dateMoment.second(0)
+      this.startDate = date
+      this.startTime = '00:00'
+      this.formData.startDate = dateMoment.format(format)
+
+      dateMoment.hour(23)
+      dateMoment.minute(59)
+      dateMoment.second(59)
+      this.endDate = date
+      this.endTime = '23:00'
+      this.formData.endDate = dateMoment.format(format)
     }
   }
 }

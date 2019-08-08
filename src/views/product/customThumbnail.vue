@@ -1,6 +1,6 @@
 <template>
   <el-card :body-style="{ padding: '0px' }">
-    <el-image :src="imageUrl" class="image" fit="contain" lazy />
+    <el-image :src="imageUrl" class="image" fit="contain" />
     <div v-if="couldEdit" style="padding: 14px;">
       <el-upload
         ref="thumbnailUpload"

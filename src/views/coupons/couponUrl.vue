@@ -29,7 +29,7 @@
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
     </div>
-    <div v-else-if="displayType === 'external'">
+    <div v-else-if="displayType === 'external'" style="margin-top: 7px">
       <el-input v-model="externalUrl" :readonly="readOnly" />
     </div>
     <div v-if="displayName" style="margin-left: 10px">{{ displayName }}</div>
@@ -37,7 +37,6 @@
 </template>
 
 <script>
-import isEmpty from 'lodash/isEmpty'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
 
@@ -83,7 +82,7 @@ export default {
   computed: {
     displayType: {
       get() {
-        if (this.url && !isEmpty(this.url)) {
+        if (this.url !== null) {
           if (this.url.startsWith('aggregation://')) {
             return 'aggregation'
           } else if (this.url.startsWith('route://commodity')) {

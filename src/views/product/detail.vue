@@ -85,13 +85,13 @@
       </el-form-item>
       <el-form-item label="商品封面图">
         <template>
-          <el-image v-if="productForm.image" :src="productForm.image" fit="contain" lazy style="width: 200px" />
+          <el-image v-if="productForm.image" :src="productForm.image" fit="contain" style="width: 200px" />
           <el-upload
             v-if="!viewProduct"
             ref="coverUpload"
             :action="uploadUrl"
             :data="uploadCoverData"
-            :auto-upload="false"
+            :auto-upload="true"
             :limit="1"
             :show-file-list="true"
             :before-upload="handleBeforeUpload"
@@ -105,9 +105,6 @@
           >
             <el-button slot="trigger" type="primary" icon="el-icon-picture">
               选择封面图
-            </el-button>
-            <el-button style="margin-left: 10px;" type="success" icon="el-icon-upload" @click="handleUploadCover">
-              开始上传
             </el-button>
           </el-upload>
         </template>
@@ -139,7 +136,7 @@
             ref="thumbnailUpload"
             :action="uploadUrl"
             :data="uploadThumbnailData"
-            :auto-upload="false"
+            :auto-upload="true"
             :limit="5 - thumbnails.length < 0 ? 0 : 5 - thumbnails.length"
             :show-file-list="true"
             :before-upload="handleBeforeUpload"
@@ -154,9 +151,6 @@
           >
             <el-button slot="trigger" :disabled="thumbnails.length >= 5" type="primary" icon="el-icon-picture">
               选择主图
-            </el-button>
-            <el-button style="margin-left: 10px;" type="success" icon="el-icon-upload" @click="handleUploadThumbnail">
-              开始上传
             </el-button>
             <div slot="tip" class="el-upload__tip">请选择商品的主图，最多支持5个</div>
           </el-upload>
@@ -196,7 +190,7 @@
               ref="introductionUpload"
               :action="uploadUrl"
               :data="uploadIntroductionData"
-              :auto-upload="false"
+              :auto-upload="true"
               :limit="30"
               :show-file-list="true"
               :before-upload="handleBeforeUpload"
@@ -211,14 +205,6 @@
             >
               <el-button slot="trigger" type="primary" icon="el-icon-picture">
                 选择描述图
-              </el-button>
-              <el-button
-                style="margin-left: 10px;"
-                type="success"
-                icon="el-icon-upload"
-                @click="handleUploadIntroduction"
-              >
-                开始上传
               </el-button>
             </el-upload>
           </div>
@@ -684,17 +670,11 @@ export default {
         this.goBack()
       }
     },
-    handleUploadCover() {
-      this.$refs.coverUpload.submit()
-    },
     handleUploadCoverSuccess(res) {
       this.$refs.coverUpload.clearFiles()
       this.loading = false
       this.uploading = false
       this.productForm.image = this.$store.getters.cosUrl + res.data.url
-    },
-    handleUploadThumbnail() {
-      this.$refs.thumbnailUpload.submit()
     },
     handleUploadThumbnailSuccess(res, file, fileList) {
       const sucList = fileList.filter(item => item.status === 'success')
@@ -721,9 +701,6 @@ export default {
       this.thumbnails.splice(index, 0, url)
       this.thumbnailUrls.splice(index, 1)
       this.thumbnailUrls.splice(index, 0, this.$store.getters.cosUrl + url)
-    },
-    handleUploadIntroduction() {
-      this.$refs.introductionUpload.submit()
     },
     handleUploadIntroductionSuccess(res, file, fileList) {
       if (fileList.length > 1) {

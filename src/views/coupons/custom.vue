@@ -314,7 +314,12 @@
       </el-form-item>
       <el-form-item label="可用商品范围" required>
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
-        <el-select v-else :value="formData.rules.scenario.type" @change="onScenarioTypeChanged">
+        <el-select
+          v-else
+          :value="formData.rules.scenario.type"
+          :disabled="disableScenarioType"
+          @change="onScenarioTypeChanged"
+        >
           <el-option
             v-for="item in scenarioOptions"
             :key="item.value"
@@ -329,7 +334,7 @@
           key="include"
           :first-class-category="formData.category"
           :mpu-list="formData.rules.scenario.couponMpus"
-          :view-only="viewOnly"
+          :view-only="viewOnly || disableScenarioType"
           @contentAdd="handleAddCouponMpus"
           @contentDelete="handleDeleteCouponMpus"
         />
@@ -499,6 +504,7 @@ export default {
       tagSelected: null,
       couponData: null,
       originalCategory: null,
+      disableScenarioType: false,
       formData: {
         name: '',
         supplierMerchantId: null,
@@ -693,6 +699,7 @@ export default {
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value.startsWith('aggregation://') ||
               value.startsWith('route://') ||
+              value.startsWith('about:blank') ||
               validateURL(value)) {
               callback()
             } else {
@@ -1111,11 +1118,14 @@ export default {
     handleCouponUrlChanged(data) {
       this.formData.url = data.url
       if (data.url.startsWith('route://commodity')) {
+        this.disableScenarioType = true
         const mpu = data.url.substring('route://commodity/'.length)
         if (!isEmpty(mpu)) {
           this.formData.rules.scenario.type = 1
           this.formData.rules.scenario.couponMpus = [mpu]
         }
+      } else {
+        this.disableScenarioType = false
       }
     },
     onMerchantChanged(value) {
