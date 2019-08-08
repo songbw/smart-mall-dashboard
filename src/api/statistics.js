@@ -64,3 +64,11 @@ export function getMerchantUserDataApi(params) {
     params
   })
 }
+
+export function getMerchantOrderDataApi(params) {
+  return Vue.axios('statistics').request({
+    url: '/statistics/merchant/statistic/order/amount',
+    method: 'get',
+    params
+  })
+}

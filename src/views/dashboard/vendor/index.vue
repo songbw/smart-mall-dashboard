@@ -32,14 +32,9 @@
     </el-row>
     <el-row :gutter="60" style="margin-top: 20px">
       <el-col :span="11">
-        <div class="data-title">订单支付总额变化趋势</div>
+        <div class="data-title">订单支付总额 / 按地区</div>
         <el-card shadow="never">
-          <ve-line
-            :data="chartOrdersData"
-            :data-empty="chartOrdersData.rows.length === 0"
-            :loading="chartOrdersLoading"
-            :settings="chartSettings"
-          />
+          <ve-pie :data="chartOrdersData" :loading="chartOrdersLoading" :settings="chartSettings" />
         </el-card>
       </el-col>
       <el-col :span="11">
@@ -61,6 +56,7 @@
 import moment from 'moment'
 import {
   getMerchantSumDataApi,
+  getMerchantOrderDataApi,
   getMerchantUserDataApi
 } from '@/api/statistics'
 
@@ -87,12 +83,12 @@ export default {
       },
       chartOrdersLoading: false,
       chartOrdersData: {
-        columns: ['date'],
+        columns: ['cityName', 'orderAmount'],
         rows: []
       },
       chartUsersLoading: false,
       chartUsersData: {
-        columns: ['date'],
+        columns: ['date', 'orderUserCount', 'refundUserCount'],
         rows: []
       }
     }
@@ -140,10 +136,26 @@ export default {
     },
     getChartData() {
       const params = this.getParameters()
+      this.getOrderData(params)
       this.getUserData(params)
     },
     onDataTypeChanged(value) {
       this.getChartData()
+    },
+    async getOrderData(params) {
+      try {
+        this.chartOrdersLoading = true
+        const { data } = await getMerchantOrderDataApi(params)
+        if (Array.isArray(data)) {
+          this.chartOrdersData.rows = data.map(item => {
+            return { cityName: item.cityName, orderAmount: item.orderAmount }
+          })
+        }
+      } catch (e) {
+        console.warn('Dashboard get merchant order error:' + e)
+      } finally {
+        this.chartOrdersLoading = false
+      }
     },
     async getUserData(params) {
       try {
@@ -159,7 +171,7 @@ export default {
           })
         }
       } catch (e) {
-        console.warn('Dashboard get merchant user errer:' + e)
+        console.warn('Dashboard get merchant user error:' + e)
       } finally {
         this.chartUsersLoading = false
       }
