@@ -49,9 +49,18 @@ export function getBehaviorDataApi(params) {
   })
 }
 
-export function getMerchantSumDataApi() {
+export function getMerchantSumDataApi(params) {
   return Vue.axios('statistics').request({
-    url: '/statistics/overview/merchant/sum',
-    method: 'get'
+    url: '/statistics/merchant/statistic/overview',
+    method: 'get',
+    params
+  })
+}
+
+export function getMerchantUserDataApi(params) {
+  return Vue.axios('statistics').request({
+    url: '/statistics/merchant/statistic/user/count',
+    method: 'get',
+    params
   })
 }

@@ -58,12 +58,17 @@
 </template>
 
 <script>
-import { getMerchantSumDataApi } from '@/api/statistics'
+import moment from 'moment'
+import {
+  getMerchantSumDataApi,
+  getMerchantUserDataApi
+} from '@/api/statistics'
 
 export default {
   name: 'VendorDashboard',
   data() {
     return {
+      merchantId: null,
       summaryLoading: false,
       summary: {
         orderPaymentAmount: 0,
@@ -73,8 +78,12 @@ export default {
       },
       chartDataType: '30',
       chartSettings: {
-        dataType: 'normal',
-        labelMap: {}
+        dataType: 'KMB',
+        labelMap: {
+          date: '日期',
+          orderUserCount: '下单人数',
+          refundUserCount: '退单人数'
+        }
       },
       chartOrdersLoading: false,
       chartOrdersData: {
@@ -102,6 +111,8 @@ export default {
     }
   },
   created() {
+    this.merchantId = this.$store.getters.vendorId
+    this.merchantId = 2
     this.getSummaryData()
     this.getChartData()
   },
@@ -109,18 +120,49 @@ export default {
     async getSummaryData() {
       try {
         this.summaryLoading = true
-        const { data } = await getMerchantSumDataApi()
-        console.debug(JSON.stringify(data))
+        const { data } = await getMerchantSumDataApi({ merchantId: this.merchantId })
+        this.summary.orderPaymentAmount = data.orderAmount
+        this.summary.orderTotalNum = data.orderCount
+        this.summary.orderCustomerTotalNum = data.orderUserCount
+        this.summary.returnOrderTotalNum = data.refundUserCount
       } catch (e) {
         console.warn('Dashboard get summary error:' + e)
       } finally {
         this.summaryLoading = false
       }
     },
+    getParameters() {
+      const format = 'YYYY-MM-DD'
+      const range = Number.parseInt(this.chartDataType)
+      const startDate = moment().subtract(range, 'days').format(format)
+      const endDate = moment().subtract(1, 'days').format(format)
+      return { merchantId: this.merchantId, startDate, endDate }
+    },
     getChartData() {
+      const params = this.getParameters()
+      this.getUserData(params)
     },
     onDataTypeChanged(value) {
       this.getChartData()
+    },
+    async getUserData(params) {
+      try {
+        this.chartUsersLoading = true
+        const { data } = await getMerchantUserDataApi(params)
+        if (Array.isArray(data)) {
+          this.chartUsersData.rows = data.map(item => {
+            const { statisticDate, ...rest } = item
+            return {
+              date: statisticDate,
+              ...rest
+            }
+          })
+        }
+      } catch (e) {
+        console.warn('Dashboard get merchant user errer:' + e)
+      } finally {
+        this.chartUsersLoading = false
+      }
     }
   }
 }

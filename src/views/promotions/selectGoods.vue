@@ -5,6 +5,9 @@
     </el-header>
     <el-main>
       <div v-if="promotionData.dailySchedule">
+        <div style="font-size: 14px;margin-bottom: 10px">
+          <i class="el-icon-warning-outline">最多添加5个活动时段，每个时段的默认结束时间为24小时（可修改）</i>
+        </div>
         <el-form v-if="!viewOnly" ref="scheduleForm" :model="scheduleData" :rules="scheduleRules" inline>
           <el-form-item label="活动时段" prop="schedule">
             <el-time-select
@@ -27,7 +30,9 @@
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="handleAddScheduleTime">添加活动时段</el-button>
+            <el-button :disabled="scheduleTabs.length >= 5" type="primary" @click="handleAddScheduleTime">
+              添加活动时段
+            </el-button>
           </el-form-item>
         </el-form>
         <el-tabs
