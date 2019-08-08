@@ -52,7 +52,7 @@
       </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.intro }}</span>
+          <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品价格(元)" align="center" width="120">
@@ -106,7 +106,7 @@ import findIndex from 'lodash/findIndex'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import Pagination from '@/components/Pagination'
-import { searchProductsApi } from '@/api/products'
+import { getProductsByIdList } from '@/api/products'
 
 export default {
   name: 'CouponGoods',
@@ -155,8 +155,7 @@ export default {
   methods: {
     isProductValid(product) {
       const price = Number.parseFloat(product.price)
-      const image = product.image || product.imageExtend
-      return !(Number.isNaN(price) || image === null)
+      return !Number.isNaN(price)
     },
     updatePageList() {
       const begin = (this.offset - 1) * this.limit
@@ -168,29 +167,33 @@ export default {
       const fetchList = filter(mpuList, mpu => findIndex(this.skuInfoList, item => item.mpu === mpu) < 0)
       if (fetchList.length > 0) {
         this.dataLoading = true
-        for (const mpu of fetchList) {
+        for (let begin = 0; begin < fetchList.length; begin += 50) {
+          const params = {
+            mpuIdList: fetchList.slice(begin, begin + 50).join(',')
+          }
           try {
             if (!this.pageMounted) {
               return
             }
-            const response = await searchProductsApi({ offset: 1, limit: 10, mpu: mpu })
+            const response = await getProductsByIdList(params)
             const data = response.data.result
-            if (data.total > 0) {
-              const product = data.list[0]
-              if (this.isProductValid(product)) {
-                const item = {
-                  skuid: product.skuid,
-                  mpu: product.mpu,
-                  price: product.price,
-                  imagePath: product.image,
-                  name: product.name,
-                  intro: product.name
+            if (data.length > 0) {
+              data.forEach(product => {
+                if (this.isProductValid(product)) {
+                  const item = {
+                    skuid: product.skuid,
+                    mpu: product.mpu,
+                    price: product.price,
+                    imagePath: product.image,
+                    name: product.name,
+                    intro: ''
+                  }
+                  this.skuInfoList.push(item)
                 }
-                this.skuInfoList.push(item)
-              }
+              })
             }
           } catch (err) {
-            console.warn('Coupon Goods: search error:' + mpu)
+            console.warn('Coupon Goods: search error:' + err)
           }
         }
         this.dataLoading = false

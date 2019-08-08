@@ -53,6 +53,51 @@
       <span>{{ `已选择${dialogSelectedItems.length}件商品` }}</span>
     </div>
     <el-table
+      v-if="singleSelection"
+      ref="dialogSkuTable"
+      v-loading="dataLoading"
+      :data="dialogSkuData"
+      style="width: 100%"
+      height="250"
+      border
+      highlight-current-row
+      @current-change="handleSingleSelectionChange"
+    >
+      <el-table-column label="已选" align="center" width="55">
+        <template slot-scope="scope">
+          <el-checkbox :value="dialogSelectedItems.length > 0 && dialogSelectedItems[0].mpu === scope.row.mpu" />
+        </template>
+      </el-table-column>
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.skuid }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品名" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品价格(元)" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="hasPromotion" label="减价(元)" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.discount }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品详情" align="center" width="80">
+        <template slot-scope="scope">
+          <el-button type="primary" size="mini" @click="handleDialogViewDetail(scope.row.mpu)">
+            查看
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-table
+      v-else
       ref="dialogSkuTable"
       v-loading="dataLoading"
       :data="dialogSkuData"
@@ -121,6 +166,10 @@ export default {
   components: { CategorySelection, Pagination },
   props: {
     dialogVisible: {
+      type: Boolean,
+      default: false
+    },
+    singleSelection: {
       type: Boolean,
       default: false
     },
@@ -263,6 +312,24 @@ export default {
       } else {
         this.dialogSkuData = []
         this.total = 0
+      }
+    },
+    handleSingleSelectionChange(row) {
+      this.dialogSelectedItems = []
+      if (row) {
+        const selectItem = {
+          skuid: row.skuid,
+          mpu: row.mpu,
+          price: row.price,
+          imagePath: row.image,
+          brand: row.brand,
+          name: row.name,
+          intro: ''
+        }
+        if (this.hasPromotion) {
+          selectItem.discount = row.discount
+        }
+        this.dialogSelectedItems.push(selectItem)
       }
     },
     handleDialogSelectionChange(val) {

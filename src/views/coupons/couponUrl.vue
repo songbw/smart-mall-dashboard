@@ -25,6 +25,7 @@
       <goods-selection-dialog
         :preset-first-category="firstClassCategory"
         :dialog-visible="dialogSelectionVisible"
+        :single-selection="true"
         @onSelectionCancelled="onGoodsSelectionCancelled"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
