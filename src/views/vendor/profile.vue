@@ -47,7 +47,7 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="营业执照" prop="licenseUrl">
+          <el-form-item v-if="needLicenseUrl" label="营业执照">
             <img v-if="vendorLicenseUrl" :src="vendorLicenseUrl" width="50%" alt="">
             <el-upload
               ref="uploadLicense"
@@ -138,6 +138,7 @@ export default {
     return {
       statusRejected: vendor_status_rejected,
       uploadUrl: app_upload_url,
+      needLicenseUrl: false,
       uploadData: {
         pathName: 'vendor/licenses'
       },

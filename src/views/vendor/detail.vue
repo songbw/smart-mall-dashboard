@@ -29,8 +29,8 @@
       <el-form-item label="更新时间">
         <el-input :value="updatedTime" readonly class="item-input" />
       </el-form-item>
-      <el-form-item label="营业执照">
-        <img v-if="company.licenseUrl" :src="company.licenseUrl" width="50%" alt="">
+      <el-form-item v-if="company.licenseUrl" label="营业执照">
+        <img :src="company.licenseUrl" width="50%" alt="">
       </el-form-item>
       <el-form-item v-if="users.length > 0" label="商户管理员">
         <el-table :data="users" border style="width: 100%;">

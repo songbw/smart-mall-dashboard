@@ -34,7 +34,12 @@
       <el-col :span="11">
         <div class="data-title">订单支付总额 / 按地区</div>
         <el-card shadow="never">
-          <ve-pie :data="chartOrdersData" :loading="chartOrdersLoading" :settings="chartSettings" />
+          <ve-pie
+            :data="chartOrdersData"
+            :loading="chartOrdersLoading"
+            :settings="chartSettings"
+            :data-empty="chartOrdersData.rows.length === 0"
+          />
         </el-card>
       </el-col>
       <el-col :span="11">
@@ -108,7 +113,6 @@ export default {
   },
   created() {
     this.merchantId = this.$store.getters.vendorId
-    this.merchantId = 2
     this.getSummaryData()
     this.getChartData()
   },
@@ -182,11 +186,13 @@ export default {
 
 <style scoped>
   .panel-item {
+    border-top: #DCDFE6 1px solid;
     border-right: #DCDFE6 1px solid;
     border-bottom: #DCDFE6 1px solid;
   }
 
   .panel-title {
+    margin-top: 10px;
     font-size: 18px;
     font-weight: bolder;
     text-align: center;

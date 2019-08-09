@@ -49,13 +49,23 @@
       <el-col :span="11">
         <div class="data-title">订单支付总额 / 按品类</div>
         <el-card shadow="never">
-          <ve-pie :data="chartCategoryData" :loading="chartCategoryLoading" :settings="chartPriceSettings" />
+          <ve-pie
+            :data="chartCategoryData"
+            :loading="chartCategoryLoading"
+            :settings="chartPriceSettings"
+            :data-empty="chartCategoryData.rows.length === 0"
+          />
         </el-card>
       </el-col>
       <el-col :span="11">
         <div class="data-title">订单支付总额 / 按商户</div>
         <el-card shadow="never">
-          <ve-pie :data="chartMerchantData" :loading="chartMerchantLoading" :settings="chartPriceSettings" />
+          <ve-pie
+            :data="chartMerchantData"
+            :loading="chartMerchantLoading"
+            :settings="chartPriceSettings"
+            :data-empty="chartMerchantData.rows.length === 0"
+          />
         </el-card>
       </el-col>
     </el-row>
@@ -312,6 +322,7 @@ export default {
   }
 
   .panel-title {
+    margin-top: 10px;
     font-size: 18px;
     font-weight: bolder;
     text-align: center;

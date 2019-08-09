@@ -3,13 +3,14 @@
     <sidebar class="sidebar-container" />
     <div class="main-container">
       <nav-bar />
-      <el-alert
-        v-if="!vendorApproved"
-        title="企业未审核通过"
-        type="error"
-        description="企业信息还未通过审核，请完善后提交审核"
-        show-icon
-      />
+      <div v-if="!vendorApproved">
+        <el-alert
+          title="企业未审核通过"
+          type="error"
+          description="企业信息还未通过审核，请完善后提交审核"
+          show-icon
+        />
+      </div>
       <app-main v-if="appReady" />
       <page-loading v-else />
     </div>
