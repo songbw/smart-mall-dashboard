@@ -465,6 +465,9 @@ export default {
       } else {
         params.id = this.$route.params.id
       }
+      if (!this.isAdminUser) {
+        params.merchantId = this.vendorId
+      }
       this.loading = true
       searchProductsApi(params).then(response => {
         const data = response.data.result
