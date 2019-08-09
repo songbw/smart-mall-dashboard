@@ -25,8 +25,17 @@
                 选择促销活动
               </el-button>
               <div v-if="titleHasPromotionActivity">
+                <el-switch
+                  v-model="titlePromotionDailySchedule"
+                  active-text="全天分时段"
+                  inactive-text="普通活动"
+                />
+              </div>
+              <div v-if="titleHasPromotionActivity">
                 <span>活动名称：</span>
+                <span v-if="titlePromotionDailySchedule">全天分时段</span>
                 <el-link
+                  v-else
                   :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
                   target="_blank"
                   type="primary"
@@ -35,7 +44,12 @@
                 </el-link>
               </div>
               <div v-if="titleHasPromotionActivity">
-                活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}
+                <div v-if="titlePromotionDailySchedule">
+                  活动时间：当天24小时
+                </div>
+                <div v-else>
+                  活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}
+                </div>
               </div>
             </el-form-item>
             <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
@@ -107,7 +121,12 @@
         <el-button v-if="titleHasPromotionActivity === false" size="mini" @click="dialogImportVisible = true">
           导入商品
         </el-button>
-        <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+        <el-button
+          :disabled="titlePromotionDailySchedule"
+          type="primary"
+          size="mini"
+          @click="dialogSelectionVisible = true"
+        >
           选择商品
         </el-button>
       </div>
@@ -300,6 +319,7 @@ export default {
               hasTextLink: false,
               textLinkValue: '',
               hasPromotionActivity: false,
+              promotionDailySchedule: false,
               promotionActivityId: -1,
               promotionActivityName: '',
               promotionActivityStartDate: '',
@@ -403,6 +423,15 @@ export default {
           }
         }
         const title = Object.assign({}, this.promotionData.settings.title, newTitle)
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionDailySchedule: {
+      get() {
+        return this.titleHasPromotionActivity ? this.promotionData.settings.title.promotionDailySchedule : false
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { promotionDailySchedule: newValue })
         this.changeTitle(title)
       }
     },

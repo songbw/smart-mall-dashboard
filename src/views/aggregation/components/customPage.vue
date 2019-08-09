@@ -322,6 +322,7 @@ export default {
               hasTextLink: false,
               textLinkValue: '',
               hasPromotionActivity: false,
+              promotionDailySchedule: false,
               promotionActivityId: -1,
               promotionActivityName: '',
               promotionActivityStartDate: '',
