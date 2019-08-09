@@ -26,7 +26,7 @@
         <el-form-item label="商品MPU">
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
-        <el-form-item label="供应商名">
+        <el-form-item v-if="isAdminUser" label="供应商名">
           <el-select :value="listVendor" @change="handleVendorChanged">
             <el-option
               v-for="item in vendorOptions"
@@ -316,6 +316,7 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
+      vendorId: 'vendorId',
       productQuery: 'productQuery',
       productVendors: 'productVendors',
       vendorApproved: 'vendorApproved'
@@ -508,8 +509,12 @@ export default {
         if (!isEmpty(this.listBrand)) {
           params.brand = this.listBrand
         }
-        if (this.listVendor > 0) {
-          params.merchantId = this.listVendor
+        if (this.isAdminUser) {
+          if (this.listVendor > 0) {
+            params.merchantId = this.listVendor
+          }
+        } else {
+          params.merchantId = this.vendorId
         }
         if (Number.isInteger(this.thirdCategoryValue)) {
           params.categoryID = this.thirdCategoryValue
