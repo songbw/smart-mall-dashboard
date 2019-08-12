@@ -72,6 +72,14 @@
           >
             批量创建商品
           </el-button>
+          <el-button
+            :disabled="productSelection.length === 0"
+            type="danger"
+            icon="el-icon-edit"
+            @click="handleEditSelection"
+          >
+            批量修改{{ productSelection.length }}个商品
+          </el-button>
         </div>
         <div>
           <el-button
@@ -255,6 +263,71 @@
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
     />
+    <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
+      <div style="font-size: 14px;margin-bottom: 10px">
+        <i class="el-icon-warning-outline">如果无需修改对应属性，可以不选择！</i>
+      </div>
+      <el-form
+        :model="selectionForm"
+        label-position="right"
+        label-width="100px"
+      >
+        <el-form-item v-if="isAdminUser" label="商品供应商">
+          <el-select v-model="selectionForm.merchantId" clearable>
+            <el-option
+              v-for="item in productVendors"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品品牌">
+          <el-select
+            filterable
+            remote
+            placeholder="请输入商品品牌关键词"
+            clearable
+            :value="selectionForm.brandId"
+            :remote-method="remoteBrandOptions"
+            :loading="brandLoading"
+            @change="handleBrandChanged"
+          >
+            <el-option
+              v-for="item in brandOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品类别">
+          <category-selection
+            :inline="false"
+            :first-value="selectionForm.firstCategoryValue"
+            :second-value="selectionForm.secondCategoryValue"
+            :third-value="selectionForm.thirdCategoryValue"
+            @changed="onEditCategorySelectionChanged"
+          />
+        </el-form-item>
+        <el-form-item v-if="isAdminUser" label="商品状态">
+          <el-select v-model="selectionForm.state" clearable>
+            <el-option
+              v-for="item in editStateOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmEditSelection">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -268,9 +341,8 @@ import {
   deleteProductApi,
   createProductApi
 } from '@/api/products'
-import {
-  getVendorListApi
-} from '@/api/vendor'
+import { getVendorListApi } from '@/api/vendor'
+import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import CategorySelection from '@/components/CategorySelection'
@@ -302,6 +374,13 @@ export default {
         value: -2,
         label: '全部'
       }].concat(ProductStateOptions),
+      editStateOptions: [{
+        value: product_state_on_sale,
+        label: '上架'
+      }, {
+        value: product_state_off_shelves,
+        label: '下架'
+      }],
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -310,7 +389,21 @@ export default {
       exportDialogVisible: false,
       allExportCancelled: false,
       allExportProgress: 0,
-      dialogImportVisible: false
+      dialogImportVisible: false,
+      editDialogVisible: false,
+      brandLoading: false,
+      brandOptions: [],
+      selectionEditing: false,
+      selectionForm: {
+        merchantId: null,
+        state: null,
+        brandId: null, // Number
+        brand: null,
+        category: null,
+        firstCategoryValue: null,
+        secondCategoryValue: null,
+        thirdCategoryValue: null
+      }
     }
   },
   computed: {
@@ -622,7 +715,7 @@ export default {
           }
           await updateProductApi(params)
           that.$message({ message: '产品下架成功！', type: 'success' })
-          that.getListData()
+          await that.getListData()
         } catch (e) {
           console.warn(`Update product state error: ${e}`)
         }
@@ -831,6 +924,92 @@ export default {
     },
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
+    },
+    handleEditSelection() {
+      Object.keys(this.selectionForm).forEach(key => {
+        this.selectionForm[key] = null
+      })
+      this.editDialogVisible = true
+    },
+    handleBrandChanged(value) {
+      this.selectionForm.brandId = value
+      this.selectionForm.brand = this.brandOptions.find(brand => brand.value === value).label
+      this.brandOptions = []
+    },
+    onEditCategorySelectionChanged(category) {
+      const value = Number.isSafeInteger(category.value) ? category.value : null
+      switch (category.level) {
+        case 1:
+          this.selectionForm.firstCategoryValue = value
+          this.selectionForm.secondCategoryValue = null
+          this.selectionForm.thirdCategoryValue = null
+          break
+        case 2:
+          this.selectionForm.secondCategoryValue = value
+          this.selectionForm.thirdCategoryValue = null
+          break
+        case 3:
+          this.selectionForm.thirdCategoryValue = value
+          break
+        default:
+          break
+      }
+    },
+    async remoteBrandOptions(query) {
+      if (isEmpty(query)) {
+        this.brandOptions = []
+      } else {
+        try {
+          this.brandLoading = true
+          const { data } = await searchBrandsApi({ offset: 1, limit: 20, query })
+          this.brandOptions = data.result.list.map(brand => {
+            // If no english name, jus return chinese name
+            const name = isEmpty(brand.brandEname) ? brand.brandCname : brand.brandName
+            return { value: brand.brandId, label: name }
+          })
+        } catch (e) {
+          console.log('Remote brand options: ' + e)
+          this.brandOptions = []
+        } finally {
+          this.brandLoading = false
+        }
+      }
+    },
+    async confirmEditSelection() {
+      const keys = ['merchantId', 'state', 'brandId', 'brand', 'category']
+      const params = {}
+      keys.forEach(key => {
+        if (this.selectionForm[key] !== null) {
+          params[key] = this.selectionForm[key]
+        }
+      })
+      if (isEmpty(params)) {
+        this.editDialogVisible = false
+      } else {
+        try {
+          const msg = `${params.merchantId ? '供应商，' : ''}
+          ${params.state ? '商品状态，' : ''}
+          ${params.category ? '商品类别，' : ''}
+          ${params.brandId ? '商品品牌，' : ''}`
+          await this.$confirm(`批量修改商品：${msg}是否继续?`, '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          this.selectionEditing = true
+          for (const product of this.productSelection) {
+            const id = product.id
+            await updateProductApi({ id, ...params })
+          }
+          this.selectionEditing = false
+          this.getListData()
+        } catch (e) {
+          console.warn('Product edit selection error:' + e)
+        } finally {
+          this.editDialogVisible = false
+          this.selectionEditing = false
+        }
+      }
     }
   }
 }

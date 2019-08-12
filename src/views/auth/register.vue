@@ -237,7 +237,7 @@ export default {
             msg = data.message + '，请确认后重试！'
           }
         } else if (status >= 500) {
-          msg = '广告服务平台出现问题，请联系管理员！'
+          msg = '服务平台出现问题，请联系管理员！'
         }
       }
       return msg

@@ -476,7 +476,7 @@ export default {
             return data.message + '，请确认后重试！'
           }
         } else if (status >= 500) {
-          return '广告服务平台出现问题，请联系管理员！'
+          return '服务平台出现问题，请联系管理员！'
         }
       }
       return null

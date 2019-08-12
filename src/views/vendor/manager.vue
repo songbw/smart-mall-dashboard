@@ -351,7 +351,8 @@ export default {
       this.$refs.vendorForm.validate(async(valid) => {
         if (valid) {
           try {
-            await createVendorProfileApi(this.vendorProfile)
+            const { id } = await createVendorProfileApi(this.vendorProfile)
+            await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
             this.vendorDialogVisible = false
             this.getVendorData()
           } catch (e) {
@@ -374,7 +375,7 @@ export default {
             return data.message + '，请确认后重试！'
           }
         } else if (status >= 500) {
-          return '广告服务平台出现问题，请联系管理员！'
+          return '服务平台出现问题，请联系管理员！'
         }
       }
       return null

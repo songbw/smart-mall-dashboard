@@ -1,5 +1,5 @@
 <template>
-  <el-form :inline="true">
+  <el-form :inline="inline">
     <el-form-item>
       <el-select
         :value="firstCategoryValue"
@@ -80,6 +80,10 @@ export default {
     thirdValue: {
       type: Number,
       default: null
+    },
+    inline: {
+      type: Boolean,
+      default: true
     }
   },
   computed: {
