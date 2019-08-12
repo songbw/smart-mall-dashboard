@@ -104,7 +104,7 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       if (validUserName(value) === false) {
-        callback(new Error('请输入3-20个以字母开头、可带数字、“_”、“.”的用户名'))
+        callback(new Error('请输入3-20个以字母开头的用户名'))
       } else {
         callback()
       }
@@ -233,7 +233,7 @@ export default {
         if (status >= 400) {
           const data = error.response.data
           const errno = Number.parseInt(data.error)
-          if (Number.isNaN(errno)) {
+          if (!Number.isNaN(errno)) {
             msg = data.message + '，请确认后重试！'
           }
         } else if (status >= 500) {

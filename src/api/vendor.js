@@ -81,3 +81,40 @@ export function getVendorProfileApi(params) {
     method: 'get'
   })
 }
+
+export function createVendorUserApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users`,
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function updateVendorUserApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users/${params.userId}`,
+    method: 'put',
+    data: {
+      phone: params.phone
+    }
+  })
+}
+
+export function deleteVendorUserApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users/${params.id}`,
+    method: 'delete'
+  })
+}
+
+export function createVendorProfileApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/companies/admin/profile`,
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}

@@ -20,6 +20,11 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <div style="margin-bottom: 20px">
+      <el-button type="primary" icon="el-icon-plus" @click="handleCreateVendor">
+        创建新商户
+      </el-button>
+    </div>
     <el-table
       ref="vendorTable"
       v-loading="dataLoading"
@@ -89,6 +94,45 @@
       :users="currentVendor.users"
       @onConfirmed="detailVisible = false"
     />
+    <el-dialog :visible.sync="vendorDialogVisible" title="创建商户">
+      <el-form
+        ref="vendorForm"
+        :model="vendorProfile"
+        :rules="vendorRules"
+        label-position="right"
+        label-width="100px"
+      >
+        <el-form-item label="商户名" prop="name">
+          <el-input v-model="vendorProfile.name" maxlength="30" />
+        </el-form-item>
+        <el-form-item label="商户地址" prop="address">
+          <el-input
+            v-model="vendorProfile.address"
+            class="item-input"
+            maxlength="50"
+          />
+        </el-form-item>
+        <el-form-item label="商户行业" prop="industry">
+          <el-select
+            v-model="vendorIndustry"
+            multiple
+            placeholder="请选择行业类型"
+            class="item-input"
+          >
+            <el-option
+              v-for="item in industryOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancelCreateVendor">取消</el-button>
+        <el-button type="primary" @click="confirmCreateVendor">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -100,7 +144,8 @@ import VendorDetail from './detail'
 import {
   getVendorListApi,
   deleteVendorApi,
-  reviewVendorProfileApi
+  reviewVendorProfileApi,
+  createVendorProfileApi
 } from '@/api/vendor'
 import {
   vendor_status_editing,
@@ -108,6 +153,7 @@ import {
   vendor_status_approved,
   vendor_status_rejected
 } from '@/utils/constants'
+import { IndustryDefinitions } from './constants'
 
 const VendorStatus = [
   {
@@ -143,12 +189,34 @@ export default {
     }
   },
   data() {
+    const validateName = (rule, value, callback) => {
+      if (!isEmpty(value)) {
+        callback()
+      } else {
+        callback(new Error('请输入商户名'))
+      }
+    }
+    const validateAddress = (rule, value, callback) => {
+      if (!isEmpty(value)) {
+        callback()
+      } else {
+        callback(new Error('请输入商户地址'))
+      }
+    }
+    const validateIndustry = (rule, value, callback) => {
+      if (!isEmpty(value)) {
+        callback()
+      } else {
+        callback(new Error('请选择商户类型'))
+      }
+    }
     return {
       statusReviewing: vendor_status_reviewing,
       statusOptions: [{
         value: -1,
         label: '全部'
       }].concat(VendorStatus),
+      industryOptions: IndustryDefinitions,
       detailVisible: false,
       dataLoading: false,
       vendorData: [],
@@ -160,6 +228,32 @@ export default {
       currentVendor: {
         company: {},
         users: []
+      },
+      vendorDialogVisible: false,
+      vendorProfile: {
+        name: null,
+        address: null,
+        industry: null
+      },
+      vendorRules: {
+        name: [{ required: true, trigger: 'blur', validator: validateName }],
+        address: [{ required: true, trigger: 'blur', validator: validateAddress }],
+        industry: [{ required: true, trigger: 'change', validator: validateIndustry }]
+      }
+    }
+  },
+  computed: {
+    vendorIndustry: {
+      get() {
+        const industry = this.vendorProfile.industry
+        if (industry) {
+          return industry.split(';')
+        } else {
+          return []
+        }
+      },
+      set(values) {
+        this.vendorProfile.industry = values.join(';')
       }
     }
   },
@@ -242,6 +336,48 @@ export default {
     },
     onQueryStatusChanged(value) {
       this.queryStatus = value
+    },
+    handleCreateVendor() {
+      this.vendorProfile.name = ''
+      this.vendorProfile.address = ''
+      this.vendorProfile.industry = ''
+      this.vendorDialogVisible = true
+    },
+    cancelCreateVendor() {
+      this.$refs.vendorForm.clearValidate()
+      this.vendorDialogVisible = false
+    },
+    confirmCreateVendor() {
+      this.$refs.vendorForm.validate(async(valid) => {
+        if (valid) {
+          try {
+            await createVendorProfileApi(this.vendorProfile)
+            this.vendorDialogVisible = false
+            this.getVendorData()
+          } catch (e) {
+            console.warn('Create vendor profile error:' + e)
+            const msg = this.getErrorMessage(e)
+            if (msg) {
+              this.$message.error(msg)
+            }
+          }
+        }
+      })
+    },
+    getErrorMessage(error) {
+      if (error.response) {
+        const status = error.response.status
+        if (status >= 400) {
+          const data = error.response.data
+          const errno = Number.parseInt(data.error)
+          if (!Number.isNaN(errno)) {
+            return data.message + '，请确认后重试！'
+          }
+        } else if (status >= 500) {
+          return '广告服务平台出现问题，请联系管理员！'
+        }
+      }
+      return null
     }
   }
 }

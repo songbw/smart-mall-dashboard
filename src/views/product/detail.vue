@@ -36,7 +36,7 @@
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
         <span v-if="viewProduct">{{ productForm.skuid }}</span>
-        <el-input v-else v-model="productForm.skuid" maxlength="20" />
+        <el-input v-else v-model="productForm.skuid" maxlength="30" />
       </el-form-item>
       <el-form-item v-if="!createProduct" label="商品状态">
         <span>{{ productForm.state | productState }}</span>
@@ -634,9 +634,13 @@ export default {
         if (!this.isAdminUser) {
           params.merchantId = this.vendorId
         }
-        await createProductApi(params)
-        this.$message({ message: '创建产品信息成功。', type: 'success' })
-        this.goBack()
+        const { code } = await createProductApi(params)
+        if (code === 200) {
+          this.$message({ message: '创建产品信息成功。', type: 'success' })
+          this.goBack()
+        } else {
+          this.$message.error('创建商品信息失败，请联系管理员！')
+        }
       } catch (e) {
         console.warn('Create product error: ' + e)
         this.$message.error('创建产品信息失败！')
