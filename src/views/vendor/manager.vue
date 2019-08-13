@@ -76,7 +76,12 @@
           >
             拒绝
           </el-button>
-          <el-button type="danger" size="mini" @click="handleDeleteVendor(scope.$index)">
+          <el-button
+            :disabled="scope.row.company.status === statusApproved"
+            type="danger"
+            size="mini"
+            @click="handleDeleteVendor(scope.$index)"
+          >
             删除
           </el-button>
         </template>
@@ -212,6 +217,7 @@ export default {
     }
     return {
       statusReviewing: vendor_status_reviewing,
+      statusApproved: vendor_status_approved,
       statusOptions: [{
         value: -1,
         label: '全部'
