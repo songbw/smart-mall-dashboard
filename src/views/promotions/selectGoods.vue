@@ -65,7 +65,12 @@
         </div>
         <div class="header-ops-container">
           <span style="width: 100px;text-align: end">优惠价格：</span>
-          <el-input v-model="promotionValue" style="width: 100px" maxlength="10" />
+          <el-input-number
+            v-model="promotionValue"
+            :min="1"
+            :max="maxPromotionValue"
+            step-strictly
+          />
           <el-button
             :disabled="selectedItems.length === 0"
             type="primary"
@@ -124,7 +129,14 @@
         <el-table-column :label="discountTypeLabel" align="center" width="250">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
-              <el-input v-model="scope.row.discount" size="small" style="width:80px; margin-right: 10px" />
+              <el-input-number
+                v-model="scope.row.discount"
+                :controls="false"
+                size="mini"
+                :min="1"
+                :max="scope.row.price"
+                step-strictly
+              />
               <el-button
                 icon="el-icon-close"
                 size="mini"
@@ -196,6 +208,7 @@
 <script>
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import min from 'lodash/min'
 import Pagination from '@/components/Pagination'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
@@ -316,6 +329,12 @@ export default {
         } else {
           return -1
         }
+      }
+    },
+    maxPromotionValue: {
+      get() {
+        const prices = this.promotionData.promotionSkus.map(sku => Number.parseInt(sku.price))
+        return prices.length > 0 ? min(prices) : 1
       }
     },
     scheduleSkus: {

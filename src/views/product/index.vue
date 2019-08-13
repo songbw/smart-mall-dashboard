@@ -139,10 +139,17 @@
           <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品价格(元)" align="center" width="200">
+      <el-table-column label="商品价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
-            <el-input v-model="scope.row.price" size="small" style="width:100px; padding-right: 10px" />
+            <el-input-number
+              v-model="scope.row.price"
+              :controls="false"
+              size="mini"
+              :min="1"
+              :max="1000000"
+              step-strictly
+            />
             <el-button
               icon="el-icon-close"
               size="mini"
@@ -369,7 +376,7 @@ export default {
   },
   data() {
     return {
-      couldEditProduct: true,
+      couldEditProduct: false,
       stateOptions: [{
         value: -2,
         label: '全部'

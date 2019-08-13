@@ -71,7 +71,7 @@
             </el-upload>
           </el-form-item>
           <el-form-item v-if="vendorStatus === statusRejected" label="审核意见">
-            <el-input v-model="vendorComment" type="textarea" readonly class="item-input" />
+            <span>{{ vendorComment }}</span>
           </el-form-item>
           <el-form-item>
             <el-button-group>

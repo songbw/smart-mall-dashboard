@@ -153,11 +153,11 @@ export default {
         code: ''
       },
       registerRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
-        confirm: [{ required: true, trigger: 'blur', validator: validateConfirm }],
-        phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
-        code: [{ required: true, trigger: 'blur', validator: validateCode }]
+        username: [{ required: true, trigger: 'change', validator: validateUsername }],
+        password: [{ required: true, trigger: 'change', validator: validatePassword }],
+        confirm: [{ required: true, trigger: 'change', validator: validateConfirm }],
+        phone: [{ required: true, trigger: 'change', validator: validatePhone }],
+        code: [{ required: true, trigger: 'change', validator: validateCode }]
       },
       isRegister: true
     }

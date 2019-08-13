@@ -1164,6 +1164,7 @@ export default {
       } else {
         this.disableScenarioType = false
       }
+      this.$refs['couponForm'].validateField(['url'])
     },
     onMerchantChanged(value) {
       this.selectVendorId = value

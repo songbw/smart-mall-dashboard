@@ -156,7 +156,7 @@
 </template>
 
 <script>
-import isEmpty from 'lodash/isEmpty'
+import uniq from 'lodash/uniq'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
 import { searchProductsApi } from '@/api/products'
@@ -233,8 +233,7 @@ export default {
     },
     isProductValid(product) {
       const price = Number.parseFloat(product.price)
-      const image = product.image || product.imageExtend
-      return !(Number.isNaN(price) || isEmpty(image))
+      return Number.isNaN(price) === false
     },
     handleDialogPromotionQuery() {
       getPromotionByIdApi({ id: this.promotionId }).then(res => {
@@ -255,7 +254,8 @@ export default {
     handleDialogFilterSearch() {
       if (this.dialogFilterForm.skus.length > 0) {
         this.dialogSkuData = []
-        this.dialogFilterForm.skus.forEach(skuID => {
+        const skus = uniq(this.dialogFilterForm.skus)
+        skus.forEach(skuID => {
           if (skuID.trim()) {
             const params = {
               offset: 1,
