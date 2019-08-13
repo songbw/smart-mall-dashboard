@@ -45,7 +45,7 @@
           <span>{{ scope.row.company.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" width="100">
+      <el-table-column label="状态" align="center" width="120">
         <template slot-scope="scope">
           <el-tag>{{ scope.row.company.status | vendorStatus }}</el-tag>
         </template>

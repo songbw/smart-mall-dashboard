@@ -28,7 +28,7 @@
         </div>
         <span v-else>{{ formData.rules.code }}</span>
       </el-form-item>
-      <el-form-item label="上线日期" required>
+      <el-form-item label="上线日期">
         <div style="display: flex; justify-content: start">
           <el-form-item prop="releaseStartDate">
             <el-date-picker
@@ -54,11 +54,11 @@
           <span style="font-size: 12px;margin-left: 10px">用户可查看和领取的日期区间</span>
         </div>
       </el-form-item>
-      <el-form-item label="发放总数" required>
+      <el-form-item label="发放总数">
         <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
-        <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" />
+        <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" step-strictly />
       </el-form-item>
-      <el-form-item label="有效日期" required>
+      <el-form-item label="有效日期">
         <div style="display: flex; justify-content: start">
           <el-form-item prop="effectiveStartDate">
             <el-date-picker
@@ -84,7 +84,7 @@
           <span style="font-size: 12px;margin-left: 10px">用户可使用的日期区间</span>
         </div>
       </el-form-item>
-      <el-form-item label="排除日期">
+      <el-form-item id="coupon-excludes" label="排除日期">
         <div>
           为有效期间的排除日期，禁止用户使用，最多支持5个区间
           <div
@@ -214,9 +214,15 @@
         />
       </el-form-item>
       <el-divider content-position="left"><span class="divider-text">规则设置</span></el-divider>
-      <el-form-item label="每人限领数量" required>
+      <el-form-item label="每人限领数量">
         <span v-if="viewOnly">{{ formData.rules.perLimited }}</span>
-        <el-input-number v-else v-model="formData.rules.perLimited" :max="1000000" :min="1" />
+        <el-input-number
+          v-else
+          v-model="formData.rules.perLimited"
+          :max="formData.releaseTotal"
+          :min="1"
+          step-strictly
+        />
       </el-form-item>
       <el-form-item v-if="false" label="推广区域">
         <div v-if="viewOnly">
@@ -252,12 +258,17 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="formData.rules.couponRules.type === 0" label="满减方式" required>
+      <el-form-item v-if="formData.rules.couponRules.type === 0" label="满减方式">
         <div style="display: flex; justify-content: start">
           <span style="margin-right: 10px">满</span>
           <el-form-item>
             <span v-if="viewOnly">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>
-            <el-input-number v-else v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice" :min="1" />
+            <el-input-number
+              v-else
+              v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice"
+              :min="1"
+              step-strictly
+            />
           </el-form-item>
           <span style="margin: 0 10px">元 减</span>
           <el-form-item>
@@ -267,21 +278,27 @@
               v-model="formData.rules.couponRules.fullReduceCoupon.reducePrice"
               :max="formData.rules.couponRules.fullReduceCoupon.fullPrice"
               :min="1"
+              step-strictly
             />
           </el-form-item>
           <span style="margin: 0 10px">元</span>
         </div>
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值" required>
+      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值">
         <span v-if="viewOnly">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
-        <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" />
+        <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" step-strictly />
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣" required>
+      <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣">
         <div style="display: flex; justify-content: start">
           <span style="margin-right: 10px">满</span>
           <el-form-item>
             <span v-if="viewOnly">{{ formData.rules.couponRules.discountCoupon.fullPrice }}</span>
-            <el-input-number v-else v-model="formData.rules.couponRules.discountCoupon.fullPrice" :min="0" />
+            <el-input-number
+              v-else
+              v-model="formData.rules.couponRules.discountCoupon.fullPrice"
+              :min="0"
+              step-strictly
+            />
           </el-form-item>
           <span style="margin: 0 10px">元 可用折扣：</span>
           <el-form-item>
@@ -310,9 +327,9 @@
       </el-form-item>
       <el-form-item v-if="formData.rules.collect.type === 3" label="所需积分">
         <span v-if="viewOnly">{{ formData.rules.collect.points }}</span>
-        <el-input-number v-else v-model="formData.rules.collect.points" :min="0" />
+        <el-input-number v-else v-model="formData.rules.collect.points" :min="0" step-strictly />
       </el-form-item>
-      <el-form-item label="可用商品范围" required>
+      <el-form-item label="可用商品范围">
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
         <el-select
           v-else
@@ -660,12 +677,13 @@ export default {
           }
         }],
         category: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (value > 0) {
               callback()
             } else {
               // Check type 全场类
-              if (this.formData.rules.scenario.type !== 2) {
+              if (this.formData.rules.scenario.type !== 2 &&
+                this.formData.rules.scenario.type !== 4) {
                 callback(new Error('请选择此优惠券的类别'))
               } else {
                 callback()
@@ -803,7 +821,7 @@ export default {
       this.formData.effectiveStartDate = this.couponData.effectiveStartDate
       this.formData.effectiveEndDate = this.couponData.effectiveEndDate
       this.formData.imageUrl = this.couponData.imageUrl
-      this.formData.url = this.couponData.url
+      this.formData.url = this.couponData.url || 'about:blank'
       this.formData.description = this.couponData.description
       this.formData.category = this.couponData.category
       if (Array.isArray(this.couponData.excludeDates)) {
@@ -907,10 +925,12 @@ export default {
       } else {
         this.$message.warn('请重新选择活动商品，最多支持400个')
       }
+      this.$refs['couponForm'].validateField(['couponMpus'])
     },
     handleDeleteCouponMpus(mpus) {
       const currents = this.formData.rules.scenario.couponMpus
       this.formData.rules.scenario.couponMpus = currents.filter(mpu => !mpus.includes(mpu))
+      this.$refs['couponForm'].validateField(['couponMpus'])
     },
     handleAddExcludeMpus(mpus) {
       const filterMpus = filter(mpus, mpu => !includes(this.formData.rules.scenario.excludeMpus, mpu))
@@ -1050,6 +1070,23 @@ export default {
       try {
         const valid = await this.$refs['couponForm'].validate()
         if (valid) {
+          if (this.formData.excludeDates.length > 0) {
+            this.formData.excludeDates = this.formData.excludeDates
+              .filter(item => item.start !== null && item.end !== null)
+            for (const exclude of this.formData.excludeDates) {
+              const start = moment(exclude.start)
+              const end = moment(exclude.end)
+              const effectiveStart = moment(this.formData.effectiveStartDate)
+              const effectiveEnd = moment(this.formData.effectiveEndDate)
+              if (start.isBefore(effectiveStart) ||
+                end.isBefore(start) ||
+                end.isAfter(effectiveEnd)) {
+                this.$message.warning('排除日期必须处于此优惠券的有效日期之间！')
+                this.$scrollTo('#coupon-excludes')
+                return
+              }
+            }
+          }
           if (this.formData.rules.scenario.type === 2 && this.formData.tags.length === 0) {
             this.$message.warning('此优惠券为全场类，必须选择一个优惠券的标签！')
             this.$scrollTo('#coupon-tags')

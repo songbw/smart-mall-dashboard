@@ -40,7 +40,7 @@
         </el-button>
       </el-form-item>
       <el-form-item>
-        <el-button @click="$emit('cancelCreation')">取消</el-button>
+        <el-button @click="onCancel">取消</el-button>
         <el-button type="primary" @click="onSubmit">{{ submitBtnLabel }}</el-button>
       </el-form-item>
     </el-form>
@@ -91,7 +91,7 @@ export default {
       groupSelectId: null,
       formRules: {
         name: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (isEmpty(this.pageName)) {
               callback(new Error('请输入有效的名称'))
             } else {
@@ -304,6 +304,9 @@ export default {
         this.$emit('createPage', pageID)
         this.creatingPage = false
       }
+    },
+    onCancel() {
+      this.$emit('cancelCreation')
     },
     onSubmit() {
       const pageID = this.pageInfo.id

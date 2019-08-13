@@ -32,7 +32,8 @@
       <el-form-item label="商品SKU">
         <el-input
           v-model="filterSkus"
-          :autosize="{ minRows: 3, maxRows: 3}"
+          :rows="3"
+          resize="none"
           placeholder="商品SKU之间用逗号分隔，最多输入50个"
           type="textarea"
         />

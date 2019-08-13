@@ -359,10 +359,10 @@ export default {
     handleCreateCoupon() {
       this.$router.push({ name: 'CreateCoupon' })
     },
-    handleEditCoupon(index) {
+    handleEditCoupon(id) {
       this.$router.push({
         name: 'CouponDetail',
-        params: { id: this.couponData[index].id, readOnly: false }
+        params: { id, readOnly: false }
       })
     },
     async handleStartCoupon(id) {

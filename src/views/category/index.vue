@@ -47,7 +47,8 @@
       </el-aside>
       <el-container>
         <el-header class="custom-header">
-          <span>{{ topCategoryHeaderTitle }}
+          <span v-if="topCategoryHeaderTitle">
+            {{ topCategoryHeaderTitle }}
             <el-tag v-if="currentSelectedTopCategory">{{ topCategoryShowState }}</el-tag>
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
@@ -228,7 +229,7 @@ export default {
         categoryIcon: null,
         isShow: null
       },
-      searchName: null,
+      searchName: '',
       columnProps: {
         label: 'categoryName',
         children: 'subs'
@@ -399,7 +400,7 @@ export default {
     handleTopCategoryClick(category) {
       this.searchCategoriesData = []
       this.currentSelectedTopCategory = category
-      this.filterName = null
+      this.filterName = ''
       if (category.categoryClass === '1') {
         this.firstClassCategoryID = category.categoryId
       }
@@ -420,7 +421,7 @@ export default {
         type: 'warning'
       }).then(async() => {
         this.currentSelectedTopCategory = null
-        this.filterName = null
+        this.filterName = ''
         try {
           await this.$store.dispatch('categories/getAllData')
         } catch (e) {
@@ -437,8 +438,10 @@ export default {
           this.searchCategoriesData = res.list.map(item => {
             return Object.assign({}, item, { isShow: !item.isShow })
           })
+          this.topCategoryHeaderTitle = ''
+          this.currentSelectedTopCategory = null
         }).catch(() => {
-          this.filterName = null
+          this.filterName = ''
         })
       } else {
         this.searchCategoriesData = []
@@ -465,6 +468,9 @@ export default {
           type: 'warning'
         })
         await this.$store.dispatch('categories/deleteCategory', category)
+        if (!isEmpty(this.filterName)) {
+          this.handleFilter()
+        }
       } catch (e) {
         console.warn('Delete category error:' + e)
       }

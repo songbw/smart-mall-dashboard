@@ -137,6 +137,7 @@
             :action="uploadUrl"
             :data="uploadThumbnailData"
             :auto-upload="true"
+            :disabled="thumbnails.length >= 5"
             :limit="5 - thumbnails.length < 0 ? 0 : 5 - thumbnails.length"
             :show-file-list="true"
             :before-upload="handleBeforeUpload"
