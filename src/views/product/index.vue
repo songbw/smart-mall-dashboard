@@ -126,7 +126,11 @@
       </el-table-column>
       <el-table-column label="商品图" align="center" width="140">
         <template slot-scope="scope">
-          <el-image :src="scope.row.image" fit="contain" />
+          <el-image :src="scope.row.image" fit="contain">
+            <div slot="error" class="image-slot">
+              <i class="el-icon-picture-outline" />
+            </div>
+          </el-image>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
