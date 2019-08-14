@@ -379,10 +379,11 @@ export default {
       this.startTime = '00:00'
       this.formData.startDate = dateMoment.format(format)
 
+      dateMoment.add(1, 'days')
       dateMoment.hour(23)
       dateMoment.minute(59)
       dateMoment.second(59)
-      this.endDate = date
+      this.endDate = dateMoment.format(dateFormat)
       this.endTime = '23:00'
       this.formData.endDate = dateMoment.format(format)
     }

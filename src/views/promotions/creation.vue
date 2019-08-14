@@ -15,10 +15,12 @@
       <select-goods
         v-else-if="activeStep === 1"
         :promotion-data="promotionData"
+        :conflicted-skus="skuList"
         :view-only="viewOnly"
         class="goods-container"
         @prevStep="handlePrevStep"
         @onUpdateSuccess="handlePromotionUpdated"
+        @clearConflictedSkus="handleResetConflicted"
       />
     </div>
   </div>
@@ -28,6 +30,7 @@
 import { mapGetters } from 'vuex'
 import CustomPromotion from './custom'
 import SelectGoods from './selectGoods'
+import { getProductsByIdList } from '@/api/products'
 
 export default {
   name: 'PromotionCreate',
@@ -37,12 +40,14 @@ export default {
       dataLoading: false,
       promotionReady: false,
       activeStep: 0,
-      viewOnly: false
+      viewOnly: false,
+      skuList: []
     }
   },
   computed: {
     ...mapGetters({
-      promotionData: 'currentPromotion'
+      promotionData: 'currentPromotion',
+      conflictedMpus: 'conflictedMpus'
     })
   },
   created() {
@@ -80,8 +85,29 @@ export default {
         this.gotoPromotionList()
       }
     },
-    handlePromotionCreated() {
+    async handlePromotionCreated() {
+      if (this.conflictedMpus.length > 0) {
+        const params = {
+          mpuIdList: this.conflictedMpus.join(',')
+        }
+        try {
+          this.dataLoading = true
+          const response = await getProductsByIdList(params)
+          const data = response.data.result
+          if (Array.isArray(data) && data.length > 0) {
+            this.skuList = data
+          }
+        } catch (e) {
+          console.warn('Promotion conflicted mpu error:' + e)
+        } finally {
+          this.dataLoading = false
+        }
+      }
       this.activeStep += 1
+    },
+    handleResetConflicted() {
+      this.$store.commit('promotions/SET_CONFLICTED_MPUS', [])
+      this.skuList = []
     },
     handlePromotionUpdated() {
       this.gotoPromotionList()

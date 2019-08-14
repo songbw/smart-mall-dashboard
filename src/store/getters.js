@@ -33,6 +33,7 @@ const getters = {
   currentPromotion: state => state.promotions.promotion,
   promotionTypes: state => state.promotions.promotionTypes,
   promotionTypeId: state => state.promotions.promotionTypeId,
+  conflictedMpus: state => state.promotions.conflictedMpus,
   couponQuery: state => state.coupons.search,
   orderQuery: state => state.orders.search,
   workOrdersQuery: state => state.workOrders.search

@@ -238,12 +238,14 @@ export default {
         this.listLoading = true
         const params = this.getSearchParams()
         const data = await getWorkOrderListApi(params)
-        this.workOrderTotal = data.total
-        this.workOrderData = data.rows
-        this.workOrderData.forEach(order => {
-          const find = this.typeOptions.find(option => option.value === order.typeId)
-          this.$set(order, 'typeName', find ? find.label : '')
-        })
+        if (data) {
+          this.workOrderTotal = data.total
+          this.workOrderData = data.rows
+          this.workOrderData.forEach(order => {
+            const find = this.typeOptions.find(option => option.value === order.typeId)
+            this.$set(order, 'typeName', find ? find.label : '')
+          })
+        }
       } catch (e) {
         console.warn('Work orders List error: ' + e)
       } finally {

@@ -31,7 +31,8 @@ const promotionTemplate = {
 const state = {
   promotion: { ...promotionTemplate },
   promotionTypes: [],
-  promotionTypeId: -1
+  promotionTypeId: -1,
+  conflictedMpus: []
 }
 
 const mutations = {
@@ -95,6 +96,9 @@ const mutations = {
   DELETE_SCHEDULE: (state, id) => {
     const schedules = state.promotion.promotionSchedules
     state.promotion.promotionSchedules = schedules.filter(item => item.id !== id)
+  },
+  SET_CONFLICTED_MPUS: (state, mpus) => {
+    state.conflictedMpus = [...mpus]
   }
 }
 

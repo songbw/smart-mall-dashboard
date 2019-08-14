@@ -4,9 +4,43 @@
       <promotion-info />
     </el-header>
     <el-main>
+      <div v-if="conflictedSkus.length > 0">
+        <div style="font-size: 14px;margin-bottom: 10px">
+          <i class="el-icon-warning-outline">
+            此活动的下面商品列表与已发布的其它活动时间有冲突，同一个商品在一段时间内只能参加一个活动
+          </i>
+        </div>
+        <el-table
+          border
+          :data="conflictedSkus"
+          style="width: 100%"
+        >
+          <el-table-column label="商品SKU" align="center" width="150">
+            <template slot="header">
+              <el-button type="danger" size="mini" @click="handleDeleteConflictedMpus">
+                全部删除
+              </el-button>
+            </template>
+            <template slot-scope="scope">
+              <span>{{ scope.row.skuid }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="商品名" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="商品价格(元)" align="center" width="120">
+            <template slot-scope="scope">
+              <span>{{ scope.row.price }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-divider />
+      </div>
       <div v-if="promotionData.dailySchedule">
         <div style="font-size: 14px;margin-bottom: 10px">
-          <i class="el-icon-warning-outline">最多添加5个活动时段，每个时段的默认结束时间为24小时（可修改）</i>
+          <i class="el-icon-warning-outline">最多添加5个活动时段，每个时段的默认结束时间为24小时。</i>
         </div>
         <el-form v-if="!viewOnly" ref="scheduleForm" :model="scheduleData" :rules="scheduleRules" inline>
           <el-form-item label="活动时段" prop="schedule">
@@ -21,13 +55,7 @@
             <span>{{ scheduleData.startTime }}</span>
           </el-form-item>
           <el-form-item label="结束时间" prop="endTime">
-            <el-date-picker
-              v-model="scheduleData.endTime"
-              default-time="23:59:59"
-              placeholder="选择开始日期和时间"
-              type="datetime"
-              value-format="yyyy-MM-dd HH:mm:ss"
-            />
+            <span>{{ scheduleData.endTime }}</span>
           </el-form-item>
           <el-form-item>
             <el-button :disabled="scheduleTabs.length >= 5" type="primary" @click="handleAddScheduleTime">
@@ -54,7 +82,7 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      <div v-if="viewOnly === false" class="header-container">
+      <div v-if="opsButtonShow" class="header-container">
         <div class="header-ops-container">
           <el-button @click="dialogImportVisible = true">
             导入商品
@@ -103,6 +131,7 @@
       <el-table
         ref="skuTable"
         :data="skuData"
+        border
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
@@ -121,7 +150,7 @@
             <span>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="商品价格(元)" align="center" width="100">
+        <el-table-column label="商品价格(元)" align="center" width="120">
           <template slot-scope="scope">
             <span>{{ scope.row.price }}</span>
           </template>
@@ -134,7 +163,7 @@
                 :controls="false"
                 size="mini"
                 :min="1"
-                :max="scope.row.price"
+                :max="Number.parseInt(scope.row.price)"
                 step-strictly
               />
               <el-button
@@ -234,6 +263,12 @@ export default {
       default: function() {
         return {}
       }
+    },
+    conflictedSkus: {
+      type: Array,
+      default: function() {
+        return []
+      }
     }
   },
   data() {
@@ -287,6 +322,15 @@ export default {
     }
   },
   computed: {
+    opsButtonShow() {
+      if (this.viewOnly) {
+        return false
+      }
+      if (this.promotionData.dailySchedule) {
+        return this.scheduleTabs.length > 0
+      }
+      return true
+    },
     scheduleTabs: {
       get() {
         return this.promotionData.promotionSchedules
@@ -720,6 +764,21 @@ export default {
           }
         }
       })
+    },
+    async handleDeleteConflictedMpus() {
+      try {
+        await this.$confirm('请确认是否删除有冲突的活动商品？', '修改活动', {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        const mpus = this.conflictedSkus.map(item => item.mpu)
+        mpus.forEach(mpu => this.handleDeleteCachedItems(mpu))
+        this.$store.commit('promotions/DELETE_SKUS', mpus)
+        this.$emit('clearConflictedSkus')
+      } catch (e) {
+        console.debug('Cancel delete conflicted skus')
+      }
     }
   }
 }

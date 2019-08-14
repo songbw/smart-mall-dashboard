@@ -14,6 +14,9 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="全天分时段活动">
+        <el-switch v-model="query.dailySchedule" />
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
           搜索
@@ -93,12 +96,19 @@
       />
       <el-table-column label="活动编号" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <el-button type="text" @click="handleViewPromotion(scope.$index)">
+            {{ scope.row.id }}
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column label="活动名称" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="全天分时段" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.dailySchedule ? '是' : '否' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="活动标签" align="center" width="100">
@@ -111,17 +121,17 @@
           <el-tag>{{ scope.row.status | promotionStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="有效开始时间" align="center" width="180">
+      <el-table-column label="开始时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.startDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="有效结束时间" align="center" width="180">
+      <el-table-column label="结束时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.endDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="200">
+      <el-table-column label="操作" align="center" width="160">
         <template slot-scope="scope">
           <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
@@ -137,7 +147,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`start:${scope.$index}`"
-                :disabled="scope.row.status !== statusInit"
+                :disabled="scope.row.dailySchedule || scope.row.status !== statusReadyForSale"
                 icon="el-icon-time"
               >
                 立即开始
@@ -222,6 +232,7 @@ export default {
     return {
       statusInit: promotion_status_init,
       statusOffShelves: promotion_status_off_shelves,
+      statusReadyForSale: promotion_status_ready_for_sale,
       statusOptions: [{
         value: 0,
         label: '全部'
@@ -229,6 +240,7 @@ export default {
       query: {
         name: '',
         status: 0,
+        dailySchedule: false,
         offset: 1,
         limit: 20
       },
@@ -271,6 +283,7 @@ export default {
     }
   },
   created() {
+    this.$store.commit('promotions/SET_CONFLICTED_MPUS', [])
     this.getPromotionTypes()
     this.getPromotionData()
   },
@@ -313,6 +326,10 @@ export default {
       }
       if (this.query.status !== 0) {
         params.status = this.query.status
+        needFilter = true
+      }
+      if (this.query.dailySchedule) {
+        params.dailySchedule = true
         needFilter = true
       }
       if (this.promotionTypeId >= 0) {
@@ -433,6 +450,36 @@ export default {
       }).catch(() => {
       })
     },
+    handlePublishSkuConflict(res, index) {
+      this.$confirm('活动发布失败，部分商品活动时间与已发布活动冲突!', '提示', {
+        confirmButtonText: '去编辑',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const mpus = Array.isArray(res.data.mpus) ? res.data.mpus : []
+        if (mpus.length > 0) {
+          this.$store.commit('promotions/SET_CONFLICTED_MPUS', mpus)
+        }
+        this.handleEditPromotion(index)
+      }).catch(() => {
+      })
+    },
+    handlePublishPromotionConflict(res) {
+      this.$confirm('活动发布失败，与已发布活动冲突，此类型活动每天只能发布一个!', '提示', {
+        confirmButtonText: '去查看',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const id = res.data.promotionId
+        if (id) {
+          this.$router.push({
+            name: 'ViewPromotion',
+            params: { id: id }
+          })
+        }
+      }).catch(() => {
+      })
+    },
     handlePublishPromotion(index) {
       this.$confirm('请确认是否发布此促销活动，发布后将不能修改？', '警告', {
         confirmButtonText: '确认',
@@ -442,9 +489,19 @@ export default {
         const id = this.promotionData[index].id
         const params = { id: id, status: promotion_status_published }
         try {
-          await updatePromotionApi(params)
-          this.$message({ message: '活动发布成功！', type: 'success' })
-          this.getPromotionData()
+          const res = await updatePromotionApi(params)
+          if (res.code === 200) {
+            this.$message({ message: '活动发布成功！', type: 'success' })
+            this.getPromotionData()
+          } else {
+            if (res.code === 500) {
+              this.handlePublishSkuConflict(res, index)
+            } else if (res.code === 501) {
+              this.handlePublishPromotionConflict(res)
+            } else {
+              this.$message.error('活动发布失败，请联系管理员！')
+            }
+          }
         } catch (e) {
           console.warn('Start Promotion: ' + e)
           this.$message({ message: '活动发布失败！', type: 'error' })

@@ -119,15 +119,15 @@
       </el-form-item>
       <el-form-item label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
-        <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" />
+        <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
-        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" />
+        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
-        <el-input-number v-else v-model="productForm.inventory" :min="0" />
+        <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
@@ -241,6 +241,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
 import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
@@ -304,9 +305,6 @@ export default {
           case 'category':
             callback(new Error('请选择商品类别'))
             break
-          case 'price':
-            callback(new Error('请输入商品销售价'))
-            break
         }
       } else {
         callback()
@@ -365,19 +363,25 @@ export default {
       },
       formRules: {
         merchantId: [{
-          required: true, validator: validateValue, trigger: 'blur'
+          required: true, validator: validateValue, trigger: 'change'
         }],
         skuid: [{
-          required: true, validator: validateValue, trigger: 'blur'
+          required: true, validator: validateValue, trigger: 'change'
         }],
         name: [{
-          required: true, validator: validateValue, trigger: 'blur'
+          required: true, validator: validateValue, trigger: 'change'
         }],
         category: [{
-          required: true, validator: validateValue, trigger: 'blur'
+          required: true, validator: validateValue, trigger: 'change'
         }],
         price: [{
-          required: true, validator: validateValue, trigger: 'change'
+          required: true, validator: (rule, value, callback) => {
+            if (isNumber(value) && value > 0) {
+              callback()
+            } else {
+              callback(new Error('请输入商品销售价'))
+            }
+          }, trigger: 'change'
         }]
       }
     }
@@ -476,7 +480,7 @@ export default {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
-              if (key !== 'price' || key !== 'sprice') {
+              if (key !== 'price' && key !== 'sprice') {
                 this.productForm[key] = this.productInfo[key]
               } else {
                 this.productForm[key] = Number.parseFloat(this.productInfo[key])
@@ -583,6 +587,13 @@ export default {
         default:
           break
       }
+      if (this.thirdCategoryValue &&
+        Number.isSafeInteger(this.thirdCategoryValue)) {
+        this.productForm.category = this.thirdCategoryValue.toString()
+        this.$refs.productForm.validateField(['category'])
+      } else {
+        this.productForm.category = null
+      }
     },
     handleSortThumbnail(params) {
       const item = this.thumbnails.splice(params.index, 1)[0]
@@ -607,13 +618,14 @@ export default {
       this.introductionUrls.splice(index, 1)
     },
     handleSubmit() {
-      if (Number.isSafeInteger(this.thirdCategoryValue)) {
-        this.productForm.category = this.thirdCategoryValue.toString()
-      } else {
-        this.productForm.category = null
-      }
       this.productForm.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : null
       this.productForm.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : null
+      if (this.productForm.sprice > 0 &&
+        this.productForm.price > 0 &&
+        this.productForm.sprice > this.productForm.price) {
+        this.$message.warning('商品的销售价必须大于进货价，请仔细检查！')
+        return
+      }
       this.$refs.productForm.validate((valid) => {
         if (valid) {
           if (this.createProduct) {
@@ -629,7 +641,13 @@ export default {
         const params = {}
         Object.keys(this.productForm).forEach(key => {
           if (this.productForm[key] !== null) {
-            params[key] = this.productForm[key]
+            if (key !== 'price' && key !== 'sprice') {
+              params[key] = this.productForm[key]
+            } else {
+              if (this.productForm[key] > 0) {
+                params[key] = this.productForm[key].toString()
+              }
+            }
           }
         })
         if (!this.isAdminUser) {
@@ -652,20 +670,39 @@ export default {
       const params = {
         id: this.productForm.id
       }
+      const filterForm = {}
       Object.keys(this.productForm).forEach(key => {
-        if (this.productInfo[key] !== this.productForm[key]) {
-          params[key] = this.productForm[key]
+        if (this.productForm[key] !== null) {
+          if (key !== 'price' && key !== 'sprice') {
+            filterForm[key] = this.productForm[key]
+          } else {
+            if (this.productForm[key] > 0) {
+              filterForm[key] = this.productForm[key].toString()
+            }
+          }
+        }
+      })
+      Object.keys(filterForm).forEach(key => {
+        if (this.productInfo[key] !== filterForm[key]) {
+          params[key] = filterForm[key]
           changed = true
         }
       })
+      const sprice = Number.parseFloat(this.productInfo.sprice)
+      if (!Number.isNaN(sprice)) {
+        const hasSprice = 'sprice' in params
+        if (!hasSprice) {
+          params.sprice = ''
+          changed = true
+        }
+      }
       if (changed) {
-        this.$confirm('请确定是否修改此商品的信息？', '警告',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }).then(() => {
-          updateProductApi(params).then(res => {
+        this.$confirm('请确定是否修改此商品的信息？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          updateProductApi(params).then(_ => {
             this.$message({ message: '更新产品信息成功。', type: 'success' })
             this.goBack()
           }).catch(error => {
