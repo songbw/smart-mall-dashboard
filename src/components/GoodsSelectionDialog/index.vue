@@ -28,7 +28,7 @@
         获取促销活动商品
       </el-button>
     </el-form>
-    <el-form v-else inline :model="dialogFilterForm">
+    <el-form v-else inline :model="dialogFilterForm" @submit.prevent.native="handleDialogFilterSearch">
       <el-form-item label="商品SKU">
         <el-input
           v-model="filterSkus"
@@ -141,7 +141,6 @@
       </el-table-column>
     </el-table>
     <pagination
-      v-if="total > limit"
       :auto-scroll="false"
       :total="total"
       :page.sync="offset"
@@ -253,7 +252,6 @@ export default {
     },
     handleDialogFilterSearch() {
       if (this.dialogFilterForm.skus.length > 0) {
-        this.dialogSkuData = []
         const skus = uniq(this.dialogFilterForm.skus)
         skus.forEach(skuID => {
           if (skuID.trim()) {
@@ -271,10 +269,14 @@ export default {
                 if (this.isProductValid(product)) {
                   this.dialogSkuData.push(product)
                 }
+              } else {
+                this.dialogSkuData = []
               }
               this.total = this.dialogSkuData.length
             }).catch(error => {
               console.log('getProductInfo:' + error)
+              this.dialogSkuData = []
+              this.total = 0
             }).finally(() => {
               this.dataLoading = false
             })
@@ -303,10 +305,14 @@ export default {
             this.dialogSkuData = data.list.filter(item => {
               return this.isProductValid(item)
             })
+          } else {
+            this.dialogSkuData = []
           }
           this.total = data.total
         }).catch(error => {
           console.log('getProductInfo:' + error)
+          this.dialogSkuData = []
+          this.total = 0
         }).finally(() => {
           this.dataLoading = false
         })

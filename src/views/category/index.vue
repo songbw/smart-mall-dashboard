@@ -1,6 +1,6 @@
 <template>
   <div v-loading="categoriesLoading" class="app-container">
-    <el-form inline>
+    <el-form inline @submit.prevent.native="handleFilter">
       <el-form-item>
         <el-input
           v-model="filterName"
@@ -9,7 +9,6 @@
           class="filter-item"
           clearable
           maxlength="10"
-          @keyup.enter.native="handleFilter"
         />
       </el-form-item>
       <el-form-item>
@@ -139,10 +138,11 @@
         </el-form-item>
         <el-form-item label="类别名称" prop="categoryName">
           <el-input
-            v-model="dialogValue.categoryName"
+            :value="dialogValue.categoryName"
             :readonly="editCategory && dialogValue.idate === null"
             maxlength="10"
             class="dialog-form-item"
+            @input="onDialogNameInput"
           />
         </el-form-item>
         <el-form-item label="类别级别">
@@ -508,6 +508,9 @@ export default {
         this.dialogValue.isShow = false
         this.dialogFormVisible = true
       }
+    },
+    onDialogNameInput(value) {
+      this.dialogValue.categoryName = trim(value)
     }
   }
 }

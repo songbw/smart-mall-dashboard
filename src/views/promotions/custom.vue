@@ -48,9 +48,9 @@
         value-format="yyyy-MM-dd"
         @input="onStartDateChanged"
       />
-      <el-time-select
+      <el-time-picker
         :value="startTime"
-        :picker-options="{start: '00:00', step: '01:00', end: '23:00'}"
+        value-format="HH:mm:ss"
         placeholder="选择开始时间"
         style="margin-left: 10px"
         @input="onStartTimeChanged"
@@ -64,9 +64,9 @@
         value-format="yyyy-MM-dd"
         @input="onEndDateChanged"
       />
-      <el-time-select
+      <el-time-picker
         :value="endTime"
-        :picker-options="{start: '00:00', step: '01:00', end: '23:00'}"
+        value-format="HH:mm:ss"
         placeholder="选择结束时间"
         style="margin-left: 10px"
         @input="onEndTimeChanged"
@@ -278,7 +278,7 @@ export default {
     setDateValue() {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const dateFormat = 'YYYY-MM-DD'
-      const timeFormat = 'HH:mm'
+      const timeFormat = 'HH:mm:ss'
       if (this.promotionData.dailySchedule) {
         if (!isEmpty(this.promotionData.startDate)) {
           const startDate = moment(this.promotionData.startDate, format)
@@ -303,13 +303,13 @@ export default {
     parseDateFormat(date, time) {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const dateFormat = 'YYYY-MM-DD'
-      const timeFormat = 'HH:mm'
+      const timeFormat = 'HH:mm:ss'
       if (!isEmpty(date) && !isEmpty(time)) {
         const dateMoment = moment(date, dateFormat)
         const timeMoment = moment(time, timeFormat)
         dateMoment.hour(timeMoment.hour())
         dateMoment.minute(timeMoment.minute())
-        dateMoment.second(0)
+        dateMoment.second(timeMoment.second())
         return dateMoment.format(format)
       } else {
         return null
@@ -323,6 +323,7 @@ export default {
     },
     onStartDateChanged(value) {
       this.startDate = value
+      this.startTime = '00:00:00'
       this.setPromotionStartDate()
     },
     onStartTimeChanged(value) {
@@ -337,6 +338,7 @@ export default {
     },
     onEndDateChanged(value) {
       this.endDate = value
+      this.endTime = '23:59:59'
       this.setPromotionEndDate()
     },
     onEndTimeChanged(value) {
@@ -376,7 +378,7 @@ export default {
       dateMoment.minute(0)
       dateMoment.second(0)
       this.startDate = date
-      this.startTime = '00:00'
+      this.startTime = '00:00:00'
       this.formData.startDate = dateMoment.format(format)
 
       dateMoment.add(1, 'days')
@@ -384,7 +386,7 @@ export default {
       dateMoment.minute(59)
       dateMoment.second(59)
       this.endDate = dateMoment.format(dateFormat)
-      this.endTime = '23:00'
+      this.endTime = '23:59:59'
       this.formData.endDate = dateMoment.format(format)
     }
   }

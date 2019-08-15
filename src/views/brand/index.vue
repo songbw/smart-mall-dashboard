@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form inline>
+    <el-form inline @submit.prevent.native="getBrandData">
       <el-form-item>
         <el-input
           v-model="queryName"
@@ -9,7 +9,6 @@
           class="filter-item"
           :clearable="true"
           maxlength="10"
-          @keyup.enter.native="getBrandData"
         />
       </el-form-item>
       <el-form-item>
@@ -84,13 +83,28 @@
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
       <el-form ref="brandForm" :model="dialogValue" :rules="dialogRules" label-width="120">
         <el-form-item label="品牌全称" prop="brandName">
-          <el-input v-model="dialogValue.brandName" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input
+            :value="dialogValue.brandName"
+            :readonly="noEditPermission"
+            class="dialog-form-item"
+            @input="value => dialogValue.brandName = value.trim()"
+          />
         </el-form-item>
         <el-form-item label="中文名称" prop="brandCname">
-          <el-input v-model="dialogValue.brandCname" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input
+            :value="dialogValue.brandCname"
+            :readonly="noEditPermission"
+            class="dialog-form-item"
+            @input="value => dialogValue.brandCname = value.trim()"
+          />
         </el-form-item>
         <el-form-item label="英文名称">
-          <el-input v-model="dialogValue.brandEname" :readonly="noEditPermission" class="dialog-form-item" />
+          <el-input
+            :value="dialogValue.brandEname"
+            :readonly="noEditPermission"
+            class="dialog-form-item"
+            @input="value => dialogValue.brandEname = value.trim()"
+          />
         </el-form-item>
         <el-form-item label="品牌图标" prop="brandLogo">
           <image-upload

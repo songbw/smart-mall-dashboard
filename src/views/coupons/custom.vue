@@ -19,12 +19,24 @@
         </el-select>
       </el-form-item>
       <el-form-item label="优惠券名称" prop="name">
-        <el-input v-model="formData.name" :readonly="viewOnly" maxlength="20" style="width: 350px" />
+        <el-input
+          :value="formData.name"
+          :readonly="viewOnly"
+          maxlength="20"
+          style="width: 350px"
+          @input="value => formData.name = value.trim()"
+        />
       </el-form-item>
       <el-form-item label="优惠券编码" prop="code">
         <div v-if="createCoupon">
           <el-checkbox v-model="autoCode">自动生成优惠券编码</el-checkbox>
-          <el-input v-if="!autoCode" v-model="formData.rules.code" style="width: 350px" />
+          <el-input
+            v-if="!autoCode"
+            :value="formData.rules.code"
+            style="width: 350px"
+            maxlength="50"
+            @input="value => formData.rules.code = value.trim()"
+          />
         </div>
         <span v-else>{{ formData.rules.code }}</span>
       </el-form-item>
@@ -593,7 +605,7 @@ export default {
             if (this.autoCode) {
               callback()
             } else {
-              if (isEmpty(value)) {
+              if (isEmpty(this.formData.rules.code)) {
                 callback(new Error('请输入有效优惠券码'))
               } else {
                 callback()

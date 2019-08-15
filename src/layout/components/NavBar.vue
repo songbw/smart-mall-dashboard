@@ -7,6 +7,7 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
+          <span style="font-weight: bolder">{{ userName }}</span>
           <svg-icon icon-class="avatar" class="user-avatar" />
           <i class="el-icon-caret-bottom" />
         </div>
@@ -37,6 +38,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      'userName',
       'sidebar'
     ])
   },
