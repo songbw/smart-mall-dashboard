@@ -273,10 +273,26 @@ export default {
         }
       } catch (e) {
         console.log(`Update vendor profile error:${e}`)
-        this.$message.error('企业信息更新失败，请联系管理人员！')
+        const msg = this.getErrorMessage(e) || '企业信息更新失败，请联系管理人员！'
+        this.$message.error(msg)
       } finally {
         this.loading = false
       }
+    },
+    getErrorMessage(error) {
+      if (error.response) {
+        const status = error.response.status
+        if (status >= 400) {
+          const data = error.response.data
+          const errno = Number.parseInt(data.error)
+          if (!Number.isNaN(errno)) {
+            return data.message + '，请确认后重试！'
+          }
+        } else if (status >= 500) {
+          return '服务平台出现问题，请联系管理员！'
+        }
+      }
+      return null
     },
     async createVendorProfile() {
       try {
@@ -285,7 +301,8 @@ export default {
         this.$message.success('企业信息登记成功!')
       } catch (e) {
         console.log(`Create vendor profile error:${e}`)
-        this.$message.error('企业信息登记失败，请联系管理人员！')
+        const msg = this.getErrorMessage(e) || '企业信息登记失败，请联系管理人员！'
+        this.$message.error(msg)
       } finally {
         this.loading = false
       }
@@ -342,6 +359,8 @@ export default {
         this.$message.success('企业信息提交成功，正在审核！')
       } catch (e) {
         console.log(`Submit vendor error: ${e}`)
+        const msg = this.getErrorMessage(e) || '企业信息提交失败，请联系管理人员！'
+        this.$message.error(msg)
       }
     }
   }
