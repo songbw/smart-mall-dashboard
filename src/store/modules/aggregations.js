@@ -18,7 +18,7 @@ const template = {
   homePage: false,
   effectiveDate: '',
   backgroundColor: '#FFFFFF',
-  groupId: -1,
+  groupId: 0,
   header: null,
   content: []
 }
@@ -53,6 +53,7 @@ const mutations = {
   RESET_CURRENT_DATA: state => {
     state.aggregation = { ...template }
     state.aggregation.content = []
+    state.aggregation.groupId = state.groupId > 0 ? state.groupId : 0
   },
   SET_CURRENT_DATA: (state, params) => {
     const keys = ['id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId']

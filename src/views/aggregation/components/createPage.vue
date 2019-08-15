@@ -48,7 +48,6 @@
       title="选择聚合页组"
       :visible.sync="groupDialogVisible"
       width="50%"
-      center
     >
       <el-radio-group v-model="groupSelectId">
         <el-radio v-for="group in aggregationGroups" :key="group.name" :label="group.id.toString()" border>
@@ -324,7 +323,9 @@ export default {
       })
     },
     handleChangeGroup() {
-      if (this.groupId > 0) {
+      if (this.pageInfo.groupId > 0) {
+        this.groupSelectId = this.pageInfo.groupId.toString()
+      } else if (this.groupId > 0) {
         this.groupSelectId = this.groupId.toString()
       } else if (this.aggregationGroups.length > 0) {
         this.groupSelectId = this.aggregationGroups[0].id.toString()
