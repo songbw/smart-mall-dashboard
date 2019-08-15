@@ -6,7 +6,7 @@
         <span v-if="viewOnly">{{ formData.supplierMerchantName }}</span>
         <el-select
           v-else
-          :value="selectVendorId"
+          :value="selectVendor"
           style="width: 50%"
           @change="onMerchantChanged"
         >
@@ -517,6 +517,7 @@ export default {
       collectOptions: CouponCollectOptions,
       scenarioOptions: CouponScenarioOptions,
       selectVendorId: null,
+      vendorLoading: false,
       vendorOptions: [],
       dataLoading: false,
       createCoupon: false,
@@ -765,6 +766,11 @@ export default {
         // 优惠券的领取方式为人工分配，需要批量生成或导入
         return this.couponDataLoaded ? this.couponData.rules.collect.type === 4 : false
       }
+    },
+    selectVendor: {
+      get() {
+        return this.vendorLoading ? null : this.selectVendorId
+      }
     }
   },
   created() {
@@ -790,7 +796,7 @@ export default {
           limit: 100,
           status: vendor_status_approved
         }
-        this.dataLoading = true
+        this.vendorLoading = true
         const data = await getVendorListApi(params)
         this.vendorOptions = data.rows.map(row => {
           return {
@@ -801,7 +807,7 @@ export default {
       } catch (e) {
         console.warn('Coupon get vendor list error:' + e)
       } finally {
-        this.dataLoading = false
+        this.vendorLoading = false
       }
     },
     async getCouponTags() {

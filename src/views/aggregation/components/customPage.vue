@@ -207,11 +207,16 @@ export default {
     async savePage(preview) {
       try {
         await this.$confirm(preview ? '保存此次修改，并开始预览聚合页，是否继续？' : '保存此次修改，是否继续？',
-          '警告',
-          { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+          '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
         this.$store.dispatch('aggregations/savePageContent').then(() => {
           if (preview) {
             this.$emit('nextStep')
+          } else {
+            this.$message.success('聚合页保存成功！')
           }
         }).catch(error => {
           console.warn('Save aggregation page error: ' + error)
