@@ -227,6 +227,9 @@ export default {
         }
         params.header = JSON.stringify(header)
       }
+      if (params.groupId === -1) {
+        params.groupId = 0
+      }
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.$emit('createPage', id)
       }).catch(err => {
