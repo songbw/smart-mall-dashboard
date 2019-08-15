@@ -32,7 +32,7 @@
     </el-row>
     <el-row :gutter="60" style="margin-top: 20px">
       <el-col :span="11">
-        <div class="data-title">订单支付总额 / 按地区</div>
+        <div class="data-title">订单支付总额<span class="panel-annotation">（元）</span> / 按地区</div>
         <el-card shadow="never">
           <ve-pie
             :data="chartOrdersData"

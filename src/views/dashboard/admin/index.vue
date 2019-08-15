@@ -47,7 +47,7 @@
     </el-row>
     <el-row :gutter="60" style="margin-top: 20px">
       <el-col :span="11">
-        <div class="data-title">订单支付总额 / 按品类</div>
+        <div class="data-title">订单支付总额<span class="panel-annotation">（元）</span> / 按品类</div>
         <el-card shadow="never">
           <ve-pie
             :data="chartCategoryData"
@@ -58,7 +58,7 @@
         </el-card>
       </el-col>
       <el-col :span="11">
-        <div class="data-title">订单支付总额 / 按商户</div>
+        <div class="data-title">订单支付总额<span class="panel-annotation">（元）</span> / 按商户</div>
         <el-card shadow="never">
           <ve-pie
             :data="chartMerchantData"
@@ -71,7 +71,7 @@
     </el-row>
     <el-row :gutter="60" style="margin-top: 20px">
       <el-col :span="11">
-        <div class="data-title">订单支付趋势 / 按活动</div>
+        <div class="data-title">订单支付趋势<span class="panel-annotation">（元）</span> / 按活动</div>
         <el-card shadow="never">
           <ve-line
             :data="chartPromotionData"
@@ -82,7 +82,7 @@
         </el-card>
       </el-col>
       <el-col :span="11">
-        <div class="data-title">订单支付趋势 / 按时间</div>
+        <div class="data-title">订单支付趋势<span class="panel-annotation">（元）</span> / 按时间</div>
         <el-card shadow="never">
           <ve-line
             :data="chartPeriodData"
