@@ -399,13 +399,17 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
-      vendorOptions: 'productVendors',
+      productVendors: 'productVendors',
       vendorId: 'vendorId'
     }),
     loadingMessage: {
       get() {
         return this.uploading ? '正在上传图片...' + this.uploadPercent + '%' : '正在加载中...'
       }
+    },
+    vendorOptions() {
+      // Filter vendor Aoyi
+      return this.productVendors.filter(item => item.value !== 2)
     },
     viewProduct() {
       return this.opType === OP_VIEW

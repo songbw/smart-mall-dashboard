@@ -3,7 +3,7 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import isEmpty from 'lodash/isEmpty'
 import localForage from 'localforage'
-import { Message } from 'element-ui'
+// import { Message } from 'element-ui'
 import store from '@/store'
 import {
   storage_key_token,
@@ -11,7 +11,21 @@ import {
 } from '@/utils/constants'
 
 const axiosMap = new Map()
-
+const relogin = () => {
+  /*
+  Message({
+    message: '登录超时或在其它地方登录，请重新登录！',
+    type: 'error',
+    duration: 5 * 1000
+  })
+   */
+  store.dispatch('user/resetUser')
+    .then(() => {
+    })
+    .catch(() => {
+    })
+    .finally(() => location.reload())
+}
 const axiosService = apiKey => {
   if (axiosMap.has(apiKey)) {
     return axiosMap.get(apiKey)
@@ -48,24 +62,15 @@ const axiosService = apiKey => {
       response => {
         return response.data
       },
-      async error => {
+      error => {
         const res = error.response
-        if (res && res.status === 400 && res.data) {
+        if (res && res.status === 401) {
+          relogin()
+        } else if (res && res.status === 400 && res.data) {
           const data = res.data
           if ('error' in data && data.error === 400001) {
             console.warn('Token expired.')
-            try {
-              Message({
-                message: '登录超时，请重新登录！',
-                type: 'error',
-                duration: 5 * 1000
-              })
-              await store.dispatch('user/resetUser')
-            } catch (e) {
-              console.warn('Axios reset token error: ' + e)
-            } finally {
-              location.reload()
-            }
+            relogin()
           }
         }
         return Promise.reject(error)

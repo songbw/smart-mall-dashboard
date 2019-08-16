@@ -48,7 +48,6 @@ export default {
         } else if (!isEmpty(token)) {
           await this.getVendorProfile()
         }
-        await this.$store.dispatch('app/getCosUrl')
 
         this.$store.commit('app/SET_READY')
       } catch (e) {
