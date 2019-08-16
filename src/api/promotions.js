@@ -8,6 +8,14 @@ export function getPromotionsApi(params) {
   })
 }
 
+export function getPublishedPromotionsApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/release',
+    method: 'get',
+    params
+  })
+}
+
 export function searchPromotionsApi(params) {
   return Vue.axios('promotions').request({
     url: '/equities/adminPromotion/search',

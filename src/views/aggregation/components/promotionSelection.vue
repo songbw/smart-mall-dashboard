@@ -64,17 +64,16 @@
       </el-table-column>
       <el-table-column label="有效开始时间" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.startDate }}</span>
+          <span>{{ scope.row.startDate | timeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column label="有效结束时间" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.endDate }}</span>
+          <span>{{ scope.row.endDate | timeFilter }}</span>
         </template>
       </el-table-column>
     </el-table>
     <pagination
-      v-if="total > query.limit"
       :total="total"
       :page.sync="query.offset"
       :limit.sync="query.limit"
@@ -88,9 +87,14 @@
 </template>
 
 <script>
+import moment from 'moment'
 import Pagination from '@/components/Pagination'
 import { searchPromotionsApi } from '@/api/promotions'
-import { PromotionStatusDefinition } from '@/utils/constants'
+import {
+  PromotionStatusDefinition,
+  PromotionPublishedDefinition
+} from '@/utils/constants'
+import { getPublishedPromotionsApi } from '../../../api/promotions'
 
 export default {
   name: 'PromotionSelection',
@@ -106,6 +110,15 @@ export default {
     promotionStatus: (status) => {
       const found = PromotionStatusDefinition.find(item => item.value === status)
       return found ? found.label : ''
+    },
+    timeFilter: time => {
+      if (time) {
+        const format = 'YYYY-MM-DD HH:mm:ss'
+        const date = moment(time)
+        return date.format(format)
+      } else {
+        return ''
+      }
     }
   },
   props: {
@@ -116,10 +129,7 @@ export default {
   },
   data() {
     return {
-      statusOptions: [{
-        value: 0,
-        label: '全部'
-      }].concat(PromotionStatusDefinition),
+      statusOptions: [{ value: 0, label: '全部' }].concat(PromotionPublishedDefinition),
       discountTypeOptions: [{
         value: -1,
         label: '全部'
@@ -161,11 +171,23 @@ export default {
     },
     getFilterData() {
       const params = this.getFilterParams()
-      if (params !== null) {
+      if ('status' in params || 'name' in params) {
         this.listLoading = true
         searchPromotionsApi(params).then((res) => {
           this.promotionsData = res.data.result.list
           this.total = res.data.result.total
+          this.listLoading = false
+        }).catch(err => {
+          console.log('Search Promotions:' + err)
+          this.listLoading = false
+        })
+      } else {
+        this.listLoading = true
+        getPublishedPromotionsApi({ pageNo: params.offset, pageSize: params.limit }).then((res) => {
+          if (res.code === 200) {
+            this.promotionsData = res.data.result.list
+            this.total = res.data.result.pageInfo.totalCount
+          }
           this.listLoading = false
         }).catch(err => {
           console.log('Search Promotions:' + err)

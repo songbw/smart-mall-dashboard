@@ -18,8 +18,20 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" @click="handleFilter">
+            搜索
+          </el-button>
+          <el-button
+            :icon="showMoreOptions ? 'el-icon-arrow-up': 'el-icon-arrow-down'"
+            type="info"
+            @click="showMoreOptions = !showMoreOptions"
+          >
+            更多选项
+          </el-button>
+        </el-form-item>
       </el-form>
-      <el-form :inline="true">
+      <el-form v-if="showMoreOptions" :inline="true">
         <el-form-item label="商品品牌">
           <el-input v-model="listBrand" :clearable="true" placeholder="输入品牌关键字" maxlength="10" />
         </el-form-item>
@@ -39,7 +51,7 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <el-form :inline="true">
+      <el-form v-if="showMoreOptions" :inline="true">
         <el-form-item label="商品类别">
           <category-selection
             :first-value="firstCategoryValue"
@@ -47,11 +59,6 @@
             :third-value="thirdCategoryValue"
             @changed="handleCategorySelectionChanged"
           />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="handleFilter">
-            搜索
-          </el-button>
         </el-form-item>
       </el-form>
       <div style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline">
@@ -82,17 +89,6 @@
           </el-button>
         </div>
         <div>
-          <span style="margin-right: 10px;font-size: 13px">底价比率</span>
-          <el-input-number
-            v-model="floorPriceRate"
-            :precision="2"
-            :step="0.05"
-            :min="1"
-            :max="10"
-            size="small"
-          />
-        </div>
-        <div>
           <el-button
             :disabled="productSelection.length === 0"
             :loading="productExporting"
@@ -114,6 +110,17 @@
         </div>
       </div>
     </div>
+    <el-form inline @submit.prevent.native="() => {}">
+      <el-form-item label="底价比率">
+        <el-input-number
+          v-model="floorPriceRate"
+          :precision="2"
+          :step="0.05"
+          :min="1"
+          :max="10"
+        />
+      </el-form-item>
+    </el-form>
     <el-table
       ref="productsTable"
       v-loading="listLoading"
@@ -128,7 +135,7 @@
         align="center"
         width="55"
       />
-      <el-table-column label="商品SKU" align="center" width="100">
+      <el-table-column label="商品SKU" align="center" width="140">
         <template slot-scope="scope">
           <el-button type="text" @click="handleViewProduct(scope.$index)">
             {{ scope.row.skuid }}
@@ -406,6 +413,7 @@ export default {
         value: product_state_off_shelves,
         label: '下架'
       }],
+      showMoreOptions: false,
       floorPriceRate: 1.1,
       productsTotal: 0,
       productsData: [],

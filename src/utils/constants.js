@@ -129,3 +129,11 @@ export const PromotionStatusDefinition = [{
   value: promotion_status_off_shelves,
   label: '已下线'
 }]
+
+export const PromotionPublishedDefinition = [{
+  value: promotion_status_ready_for_sale,
+  label: '未开始'
+}, {
+  value: promotion_status_on_sale,
+  label: '进行中'
+}]
