@@ -92,7 +92,7 @@
         highlight-current-row
         style="width: 100%;"
       >
-        <el-table-column label="ID" align="center" width="100px">
+        <el-table-column label="编号" align="center" width="60">
           <template slot-scope="scope">
             <span>{{ scope.row.id }}</span>
           </template>
@@ -104,7 +104,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="创建日期" align="center" width="150px">
+        <el-table-column label="创建日期" align="center" width="150">
           <template slot-scope="scope">
             <span>{{ scope.row.effectiveDate | dateFilter }}</span>
           </template>
@@ -116,7 +116,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="350px">
+        <el-table-column label="操作" align="center" width="300px">
           <template slot-scope="scope">
             <el-button
               size="mini"

@@ -541,7 +541,7 @@ export default {
           this.brandOptions = data.result.list.map(brand => {
             // If no english name, jus return chinese name
             const name = isEmpty(brand.brandEname) ? brand.brandCname : brand.brandName
-            return { value: brand.brandId, label: name }
+            return { value: brand.brandId, label: (name || brand.brandName) }
           })
         } catch (e) {
           console.log('Remote brand options: ' + e)

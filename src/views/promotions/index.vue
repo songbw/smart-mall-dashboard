@@ -94,7 +94,7 @@
         type="selection"
         width="55"
       />
-      <el-table-column label="活动编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="50">
         <template slot-scope="scope">
           <el-button type="text" @click="handleViewPromotion(scope.$index)">
             {{ scope.row.id }}
@@ -121,17 +121,17 @@
           <el-tag>{{ scope.row.status | promotionStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="开始时间" align="center" width="180">
+      <el-table-column label="开始时间" align="center" width="160">
         <template slot-scope="scope">
           <span>{{ scope.row.startDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" width="180">
+      <el-table-column label="结束时间" align="center" width="160">
         <template slot-scope="scope">
           <span>{{ scope.row.endDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="160">
+      <el-table-column label="操作" align="center" width="140">
         <template slot-scope="scope">
           <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">

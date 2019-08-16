@@ -54,7 +54,7 @@
           </el-button>
         </el-form-item>
       </el-form>
-      <div style="margin-bottom: 10px;display: flex;justify-content: space-between">
+      <div style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline">
         <div>
           <el-button
             :disabled="!vendorApproved"
@@ -70,7 +70,7 @@
             icon="el-icon-upload2"
             @click="dialogImportVisible = true"
           >
-            批量创建商品
+            批量创建
           </el-button>
           <el-button
             :disabled="productSelection.length === 0"
@@ -78,7 +78,7 @@
             icon="el-icon-edit"
             @click="handleEditSelection"
           >
-            批量修改{{ productSelection.length }}个商品
+            修改已选{{ productSelection.length }}个商品
           </el-button>
         </div>
         <div>
@@ -89,6 +89,7 @@
             :step="0.05"
             :min="1"
             :max="10"
+            size="small"
           />
         </div>
         <div>
@@ -108,7 +109,7 @@
             icon="el-icon-download"
             @click="handleExportAllProducts"
           >
-            导出全部商品
+            导出全部
           </el-button>
         </div>
       </div>

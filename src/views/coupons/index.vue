@@ -66,7 +66,7 @@
       highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="50">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -91,17 +91,17 @@
           <span>{{ scope.row.releaseNum }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" width="100">
+      <el-table-column label="状态" align="center" width="80">
         <template slot-scope="scope">
           <el-tag>{{ scope.row.status | couponStatusFilter }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="上线开始时间" align="center" width="180">
+      <el-table-column label="上线开始时间" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseStartDate | dateFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="上线结束时间" align="center" width="180">
+      <el-table-column label="上线结束时间" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseEndDate | dateFilter }}</span>
         </template>
