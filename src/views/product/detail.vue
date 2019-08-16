@@ -301,9 +301,6 @@ export default {
               callback()
             }
             break
-          case 'skuid':
-            callback(new Error('请输入商品SKU'))
-            break
           case 'name':
             callback(new Error('请输入商品名称'))
             break
@@ -372,7 +369,14 @@ export default {
           required: true, validator: validateValue, trigger: 'change'
         }],
         skuid: [{
-          required: true, validator: validateValue, trigger: 'change'
+          required: true, validator: (rule, value, callback) => {
+            const reg = /^[a-zA-Z0-9]+$/
+            if (value && reg.test(value)) {
+              callback()
+            } else {
+              callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
+            }
+          }, trigger: 'change'
         }],
         name: [{
           required: true, validator: validateValue, trigger: 'change'
@@ -819,9 +823,15 @@ export default {
       this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + url)
     },
     handleBeforeUpload(file) {
+      const maxSize = 1024 * 1024
+      if (file.size > maxSize) {
+        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
+        return false
+      }
       this.uploadPercent = 0
       this.loading = true
       this.uploading = true
+      return true
     },
     handleUploadError(err) {
       console.log('handleUploadError:' + err)
