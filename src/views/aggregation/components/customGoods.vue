@@ -28,7 +28,7 @@
           <el-radio label="3">1行3个</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="楼层标题颜色">
+      <el-form-item label="楼层标题底色">
         <el-color-picker v-model="floorTitleColor" />
         <span>{{ floorTitleColor }}</span>
       </el-form-item>

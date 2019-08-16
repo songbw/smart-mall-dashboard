@@ -121,6 +121,11 @@
         <span v-if="viewProduct"> {{ productForm.price }}</span>
         <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
+      <el-form-item label="销售底价(元)">
+        <span style="margin-right: 10px"> {{ floorPrice }}</span>
+        <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
+        <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
+      </el-form-item>
       <el-form-item label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
@@ -334,6 +339,7 @@ export default {
       firstCategoryValue: null,
       secondCategoryValue: null,
       thirdCategoryValue: null,
+      floorPriceRate: 1.1,
       thumbnails: [],
       thumbnailUrls: [],
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
@@ -405,6 +411,13 @@ export default {
     },
     editProduct() {
       return this.opType === OP_EDIT
+    },
+    floorPrice() {
+      if (this.productForm.sprice) {
+        return (this.productForm.sprice * this.floorPriceRate).toFixed(2).toString()
+      } else {
+        return '无进货价格'
+      }
     }
   },
   created() {
@@ -483,7 +496,8 @@ export default {
               if (key !== 'price' && key !== 'sprice') {
                 this.productForm[key] = this.productInfo[key]
               } else {
-                this.productForm[key] = Number.parseFloat(this.productInfo[key])
+                const value = Number.parseFloat(this.productInfo[key])
+                this.productForm[key] = Number.isNaN(value) ? null : value
               }
             }
           })
@@ -830,8 +844,5 @@ export default {
 </script>
 
 <style scoped>
-  .bottom {
-    bottom: 10px;
-    right: 10px;
-  }
+
 </style>

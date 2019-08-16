@@ -82,6 +82,16 @@
           </el-button>
         </div>
         <div>
+          <span style="margin-right: 10px;font-size: 13px">底价比率</span>
+          <el-input-number
+            v-model="floorPriceRate"
+            :precision="2"
+            :step="0.05"
+            :min="1"
+            :max="10"
+          />
+        </div>
+        <div>
           <el-button
             :disabled="productSelection.length === 0"
             :loading="productExporting"
@@ -143,7 +153,7 @@
           <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品价格(元)" align="center" width="120">
+      <el-table-column label="销售价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
             <el-input-number
@@ -179,6 +189,9 @@
               circle
               @click="scope.row.editPrice=!scope.row.editPrice"
             />
+            <div v-if="scope.row.sprice" style="font-size: 12px">
+              （底价:{{ getFloorPrice(scope.row) }}）
+            </div>
           </template>
         </template>
       </el-table-column>
@@ -392,6 +405,7 @@ export default {
         value: product_state_off_shelves,
         label: '下架'
       }],
+      floorPriceRate: 1.1,
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -669,6 +683,14 @@ export default {
       }
       this.listOffset = 1
       this.getListData()
+    },
+    getFloorPrice(row) {
+      const sprice = Number.parseFloat(row.sprice)
+      if (Number.isNaN(sprice)) {
+        return null
+      } else {
+        return (sprice * this.floorPriceRate).toFixed(2)
+      }
     },
     handleCreateProduct() {
       this.$router.push({
