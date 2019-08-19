@@ -12,7 +12,7 @@
       <el-form-item label="页面名称" prop="name">
         <el-input v-model="pageName" />
       </el-form-item>
-      <el-form-item label="主页设置" prop="homePage">
+      <el-form-item v-if="isAdminUser" label="主页设置" prop="homePage">
         <el-switch v-model="homePage" />
       </el-form-item>
       <el-form-item label="背景色" prop="backgroundColor">
@@ -103,6 +103,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      isAdminUser: 'isAdminUser',
       pageInfo: 'currentAggregation',
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId'

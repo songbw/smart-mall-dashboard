@@ -176,6 +176,7 @@
 </template>
 
 <script>
+import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
@@ -327,42 +328,42 @@ export default {
       })
     },
     handleCancel() {
-      if (!this.editCategory) {
-        this.$refs.categoryForm.resetFields()
-      }
       this.dialogFormVisible = false
+      this.resetDialogValue()
+      this.$refs.categoryForm.resetFields()
     },
     handleSubmit() {
-      if (this.editCategory) {
-        this.updateCategory()
-      } else {
-        this.createCategory()
-      }
-    },
-    createCategory() {
-      this.$refs.categoryForm.validate(async valid => {
+      this.$refs.categoryForm.validate(valid => {
         if (valid) {
-          try {
-            this.dialogLoading = true
-            const params = {
-              parentId: this.dialogValue.parentId,
-              categoryName: this.dialogValue.categoryName,
-              categoryClass: this.dialogValue.categoryClass,
-              categoryIcon: this.dialogValue.categoryIcon,
-              sortOrder: this.dialogValue.sortOrder,
-              isShow: this.dialogValue.isShow
-            }
-            await this.$store.dispatch('categories/createCategory', params)
-            this.$message.success(`创建类别${params.categoryName}成功！`)
-          } catch (e) {
-            console.warn('Create category error:' + e)
-            this.$message.error(`创建类别失败，请稍后重试！`)
-          } finally {
-            this.dialogFormVisible = false
-            this.dialogLoading = false
+          if (this.editCategory) {
+            this.updateCategory()
+          } else {
+            this.createCategory()
           }
         }
       })
+    },
+    async createCategory() {
+      try {
+        this.dialogLoading = true
+        const params = {
+          parentId: this.dialogValue.parentId,
+          categoryName: this.dialogValue.categoryName,
+          categoryClass: this.dialogValue.categoryClass,
+          categoryIcon: this.dialogValue.categoryIcon,
+          sortOrder: this.dialogValue.sortOrder,
+          isShow: this.dialogValue.isShow
+        }
+        await this.$store.dispatch('categories/createCategory', params)
+        this.$message.success(`创建类别${params.categoryName}成功！`)
+      } catch (e) {
+        console.warn('Create category error:' + e)
+        this.$message.error(`创建类别失败，请稍后重试！`)
+      } finally {
+        this.dialogFormVisible = false
+        this.dialogLoading = false
+        this.resetDialogValue()
+      }
     },
     async updateCategory() {
       let changed = false
@@ -393,9 +394,10 @@ export default {
           console.warn('updateCategory:' + e)
         } finally {
           this.dialogLoading = false
-          this.dialogFormVisible = false
         }
       }
+      this.dialogFormVisible = false
+      this.resetDialogValue()
     },
     handleTopCategoryClick(category) {
       this.searchCategoriesData = []
@@ -467,6 +469,11 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
+        if (this.currentSelectedTopCategory &&
+          this.currentSelectedTopCategory.categoryId === category.categoryId) {
+          this.topCategoryHeaderTitle = ''
+          this.currentSelectedTopCategory = null
+        }
         await this.$store.dispatch('categories/deleteCategory', category)
         if (!isEmpty(this.filterName)) {
           this.handleFilter()
@@ -478,19 +485,26 @@ export default {
     handleUploadImageSuccess(url) {
       this.dialogValue.categoryIcon = url
     },
-    handleCreateFirstClass() {
-      this.editCategory = false
-      this.dialogFormTitle = '新建一级类别'
+    resetDialogValue() {
       this.dialogValue.categoryId = null
       this.dialogValue.parentId = 0
-      this.dialogValue.categoryClass = '1'
-      this.dialogValue.categoryName = null
+      this.dialogValue.categoryClass = '0'
+      this.dialogValue.categoryName = ''
       this.dialogValue.categoryIcon = null
       this.dialogValue.sortOrder = 50
       this.dialogValue.isShow = false
+      this.dialogValue.idate = null
+    },
+    handleCreateFirstClass() {
+      this.resetDialogValue()
+      this.editCategory = false
+      this.dialogFormTitle = '新建一级类别'
+      this.dialogValue.categoryClass = '1'
+      this.dialogValue.idate = moment()
       this.dialogFormVisible = true
     },
     handleCreateSubClass() {
+      this.resetDialogValue()
       if (this.currentSelectedTopCategory) {
         this.editCategory = false
         if (this.currentSelectedTopCategory.categoryClass === '1') {
@@ -500,12 +514,8 @@ export default {
           this.dialogFormTitle = '新建三级类别'
           this.dialogValue.categoryClass = '3'
         }
-        this.dialogValue.categoryId = null
         this.dialogValue.parentId = this.currentSelectedTopCategory.categoryId
-        this.dialogValue.categoryName = null
-        this.dialogValue.categoryIcon = null
-        this.dialogValue.sortOrder = 50
-        this.dialogValue.isShow = false
+        this.dialogValue.idate = moment()
         this.dialogFormVisible = true
       }
     },

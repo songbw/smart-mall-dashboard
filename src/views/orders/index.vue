@@ -57,7 +57,7 @@
           搜索
         </el-button>
         <el-button icon="el-icon-download" type="success" @click="handleExportOrders">
-          导出全部订单
+          批量导出订单
         </el-button>
       </el-form-item>
     </el-form>
