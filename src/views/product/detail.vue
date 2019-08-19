@@ -710,9 +710,10 @@ export default {
           changed = true
         }
       })
+      // remove sprice if product form has not contain sprice field
       const sprice = Number.parseFloat(this.productInfo.sprice)
       if (!Number.isNaN(sprice)) {
-        const hasSprice = 'sprice' in params
+        const hasSprice = 'sprice' in filterForm
         if (!hasSprice) {
           params.sprice = ''
           changed = true

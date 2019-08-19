@@ -328,9 +328,9 @@ export default {
       })
     },
     handleCancel() {
-      this.dialogFormVisible = false
       this.resetDialogValue()
       this.$refs.categoryForm.resetFields()
+      this.dialogFormVisible = false
     },
     handleSubmit() {
       this.$refs.categoryForm.validate(valid => {
