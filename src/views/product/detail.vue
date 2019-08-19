@@ -19,7 +19,9 @@
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
       <el-form-item v-if="isAdminUser" label="商品供应商" prop="merchantId">
-        <span v-if="viewProduct">{{ getVendorName(productForm.merchantId) }}</span>
+        <span v-if="viewProduct || productForm.merchantId === vendorAoyi">
+          {{ getVendorName(productForm.merchantId) }}
+        </span>
         <el-select
           v-else
           :value="productForm.merchantId"
@@ -117,11 +119,11 @@
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
-      <el-form-item label="销售价格(元)" prop="price">
+      <el-form-item v-if="isAdminUser" label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
         <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
-      <el-form-item label="销售底价(元)">
+      <el-form-item v-if="isAdminUser" label="销售底价(元)">
         <span style="margin-right: 10px"> {{ floorPrice }}</span>
         <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
         <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
@@ -314,6 +316,7 @@ export default {
     }
     return {
       uploadUrl: app_upload_url,
+      vendorAoyi: 2,
       uploading: false,
       uploadPercent: 0,
       uploadCoverData: {
@@ -386,10 +389,14 @@ export default {
         }],
         price: [{
           required: true, validator: (rule, value, callback) => {
-            if (isNumber(value) && value > 0) {
-              callback()
+            if (this.isAdminUser) {
+              if (isNumber(value) && value > 0) {
+                callback()
+              } else {
+                callback(new Error('请输入商品销售价'))
+              }
             } else {
-              callback(new Error('请输入商品销售价'))
+              callback()
             }
           }, trigger: 'change'
         }]
@@ -409,7 +416,7 @@ export default {
     },
     vendorOptions() {
       // Filter vendor Aoyi
-      return this.productVendors.filter(item => item.value !== 2)
+      return this.productVendors.filter(item => item.value !== this.vendorAoyi)
     },
     viewProduct() {
       return this.opType === OP_VIEW
@@ -448,7 +455,7 @@ export default {
       }
     },
     async getVendorList() {
-      if (this.vendorOptions.length === 0) {
+      if (this.productVendors.length === 0) {
         try {
           this.loading = true
           const params = {
@@ -472,8 +479,8 @@ export default {
       }
     },
     getVendorName(vendorId) {
-      if (this.vendorOptions.length > 0 && vendorId != null) {
-        const vendor = this.vendorOptions.find(option => option.value === vendorId)
+      if (this.productVendors.length > 0 && vendorId != null) {
+        const vendor = this.productVendors.find(option => option.value === vendorId)
         if (vendor) {
           return vendor.label
         } else {

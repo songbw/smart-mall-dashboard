@@ -110,8 +110,15 @@
             </el-table-column>
             <el-table-column label="操作" align="center" width="160">
               <template slot-scope="scope">
-                <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-                <el-button v-if="scope.row.idate" size="mini" type="danger" @click="handleDelete(scope.row)">
+                <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
+                  {{ isAdminUser ? '编辑' : '查看' }}
+                </el-button>
+                <el-button
+                  v-if="isAdminUser && scope.row.idate"
+                  size="mini"
+                  type="danger"
+                  @click="handleDelete(scope.row)"
+                >
                   删除
                 </el-button>
               </template>
@@ -154,7 +161,7 @@
         <el-form-item label="类别排序">
           <el-input v-if="noEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" />
-          <span style="font-size: 13px;margin-left: 10px">数值越小优先级越高</span>
+          <div style="font-size: 13px;margin-left: 4rem">数值越小优先级越高</div>
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload

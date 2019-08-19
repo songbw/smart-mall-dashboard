@@ -110,7 +110,7 @@
         </div>
       </div>
     </div>
-    <el-form inline @submit.prevent.native="() => {}">
+    <el-form v-if="isAdminUser" inline @submit.prevent.native="() => {}">
       <el-form-item label="底价比率">
         <el-input-number
           v-model="floorPriceRate"
@@ -161,7 +161,7 @@
           <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="销售价格(元)" align="center" width="120">
+      <el-table-column v-if="isAdminUser" label="销售价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
             <el-input-number
