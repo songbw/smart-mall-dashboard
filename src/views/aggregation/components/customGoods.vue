@@ -16,8 +16,8 @@
       />
     </div>
     <div class="goods-ops-container">
-      <span>最多可以添加7个</span>
-      <el-button :disabled="goodsInfo.list.length >= 7" type="primary" @click="addGoodsFloor">
+      <span>最多可以添加{{ maxFloorLength }}个</span>
+      <el-button :disabled="goodsInfo.list.length >= maxFloorLength" type="primary" @click="addGoodsFloor">
         添加楼层
       </el-button>
     </div>
@@ -72,6 +72,11 @@ import { goodsType } from './templateType'
 export default {
   name: 'CustomGoods',
   components: { GoodsFloor },
+  data() {
+    return {
+      maxFloorLength: 20
+    }
+  },
   computed: {
     ...mapGetters({
       pageTemplateList: 'currentAggregationContent',

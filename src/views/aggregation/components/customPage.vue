@@ -237,6 +237,13 @@ export default {
       this.setEditTemplateTypeIndex(index - 1)
     },
     handleAddTemplateType(type) {
+      if (type === goodsType) {
+        const hasGoodsType = this.pageTemplateList.find(item => item.type === goodsType)
+        if (hasGoodsType) {
+          this.$message.warning('目前每个页面只支持一个商品模板！')
+          return
+        }
+      }
       const option = this.options.find(o => o.type === type)
       const item = { type: option.type, name: option.name }
       this.initTemplateTypeData(type, item)
