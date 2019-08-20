@@ -4,10 +4,9 @@
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="false"
+    :append-to-body="true"
     title="选择商品"
     width="60%"
-    append-to-body
-    center
   >
     <el-form>
       <el-form-item label="商品类别">
@@ -30,12 +29,14 @@
     </el-form>
     <el-form v-else inline :model="dialogFilterForm" @submit.prevent.native="handleDialogFilterSearch">
       <el-form-item label="商品SKU">
+        <span class="el-icon-warning-outline" style="font-size: 12px">以英文逗号分隔</span>
         <el-input
           v-model="filterSkus"
           :rows="3"
           resize="none"
-          placeholder="商品SKU之间用逗号分隔，最多输入50个"
+          placeholder="商品SKU之间以英文逗号分隔，最多输入50个"
           type="textarea"
+          label="http"
         />
       </el-form-item>
       <el-form-item label="商品名">

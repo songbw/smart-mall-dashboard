@@ -628,7 +628,7 @@ export default {
                   callback()
                 }
               } else {
-                callback(new Error('请选择发布的开始日期和时间'))
+                callback(new Error('请选择上线的开始日期和时间'))
               }
             }
           }
@@ -645,7 +645,7 @@ export default {
               if (value) {
                 callback()
               } else {
-                callback(new Error('请选择发布的结束日期和时间'))
+                callback(new Error('请选择上线的结束日期和时间'))
               }
             }
           }
@@ -667,7 +667,7 @@ export default {
                   callback()
                 }
               } else {
-                callback(new Error('请选择发布的开始日期和时间'))
+                callback(new Error('请选择有效期的开始日期和时间'))
               }
             }
           }
@@ -680,11 +680,14 @@ export default {
               callback(new Error('结束时间必须晚于开始时间'))
             } else if (value && moment(value).isBefore(now)) {
               callback(new Error('结束时间必须晚于当前时间'))
+            } else if (value && this.formData.releaseEndDate &&
+              moment(value).isBefore(this.formData.releaseEndDate)) {
+              callback(new Error('结束时间必须晚于上线结束时间'))
             } else {
               if (value) {
                 callback()
               } else {
-                callback(new Error('请选择发布的结束日期和时间'))
+                callback(new Error('请选择有效期的结束日期和时间'))
               }
             }
           }

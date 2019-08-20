@@ -26,7 +26,7 @@
       </el-form-item>
     </el-form>
     <el-form :inline="true">
-      <el-form-item label="创建开始日期">
+      <el-form-item label="申请开始日期">
         <el-date-picker
           v-model="queryStartDate"
           type="date"
@@ -34,7 +34,7 @@
           placeholder="选择开始日期"
         />
       </el-form-item>
-      <el-form-item label="创建结束日期">
+      <el-form-item label="申请结束日期">
         <el-date-picker
           v-model="queryEndDate"
           type="date"
@@ -179,18 +179,18 @@ export default {
     },
     queryStartDate: {
       get() {
-        return this.workOrdersQuery.createTimeStart
+        return this.workOrdersQuery.timeStart
       },
       set(value) {
-        this.$store.commit('workOrders/SET_SEARCH_DATA', { createTimeStart: value })
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { timeStart: value })
       }
     },
     queryEndDate: {
       get() {
-        return this.workOrdersQuery.createTimeEnd
+        return this.workOrdersQuery.timeEnd
       },
       set(value) {
-        this.$store.commit('workOrders/SET_SEARCH_DATA', { createTimeEnd: value })
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { timeEnd: value })
       }
     },
     queryOffset: {
@@ -219,7 +219,7 @@ export default {
         pageIndex: this.queryOffset,
         pageSize: this.queryLimit
       }
-      const keys = ['mobile', 'createTimeStart', 'createTimeEnd']
+      const keys = ['mobile', 'timeStart', 'timeEnd']
       keys.forEach(key => {
         if (!isEmpty(this.workOrdersQuery[key])) {
           params[key] = this.workOrdersQuery[key]

@@ -8,8 +8,8 @@ const state = {
     typeId: null,
     status: null,
     mobile: '',
-    createTimeStart: null,
-    createTimeEnd: null
+    timeStart: null,
+    timeEnd: null
   }
 }
 
