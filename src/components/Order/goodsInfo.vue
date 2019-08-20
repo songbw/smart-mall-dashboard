@@ -54,12 +54,12 @@
               <span>{{ scope.row.num }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="价格(元)" align="center" width="80">
+          <el-table-column label="销售价格(元)" align="center" width="80">
             <template slot-scope="scope">
               <span>{{ scope.row.unitPrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="销售价(元)" align="center" width="100">
+          <el-table-column label="支付价格(元)" align="center" width="100">
             <template slot-scope="scope">
               <span>{{ scope.row.salePrice }}</span>
             </template>
