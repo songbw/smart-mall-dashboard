@@ -76,10 +76,12 @@ export default {
       this.firstCategoryValue = value
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
+      this.$emit('categorySet', this.index, null)
     },
     handleSecondCategoryChanged(value) {
       this.secondCategoryValue = value
       this.thirdCategoryValue = null
+      this.$emit('categorySet', this.index, null)
     },
     handleThirdCategoryChanged(value) {
       this.thirdCategoryValue = value

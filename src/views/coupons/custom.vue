@@ -734,8 +734,9 @@ export default {
         couponCategories: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             // Check type 全场类
-            if (this.formData.rules.scenario.type === 3 &&
-              this.formData.rules.scenario.categories.length === 0) {
+            const categories = this.formData.rules.scenario.categories
+              .filter(category => category !== -1)
+            if (this.formData.rules.scenario.type === 3 && categories.length === 0) {
               callback(new Error('请选择此优惠券的活动类别'))
             } else {
               callback()
@@ -1013,10 +1014,14 @@ export default {
       }
     },
     handleSetCategory(index, value) {
-      if (includes(this.formData.rules.scenario.categories, value)) {
-        this.$message.warn('此类别已添加，请选择其它类别')
+      if (value) {
+        if (includes(this.formData.rules.scenario.categories, value)) {
+          this.$message.warn('此类别已添加，请选择其它类别')
+        } else {
+          this.formData.rules.scenario.categories[index] = value
+        }
       } else {
-        this.formData.rules.scenario.categories[index] = value
+        this.formData.rules.scenario.categories[index] = -1
       }
     },
     handleDeleteCategory(index) {
