@@ -309,6 +309,9 @@ export default {
       if (this.querySubStatus >= 0) {
         params.subStatus = this.querySubStatus
       }
+      if (this.queryVendor >= 0) {
+        params.merchantId = this.queryVendor
+      }
       return params
     },
     async getOrderList() {
