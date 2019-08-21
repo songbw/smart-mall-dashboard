@@ -51,6 +51,15 @@ const mutations = {
     })
     if (state.promotion.promotionSkus === null) {
       state.promotion.promotionSkus = []
+    } else {
+      state.promotion.promotionSkus = state.promotion.promotionSkus.map(sku => {
+        const { price, discount, ...rest } = sku
+        return {
+          price: Number.parseFloat(price),
+          discount: Number.parseFloat(discount),
+          ...rest
+        }
+      })
     }
     if (state.promotion.promotionSchedules === null) {
       state.promotion.promotionSchedules = []

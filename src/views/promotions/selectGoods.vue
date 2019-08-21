@@ -91,7 +91,7 @@
             选择商品
           </el-button>
         </div>
-        <div class="header-ops-container">
+        <div v-if="!promotionData.dailySchedule" class="header-ops-container">
           <span style="width: 100px;text-align: end">优惠价格：</span>
           <el-input-number
             v-model="promotionValue"
@@ -155,7 +155,48 @@
             <span>{{ scope.row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="discountTypeLabel" align="center" width="250">
+        <el-table-column v-if="promotionData.dailySchedule" label="秒杀价格(元)" align="center" width="250">
+          <template slot-scope="scope">
+            <template v-if="scope.row.editDiscount">
+              <el-input-number
+                :value="scope.row.discount > 0 ? scope.row.price - scope.row.discount : null"
+                :controls="false"
+                size="mini"
+                :min="0"
+                :max="Number.parseInt(scope.row.price)"
+                @input="value => handleSetSecKillPrice(value, scope.row)"
+                step-strictly
+              />
+              <el-button
+                icon="el-icon-close"
+                size="mini"
+                type="primary"
+                circle
+                @click="handleCancelEditDiscount(scope.row)"
+              />
+              <el-button
+                icon="el-icon-check"
+                size="mini"
+                type="primary"
+                circle
+                @click="handleConfirmEditDiscount(scope.row)"
+              />
+            </template>
+            <template v-else>
+              <span>{{ scope.row.discount > 0 ? scope.row.price - scope.row.discount : null }}</span>
+              <el-button
+                v-if="viewOnly === false"
+                icon="el-icon-edit"
+                size="mini"
+                type="primary"
+                circle
+                style="margin-left: 10px"
+                @click="scope.row.editDiscount = true"
+              />
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column v-else :label="discountTypeLabel" align="center" width="250">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
               <el-input-number
@@ -569,7 +610,12 @@ export default {
       for (const sku of skus) {
         const found = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
         if (found < 0) {
-          const addItem = { skuid: sku.skuid, mpu: sku.mpu, discount: 0, scheduleId: this.scheduleId }
+          const addItem = {
+            skuid: sku.skuid,
+            mpu: sku.mpu,
+            discount: 0,
+            scheduleId: this.scheduleId
+          }
           const deleteIndex = this.deleteItems.findIndex(item => item.mpu === sku.mpu)
           if (deleteIndex >= 0) {
             this.deleteItems.splice(deleteIndex, 1)
@@ -581,7 +627,7 @@ export default {
             ...addItem,
             name: sku.name,
             brand: sku.brand,
-            price: sku.price
+            price: Number.parseFloat(sku.price)
           })
           total++
         }
@@ -591,11 +637,28 @@ export default {
       }
       return total
     },
+    handleSetSecKillPrice(value, row) {
+      console.debug('Second kill ' + value)
+      row.discount = row.price >= value ? row.price - value : 0
+    },
     handleCancelEditDiscount(row) {
       row.discount = row.originalDiscount
       row.editDiscount = false
     },
-    handleConfirmEditDiscount(row) {
+    async handleConfirmEditDiscount(row) {
+      try {
+        if (row.discount > 0 && row.discount / row.price > 0.5) {
+          await this.$confirm('此商品促销价格低于原价的5折，是否继续设置？', '秒杀价格', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+        }
+      } catch (e) {
+        console.debug('Cancel set promotion discount')
+        row.discount = row.originalDiscount
+        return
+      }
       row.editDiscount = false
       this.$store.commit('promotions/SET_SKU_DISCOUNT', { mpu: row.mpu, discount: row.discount })
 
