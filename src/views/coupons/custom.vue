@@ -457,7 +457,7 @@
             </span>
             <span v-else-if="formData.rules.couponRules.type === 2">
               <span>满</span>
-              <span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>元
+              <span class="data-text">{{ formData.rules.couponRules.discountCoupon.fullPrice }}</span>元
               <span>折扣为
                 <span class="data-text">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
               </span>

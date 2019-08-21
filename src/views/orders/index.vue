@@ -181,6 +181,7 @@ export default {
         value: -1,
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
+      vendorLoading: false,
       vendors: [],
       listLoading: false,
       orderData: [],
@@ -195,7 +196,7 @@ export default {
       orderQuery: 'orderQuery'
     }),
     vendorOptions() {
-      return [{ value: -1, label: '全部' }].concat(this.vendors)
+      return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
     },
     queryTradeNo: {
       get() {
@@ -231,7 +232,7 @@ export default {
     },
     queryVendor: {
       get() {
-        return this.orderQuery.merchantId
+        return this.vendorLoading ? null : this.orderQuery.merchantId
       },
       set(value) {
         this.$store.commit('orders/SET_SEARCH_DATA', { merchantId: value })
@@ -281,7 +282,7 @@ export default {
           limit: 100,
           status: vendor_status_approved
         }
-        this.listLoading = true
+        this.vendorLoading = true
         const data = await getVendorListApi(params)
         this.vendors = data.rows.map(row => {
           return {
@@ -292,7 +293,7 @@ export default {
       } catch (e) {
         console.warn('Orders get vendor list error:' + e)
       } finally {
-        this.listLoading = false
+        this.vendorLoading = false
       }
     },
     getSearchParams() {
