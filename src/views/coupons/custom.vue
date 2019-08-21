@@ -151,7 +151,7 @@
       <el-form-item label="优惠券类别" prop="category">
         <el-select
           :disabled="viewOnly"
-          :value="formData.category"
+          :value="selectCategoryId"
           clearable
           placeholder="选择类别"
           @change="onCategoryChanged"
@@ -354,8 +354,12 @@
             :key="item.value"
             :label="item.label"
             :value="item.value"
+            :disabled="item.disabled"
           />
         </el-select>
+        <span class="el-icon-warning-outline" style="font-size: 12px;margin-left: 10px">
+          根据优惠券类别，商品范围会有区分，比如全部类别优惠券，只能选择全场类商品
+        </span>
       </el-form-item>
       <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" prop="couponMpus">
         <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
@@ -515,7 +519,6 @@ export default {
       appScopes: CouponAppScopes,
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
-      scenarioOptions: CouponScenarioOptions,
       selectVendorId: null,
       vendorLoading: false,
       vendorOptions: [],
@@ -535,6 +538,7 @@ export default {
       couponData: null,
       originalCategory: null,
       disableScenarioType: false,
+      selectCategoryId: '',
       formData: {
         name: '',
         supplierMerchantId: null,
@@ -694,7 +698,7 @@ export default {
         }],
         category: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
-            if (value > 0) {
+            if (this.selectCategoryId !== '') {
               callback()
             } else {
               // Check type 全场类
@@ -753,15 +757,41 @@ export default {
     categoryOptions: {
       get() {
         if (this.categoriesLoaded) {
-          return this.categoriesOption.map(item => {
-            return { categoryId: item.categoryId, categoryName: item.categoryName }
-          })
+          return [{ categoryId: '0', categoryName: '全部类别' }].concat(this.categoriesOption.map(item => {
+            return { categoryId: item.categoryId.toString(), categoryName: item.categoryName }
+          }))
         } else {
           return [{
             categoryId: -1,
             categoryName: '正在加载类别...'
           }]
         }
+      }
+    },
+    scenarioOptions: {
+      get() {
+        return CouponScenarioOptions.map(option => {
+          const item = {
+            value: option.value,
+            label: option.label
+          }
+          let disabled = false
+          const category = Number.parseInt(this.selectCategoryId)
+          if (!Number.isNaN(category)) {
+            if (category === 0) {
+              // 全场类
+              if (option.value !== 2) {
+                disabled = true
+              }
+            } else {
+              if (option.value === 2) {
+                disabled = true
+              }
+            }
+          }
+          item.disabled = disabled
+          return item
+        })
       }
     },
     isManualCollect: {
@@ -845,6 +875,7 @@ export default {
       this.formData.url = this.couponData.url || 'about:blank'
       this.formData.description = this.couponData.description
       this.formData.category = this.couponData.category
+      this.selectCategoryId = this.formData.category ? this.formData.category.toString() : '0'
       if (Array.isArray(this.couponData.excludeDates)) {
         const items = this.couponData.excludeDates.filter(date => !isEmpty(date))
         this.couponData.excludeDates = [...items]
@@ -1195,9 +1226,15 @@ export default {
     },
     onCategoryChanged(value) {
       const id = Number.parseInt(value)
-      if (Number.isNaN(id)) {
+      this.selectCategoryId = value
+      if (Number.isNaN(id) || id === 0) {
+        if (id === 0) {
+          // 全场类
+          this.formData.rules.scenario.type = 2
+        }
         this.formData.category = null
       } else {
+        this.formData.rules.scenario.type = 1
         this.formData.category = id
         this.formData.rules.scenario.categories = []
       }
@@ -1207,6 +1244,7 @@ export default {
       if (value === 2) {
         // 全场类, no category, should have tag
         this.originalCategory = this.formData.category
+        this.selectCategoryId = '0'
         this.formData.category = null
       } else {
         this.formData.category = this.originalCategory
