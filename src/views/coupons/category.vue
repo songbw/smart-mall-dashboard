@@ -1,7 +1,7 @@
 <template>
   <div style="display:flex;justify-content: start;margin-bottom: 10px">
     <category-selection
-      :first-selectable="!viewOnly || presetFirstCategory === null"
+      :first-selectable="!viewOnly && presetFirstCategory === null"
       :first-value="presetFirstCategory || firstCategoryValue"
       :second-selectable="!viewOnly"
       :second-value="secondCategoryValue"

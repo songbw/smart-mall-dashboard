@@ -370,8 +370,7 @@ export default {
         await this.$confirm('上线此优惠券将导致活动立即开始，请确认是否要继续？', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning',
-          center: true
+          type: 'warning'
         })
         await updateCouponApi({ id, status: coupon_status_published })
         this.getCouponData()

@@ -66,7 +66,7 @@
           <span style="font-size: 12px;margin-left: 10px">用户可查看和领取的日期区间</span>
         </div>
       </el-form-item>
-      <el-form-item label="发放总数">
+      <el-form-item label="发放总数" prop="releaseTotal">
         <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
         <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" step-strictly />
       </el-form-item>
@@ -358,7 +358,7 @@
           />
         </el-select>
         <span class="el-icon-warning-outline" style="font-size: 12px;margin-left: 10px">
-          根据优惠券类别，商品范围会有区分，比如全部类别优惠券，只能选择全场类商品
+          根据优惠券类别，商品范围会有区分，比如全部类别优惠券，只能选择全场类商品或特定商品
         </span>
       </el-form-item>
       <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" prop="couponMpus">
@@ -545,7 +545,7 @@ export default {
         supplierMerchantName: null,
         releaseStartDate: null,
         releaseEndDate: null,
-        releaseTotal: 0,
+        releaseTotal: 1,
         effectiveStartDate: null,
         effectiveEndDate: null,
         excludeDates: [],
@@ -696,6 +696,15 @@ export default {
             }
           }
         }],
+        releaseTotal: [{
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
+            if (value > 0) {
+              callback()
+            } else {
+              callback(new Error('请输入有效的发放总数'))
+            }
+          }
+        }],
         category: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (this.selectCategoryId !== '') {
@@ -780,7 +789,7 @@ export default {
           if (!Number.isNaN(category)) {
             if (category === 0) {
               // 全场类
-              if (option.value !== 2) {
+              if (option.value !== 1 && option.value !== 2) {
                 disabled = true
               }
             } else {
@@ -1139,8 +1148,8 @@ export default {
               }
             }
           }
-          if (this.formData.rules.scenario.type === 2 && this.formData.tags.length === 0) {
-            this.$message.warning('此优惠券为全场类，必须选择一个优惠券的标签！')
+          if (this.selectCategoryId === '0' && this.formData.tags.length === 0) {
+            this.$message.warning('此优惠券为全部类别，必须选择一个优惠券的标签！')
             this.$scrollTo('#coupon-tags')
             return
           }
@@ -1234,7 +1243,9 @@ export default {
         }
         this.formData.category = null
       } else {
-        this.formData.rules.scenario.type = 1
+        if (this.formData.rules.scenario.type === 2) {
+          this.formData.rules.scenario.type = 1
+        }
         this.formData.category = id
         this.formData.rules.scenario.categories = []
       }
@@ -1247,7 +1258,9 @@ export default {
         this.selectCategoryId = '0'
         this.formData.category = null
       } else {
-        this.formData.category = this.originalCategory
+        if (this.originalCategory !== null) {
+          this.formData.category = this.originalCategory
+        }
       }
     }
   }
