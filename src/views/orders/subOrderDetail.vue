@@ -4,7 +4,7 @@
       :sku-list="[orderData]"
     />
     <order-info
-      :status="orderData.status"
+      :status="orderData.mainStatus"
       :trade-no="orderData.tradeNo"
       :merchant-id="orderData.merchantId"
       :created-at="orderData.createdAt"
@@ -75,6 +75,8 @@ export default {
         const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
         if (data.result.list.length > 0) {
           this.orderData = data.result.list[0]
+          this.orderData.mainStatus = this.orderData.status
+          this.orderData.status = this.orderData.subStatus
         }
       } catch (e) {
         console.warn('Get order detail error:' + e)
