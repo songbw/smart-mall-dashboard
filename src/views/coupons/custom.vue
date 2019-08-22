@@ -578,7 +578,7 @@ export default {
         description: '',
         rules: {
           code: '',
-          perLimited: 0,
+          perLimited: 1,
           scopes: [],
           couponRules: {
             type: 0,
