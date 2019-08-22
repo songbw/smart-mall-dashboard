@@ -169,7 +169,7 @@
             :view-only="noEditPermission"
             path-name="categories"
             image-width="200px"
-            tip="请选择对应的类别图标文件，类型位JPEG或PNG"
+            tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
             @success="handleUploadImageSuccess"
           />
         </el-form-item>

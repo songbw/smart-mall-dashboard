@@ -326,6 +326,17 @@
           </el-form-item>
         </div>
       </el-form-item>
+      <el-form-item label="适用会员">
+        <span v-if="viewOnly">{{ formData.rules.customer.type | couponCustomerFilter }}</span>
+        <el-select v-else v-model="formData.rules.customer.type">
+          <el-option
+            v-for="item in customerOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="领取方式">
         <span v-if="viewOnly">{{ formData.rules.collect.type | couponCollectFilter }}</span>
         <el-select v-else v-model="formData.rules.collect.type">
@@ -495,7 +506,13 @@ import ImageUpload from '@/components/ImageUpload'
 import { createCouponApi, getCouponByIdApi, getCouponTagsApi, updateCouponApi } from '@/api/coupons'
 import { getVendorListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
-import { CouponAppScopes, CouponCollectOptions, CouponScenarioOptions, CouponTypeOptions } from './constants'
+import {
+  CouponAppScopes,
+  CouponCollectOptions,
+  CouponScenarioOptions,
+  CouponTypeOptions,
+  CustomerTypeOptions
+} from './constants'
 
 export default {
   name: 'CustomCoupon',
@@ -512,6 +529,10 @@ export default {
     couponScenarioFilter: type => {
       const item = CouponScenarioOptions.find(coupon => coupon.value === type)
       return item ? item.label : ''
+    },
+    couponCustomerFilter: type => {
+      const item = CustomerTypeOptions.find(customer => customer.value === type)
+      return item ? item.label : ''
     }
   },
   data() {
@@ -519,6 +540,7 @@ export default {
       appScopes: CouponAppScopes,
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
+      customerOptions: CustomerTypeOptions,
       selectVendorId: null,
       vendorLoading: false,
       vendorOptions: [],
@@ -575,6 +597,9 @@ export default {
           collect: {
             type: 1,
             points: 0
+          },
+          customer: {
+            type: 0
           },
           scenario: {
             type: 1,
@@ -923,6 +948,7 @@ export default {
         this.formData.rules.couponRules.cashCoupon.amount =
           this.couponData.rules.couponRules.cashCoupon.amount
       }
+      this.formData.rules.customer.type = this.couponData.rules.customer.type
       this.formData.rules.collect.type = this.couponData.rules.collect.type
       this.formData.rules.collect.points = this.couponData.rules.collect.points
       this.formData.rules.scenario.type = this.couponData.rules.scenario.type

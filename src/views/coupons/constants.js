@@ -85,3 +85,11 @@ export const UsageStatusOptions = [{
   value: 4,
   label: '已失效'
 }]
+
+export const CustomerTypeOptions = [{
+  value: 0,
+  label: '全部会员'
+}, {
+  value: 1,
+  label: '新人会员'
+}]

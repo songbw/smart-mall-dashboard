@@ -112,7 +112,7 @@
             :view-only="noEditPermission"
             path-name="brands"
             image-width="150px"
-            tip="请选择对应的类别文件，类型位JPG或PNG"
+            tip="请选择对应的类别文件，文件格式为JPG或PNG"
             @success="handleUploadImageSuccess"
           />
         </el-form-item>

@@ -26,6 +26,15 @@
         <el-color-picker v-model="headerColor" />
         <el-tag>{{ headerColor }}</el-tag>
       </el-form-item>
+      <el-form-item v-if="homePage" label="新人礼包图">
+        <image-upload
+          :image-url="novicePackUrl"
+          path-name="aggregations"
+          image-width="150px"
+          tip="可选项，新人礼包宣传背景图，文件格式为JPG或PNG"
+          @success="handleUploadImageSuccess"
+        />
+      </el-form-item>
       <el-form-item label="聚合页组">
         <span>{{ groupName }}</span>
         <el-button
@@ -66,9 +75,8 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
-import {
-  searchAggregationsApi
-} from '@/api/aggregations'
+import { searchAggregationsApi } from '@/api/aggregations'
+import ImageUpload from '@/components/ImageUpload'
 
 import {
   aggregation_on_sale_status
@@ -76,6 +84,7 @@ import {
 
 export default {
   name: 'CreationForm',
+  components: { ImageUpload },
   data() {
     return {
       creatingPage: false,
@@ -160,7 +169,8 @@ export default {
       set(newValue) {
         const header = {
           showSearchBar: this.showSearchBar,
-          backgroundColor: newValue
+          backgroundColor: newValue,
+          novicePackUrl: this.novicePackUrl
         }
         const headerStr = JSON.stringify(header)
         this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
@@ -183,7 +193,32 @@ export default {
       set(newValue) {
         const header = {
           showSearchBar: newValue,
-          backgroundColor: this.headerColor
+          backgroundColor: this.headerColor,
+          novicePackUrl: this.novicePackUrl
+        }
+        const headerStr = JSON.stringify(header)
+        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
+        this.pageForm.header = headerStr
+      }
+    },
+    novicePackUrl: {
+      get() {
+        if (isEmpty(this.pageInfo.header)) {
+          return null
+        } else {
+          const header = JSON.parse(this.pageInfo.header)
+          if ('novicePackUrl' in header) {
+            return header.novicePackUrl
+          } else {
+            return null
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          showSearchBar: this.showSearchBar,
+          backgroundColor: this.headerColor,
+          novicePackUrl: newValue
         }
         const headerStr = JSON.stringify(header)
         this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
@@ -342,6 +377,9 @@ export default {
       this.pageForm.groupId = Number.parseInt(this.groupSelectId)
       this.$store.commit('aggregations/SET_CURRENT_DATA', { groupId: this.pageForm.groupId })
       this.groupSelectId = null
+    },
+    handleUploadImageSuccess(url) {
+      this.novicePackUrl = url
     }
   }
 }
