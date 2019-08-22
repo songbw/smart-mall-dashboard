@@ -384,6 +384,7 @@ import {
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
+import { product_state_is_editing } from '../../utils/constants'
 
 export default {
   name: 'Product',
@@ -677,8 +678,9 @@ export default {
       }
     },
     isProductCouldDelete(product) {
-      // MerchantId equals 2 means product is Aoyi, not allow delete
-      return product.merchantId !== 2 && !this.isProductOnSale(product.state)
+      // Only in editing state could delete
+      const value = Number.parseInt(product.state)
+      return Number.isNaN(value) ? false : value === product_state_is_editing
     },
     handleFilter() {
       if (this.firstCategoryValue != null) {
