@@ -751,10 +751,21 @@ export default {
       this.uploading = false
       this.productForm.image = this.$store.getters.cosUrl + res.data.url
     },
+    sortByFileName(fileList) {
+      return sortBy(fileList, [file => {
+        const regex = /\d+/g
+        const found = regex.exec(file.name)
+        if (found) {
+          return Number.parseInt(found[0])
+        } else {
+          return 0
+        }
+      }])
+    },
     handleUploadThumbnailSuccess(res, file, fileList) {
       const sucList = fileList.filter(item => item.status === 'success')
       if (sucList.length === fileList.length) {
-        const sortList = sortBy(sucList, ['name'])
+        const sortList = this.sortByFileName(sucList)
         for (const item of sortList) {
           const url = item.response.data.url
           if (!this.thumbnails.includes(url)) {
@@ -781,7 +792,7 @@ export default {
       if (fileList.length > 1) {
         const sucList = fileList.filter(item => item.status === 'success')
         if (sucList.length === fileList.length) {
-          const sortList = sortBy(sucList, ['name'])
+          const sortList = this.sortByFileName(sucList)
           for (const item of sortList) {
             const url = item.response.data.url
             if (!this.introductions.includes(url)) {
