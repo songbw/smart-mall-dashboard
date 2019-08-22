@@ -458,7 +458,8 @@ export default {
           const id = response.data.id
           this.handleViewUsageCoupon(id)
         } else {
-          this.$message.error('核销优惠券码失败！')
+          const msg = response.msg || '核销优惠券码失败'
+          this.$message.error(msg + '，请仔细核查券码！')
         }
       } catch (e) {
         console.warn('Consume coupon user code: ' + e)

@@ -130,11 +130,15 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await deleteCouponTagApi({ id: row.id })
-        if (this.couponTags.length === 1 && this.queryOffset > 1) {
-          this.queryOffset = this.queryOffset - 1
+        const { code } = await deleteCouponTagApi({ id: row.id })
+        if (code === 200) {
+          if (this.couponTags.length === 1 && this.queryOffset > 1) {
+            this.queryOffset = this.queryOffset - 1
+          }
+          this.getCouponTags()
+        } else {
+          this.$message.warning('标签删除失败，请先删除此标签下优惠券！')
         }
-        this.getCouponTags()
       } catch (e) {
         console.warn('CouponTag: delete ' + e)
       }
