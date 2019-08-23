@@ -18,6 +18,7 @@
               <el-switch v-model="titleHasPromotionActivity" />
               <el-button
                 v-if="titleHasPromotionActivity"
+                :disabled="titlePromotionDailySchedule"
                 type="primary"
                 size="small"
                 @click="dialogPromotionVisible = true"

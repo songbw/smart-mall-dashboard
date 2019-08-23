@@ -89,12 +89,11 @@
 <script>
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
-import { searchPromotionsApi } from '@/api/promotions'
+import { searchPromotionsApi, getPublishedPromotionsApi } from '@/api/promotions'
 import {
   PromotionStatusDefinition,
   PromotionPublishedDefinition
 } from '@/utils/constants'
-import { getPublishedPromotionsApi } from '../../../api/promotions'
 
 export default {
   name: 'PromotionSelection',
@@ -158,6 +157,7 @@ export default {
       const params = {}
       params.offset = this.query.offset
       params.limit = this.query.limit
+      params.dailySchedule = false
       if (this.query.name && this.query.name.trim()) {
         params.name = this.query.name.trim()
       }
@@ -183,7 +183,9 @@ export default {
         })
       } else {
         this.listLoading = true
-        getPublishedPromotionsApi({ pageNo: params.offset, pageSize: params.limit }).then((res) => {
+        getPublishedPromotionsApi({
+          pageNo: params.offset, pageSize: params.limit, dailySchedule: false
+        }).then((res) => {
           if (res.code === 200) {
             this.promotionsData = res.data.result.list
             this.total = res.data.result.pageInfo.totalCount

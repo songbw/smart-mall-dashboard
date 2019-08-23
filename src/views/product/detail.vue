@@ -682,12 +682,12 @@ export default {
         if (!this.isAdminUser) {
           params.merchantId = this.vendorId
         }
-        const { code } = await createProductApi(params)
-        if (code === 200) {
+        const res = await createProductApi(params)
+        if (res.code === 200) {
           this.$message({ message: '创建产品信息成功。', type: 'success' })
           this.goBack()
         } else {
-          this.$message.error('创建商品信息失败，请联系管理员！')
+          this.$message.error(res.msg || '创建商品信息失败，请联系管理员！')
         }
       } catch (e) {
         console.warn('Create product error: ' + e)
