@@ -160,6 +160,14 @@ const mutations = {
       template.data.list[params.index].intro = params.intro
     }
   },
+  SET_COUPON_LIST: (state, params) => {
+    const template = state.aggregation.content[state.contentIndex]
+    const len = template.data.list.length
+    template.data.list.splice(0, len)
+    params.forEach(item => {
+      template.data.list.push({ ...item })
+    })
+  },
   SET_GROUP_LIST: (state, list) => {
     state.groups = list
   },

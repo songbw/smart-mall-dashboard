@@ -46,10 +46,9 @@
       </el-form>
     </div>
     <div v-if="displayName" style="margin-left: 10px">
-      <el-button type="text" @click="dialogPreviewVisible = true">{{ displayName }}</el-button>
+      <el-button type="text" @click="onPreviewShown">{{ displayName }}</el-button>
     </div>
     <preview-dialog
-      v-if="qrCodeValue"
       :qr-code="qrCodeValue"
       :dialog-visible="dialogPreviewVisible"
       @closed="dialogPreviewVisible = false"
@@ -227,15 +226,15 @@ export default {
               return process.env.VUE_APP_MALL_URL + '/category/goods/promotion/' + id
             }
              */
-            return null
+            return ''
           case 'category':
             return process.env.VUE_APP_MALL_URL + '/category/all'
           case 'coupon':
             return process.env.VUE_APP_MALL_URL + '/user/couponCenter'
           default:
-            return null
+            return ''
         }
-        return null
+        return ''
       }
     }
   },
@@ -291,6 +290,11 @@ export default {
     },
     onGoodsSelectionCancelled() {
       this.dialogSelectionVisible = false
+    },
+    onPreviewShown() {
+      if (this.qrCodeValue) {
+        this.dialogPreviewVisible = true
+      }
     }
   }
 }

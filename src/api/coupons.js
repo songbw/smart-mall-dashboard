@@ -102,3 +102,11 @@ export function consumeCouponApi(params) {
     data: { ...params }
   })
 }
+
+export function getPublishedCouponsApi(params) {
+  return Vue.axios('coupons')({
+    url: '/equities/adminCoupon/release',
+    method: 'get',
+    params
+  })
+}

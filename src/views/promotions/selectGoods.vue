@@ -164,8 +164,8 @@
                 size="mini"
                 :min="0"
                 :max="Number.parseInt(scope.row.price)"
-                @input="value => handleSetSecKillPrice(value, scope.row)"
                 step-strictly
+                @input="value => handleSetSecKillPrice(value, scope.row)"
               />
               <el-button
                 icon="el-icon-close"

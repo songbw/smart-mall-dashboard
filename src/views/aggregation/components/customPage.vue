@@ -99,6 +99,9 @@
               <custom-hot-zone
                 v-if="currentTemplateIndex === index && pageTemplate.type === hotZoneType"
               />
+              <custom-coupon
+                v-if="currentTemplateIndex === index && pageTemplate.type === couponType"
+              />
             </div>
           </el-main>
         </el-container>
@@ -122,26 +125,29 @@ import CustomGrid from './customGrid'
 import CustomPromotion from './customPromotion'
 import CustomGoods from './customGoods'
 import CustomHotZone from './customHotZone'
+import CustomCoupon from './customCoupon'
 import {
   bannerType,
   serviceType,
   gridType,
   promotionType,
   goodsType,
-  hotZoneType
+  hotZoneType,
+  couponType
 } from './templateType'
 
 const bannerImage = require('@/assets/images/banner.png')
 const serviceImage = require('@/assets/images/icon-grid.png')
 const goodsImage = require('@/assets/images/goods.png')
 const gridImage = require('@/assets/images/grid.png')
-const couponImage = require('@/assets/images/coupon.png')
+const promotionImage = require('@/assets/images/promotion.png')
 const hotZoneImage = require('@/assets/images/image.png')
+const couponImage = require('@/assets/images/coupon.png')
 
 export default {
   name: 'CustomPage',
   components: {
-    CustomBanner, CustomService, CustomGrid, CustomPromotion, CustomGoods, CustomHotZone
+    CustomBanner, CustomService, CustomGrid, CustomPromotion, CustomGoods, CustomHotZone, CustomCoupon
   },
   data() {
     return {
@@ -152,6 +158,7 @@ export default {
       promotionType: promotionType,
       goodsType: goodsType,
       hotZoneType: hotZoneType,
+      couponType: couponType,
       options: [
         {
           type: bannerType,
@@ -175,7 +182,7 @@ export default {
           type: promotionType,
           name: '促销活动',
           tipTitle: '促销活动服务模块功能说明',
-          image: couponImage
+          image: promotionImage
         },
         {
           type: goodsType,
@@ -186,8 +193,14 @@ export default {
         {
           type: hotZoneType,
           name: '图片热区',
-          tipTitle: '服务模块功能说明',
+          tipTitle: '图片热区模块功能说明',
           image: hotZoneImage
+        },
+        {
+          type: couponType,
+          name: '优惠券活动',
+          tipTitle: '优惠券活动模块功能说明',
+          image: couponImage
         }
       ],
       currentTemplateTipTitle: ''
@@ -341,6 +354,7 @@ export default {
               promotionActivityEndDate: '',
               hasImage: false,
               imageUrl: '',
+              targetType: '',
               targetUrl: '',
               targetName: ''
             },
@@ -351,6 +365,18 @@ export default {
           template.data.settings = {
             imageUrl: '',
             imageKey: ''
+          }
+          break
+        case couponType:
+          template.data.settings = {
+            title: {
+              show: false,
+              imageUrl: '',
+              targetType: '',
+              targetUrl: '',
+              targetName: ''
+            },
+            marginBottom: '0'
           }
           break
       }

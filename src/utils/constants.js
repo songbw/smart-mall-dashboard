@@ -137,3 +137,35 @@ export const PromotionPublishedDefinition = [{
   value: promotion_status_on_sale,
   label: '进行中'
 }]
+
+export const coupon_status_init = 1
+export const coupon_status_published = 2
+export const coupon_status_ready_for_sale = 3
+export const coupon_status_on_sale = 4
+export const coupon_status_off_shelves = 5
+export const coupon_status_distributing = 6
+
+export const CouponStatusDefinition = [{
+  value: coupon_status_init,
+  label: '编辑中'
+}, {
+  value: coupon_status_ready_for_sale,
+  label: '未开始'
+}, {
+  value: coupon_status_on_sale,
+  label: '进行中'
+}, {
+  value: coupon_status_off_shelves,
+  label: '已下线'
+}, {
+  value: coupon_status_distributing,
+  label: '待分配'
+}]
+
+export const CouponPublishedDefinition = [{
+  value: coupon_status_ready_for_sale,
+  label: '未开始'
+}, {
+  value: coupon_status_on_sale,
+  label: '进行中'
+}]

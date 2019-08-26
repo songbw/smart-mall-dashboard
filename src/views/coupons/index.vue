@@ -62,8 +62,6 @@
       :data="couponData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%;"
     >
       <el-table-column label="编号" align="center" width="50">
@@ -182,7 +180,7 @@ import {
   coupon_status_on_sale,
   coupon_status_off_shelves,
   CouponStatusDefinition
-} from './constants'
+} from '@/utils/constants'
 import {
   getCouponsApi,
   searchCouponsApi,
@@ -395,8 +393,7 @@ export default {
         await this.$confirm('下线此优惠券将导致活动停止，请确认是否要继续？', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning',
-          center: true
+          type: 'warning'
         })
         await updateCouponApi({ id, status: coupon_status_off_shelves })
         this.getCouponData()
@@ -409,8 +406,7 @@ export default {
         await this.$confirm('删除此优惠券将不会再恢复，请确认是否要继续？', '警告', {
           confirmButtonText: '删除',
           cancelButtonText: '取消',
-          type: 'warning',
-          center: true
+          type: 'warning'
         })
         await deleteCouponApi({ id })
         if (this.couponData.length === 1 && this.queryOffset > 1) {

@@ -35,6 +35,7 @@
       style="width: 100%"
       height="250"
       highlight-current-row
+      border
       @current-change="handleDialogSelectionChange"
     >
       <el-table-column label="已选" align="center" width="100px">

@@ -662,6 +662,8 @@ export default {
           } else {
             this.handleUpdateProduct()
           }
+        } else {
+          this.$message.warning('商品信息不完整，请仔细检查！')
         }
       })
     },
