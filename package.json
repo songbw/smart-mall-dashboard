@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vue-cli-service serve",
     "build": "vue-cli-service build --modern",
+    "build:gat-sn": "vue-cli-service build --mode gat-sn --modern",
     "preview": "serve -n -d ./dist",
     "lint": "eslint --ext .js,.vue src",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml"
