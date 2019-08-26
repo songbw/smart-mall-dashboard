@@ -96,7 +96,7 @@
     <vendor-detail
       :dialog-visible="detailVisible"
       :company="currentVendor.company"
-      :users="currentVendor.users"
+      :users="currentVendor.users || []"
       @onConfirmed="detailVisible = false"
     />
     <el-dialog :visible.sync="vendorDialogVisible" title="创建商户">
