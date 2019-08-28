@@ -1,7 +1,7 @@
 <template>
   <el-container>
     <el-header style="text-align: center">
-      <h1>欢迎来到凤巢信息科技商城管理平台</h1>
+      <h1>欢迎来到{{ title }}</h1>
     </el-header>
     <el-main>
       <el-card style="width: 480px;margin: 0 auto" :body-style="{padding: '40px'}">
@@ -56,6 +56,10 @@
         </el-form>
       </el-card>
     </el-main>
+    <el-footer style="font-size: 12px;text-align: center">
+      <svg-icon icon-class="copyright" />
+      <span>2018-2019 深圳凤巢信息科技有限公司</span>
+    </el-footer>
   </el-container>
 </template>
 
@@ -91,6 +95,7 @@ export default {
       }
     }
     return {
+      title: process.env.VUE_APP_NAME,
       loading: false,
       loginForm: {
         username: '',
