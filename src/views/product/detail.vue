@@ -121,7 +121,14 @@
       </el-form-item>
       <el-form-item v-if="isAdminUser" label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
-        <el-input-number v-else v-model="productForm.price" :precision="2" :step="1" :min="0" :max="1000000" />
+        <el-input-number
+          v-else
+          v-model="productForm.price"
+          :precision="2"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
       </el-form-item>
       <el-form-item v-if="isAdminUser" label="销售底价(元)">
         <span style="margin-right: 10px"> {{ floorPrice }}</span>
@@ -359,8 +366,8 @@ export default {
         weight: null,
         upc: null,
         saleunit: null,
-        price: null,
-        sprice: null,
+        price: 0,
+        sprice: 0,
         inventory: null, // Number
         mpu: null,
         createdAt: null,

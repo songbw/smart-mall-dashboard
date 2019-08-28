@@ -6,7 +6,12 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-const name = defaultSettings.title || 'Smart Mall Dashboard' // page title
+process.env.VUE_APP_VERSION = require('./package.json').version
+
+const nameGatSn = process.env.APP_HOST === 'GAT-SN' ? defaultSettings.titleGatSn : ''
+const nameGatZy = process.env.APP_HOST === 'GAT-ZY' ? defaultSettings.titleGatZy : ''
+const name = nameGatSn || nameGatZy || defaultSettings.title || 'Smart Mall Dashboard' // page title
+process.env.VUE_APP_NAME = name
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {

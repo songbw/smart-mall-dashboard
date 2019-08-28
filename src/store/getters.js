@@ -12,6 +12,8 @@ const getters = {
   userPhone: state => state.user.phone,
   userRole: state => state.user.role,
   isAdminUser: state => role_admin_name === state.user.role,
+  vendorLoading: state => state.user.role === '' ||
+    (role_admin_name !== state.user.role && state.vendor.profile.id === -2),
   vendorProfile: state => state.vendor.profile,
   vendorApproved: state => {
     return role_admin_name === state.user.role ||

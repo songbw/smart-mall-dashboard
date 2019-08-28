@@ -25,7 +25,7 @@ export default {
   },
   data() {
     return {
-      title: title
+      title: process.env.VUE_APP_NAME
     }
   }
 }

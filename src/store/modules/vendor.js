@@ -7,7 +7,7 @@ import {
 
 const state = {
   profile: {
-    id: -1,
+    id: -2, // not fetched is -2, failed is -1
     name: '',
     address: '',
     industry: '', // 'FINANCE;GAME;TRAFFIC;LIFE;E_BUSINESS;SOCIAL;CATERERS;CAR;RECRUIT;OTHER'

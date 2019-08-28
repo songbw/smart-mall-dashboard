@@ -3,7 +3,7 @@
     <sidebar class="sidebar-container" />
     <div class="main-container">
       <nav-bar />
-      <div v-if="!vendorApproved">
+      <div v-if="!vendorLoading && !vendorApproved">
         <el-alert
           title="企业未审核通过"
           type="error"
@@ -33,6 +33,7 @@ export default {
   computed: {
     ...mapGetters([
       'appReady',
+      'vendorLoading',
       'vendorApproved'
     ]),
     sidebar() {
