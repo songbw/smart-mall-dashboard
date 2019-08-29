@@ -88,7 +88,7 @@
             导入商品
           </el-button>
           <el-button type="primary" @click="dialogSelectionVisible = true">
-            选择商品
+            添加商品
           </el-button>
         </div>
         <div v-if="!promotionData.dailySchedule" class="header-ops-container">

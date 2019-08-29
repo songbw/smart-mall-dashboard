@@ -8,7 +8,7 @@
           :disabled="viewOnly"
           @click="dialogSelectionVisible = true"
         >
-          选择商品
+          添加商品
         </el-button>
         <el-button
           size="mini"

@@ -41,7 +41,7 @@
       <div class="header-container">
         <div class="header-ops-container">
           <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
-            选择商品
+            添加商品
           </el-button>
           <el-button size="mini" type="info" @click="dialogImportVisible = true">
             导入商品

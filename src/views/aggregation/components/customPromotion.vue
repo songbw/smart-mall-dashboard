@@ -128,7 +128,7 @@
           size="mini"
           @click="dialogSelectionVisible = true"
         >
-          选择商品
+          添加商品
         </el-button>
       </div>
       <div class="header-ops-container">
@@ -635,9 +635,15 @@ export default {
       this.editGoodName = ''
       this.editIntro = ''
     },
+    addPromotionSkus(skus) {
+      const filteredSkus = skus.filter(sku => this.skuData.findIndex(item => item.mpu === sku.mpu) < 0)
+      if (filteredSkus.length > 0) {
+        this.$store.commit('aggregations/SET_PROMOTION_LIST', this.skuData.concat(filteredSkus))
+      }
+    },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
-      this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
+      this.addPromotionSkus(skus)
     },
     onGoodsSelectionCancelled() {
       this.dialogSelectionVisible = false
@@ -658,7 +664,7 @@ export default {
     },
     onGoodsImportConfirmed(skus) {
       this.dialogImportVisible = false
-      this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
+      this.addPromotionSkus(skus)
     },
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
