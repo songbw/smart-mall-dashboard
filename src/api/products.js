@@ -53,3 +53,12 @@ export function getProductsByIdList(params) {
     params
   })
 }
+
+export function exportProductsApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/export',
+    method: 'get',
+    responseType: 'arraybuffer',
+    params
+  })
+}

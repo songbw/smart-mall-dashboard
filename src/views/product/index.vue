@@ -90,6 +90,7 @@
         </div>
         <div>
           <el-button
+            v-if="false"
             :disabled="productSelection.length === 0"
             :loading="productExporting"
             type="info"
@@ -99,7 +100,6 @@
             导出已选{{ productSelection.length }}个商品
           </el-button>
           <el-button
-            :disabled="productsTotal === 0"
             :loading="productExporting"
             type="warning"
             icon="el-icon-download"
@@ -273,22 +273,6 @@
       :limit.sync="listLimit"
       @pagination="getListData"
     />
-    <el-dialog
-      title="导出商品"
-      :visible.sync="exportDialogVisible"
-      :show-close="false"
-      :close-on-press-escape="false"
-      :close-on-click-modal="false"
-      width="200px"
-      center
-    >
-      <div>
-        <el-progress type="circle" :percentage="allExportProgress" />
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleCancelExportAll">取消</el-button>
-      </span>
-    </el-dialog>
     <goods-import-dialog
       :dialog-visible="dialogImportVisible"
       :product-creation="true"
@@ -366,12 +350,14 @@
 <script>
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
+import moment from 'moment'
 import {
   getProductListApi,
   updateProductApi,
   searchProductsApi,
   deleteProductApi,
-  createProductApi
+  createProductApi,
+  exportProductsApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
@@ -421,9 +407,6 @@ export default {
       listLoading: false,
       productExporting: false,
       productSelection: [],
-      exportDialogVisible: false,
-      allExportCancelled: false,
-      allExportProgress: 0,
       dialogImportVisible: false,
       editDialogVisible: false,
       brandLoading: false,
@@ -591,6 +574,9 @@ export default {
       if (this.vendorApproved) {
         const params = this.getFilterParams()
         if (params) {
+          params.offset = this.listOffset
+          params.limit = this.listLimit
+          params.order = 'desc'
           this.getFilterProducts(params)
         } else {
           this.getAllProducts()
@@ -623,9 +609,6 @@ export default {
     },
     getFilterParams() {
       const params = {}
-      params.offset = this.listOffset
-      params.limit = this.listLimit
-      params.order = 'desc'
       if (!isEmpty(this.listSkuId)) {
         params.skuid = this.listSkuId
       } else if (!isEmpty(this.listMpu)) {
@@ -723,21 +706,20 @@ export default {
       })
     },
     handleProductOnSale(index) {
-      const that = this
       this.$confirm('是否继续上架此商品？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
         try {
-          const id = that.productsData[index].id
+          const id = this.productsData[index].id
           const params = {
             id,
             state: product_state_on_sale
           }
           await updateProductApi(params)
-          that.$message({ message: '产品上架成功！', type: 'success' })
-          that.getListData()
+          this.$message({ message: '产品上架成功！', type: 'success' })
+          this.getListData()
         } catch (e) {
           console.warn(`Update product state error: ${e}`)
         }
@@ -877,42 +859,35 @@ export default {
     handleExportSelection() {
       this.exportToFile(this.productSelection)
     },
-    handleCancelExportAll() {
-      this.allExportCancelled = true
-      this.exportDialogVisible = false
-    },
-    async handleExportAllProducts() {
-      this.allExportProgress = 0
-      this.allExportCancelled = false
-      this.exportDialogVisible = true
-      const allProducts = []
-      const filterParams = this.getFilterParams()
-      const params = Object.assign({}, filterParams || {}, { offset: 1, limit: 100 })
 
-      let pageTotal = 0
-      let suc = true
-      let res = null
-      let data = null
-      do {
-        try {
-          res = await searchProductsApi(params)
-          data = res.data.result
-          data.list.forEach(item => allProducts.push({ skuid: item.skuid }))
-          pageTotal = data.pages
-          this.allExportProgress = parseInt(params.offset * 100 / pageTotal, 10)
-          params.offset = params.offset + 1
-        } catch (e) {
-          suc = false
-          console.warn('handleExportAllProducts:' + e)
-          break
+    async handleExportAllProducts() {
+      const params = this.getFilterParams()
+      try {
+        const filename = '商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
+        this.getListData()
+        const data = await exportProductsApi(params)
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Export all products:' + e)
+        const res = e.response
+        let msg = '导出商品列表失败，请联系管理员！'
+        if (res && res.status) {
+          if (res.status === 416) {
+            msg = '导出商品列表失败，商品数量过多，请修改导出选项！'
+          } else {
+            msg = '导出商品列表失败，未找到对应商品，请修改导出选项！'
+          }
         }
-      } while (params.offset <= pageTotal && !this.allExportCancelled)
-      if (suc && allProducts.length > 0 && !this.allExportCancelled) {
-        this.exportToFile(allProducts)
+        this.$message.warning(msg)
       }
-      this.allExportProgress = 0
-      this.allExportCancelled = false
-      this.exportDialogVisible = false
     },
     exportToFile(dataList) {
       this.productExporting = true
@@ -998,6 +973,7 @@ export default {
         default:
           break
       }
+      this.selectionForm.category = this.selectionForm.thirdCategoryValue
     },
     async remoteBrandOptions(query) {
       if (isEmpty(query)) {

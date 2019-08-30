@@ -505,7 +505,7 @@ import CouponUrl from './couponUrl'
 import ImageUpload from '@/components/ImageUpload'
 import { createCouponApi, getCouponByIdApi, getCouponTagsApi, updateCouponApi } from '@/api/coupons'
 import { getVendorListApi } from '@/api/vendor'
-import { vendor_status_approved } from '@/utils/constants'
+import { vendor_status_approved, coupon_status_distributing } from '@/utils/constants'
 import {
   CouponAppScopes,
   CouponCollectOptions,
@@ -1040,6 +1040,7 @@ export default {
       }
     },
     handleSetCategory(index, value) {
+      console.debug('index:' + index + ' value:' + value)
       if (value) {
         if (includes(this.formData.rules.scenario.categories, value)) {
           this.$message.warn('此类别已添加，请选择其它类别')
@@ -1079,17 +1080,7 @@ export default {
     reviseCouponStatus(data) {
       if ('rules' in data && 'collect' in data.rules && 'type' in data.rules.collect) {
         if (data.rules.collect.type === 4) { // 领取方式为人工分配，状态应为‘待分配’
-          data.status = 4
-        }
-      }
-      if ('status' in data && data.status !== 4 &&
-        'releaseStartDate' in data) {
-        const now = moment()
-        const startDate = moment(data.releaseStartDate)
-        if (startDate.isBefore(now)) {
-          data.status = 2
-        } else if (startDate.isAfter(now)) {
-          data.status = 1
+          data.status = coupon_status_distributing
         }
       }
     },

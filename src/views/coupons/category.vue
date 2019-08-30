@@ -47,12 +47,10 @@ export default {
   created() {
     if (this.categoryValue !== -1) {
       const firstValue = Number.parseInt(this.categoryValue.toString().substring(0, 2))
-      if (!Number.isNaN(firstValue)) {
-        this.handleFirstCategoryChanged(firstValue)
-        const secondValue = Number.parseInt(this.categoryValue.toString().substring(0, 4))
-        this.handleSecondCategoryChanged(secondValue)
-        this.thirdCategoryValue = this.categoryValue
-      }
+      this.firstCategoryValue = Number.isNaN(firstValue) ? null : firstValue
+      const secondValue = Number.parseInt(this.categoryValue.toString().substring(0, 4))
+      this.secondCategoryValue = Number.isNaN(secondValue) ? null : secondValue
+      this.thirdCategoryValue = this.categoryValue
     }
   },
   methods: {

@@ -113,7 +113,7 @@
       </el-form-item>
       <el-form-item label="商品条形码">
         <span v-if="viewProduct"> {{ productForm.upc }}</span>
-        <el-input v-else v-model="productForm.upc" maxlength="50" />
+        <el-input v-else v-model="productForm.upc" maxlength="30" />
       </el-form-item>
       <el-form-item label="销售单位">
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
@@ -206,7 +206,8 @@
               :action="uploadUrl"
               :data="uploadIntroductionData"
               :auto-upload="true"
-              :limit="30"
+              :limit="30 - introductions.length < 0 ? 0 : 30 - introductions.length"
+              :disabled="introductions.length >= 30"
               :show-file-list="true"
               :before-upload="handleBeforeUpload"
               :on-success="handleUploadIntroductionSuccess"
@@ -218,9 +219,10 @@
               name="file"
               multiple
             >
-              <el-button slot="trigger" type="primary" icon="el-icon-picture">
+              <el-button slot="trigger" :disabled="introductions.length >= 30" type="primary" icon="el-icon-picture">
                 选择描述图
               </el-button>
+              <div slot="tip" class="el-upload__tip">请选择商品的详情图，最多支持30个</div>
             </el-upload>
           </div>
           <div v-for="(img, index) in introductionUrls" :key="introductions[index]" style="padding: 14px">

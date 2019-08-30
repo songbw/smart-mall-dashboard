@@ -79,6 +79,7 @@ export default {
       },
       chartDataType: '30',
       chartSettings: {
+        limitShowNum: 6,
         dataType: 'KMB',
         labelMap: {
           date: '日期',

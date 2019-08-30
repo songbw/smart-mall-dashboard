@@ -155,17 +155,17 @@ export default {
             this.$router.push({ path: '/' })
           } catch (e) {
             console.warn('User Login:' + e)
-            let msg = '用户名或密码错误，请确认后重试！'
+            let msg = '系统服务有问题，请联系管理员！'
             const res = e.response
-            if (res.status > 400 && res.status < 500) {
+            if (res && res.status > 400 && res.status < 500) {
               if (res && res.data) {
                 const data = res.data
                 if (data.error === 400002) {
                   msg = '此用户名未注册，请确认后重试！'
+                } else {
+                  msg = '用户名或密码错误，请确认后重试！'
                 }
               }
-            } else if (res.status > 500) {
-              msg = '系统服务有问题，请联系管理员！'
             }
             this.$message.warning(msg)
           } finally {

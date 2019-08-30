@@ -316,10 +316,7 @@ export default {
       }
     },
     setPromotionStartDate() {
-      const date = this.parseDateFormat(this.startDate, this.startTime)
-      if (date) {
-        this.formData.startDate = date
-      }
+      this.formData.startDate = this.parseDateFormat(this.startDate, this.startTime)
     },
     onStartDateChanged(value) {
       this.startDate = value
@@ -331,10 +328,7 @@ export default {
       this.setPromotionStartDate()
     },
     setPromotionEndDate() {
-      const date = this.parseDateFormat(this.endDate, this.endTime)
-      if (date) {
-        this.formData.endDate = date
-      }
+      this.formData.endDate = this.parseDateFormat(this.endDate, this.endTime)
     },
     onEndDateChanged(value) {
       this.endDate = value
@@ -372,22 +366,26 @@ export default {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const dateFormat = 'YYYY-MM-DD'
       this.scheduleDate = date
+      if (date) {
+        const dateMoment = moment(date, dateFormat)
+        dateMoment.hour(0)
+        dateMoment.minute(0)
+        dateMoment.second(0)
+        this.startDate = date
+        this.startTime = '00:00:00'
+        this.formData.startDate = dateMoment.format(format)
 
-      const dateMoment = moment(date, dateFormat)
-      dateMoment.hour(0)
-      dateMoment.minute(0)
-      dateMoment.second(0)
-      this.startDate = date
-      this.startTime = '00:00:00'
-      this.formData.startDate = dateMoment.format(format)
-
-      dateMoment.add(1, 'days')
-      dateMoment.hour(23)
-      dateMoment.minute(59)
-      dateMoment.second(59)
-      this.endDate = dateMoment.format(dateFormat)
-      this.endTime = '23:59:59'
-      this.formData.endDate = dateMoment.format(format)
+        dateMoment.add(1, 'days')
+        dateMoment.hour(23)
+        dateMoment.minute(59)
+        dateMoment.second(59)
+        this.endDate = dateMoment.format(dateFormat)
+        this.endTime = '23:59:59'
+        this.formData.endDate = dateMoment.format(format)
+      } else {
+        this.formData.startDate = null
+        this.formData.endDate = null
+      }
     }
   }
 }

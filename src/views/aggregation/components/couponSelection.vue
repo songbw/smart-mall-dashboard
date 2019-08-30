@@ -5,7 +5,7 @@
     :close-on-press-escape="false"
     :show-close="false"
     append-to-body
-    title="选择促销活动"
+    title="选择优惠券活动"
     width="70%"
     center
   >

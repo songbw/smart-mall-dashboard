@@ -127,6 +127,7 @@ export default {
         orderAveragePrice: 0
       },
       chartPriceSettings: {
+        limitShowNum: 5,
         dataType: 'KMB',
         labelMap: {
           category: '类别',
