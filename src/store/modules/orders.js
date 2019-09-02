@@ -1,17 +1,20 @@
 import isString from 'lodash/isString'
 import trim from 'lodash/trim'
 
+const queryTemplate = {
+  pageIndex: 1,
+  pageSize: 20,
+  tradeNo: '',
+  subOrderId: '',
+  mobile: '',
+  payDateStart: null,
+  payDateEnd: null,
+  subStatus: -1,
+  merchantId: -1
+}
 const state = {
   search: {
-    pageIndex: 1,
-    pageSize: 20,
-    tradeNo: '',
-    subOrderId: '',
-    mobile: '',
-    payDateStart: null,
-    payDateEnd: null,
-    subStatus: -1,
-    merchantId: -1
+    ...queryTemplate
   }
 }
 
@@ -26,6 +29,9 @@ const mutations = {
         }
       }
     })
+  },
+  RESET_SEARCH_DATA: state => {
+    state.search = { ...queryTemplate }
   }
 }
 

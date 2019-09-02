@@ -274,6 +274,13 @@ export default {
   created() {
     this.getOrderList()
   },
+  beforeRouteLeave(to, from, next) {
+    const toGroup = to.meta.group || ''
+    if (toGroup !== this.$route.meta.group) {
+      this.$store.commit('orders/RESET_SEARCH_DATA')
+    }
+    next()
+  },
   methods: {
     async getVendorList() {
       try {

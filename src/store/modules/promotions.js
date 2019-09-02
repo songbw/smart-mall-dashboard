@@ -173,7 +173,7 @@ const actions = {
   },
   async deleteType({ commit, state }, params) {
     await deletePromotionTypeApi(params)
-    const list = state.promotionTypes.filter(type => type.id === params.promotionTypeId)
+    const list = state.promotionTypes.filter(type => type.id !== params.promotionTypeId)
     commit('SET_TYPE_LIST', list)
   },
   async addScheduleTime({ commit }, params) {

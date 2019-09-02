@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="优惠券名称" class="form-item">
+      <el-form-item label="优惠券名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
-      <el-form-item label="优惠券状态" class="form-item">
+      <el-form-item label="优惠券状态">
         <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
@@ -16,7 +16,7 @@
       </el-form-item>
     </el-form>
     <el-form :inline="true" :model="queryData">
-      <el-form-item label="开始时间" class="form-item">
+      <el-form-item label="开始时间">
         <el-date-picker
           v-model="queryStartDate"
           type="date"
@@ -24,7 +24,7 @@
           placeholder="选择开始日期"
         />
       </el-form-item>
-      <el-form-item label="结束时间" class="form-item">
+      <el-form-item label="结束时间">
         <el-date-picker
           v-model="queryEndDate"
           type="date"
@@ -466,10 +466,6 @@ export default {
 </script>
 
 <style scoped>
-  .form-item {
-    width: 300px;
-  }
-
   .ops-button-group {
     margin: 10px 0;
   }

@@ -65,6 +65,8 @@ import {
   getMerchantUserDataApi
 } from '@/api/statistics'
 
+const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value).toFixed(2)
+
 export default {
   name: 'VendorDashboard',
   data() {
@@ -122,10 +124,10 @@ export default {
       try {
         this.summaryLoading = true
         const { data } = await getMerchantSumDataApi({ merchantId: this.merchantId })
-        this.summary.orderPaymentAmount = data.orderAmount
-        this.summary.orderTotalNum = data.orderCount
-        this.summary.orderCustomerTotalNum = data.orderUserCount
-        this.summary.returnOrderTotalNum = data.refundUserCount
+        this.summary.orderPaymentAmount = convertToNumber(data.orderAmount)
+        this.summary.orderTotalNum = convertToNumber(data.orderCount)
+        this.summary.orderCustomerTotalNum = convertToNumber(data.orderUserCount)
+        this.summary.returnOrderTotalNum = convertToNumber(data.refundUserCount)
       } catch (e) {
         console.warn('Dashboard get summary error:' + e)
       } finally {
@@ -153,7 +155,10 @@ export default {
         const { data } = await getMerchantOrderDataApi(params)
         if (Array.isArray(data)) {
           this.chartOrdersData.rows = data.map(item => {
-            return { cityName: item.cityName, orderAmount: item.orderAmount }
+            return {
+              cityName: item.cityName,
+              orderAmount: convertToNumber(item.orderAmount)
+            }
           })
         }
       } catch (e) {

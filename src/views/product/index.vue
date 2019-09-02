@@ -533,6 +533,13 @@ export default {
   created() {
     this.prepareList()
   },
+  beforeRouteLeave(to, from, next) {
+    const toGroup = to.meta.group || ''
+    if (toGroup !== this.$route.meta.group) {
+      this.$store.commit('products/RESET_SEARCH_DATA')
+    }
+    next()
+  },
   methods: {
     async prepareList() {
       await this.getVendorList()
@@ -611,26 +618,27 @@ export default {
       const params = {}
       if (!isEmpty(this.listSkuId)) {
         params.skuid = this.listSkuId
-      } else if (!isEmpty(this.listMpu)) {
-        params.mpu = this.listMpu
-      } else {
-        if (!isEmpty(this.listQuery)) {
-          params.query = this.listQuery
-        }
-        if (!isEmpty(this.listBrand)) {
-          params.brand = this.listBrand
-        }
-        if (this.isAdminUser) {
-          if (this.listVendor > 0) {
-            params.merchantId = this.listVendor
-          }
-        } else {
-          params.merchantId = this.vendorId
-        }
-        if (Number.isInteger(this.thirdCategoryValue)) {
-          params.categoryID = this.thirdCategoryValue
-        }
       }
+      if (!isEmpty(this.listMpu)) {
+        params.mpu = this.listMpu
+      }
+      if (!isEmpty(this.listQuery)) {
+        params.query = this.listQuery
+      }
+      if (!isEmpty(this.listBrand)) {
+        params.brand = this.listBrand
+      }
+      if (this.isAdminUser) {
+        if (this.listVendor > 0) {
+          params.merchantId = this.listVendor
+        }
+      } else {
+        params.merchantId = this.vendorId
+      }
+      if (Number.isInteger(this.thirdCategoryValue)) {
+        params.categoryID = this.thirdCategoryValue
+      }
+
       if (this.listState !== -2) {
         params.state = this.listState
       }

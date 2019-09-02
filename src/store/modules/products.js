@@ -1,19 +1,22 @@
 import isString from 'lodash/isString'
 import trim from 'lodash/trim'
 
+const queryTemplate = {
+  offset: 1,
+  limit: 20,
+  query: '',
+  skuid: '',
+  brand: '',
+  mpu: '',
+  state: -2,
+  vendorId: -1,
+  firstCategoryId: null,
+  secondCategoryId: null,
+  thirdCategoryId: null
+}
 const state = {
   search: {
-    offset: 1,
-    limit: 20,
-    query: '',
-    skuid: '',
-    brand: '',
-    mpu: '',
-    state: -2,
-    vendorId: -1,
-    firstCategoryId: null,
-    secondCategoryId: null,
-    thirdCategoryId: null
+    ...queryTemplate
   },
   vendors: []
 }
@@ -29,6 +32,9 @@ const mutations = {
         }
       }
     })
+  },
+  RESET_SEARCH_DATA: state => {
+    state.search = { ...queryTemplate }
   },
   SET_FIRST_CATEGORY_ID: (state, params) => {
     state.search.firstCategoryId = params.firstCategoryId

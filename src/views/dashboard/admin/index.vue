@@ -98,6 +98,7 @@
 
 <script>
 import sortBy from 'lodash/sortBy'
+import isNumber from 'lodash/isNumber'
 import moment from 'moment'
 import {
   getCategoryDataApi,
@@ -106,6 +107,8 @@ import {
   getPromotionDataApi,
   getSummaryDataApi
 } from '@/api/statistics'
+
+const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value).toFixed(2)
 
 export default {
   name: 'AdminDashboard',
@@ -128,7 +131,7 @@ export default {
       },
       chartPriceSettings: {
         limitShowNum: 5,
-        dataType: 'KMB',
+        dataType: 'normal',
         labelMap: {
           category: '类别',
           merchant: '商户',
@@ -193,13 +196,13 @@ export default {
       try {
         this.summaryLoading = true
         const { data } = await getSummaryDataApi()
-        this.summary.orderPaymentAmount = data.orderAmount
-        this.summary.orderTotalNum = data.orderCount
-        this.summary.customerTotalNum = data.userCount
-        this.summary.orderCustomerTotalNum = data.orderUserCount
-        this.summary.returnOrderTotalNum = data.refundOrderCount
-        this.summary.perCustomerTransaction = data.perCustomerPrice
-        this.summary.orderAveragePrice = data.avgOrderPrice
+        this.summary.orderPaymentAmount = convertToNumber(data.orderAmount)
+        this.summary.orderTotalNum = convertToNumber(data.orderCount)
+        this.summary.customerTotalNum = convertToNumber(data.userCount)
+        this.summary.orderCustomerTotalNum = convertToNumber(data.orderUserCount)
+        this.summary.returnOrderTotalNum = convertToNumber(data.refundOrderCount)
+        this.summary.perCustomerTransaction = convertToNumber(data.perCustomerPrice)
+        this.summary.orderAveragePrice = convertToNumber(data.avgOrderPrice)
       } catch (e) {
         console.warn('Dashboard get summary error:' + e)
       } finally {
@@ -229,7 +232,7 @@ export default {
             .map(item => {
               return {
                 category: item.categoryName,
-                total: item.orderAmount
+                total: convertToNumber(item.orderAmount)
               }
             })
         }
@@ -248,7 +251,7 @@ export default {
             .map(item => {
               return {
                 merchant: item.merchantName,
-                total: item.orderAmount
+                total: convertToNumber(item.orderAmount)
               }
             })
         }
@@ -266,7 +269,7 @@ export default {
           this.chartPromotionData.columns = Object.keys(data[0])
           const rows = data
             .map(item => {
-              const format = 'YYYY/MM/DD'
+              const format = 'MM/DD'
               const { date, ...others } = item
               const dataFormat = moment(date).format(format)
               return { date: dataFormat, ...others }
@@ -288,16 +291,16 @@ export default {
           const rows = data
             .filter(item => moment(item.statisticsDate).isValid())
             .map(item => {
-              const format = 'YYYY/MM/DD'
+              const format = 'MM/DD'
               const date = moment(item.statisticsDate).format(format)
               return {
                 date,
-                earlyMorning: item.earlyMorning,
-                morning: item.morning,
-                noon: item.noon,
-                afternoon: item.afternoon,
-                night: item.night,
-                lateAtNight: item.lateAtNight
+                earlyMorning: convertToNumber(item.earlyMorning),
+                morning: convertToNumber(item.morning),
+                noon: convertToNumber(item.noon),
+                afternoon: convertToNumber(item.afternoon),
+                night: convertToNumber(item.night),
+                lateAtNight: convertToNumber(item.lateAtNight)
               }
             })
           this.chartPeriodData.rows = sortBy(rows, ['date'])

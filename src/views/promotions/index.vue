@@ -31,8 +31,8 @@
           :label="item.label"
           :name="item.name"
         >
-          <div style="display: flex;justify-content: space-between">
-            <el-button-group v-if="isAdminUser">
+          <div v-if="isAdminUser" style="display: flex;justify-content: space-between">
+            <el-button-group>
               <el-button
                 type="primary"
                 icon="el-icon-edit"
@@ -51,7 +51,7 @@
                 批量结束活动
               </el-button>
             </el-button-group>
-            <el-button-group v-if="isAdminUser">
+            <el-button-group>
               <el-button
                 type="info"
                 icon="el-icon-folder"

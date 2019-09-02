@@ -59,34 +59,34 @@ export const constantRoutes = [
         path: 'products',
         name: 'Products',
         component: () => import('@/views/product/index'),
-        meta: { title: '商品管理', icon: 'products' }
+        meta: { title: '商品管理', icon: 'products', group: 'products' }
       },
       {
         path: 'viewProduct/:mpu',
         name: 'ViewProduct',
         component: () => import('@/views/product/detail'),
-        meta: { title: '查看商品', icon: 'products' },
+        meta: { title: '查看商品', icon: 'products', group: 'products' },
         hidden: true
       },
       {
         path: 'showProduct/:id',
         name: 'ShowProduct',
         component: () => import('@/views/product/detail'),
-        meta: { title: '查看商品', icon: 'products' },
+        meta: { title: '查看商品', icon: 'products', group: 'products' },
         hidden: true
       },
       {
         path: 'editProduct/:id',
         name: 'EditProduct',
         component: () => import('@/views/product/detail'),
-        meta: { title: '编辑商品', icon: 'products' },
+        meta: { title: '编辑商品', icon: 'products', group: 'products' },
         hidden: true
       },
       {
         path: 'createProduct',
         name: 'CreateProduct',
         component: () => import('@/views/product/detail'),
-        meta: { title: '创建商品', icon: 'products' },
+        meta: { title: '创建商品', icon: 'products', group: 'products' },
         hidden: true
       },
       {
@@ -114,7 +114,7 @@ export const constantRoutes = [
         path: 'index',
         name: 'CouponsIndex',
         component: () => import('@/views/coupons/index'),
-        meta: { title: '优惠券管理', icon: 'coupons' }
+        meta: { title: '优惠券管理', icon: 'coupons', group: 'coupons' }
       },
       {
         path: 'tags',
@@ -126,21 +126,21 @@ export const constantRoutes = [
         path: 'detail/:id',
         name: 'CouponDetail',
         component: () => import('@/views/coupons/custom'),
-        meta: { title: '优惠券详情' },
+        meta: { title: '优惠券详情', group: 'coupons' },
         hidden: true
       },
       {
         path: 'creation',
         name: 'CreateCoupon',
         component: () => import('@/views/coupons/custom'),
-        meta: { title: '创建优惠券' },
+        meta: { title: '创建优惠券', group: 'coupons' },
         hidden: true
       },
       {
         path: 'usages/:id',
         name: 'CouponUsages',
         component: () => import('@/views/coupons/usages'),
-        meta: { title: '领取详情' },
+        meta: { title: '领取详情', group: 'coupons' },
         hidden: true
       }
     ]
@@ -156,47 +156,47 @@ export const constantRoutes = [
         path: 'aggregations',
         name: 'Aggregations',
         component: () => import('@/views/aggregation/index'),
-        meta: { title: '聚合页管理', icon: 'aggregations' }
+        meta: { title: '聚合页管理', icon: 'aggregations', group: 'aggregations' }
       },
       {
         path: 'editAggregation/:id',
         name: 'EditAggregation',
         component: () => import('@/views/aggregation/detail'),
-        meta: { title: '编辑聚合页', icon: 'aggregations' },
+        meta: { title: '编辑聚合页', icon: 'aggregations', group: 'aggregations' },
         hidden: true
       },
       {
         path: 'createAggregation',
         name: 'CreateAggregation',
         component: () => import('@/views/aggregation/detail'),
-        meta: { title: '创建聚合页', icon: 'aggregations' },
+        meta: { title: '创建聚合页', icon: 'aggregations', group: 'aggregations' },
         hidden: true
       },
       {
         path: 'promotions',
         name: 'Promotions',
         component: () => import('@/views/promotions/index'),
-        meta: { title: '促销活动', icon: 'promotions' }
+        meta: { title: '促销活动', icon: 'promotions', group: 'promotions' }
       },
       {
         path: 'createPromotion',
         name: 'CreatePromotion',
         component: () => import('@/views/promotions/creation'),
-        meta: { title: '创建促销活动', icon: 'promotions' },
+        meta: { title: '创建促销活动', icon: 'promotions', group: 'promotions' },
         hidden: true
       },
       {
         path: 'editPromotion/:id',
         name: 'EditPromotion',
         component: () => import('@/views/promotions/creation'),
-        meta: { title: '创建促销活动', icon: 'promotions' },
+        meta: { title: '编辑促销活动', icon: 'promotions', group: 'promotions' },
         hidden: true
       },
       {
         path: 'viewPromotion/:id',
         name: 'ViewPromotion',
         component: () => import('@/views/promotions/creation'),
-        meta: { title: '创建促销活动', icon: 'promotions' },
+        meta: { title: '查看促销活动', icon: 'promotions', group: 'promotions' },
         hidden: true
       }
     ]
@@ -212,27 +212,27 @@ export const constantRoutes = [
         path: 'index',
         name: 'Orders',
         component: () => import('@/views/orders/index'),
-        meta: { title: '订单管理', icon: 'carts' }
+        meta: { title: '订单管理', icon: 'carts', group: 'orders' }
       },
       {
         path: 'viewSubOrder/:subId',
         name: 'ViewSubOrder',
         component: () => import('@/views/orders/subOrderDetail'),
-        meta: { title: '查看子订单', icon: 'orders' },
+        meta: { title: '查看子订单', icon: 'orders', group: 'orders' },
         hidden: true
       },
       {
         path: 'viewMainOrder/:mainId',
         name: 'ViewMainOrder',
         component: () => import('@/views/orders/mainOrderDetail'),
-        meta: { title: '查看主订单', icon: 'orders' },
+        meta: { title: '查看主订单', icon: 'orders', group: 'orders' },
         hidden: true
       },
       {
         path: 'delivery',
         name: 'OrderDelivery',
         component: () => import('@/views/orders/delivery'),
-        meta: { title: '物流发货', icon: 'delivery' }
+        meta: { title: '物流发货', icon: 'delivery', group: 'orders' }
       }
     ]
   },
@@ -247,13 +247,13 @@ export const constantRoutes = [
         path: 'index',
         name: 'WorkOrders',
         component: () => import('@/views/workorders/index'),
-        meta: { title: '售后管理', icon: 'work-order' }
+        meta: { title: '售后管理', icon: 'work-order', group: 'workOrders' }
       },
       {
         path: 'viewWorkOrder/:id',
         name: 'ViewWorkOrder',
         component: () => import('@/views/workorders/detail'),
-        meta: { title: '查看售后详情', icon: 'work-order' },
+        meta: { title: '查看售后详情', icon: 'work-order', group: 'workOrders' },
         hidden: true
       },
       {
