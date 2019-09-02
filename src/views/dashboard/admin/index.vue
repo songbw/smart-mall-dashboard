@@ -45,7 +45,7 @@
         </el-radio-group>
       </el-col>
     </el-row>
-    <el-row :gutter="60" style="margin-top: 20px">
+    <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="11">
         <div class="data-title">订单支付总额<span class="panel-annotation">（元）</span> / 按品类</div>
         <el-card shadow="never">
@@ -69,7 +69,7 @@
         </el-card>
       </el-col>
     </el-row>
-    <el-row :gutter="60" style="margin-top: 20px">
+    <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="11">
         <div class="data-title">订单支付趋势<span class="panel-annotation">（元）</span> / 按活动</div>
         <el-card shadow="never">

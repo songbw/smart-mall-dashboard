@@ -91,8 +91,8 @@
             添加商品
           </el-button>
         </div>
-        <div v-if="!promotionData.dailySchedule" class="header-ops-container">
-          <span style="width: 100px;text-align: end">优惠价格：</span>
+        <div v-if="setDiscount" class="header-ops-container">
+          <span style="width: 100px;text-align: end">优惠减价：</span>
           <el-input-number
             v-model="promotionValue"
             :min="1"
@@ -155,7 +155,47 @@
             <span>{{ scope.row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column v-if="promotionData.dailySchedule" label="秒杀价格(元)" align="center" width="250">
+        <el-table-column v-if="setDiscount" :label="discountTypeLabel" align="center" width="250">
+          <template slot-scope="scope">
+            <template v-if="scope.row.editDiscount">
+              <el-input-number
+                v-model="scope.row.discount"
+                :controls="false"
+                size="mini"
+                :min="1"
+                :max="Number.parseInt(scope.row.price)"
+                step-strictly
+              />
+              <el-button
+                icon="el-icon-close"
+                size="mini"
+                type="primary"
+                circle
+                @click="handleCancelEditDiscount(scope.row)"
+              />
+              <el-button
+                icon="el-icon-check"
+                size="mini"
+                type="primary"
+                circle
+                @click="handleConfirmEditDiscount(scope.row)"
+              />
+            </template>
+            <template v-else>
+              <span>{{ scope.row.discount }}</span>
+              <el-button
+                v-if="viewOnly === false"
+                icon="el-icon-edit"
+                size="mini"
+                type="primary"
+                circle
+                style="margin-left: 10px"
+                @click="scope.row.editDiscount = true"
+              />
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column v-else label="促销价格(元)" align="center" width="250">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
               <el-input-number
@@ -184,46 +224,6 @@
             </template>
             <template v-else>
               <span>{{ scope.row.discount > 0 ? scope.row.price - scope.row.discount : null }}</span>
-              <el-button
-                v-if="viewOnly === false"
-                icon="el-icon-edit"
-                size="mini"
-                type="primary"
-                circle
-                style="margin-left: 10px"
-                @click="scope.row.editDiscount = true"
-              />
-            </template>
-          </template>
-        </el-table-column>
-        <el-table-column v-else :label="discountTypeLabel" align="center" width="250">
-          <template slot-scope="scope">
-            <template v-if="scope.row.editDiscount">
-              <el-input-number
-                v-model="scope.row.discount"
-                :controls="false"
-                size="mini"
-                :min="1"
-                :max="Number.parseInt(scope.row.price)"
-                step-strictly
-              />
-              <el-button
-                icon="el-icon-close"
-                size="mini"
-                type="primary"
-                circle
-                @click="handleCancelEditDiscount(scope.row)"
-              />
-              <el-button
-                icon="el-icon-check"
-                size="mini"
-                type="primary"
-                circle
-                @click="handleConfirmEditDiscount(scope.row)"
-              />
-            </template>
-            <template v-else>
-              <span>{{ scope.row.discount }}</span>
               <el-button
                 v-if="viewOnly === false"
                 icon="el-icon-edit"
@@ -314,6 +314,7 @@ export default {
   },
   data() {
     return {
+      setDiscount: false,
       typeOptions: [{
         value: 0,
         label: '减价'
