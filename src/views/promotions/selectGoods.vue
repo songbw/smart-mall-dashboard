@@ -163,7 +163,7 @@
                 :controls="false"
                 size="mini"
                 :min="1"
-                :max="Number.parseInt(scope.row.price)"
+                :max="scope.row.price + 1"
                 step-strictly
               />
               <el-button
@@ -203,7 +203,7 @@
                 :controls="false"
                 size="mini"
                 :min="0"
-                :max="Number.parseInt(scope.row.price)"
+                :max="scope.row.price + 1"
                 step-strictly
                 @input="value => handleSetSecKillPrice(value, scope.row)"
               />
@@ -639,7 +639,6 @@ export default {
       return total
     },
     handleSetSecKillPrice(value, row) {
-      console.debug('Second kill ' + value)
       row.discount = row.price >= value ? row.price - value : 0
     },
     handleCancelEditDiscount(row) {

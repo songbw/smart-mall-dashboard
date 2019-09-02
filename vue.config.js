@@ -6,7 +6,8 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-process.env.VUE_APP_VERSION = require('./package.json').version
+const moment = require('moment')
+process.env.VUE_APP_VERSION = require('./package.json').version + '.' + moment().format('MMDD')
 
 const nameGatSn = process.env.APP_HOST === 'GAT-SN' ? defaultSettings.titleGatSn : ''
 const nameGatZy = process.env.APP_HOST === 'GAT-ZY' ? defaultSettings.titleGatZy : ''

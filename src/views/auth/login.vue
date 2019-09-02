@@ -57,8 +57,13 @@
       </el-card>
     </el-main>
     <el-footer style="font-size: 12px;text-align: center">
-      <svg-icon icon-class="copyright" />
-      <span>2018-2019 深圳凤巢信息科技有限公司</span>
+      <div>
+        <svg-icon icon-class="copyright" />
+        <span>2018-2019 深圳凤巢信息科技有限公司</span>
+      </div>
+      <div>
+        版本：{{ appVersion }}
+      </div>
     </el-footer>
   </el-container>
 </template>
@@ -96,6 +101,7 @@ export default {
     }
     return {
       title: process.env.VUE_APP_NAME,
+      appVersion: process.env.VUE_APP_VERSION,
       loading: false,
       loginForm: {
         username: '',

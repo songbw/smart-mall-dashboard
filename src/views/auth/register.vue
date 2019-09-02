@@ -87,10 +87,6 @@
         </el-form>
       </el-card>
     </el-main>
-    <el-footer style="font-size: 12px;text-align: center">
-      <svg-icon icon-class="copyright" />
-      <span>2018-2019 深圳凤巢信息科技有限公司</span>
-    </el-footer>
   </el-container>
 </template>
 
