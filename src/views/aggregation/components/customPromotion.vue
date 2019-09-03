@@ -1,110 +1,105 @@
 <template>
   <div style="width: 100%">
     <el-container class="show-border">
-      <el-form label-width="120px">
-        <el-form-item label="开启头部">
-          <el-switch v-model="showTitle" />
-          <el-form v-if="showTitle" label-position="right" label-width="160px">
-            <el-form-item label="文字位置">
-              <el-radio-group v-model="titleTextAlign">
-                <el-radio label="left">居左</el-radio>
-                <el-radio label="center">居中</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="标题">
-              <el-input v-model="titleTextValue" />
-            </el-form-item>
-            <el-form-item label="链接促销活动">
-              <el-switch v-model="titleHasPromotionActivity" />
-              <el-button
-                v-if="titleHasPromotionActivity"
-                :disabled="titlePromotionDailySchedule"
-                type="primary"
-                size="small"
-                @click="dialogPromotionVisible = true"
-              >
-                选择促销活动
-              </el-button>
-              <div v-if="titleHasPromotionActivity">
-                <el-switch
-                  v-model="titlePromotionDailySchedule"
-                  active-text="全天分时段"
-                  inactive-text="普通活动"
-                />
-              </div>
-              <div v-if="titleHasPromotionActivity">
-                <span>活动名称：</span>
-                <span v-if="titlePromotionDailySchedule">全天分时段</span>
-                <el-link
-                  v-else
-                  :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
-                  target="_blank"
-                  type="primary"
-                >
-                  {{ titlePromotionActivityName }}
-                </el-link>
-              </div>
-              <div v-if="titleHasPromotionActivity">
-                <div v-if="titlePromotionDailySchedule">
-                  活动时间：当天24小时
-                </div>
-                <div v-else>
-                  活动时间： {{ titlePromotionActivityStartDate }} - {{ titlePromotionActivityEndDate }}
-                </div>
-              </div>
-            </el-form-item>
-            <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
-              <el-switch v-model="titleHasTextLink" />
-            </el-form-item>
-            <el-form-item
-              v-if="titleTextAlign === 'left' && titleHasTextLink"
-              label="文件链接标题"
+      <el-form v-if="showTitle" label-position="right" label-width="160px">
+        <el-form-item label="文字位置">
+          <el-radio-group v-model="titleTextAlign">
+            <el-radio label="left">居左</el-radio>
+            <el-radio label="center">居中</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="标题">
+          <el-input v-model="titleTextValue" />
+        </el-form-item>
+        <el-form-item label="促销活动">
+          <el-button
+            v-if="titleHasPromotionActivity"
+            :disabled="titlePromotionDailySchedule"
+            type="primary"
+            size="small"
+            @click="dialogPromotionVisible = true"
+          >
+            选择促销活动
+          </el-button>
+          <div v-if="titleHasPromotionActivity">
+            <el-switch
+              v-model="titlePromotionDailySchedule"
+              active-text="全天分时段"
+              inactive-text="普通活动"
+            />
+          </div>
+          <div v-if="titleHasPromotionActivity">
+            <span>活动名称：</span>
+            <span v-if="titlePromotionDailySchedule">全天分时段</span>
+            <el-link
+              v-else
+              :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
+              target="_blank"
+              type="primary"
             >
-              <el-input v-model="titleTextLinkValue" />
-            </el-form-item>
-            <el-form-item label="开启活动图片">
-              <el-switch v-model="titleHasImage" />
-            </el-form-item>
-            <el-form-item
-              v-if="titleHasImage"
-              label="活动图片"
-            >
-              <img v-if="titleImageUrl" :src="titleImageUrl" width="200px" alt="">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                :data="uploadData"
-                :auto-upload="true"
-                :limit="1"
-                :show-file-list="false"
-                :before-upload="handleBeforeUploadImage"
-                :on-progress="handleUploadImageProgress"
-                :on-success="handleUploadImageSuccess"
-                :on-error="handleUploadImageError"
-                accept="image/png, image/jpeg"
-                list-type="picture"
-                name="file"
-              >
-                <el-button slot="trigger" size="small" type="primary">
-                  选择图标文件
-                </el-button>
-                <div slot="tip" class="el-upload__tip">建议上传宽度为1095px,高度687px，不超过500k，格式为jpg/png的图片</div>
-              </el-upload>
-            </el-form-item>
-            <el-form-item
-              v-if="titleHasLink"
-              label="文字和图片链接地址"
-            >
-              <image-target-link
-                :could-change="titleHasPromotionActivity === false"
-                :target-index="currentTemplateIndex"
-                :target-type="titleTargetType"
-                :target-url="titleTargetUrl"
-                :target-name="titleTargetName"
-                @targetChanges="handleImageTargetChanges"
-              />
-            </el-form-item>
-          </el-form>
+              {{ titlePromotionActivityName }}
+            </el-link>
+          </div>
+          <div v-if="titleHasPromotionActivity">
+            <div v-if="titlePromotionDailySchedule">
+              活动时间：当天24小时
+            </div>
+            <div v-else>
+              活动时间： {{ titlePromotionActivityStartDate | dateFilter }}
+              - {{ titlePromotionActivityEndDate | dateFilter }}
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
+          <el-switch v-model="titleHasTextLink" />
+        </el-form-item>
+        <el-form-item
+          v-if="titleTextAlign === 'left' && titleHasTextLink"
+          label="文件链接标题"
+        >
+          <el-input v-model="titleTextLinkValue" />
+        </el-form-item>
+        <el-form-item label="开启活动图片">
+          <el-switch v-model="titleHasImage" />
+        </el-form-item>
+        <el-form-item
+          v-if="titleHasImage"
+          label="活动图片"
+        >
+          <img v-if="titleImageUrl" :src="titleImageUrl" width="200px" alt="">
+          <el-upload
+            ref="upload"
+            :action="uploadUrl"
+            :data="uploadData"
+            :auto-upload="true"
+            :limit="1"
+            :show-file-list="false"
+            :before-upload="handleBeforeUploadImage"
+            :on-progress="handleUploadImageProgress"
+            :on-success="handleUploadImageSuccess"
+            :on-error="handleUploadImageError"
+            accept="image/png, image/jpeg"
+            list-type="picture"
+            name="file"
+          >
+            <el-button slot="trigger" size="small" type="primary">
+              选择图标文件
+            </el-button>
+            <div slot="tip" class="el-upload__tip">建议上传宽度为1095px,高度687px，不超过500k，格式为jpg/png的图片</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item
+          v-if="titleHasLink"
+          label="文字和图片链接地址"
+        >
+          <image-target-link
+            :could-change="titleHasPromotionActivity === false"
+            :target-index="currentTemplateIndex"
+            :target-type="titleTargetType"
+            :target-url="titleTargetUrl"
+            :target-name="titleTargetName"
+            @targetChanges="handleImageTargetChanges"
+          />
         </el-form-item>
         <el-form-item label="下边距">
           <el-select :value="marginBottom" @change="onMarginBottomChanged">
@@ -123,7 +118,7 @@
           导入商品
         </el-button>
         <el-button
-          :disabled="titlePromotionDailySchedule"
+          :disabled="titlePromotionDailySchedule || titlePromotionActivityId < 0"
           type="primary"
           size="mini"
           @click="dialogSelectionVisible = true"
@@ -170,6 +165,7 @@
         <template slot-scope="scope">
           <el-tooltip :open-delay="1000" content="上移" placement="top">
             <el-button
+              :disabled="scope.$index === 0"
               icon="el-icon-caret-top"
               type="primary"
               size="mini"
@@ -179,6 +175,7 @@
           </el-tooltip>
           <el-tooltip :open-delay="1000" content="下移" placement="top">
             <el-button
+              :disabled="scope.$index === skuData.length - 1"
               icon="el-icon-caret-bottom"
               type="primary"
               size="mini"
@@ -188,6 +185,7 @@
           </el-tooltip>
           <el-tooltip :open-delay="1000" content="置顶" placement="top">
             <el-button
+              :disabled="scope.$index === 0"
               icon="el-icon-top"
               type="primary"
               size="mini"
@@ -267,7 +265,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { promotionType } from './templateType'
+import moment from 'moment'
+import { promotionType, promotionSettings } from './templateType'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import PromotionSelection from './promotionSelection'
@@ -277,6 +276,13 @@ import { app_upload_url } from '@/utils/constants'
 export default {
   name: 'CustomPromotion',
   components: { GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, PromotionSelection },
+  filters: {
+    dateFilter: date => {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const momentDate = moment(date)
+      return momentDate.isValid() ? momentDate.format(format) : ''
+    }
+  },
   data() {
     return {
       uploadUrl: app_upload_url,
@@ -312,27 +318,7 @@ export default {
       } else {
         return {
           list: [],
-          settings: {
-            title: {
-              show: false,
-              textAlign: 'left',
-              textValue: '',
-              hasTextLink: false,
-              textLinkValue: '',
-              hasPromotionActivity: false,
-              promotionDailySchedule: false,
-              promotionActivityId: -1,
-              promotionActivityName: '',
-              promotionActivityStartDate: '',
-              promotionActivityEndDate: '',
-              hasImage: false,
-              imageUrl: '',
-              targetType: '',
-              targetUrl: '',
-              targetName: ''
-            },
-            marginBottom: '0'
-          }
+          settings: { ...promotionSettings }
         }
       }
     },
@@ -496,7 +482,7 @@ export default {
     },
     titleHasLink: {
       get() {
-        return this.titleHasImage || this.titleHasTextLink
+        return this.titleHasPromotionActivity ? false : this.titleHasImage || this.titleHasTextLink
       }
     },
     titleTargetType: {

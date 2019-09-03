@@ -9,9 +9,8 @@
     width="60%"
   >
     <el-form>
-      <el-form-item label="商品类别">
+      <el-form-item v-if="!hasPromotion" label="商品类别">
         <category-selection
-          v-if="!hasPromotion"
           :first-selectable="presetFirstCategory === null"
           :first-value="presetFirstCategory || firstCategoryValue"
           :seond-selectable="presetSecondCategory === null"
@@ -142,6 +141,7 @@
       </el-table-column>
     </el-table>
     <pagination
+      v-if="!hasPromotion"
       :auto-scroll="false"
       :total="total"
       :page.sync="offset"

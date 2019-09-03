@@ -57,7 +57,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import hotzone from 'vue-hotzone'
-import { hotZoneType } from './templateType'
+import { hotZoneType, hotZoneSettings } from './templateType'
 import ImageTargetLink from './imageTargetLink'
 import { app_upload_url } from '@/utils/constants'
 
@@ -90,10 +90,7 @@ export default {
         } else {
           return {
             list: [],
-            settings: {
-              imageUrl: '',
-              imageKey: ''
-            }
+            settings: { ...hotZoneSettings }
           }
         }
       }

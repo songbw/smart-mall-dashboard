@@ -102,6 +102,9 @@
               <custom-coupon
                 v-if="currentTemplateIndex === index && pageTemplate.type === couponType"
               />
+              <custom-combo
+                v-if="currentTemplateIndex === index && pageTemplate.type === comboType"
+              />
             </div>
           </el-main>
         </el-container>
@@ -126,14 +129,22 @@ import CustomPromotion from './customPromotion'
 import CustomGoods from './customGoods'
 import CustomHotZone from './customHotZone'
 import CustomCoupon from './customCoupon'
+import CustomCombo from './customCombo'
 import {
   bannerType,
   serviceType,
   gridType,
+  gridSettings,
   promotionType,
+  promotionSettings,
   goodsType,
+  goodsSettings,
   hotZoneType,
-  couponType
+  hotZoneSettings,
+  couponType,
+  couponSettings,
+  comboType,
+  comboSettings
 } from './templateType'
 
 const bannerImage = require('@/assets/images/banner.png')
@@ -143,11 +154,19 @@ const gridImage = require('@/assets/images/grid.png')
 const promotionImage = require('@/assets/images/promotion.png')
 const hotZoneImage = require('@/assets/images/image.png')
 const couponImage = require('@/assets/images/coupon.png')
+const comboImage = require('@/assets/images/combo.png')
 
 export default {
   name: 'CustomPage',
   components: {
-    CustomBanner, CustomService, CustomGrid, CustomPromotion, CustomGoods, CustomHotZone, CustomCoupon
+    CustomBanner,
+    CustomService,
+    CustomGrid,
+    CustomPromotion,
+    CustomGoods,
+    CustomHotZone,
+    CustomCoupon,
+    CustomCombo
   },
   data() {
     return {
@@ -159,6 +178,7 @@ export default {
       goodsType: goodsType,
       hotZoneType: hotZoneType,
       couponType: couponType,
+      comboType: comboType,
       options: [
         {
           type: bannerType,
@@ -201,6 +221,12 @@ export default {
           name: '优惠券活动',
           tipTitle: '优惠券活动模块功能说明',
           image: couponImage
+        },
+        {
+          type: comboType,
+          name: '左右组合',
+          tipTitle: '左右组合活动模块功能说明',
+          image: comboImage
         }
       ],
       currentTemplateTipTitle: ''
@@ -310,74 +336,26 @@ export default {
           template.data.settings.marginBottom = '0'
           break
         case gridType:
-          template.data.settings.title = {
-            show: false,
-            text: {
-              align: 'center',
-              value: '',
-              hasLink: false,
-              linkType: 'aggregation',
-              linkTitle: '',
-              linkUrl: ''
-            }
-          }
+          template.data.settings.title = { ...gridSettings }
           template.data.settings.marginBottom = '0'
           break
         case goodsType:
-          template.data.settings = {
-            countPerLine: 2,
-            floorTitleColor: '#000000',
-            priceBackgroundColor: '#ECE8DE',
-            priceTextColor: '#6E0F00',
-            hasTabBar: false,
-            tabBarBackgroundColor: '#333333',
-            tabBarTextColor: '#FF9933',
-            marginBottom: 0
-          }
+          template.data.settings = { ...goodsSettings }
           break
         case serviceType:
           template.data.settings.marginBottom = '0'
           break
         case promotionType:
-          template.data.settings = {
-            title: {
-              show: false,
-              textAlign: 'left',
-              textValue: '',
-              hasTextLink: false,
-              textLinkValue: '',
-              hasPromotionActivity: false,
-              promotionDailySchedule: false,
-              promotionActivityId: -1,
-              promotionActivityName: '',
-              promotionActivityStartDate: '',
-              promotionActivityEndDate: '',
-              hasImage: false,
-              imageUrl: '',
-              targetType: '',
-              targetUrl: '',
-              targetName: ''
-            },
-            marginBottom: '0'
-          }
+          template.data.settings = { ...promotionSettings }
           break
         case hotZoneType:
-          template.data.settings = {
-            imageUrl: '',
-            imageKey: ''
-          }
+          template.data.settings = { ...hotZoneSettings }
           break
         case couponType:
-          template.data.settings = {
-            title: {
-              show: false,
-              imageUrl: '',
-              targetType: '',
-              targetUrl: '',
-              targetName: ''
-            },
-            marginBottom: '0'
-          }
+          template.data.settings = { ...couponSettings }
+          break
+        case comboType:
+          template.data.settings = { ...comboSettings }
           break
       }
     },

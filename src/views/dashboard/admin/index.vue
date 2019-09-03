@@ -52,7 +52,7 @@
           <ve-pie
             :data="chartCategoryData"
             :loading="chartCategoryLoading"
-            :settings="chartPriceSettings"
+            :settings="chartPieSettings"
             :data-empty="chartCategoryData.rows.length === 0"
           />
         </el-card>
@@ -63,7 +63,7 @@
           <ve-pie
             :data="chartMerchantData"
             :loading="chartMerchantLoading"
-            :settings="chartPriceSettings"
+            :settings="chartPieSettings"
             :data-empty="chartMerchantData.rows.length === 0"
           />
         </el-card>
@@ -129,14 +129,17 @@ export default {
         perCustomerTransaction: 0,
         orderAveragePrice: 0
       },
-      chartPriceSettings: {
+      chartPieSettings: {
         limitShowNum: 5,
-        dataType: 'normal',
+        dataType: 'KMB',
         labelMap: {
           category: '类别',
-          merchant: '商户',
-          total: '支付总额',
-          date: '日期',
+          merchant: '商户'
+        }
+      },
+      chartPriceSettings: {
+        dataType: 'KMB',
+        labelMap: {
           earlyMorning: '凌晨',
           morning: '上午',
           noon: '中午',

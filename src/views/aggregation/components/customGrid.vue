@@ -76,7 +76,7 @@
 import { mapGetters } from 'vuex'
 import GridItem from './gridItem'
 import ImageTargetLink from './imageTargetLink'
-import { gridType } from './templateType'
+import { gridType, gridSettings } from './templateType'
 
 export default {
   name: 'CustomGrid',
@@ -95,22 +95,7 @@ export default {
       } else {
         return {
           list: [],
-          settings:
-            {
-              title: {
-                show: false,
-                text: {
-                  align: 'center',
-                  value: '',
-                  hasLink: false,
-                  linkTitle: '',
-                  linkType: 'aggregation',
-                  linkUrl: '',
-                  linkUrlName: ''
-                }
-              },
-              marginBottom: '0'
-            }
+          settings: { ...gridSettings }
         }
       }
     },

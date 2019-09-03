@@ -143,7 +143,7 @@ import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
 import CouponSelection from './couponSelection'
-import { couponType } from './templateType'
+import { couponType, couponSettings } from './templateType'
 import { CouponStatusDefinition } from '@/utils/constants'
 
 export default {
@@ -177,16 +177,7 @@ export default {
       } else {
         return {
           list: [],
-          settings: {
-            title: {
-              show: false,
-              imageUrl: '',
-              targetType: '',
-              targetUrl: '',
-              targetName: ''
-            },
-            marginBottom: '0'
-          }
+          settings: { ...couponSettings }
         }
       }
     },

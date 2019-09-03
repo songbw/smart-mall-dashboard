@@ -67,7 +67,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import GoodsFloor from './goodsFloor'
-import { goodsType } from './templateType'
+import { goodsType, goodsSettings } from './templateType'
 
 export default {
   name: 'CustomGoods',
@@ -88,17 +88,7 @@ export default {
       } else {
         return {
           list: [],
-          settings:
-            {
-              countPerLine: 2,
-              floorTitleColor: '#000000',
-              priceBackgroundColor: '#ECE8DE',
-              priceTextColor: '#6E0F00',
-              hasTabBar: false,
-              tabBarBackgroundColor: '#333333',
-              tabBarTextColor: '#FF9933',
-              marginBottom: 0
-            }
+          settings: { ...goodsSettings }
         }
       }
     },
