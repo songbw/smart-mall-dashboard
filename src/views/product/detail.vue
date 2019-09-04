@@ -37,8 +37,16 @@
         </el-select>
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
-        <span v-if="viewProduct">{{ productForm.skuid }}</span>
-        <el-input v-else v-model="productForm.skuid" maxlength="30" />
+        <div v-if="createProduct">
+          <el-checkbox v-model="autoSku">系统生成</el-checkbox>
+          <el-input
+            v-if="!autoSku"
+            v-model="productForm.skuid"
+            maxlength="30"
+            style="width: 350px;margin-left: 10px"
+          />
+        </div>
+        <span v-else>{{ productForm.skuid }}</span>
       </el-form-item>
       <el-form-item v-if="!createProduct" label="商品状态">
         <span>{{ productForm.state | productState }}</span>
@@ -341,6 +349,7 @@ export default {
       introductionUploadPath: 'products',
       loading: false,
       opType: OP_VIEW,
+      autoSku: true,
       brandLoading: false,
       brandOptions: [],
       brandSelectedId: null,
@@ -383,7 +392,7 @@ export default {
         skuid: [{
           required: true, validator: (rule, value, callback) => {
             const reg = /^[a-zA-Z0-9]+$/
-            if (value && reg.test(value)) {
+            if (this.autoSku || (value && reg.test(value))) {
               callback()
             } else {
               callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
@@ -692,6 +701,9 @@ export default {
         })
         if (!this.isAdminUser) {
           params.merchantId = this.vendorId
+        }
+        if (this.autoSku) {
+          params.skuid = ''
         }
         const res = await createProductApi(params)
         if (res.code === 200) {

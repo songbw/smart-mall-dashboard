@@ -453,7 +453,7 @@ export default {
       const settings = Object.assign({}, this.comboInfo.settings, side)
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
     },
-    clearSideSkus(){
+    clearSideSkus() {
       const skus = this.comboInfo.list.filter(item => item.side !== this.editSide)
       this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
     },
