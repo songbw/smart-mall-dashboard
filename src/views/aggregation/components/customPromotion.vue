@@ -125,6 +125,10 @@
         >
           添加商品
         </el-button>
+        <span style="font-size: 14px;margin-left: 10px">
+          <i class="el-icon-warning-outline" />
+          已添加{{ skuData.length }}个商品，最多{{ maxSkuNum }}个
+        </span>
       </div>
       <div class="header-ops-container">
         <span>{{ `已选择${selectedItems.length}件商品` }}</span>
@@ -289,6 +293,7 @@ export default {
       uploadData: {
         pathName: 'aggregations'
       },
+      maxSkuNum: 20,
       dialogImportVisible: false,
       uploadDialogVisible: false,
       dialogPromotionVisible: false,
@@ -418,7 +423,15 @@ export default {
         return this.titleHasPromotionActivity ? this.promotionData.settings.title.promotionDailySchedule : false
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { promotionDailySchedule: newValue })
+        const newTitle = { promotionDailySchedule: newValue }
+        if (newValue) {
+          newTitle.promotionActivityId = -1
+          newTitle.promotionActivityName = ''
+          newTitle.promotionActivityStartDate = ''
+          newTitle.promotionActivityEndDate = ''
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
+        }
+        const title = Object.assign({}, this.promotionData.settings.title, newTitle)
         this.changeTitle(title)
       }
     },
@@ -624,7 +637,11 @@ export default {
     addPromotionSkus(skus) {
       const filteredSkus = skus.filter(sku => this.skuData.findIndex(item => item.mpu === sku.mpu) < 0)
       if (filteredSkus.length > 0) {
-        this.$store.commit('aggregations/SET_PROMOTION_LIST', this.skuData.concat(filteredSkus))
+        if (this.skuData.length + filteredSkus.length <= this.maxSkuNum) {
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', this.skuData.concat(filteredSkus))
+        } else {
+          this.$message.warning(`活动商品最多添加${this.maxSkuNum}个，请仔细选择商品！`)
+        }
       }
     },
     onGoodsSelectionConfirmed(skus) {

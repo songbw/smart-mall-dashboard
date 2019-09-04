@@ -206,6 +206,7 @@
                 :max="scope.row.price + 1"
                 step-strictly
                 @input="value => handleSetSecKillPrice(value, scope.row)"
+                @blur="event => handleConfirmEditDiscount(scope.row)"
               />
               <el-button
                 icon="el-icon-close"

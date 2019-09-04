@@ -110,6 +110,10 @@
         >
           添加商品
         </el-button>
+        <span style="font-size: 14px;margin-left: 10px">
+          <i class="el-icon-warning-outline" />
+          已添加{{ currentSideSkuData.length }}个商品，最多{{ maxSideSkuNum }}个
+        </span>
       </div>
       <div class="header-ops-container">
         <span>{{ `已选择${selectedItems.length}件商品` }}</span>
@@ -258,6 +262,7 @@ export default {
   },
   data() {
     return {
+      maxSideSkuNum: 10,
       editSide: 'left',
       dialogPromotionVisible: false,
       dialogImportVisible: false,
@@ -304,7 +309,20 @@ export default {
         return this.currentSideSetting.hasPromotionActivity
       },
       set(newValue) {
-        const title = Object.assign({}, this.currentSideSetting, { hasPromotionActivity: newValue })
+        const newTitle = { hasPromotionActivity: newValue }
+        if (newValue) {
+          newTitle.targetType = 'promotion'
+        } else {
+          newTitle.promotionActivityId = -1
+          newTitle.promotionActivityName = ''
+          newTitle.promotionActivityStartDate = ''
+          newTitle.promotionActivityEndDate = ''
+          newTitle.targetType = 'aggregation'
+          newTitle.targetUrl = ''
+          newTitle.targetName = ''
+        }
+        newTitle.promotionDailySchedule = false
+        const title = Object.assign({}, this.currentSideSetting, newTitle)
         this.changeSideTitle(title)
       }
     },
@@ -313,7 +331,15 @@ export default {
         return this.currentSideSetting.promotionDailySchedule
       },
       set(newValue) {
-        const title = Object.assign({}, this.currentSideSetting, { promotionDailySchedule: newValue })
+        const newTitle = { promotionDailySchedule: newValue }
+        if (newValue) {
+          newTitle.promotionActivityId = -1
+          newTitle.promotionActivityName = ''
+          newTitle.promotionActivityStartDate = ''
+          newTitle.promotionActivityEndDate = ''
+          this.clearSideSkus()
+        }
+        const title = Object.assign({}, this.currentSideSetting, newTitle)
         this.changeSideTitle(title)
       }
     },
@@ -427,6 +453,10 @@ export default {
       const settings = Object.assign({}, this.comboInfo.settings, side)
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
     },
+    clearSideSkus(){
+      const skus = this.comboInfo.list.filter(item => item.side !== this.editSide)
+      this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
+    },
     onPromotionSelectionConfirmed(promotion) {
       this.dialogPromotionVisible = false
       this.titlePromotionActivityId = promotion.id
@@ -533,8 +563,12 @@ export default {
     addPromotionSkus(skus) {
       const filteredSkus = skus.filter(sku => this.comboInfo.list.findIndex(item => item.mpu === sku.mpu) < 0)
       if (filteredSkus.length > 0) {
-        const sideSkus = filteredSkus.map(sku => ({ ...sku, side: this.editSide }))
-        this.$store.commit('aggregations/SET_PROMOTION_LIST', this.comboInfo.list.concat(sideSkus))
+        if (this.currentSideSkuData.length + filteredSkus.length <= this.maxSideSkuNum) {
+          const sideSkus = filteredSkus.map(sku => ({ ...sku, side: this.editSide }))
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', this.comboInfo.list.concat(sideSkus))
+        } else {
+          this.$message.warning(`活动商品最多添加${this.maxSideSkuNum}个，请仔细选择商品！`)
+        }
       }
     },
     onGoodsSelectionConfirmed(skus) {
