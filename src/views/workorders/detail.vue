@@ -5,7 +5,7 @@
         <el-card shadow="never">
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
-            <el-button type="primary" @click="handleShowFlowDialog">
+            <el-button :disabled="workOrderData.status === 6" type="primary" @click="handleShowFlowDialog">
               处理
             </el-button>
           </div>
@@ -30,6 +30,12 @@
             </el-form-item>
             <el-form-item label="退款金额:">
               <span>￥ {{ workOrderData.refundAmount }}</span>
+            </el-form-item>
+            <el-form-item label="更新时间:">
+              <span>{{ workOrderData.createTime | timeFilter }}</span>
+            </el-form-item>
+            <el-form-item label="累计退款:">
+              <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -105,6 +111,9 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item v-if="flowForm.status === 6" label="包含运费">
+          <el-switch v-model="flowForm.handleFare" />
+        </el-form-item>
         <el-form-item label="处理意见" prop="comments">
           <el-input v-model="flowForm.comments" autocomplete="off" />
         </el-form-item>
@@ -149,7 +158,7 @@ const FlowStatusOptions = [
   }, {
     value: 5, label: '开始处理'
   }, {
-    value: 6, label: '处理完成'
+    value: 6, label: '同意退款'
   }]
 export default {
   name: 'WorkOrderDetail',
@@ -197,6 +206,7 @@ export default {
       dialogFlowVisible: false,
       flowForm: {
         status: null,
+        handleFare: false,
         comments: null
       },
       flowRules: {
@@ -286,6 +296,7 @@ export default {
     },
     handleShowFlowDialog() {
       this.flowForm.status = null
+      this.flowForm.handleFare = false
       this.flowForm.comments = ''
       this.dialogFlowVisible = true
     },
@@ -302,7 +313,12 @@ export default {
           this.dialogFlowVisible = false
           try {
             const operator = this.$store.state.user.name
-            await createWorkOrderFlowApi({ workOrderId: this.workOrderData.id, operator, ...this.flowForm })
+            const { status, handleFare, comments } = this.flowForm
+            const params = { workOrderId: this.workOrderData.id, operator, status, comments }
+            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+              params.handleFare = handleFare ? 1 : 0
+            }
+            await createWorkOrderFlowApi(params)
             this.$message.success('处理工单成功！')
             this.getWorkOrderData()
           } catch (e) {

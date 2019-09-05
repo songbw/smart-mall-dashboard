@@ -13,16 +13,16 @@
           default-expand-all
         >
           <el-table-column type="expand">
-            <template slot-scope="props">
+            <template slot-scope="scope">
               <div style="display: flex;justify-content: space-between">
-                <div><span class="item-label">子订单状态：</span> {{ getSubStatus(props.row) | statusFilter }}</div>
-                <div><span class="item-label">子订单号：</span> {{ props.row.subOrderId }}</div>
+                <div><span class="item-label">子订单状态：</span> {{ getSubStatus(scope.row) | statusFilter }}</div>
+                <div><span class="item-label">子订单号：</span> {{ scope.row.subOrderId }}</div>
               </div>
-              <div v-if="logisticsTimeline.length" style="margin-top: 10px">
+              <div v-if="fetchedLogistics" style="margin-top: 10px">
                 <div class="item-label">物流信息：</div>
                 <el-timeline style="margin-top: 10px">
                   <el-timeline-item
-                    v-for="item in logisticsTimeline"
+                    v-for="item in scope.row.logisticsTimeline"
                     :key="item.time"
                     :timestamp="item.ftime"
                   >
@@ -116,28 +116,36 @@ export default {
   },
   data() {
     return {
-      logisticsTimeline: []
+      fetchedLogistics: false
     }
   },
   watch: {
-    skuList: function(val) {
-      this.getLogisticsInfo()
+    skuList: function(val, oldVal) {
+      if (val.length > 0 && !this.fetchedLogistics) {
+        this.getLogisticsInfo()
+      }
     }
   },
   methods: {
     getLogisticsInfo() {
+      let num = 0
       this.skuList.forEach(sku => {
         if (!isEmpty(sku.logisticsId)) {
+          num += 1
           getLogisticsInfoApi({ orderId: sku.subOrderId }).then(res => {
             const query = res.data.result
             if (query && query.length > 0) {
-              this.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
+              sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
             }
           }).catch(e => {
             console.warn('Order goods get logistics error:' + e)
+            sku.logisticsTimeline = []
           })
         }
       })
+      if (num === this.skuList.length) {
+        this.fetchedLogistics = true
+      }
     },
     getSubStatus(row) {
       return row.subStatus ? row.subStatus : row.status

@@ -665,8 +665,8 @@ export default {
       this.introductionUrls.splice(index, 1)
     },
     handleSubmit() {
-      this.productForm.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : null
-      this.productForm.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : null
+      this.productForm.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : ''
+      this.productForm.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : ''
       if (this.productForm.sprice > 0 &&
         this.productForm.price > 0 &&
         this.productForm.sprice > this.productForm.price) {
