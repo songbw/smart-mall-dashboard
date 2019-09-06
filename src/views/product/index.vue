@@ -350,6 +350,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
+import trim from 'lodash/trim'
 import moment from 'moment'
 import {
   getProductListApi,
@@ -486,7 +487,7 @@ export default {
         return this.productQuery.query
       },
       set(value) {
-        this.$store.commit('products/SET_SEARCH_DATA', { query: value })
+        this.$store.commit('products/SET_SEARCH_DATA', { query: trim(value) })
       }
     },
     listSkuId: {
@@ -494,7 +495,7 @@ export default {
         return this.productQuery.skuid
       },
       set(value) {
-        this.$store.commit('products/SET_SEARCH_DATA', { skuid: value })
+        this.$store.commit('products/SET_SEARCH_DATA', { skuid: trim(value) })
       }
     },
     listBrand: {
@@ -502,7 +503,7 @@ export default {
         return this.productQuery.brand
       },
       set(value) {
-        this.$store.commit('products/SET_SEARCH_DATA', { brand: value })
+        this.$store.commit('products/SET_SEARCH_DATA', { brand: trim(value) })
       }
     },
     listMpu: {
@@ -510,7 +511,7 @@ export default {
         return this.productQuery.mpu
       },
       set(value) {
-        this.$store.commit('products/SET_SEARCH_DATA', { mpu: value })
+        this.$store.commit('products/SET_SEARCH_DATA', { mpu: trim(value) })
       }
     },
     listState: {

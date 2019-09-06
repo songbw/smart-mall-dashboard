@@ -143,7 +143,6 @@ export default {
       query: {
         name: '',
         status: 0,
-        type: -1,
         offset: 1,
         limit: 20
       },
@@ -156,25 +155,19 @@ export default {
   methods: {
     getFilterParams() {
       const params = {}
-      params.offset = this.query.offset
-      params.limit = this.query.limit
-      params.dailySchedule = false
       if (this.query.name && this.query.name.trim()) {
         params.name = this.query.name.trim()
       }
       if (this.query.status !== 0) {
         params.status = this.query.status
       }
-      if (this.query.type !== -1) {
-        params.promotionType = this.query.type
-      }
       return params
     },
     getFilterData() {
       const params = this.getFilterParams()
-      if ('status' in params || 'name' in params) {
+      if ('status' in params) {
         this.listLoading = true
-        searchPromotionsApi(params).then((res) => {
+        searchPromotionsApi({ offset: this.query.offset, limit: this.query.limit, ...params }).then((res) => {
           this.promotionsData = res.data.result.list
           this.total = res.data.result.total
           this.listLoading = false
@@ -185,7 +178,7 @@ export default {
       } else {
         this.listLoading = true
         getPublishedPromotionsApi({
-          pageNo: params.offset, pageSize: params.limit, dailySchedule: false
+          pageNo: this.query.offset, pageSize: this.query.limit, ...params
         }).then((res) => {
           if (res.code === 200) {
             this.promotionsData = res.data.result.list

@@ -1,88 +1,119 @@
 <template>
-  <el-form
-    ref="promotionForm"
-    :model="formData"
-    :rules="formRules"
-    label-position="right"
-    label-width="120px"
-  >
-    <el-form-item label="活动名称" prop="name">
-      <el-input v-model="formData.name" maxlength="20" placeholder="请输入活动名称" style="width: 300px" />
-    </el-form-item>
-    <el-form-item label="活动类型" prop="type">
-      <el-select v-model="formData.promotionTypeId">
-        <el-option
-          v-for="item in tabOptions"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+  <div>
+    <el-form
+      ref="promotionForm"
+      v-loading="promotionLoading"
+      :model="formData"
+      :rules="formRules"
+      label-position="right"
+      label-width="120px"
+    >
+      <el-form-item label="活动名称" prop="name">
+        <el-input v-model="formData.name" maxlength="30" placeholder="请输入活动名称" style="width: 300px" />
+      </el-form-item>
+      <el-form-item label="活动类型" prop="type">
+        <el-select v-model="formData.promotionTypeId">
+          <el-option
+            v-for="item in tabOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="活动标签" prop="tag">
+        <el-autocomplete
+          v-model="formData.tag"
+          :fetch-suggestions="queryTags"
+          :maxlength="10"
+          placeholder="请输入活动标签"
         />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="活动标签" prop="tag">
-      <el-autocomplete
-        v-model="formData.tag"
-        :fetch-suggestions="queryTags"
-        :maxlength="10"
-        placeholder="请输入活动标签"
-      />
-    </el-form-item>
-    <el-form-item label="全天分时段">
-      <el-switch v-model="formData.dailySchedule" :disabled="scheduleDisabled" />
-      <span style="font-size: 12px;margin-left: 10px">创建后将不能修改</span>
-    </el-form-item>
-    <el-form-item v-if="formData.dailySchedule" label="活动日期" prop="scheduleDate">
-      <el-date-picker
-        :value="scheduleDate"
-        placeholder="选择活动日期"
-        type="date"
-        value-format="yyyy-MM-dd"
-        @input="onScheduleDateChanged"
-      />
-    </el-form-item>
-    <el-form-item v-if="!formData.dailySchedule" label="开始时间" prop="startDate">
-      <el-date-picker
-        :value="startDate"
-        placeholder="选择开始日期"
-        type="date"
-        value-format="yyyy-MM-dd"
-        @input="onStartDateChanged"
-      />
-      <el-time-picker
-        :value="startTime"
-        value-format="HH:mm:ss"
-        placeholder="选择开始时间"
-        style="margin-left: 10px"
-        @input="onStartTimeChanged"
-      />
-    </el-form-item>
-    <el-form-item v-if="!formData.dailySchedule" label="结束时间" prop="endDate">
-      <el-date-picker
-        :value="endDate"
-        placeholder="选择结束日期"
-        type="date"
-        value-format="yyyy-MM-dd"
-        @input="onEndDateChanged"
-      />
-      <el-time-picker
-        :value="endTime"
-        value-format="HH:mm:ss"
-        placeholder="选择结束时间"
-        style="margin-left: 10px"
-        @input="onEndTimeChanged"
-      />
-    </el-form-item>
-    <el-form-item>
-      <el-button @click="$emit('cancelCreation')">取消</el-button>
-      <el-button type="primary" @click="savePromotion">{{ saveButtonLabel }}</el-button>
-    </el-form-item>
-  </el-form>
+      </el-form-item>
+      <el-form-item label="全天分时段">
+        <el-switch v-model="formData.dailySchedule" :disabled="scheduleDisabled" />
+        <span style="font-size: 12px;margin-left: 10px">创建后将不能修改</span>
+      </el-form-item>
+      <el-form-item v-if="formData.dailySchedule" label="活动日期" prop="scheduleDate">
+        <el-date-picker
+          :value="scheduleDate"
+          placeholder="选择活动日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+          @input="onScheduleDateChanged"
+        />
+      </el-form-item>
+      <el-form-item v-if="formData.dailySchedule && promotionData.id < 0" label="活动时段" prop="scheduleDate">
+        <span v-if="defaultSchedules.length > 0">
+          <el-tag
+            v-for="tag in defaultSchedules"
+            :key="tag"
+            :disable-transitions="false"
+            style="margin-right: 10px"
+          >
+            {{ tag }}
+          </el-tag>
+        </span>
+        <el-button size="mini" type="warning" @click="dialogScheduleVisible = true">修改时段</el-button>
+      </el-form-item>
+      <el-form-item v-if="!formData.dailySchedule" label="开始时间" prop="startDate">
+        <el-date-picker
+          :value="startDate"
+          placeholder="选择开始日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+          @input="onStartDateChanged"
+        />
+        <el-time-picker
+          :value="startTime"
+          value-format="HH:mm:ss"
+          placeholder="选择开始时间"
+          style="margin-left: 10px"
+          @input="onStartTimeChanged"
+        />
+      </el-form-item>
+      <el-form-item v-if="!formData.dailySchedule" label="结束时间" prop="endDate">
+        <el-date-picker
+          :value="endDate"
+          placeholder="选择结束日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+          @input="onEndDateChanged"
+        />
+        <el-time-picker
+          :value="endTime"
+          value-format="HH:mm:ss"
+          placeholder="选择结束时间"
+          style="margin-left: 10px"
+          @input="onEndTimeChanged"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="$emit('cancelCreation')">取消</el-button>
+        <el-button type="primary" @click="savePromotion">{{ saveButtonLabel }}</el-button>
+      </el-form-item>
+    </el-form>
+    <el-dialog v-loading="scheduleUpdating" title="修改活动时段" :visible.sync="dialogScheduleVisible">
+      <div style="margin-bottom: 10px"><i class="el-icon-warning-outline" />促销活动的默认时段，最多创建5个。</div>
+      <el-checkbox-group v-model="checkSchedules" :max="5">
+        <el-checkbox
+          v-for="hour in scheduleOptions"
+          :key="hour"
+          :label="hour"
+        />
+      </el-checkbox-group>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelSchedule">取消</el-button>
+        <el-button type="primary" @click="handleUpdateSchedule">确定</el-button>
+      </div>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import range from 'lodash/range'
 
 export default {
   name: 'CustomPromotion',
@@ -102,6 +133,11 @@ export default {
       startTime: null,
       endDate: null,
       endTime: null,
+      promotionLoading: false,
+      dialogScheduleVisible: false,
+      scheduleOptions: [],
+      scheduleUpdating: false,
+      checkSchedules: [],
       formData: {
         name: this.promotionData.name,
         promotionTypeId: this.promotionData.promotionTypeId,
@@ -205,7 +241,8 @@ export default {
   computed: {
     ...mapGetters({
       promotionTypes: 'promotionTypes',
-      promotionTypeId: 'promotionTypeId'
+      promotionTypeId: 'promotionTypeId',
+      defaultSchedules: 'defaultSchedules'
     }),
     saveButtonLabel() {
       if (this.promotionData && this.promotionData.id >= 0) {
@@ -222,24 +259,45 @@ export default {
   },
   created() {
     this.setDateValue()
+    this.getDefaultSchedules()
   },
   methods: {
-    handleSetDiscountType(id) {
+    async handleSetDiscountType(id) {
       const params = {
         id,
         discountType: 0
       }
-      this.$store.dispatch('promotions/update', params).then(() => {
-        this.$emit('onPromotionCreated')
-      }).catch(err => {
-        console.warn('updatePromotion:' + err)
-      })
+      await this.$store.dispatch('promotions/update', params)
     },
-    handleCreatePromotion() {
-      this.$store.dispatch('promotions/create', this.formData).then((id) => {
-        this.handleSetDiscountType(id)
-      }).catch(err => {
-        console.warn('createPromotion:' + err)
+    async handleCreatePromotion() {
+      this.promotionLoading = true
+      try {
+        const id = await this.$store.dispatch('promotions/create', this.formData)
+        await this.handleSetDiscountType(id)
+        for (const time of this.defaultSchedules) {
+          await this.addScheduleTime(time, id)
+        }
+        this.$emit('onPromotionCreated')
+      } catch (e) {
+        console.warn('CreatePromotion error: ' + e)
+        this.$message.warning('创建促销活动失败，请联系管理员！')
+      } finally {
+        this.promotionLoading = false
+      }
+    },
+    async addScheduleTime(value, id) {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const timeFormat = 'HH:mm'
+      const startDateTime = moment(this.formData.startDate, format)
+      const timeMoment = moment(value, timeFormat)
+      startDateTime.hour(timeMoment.hour())
+      startDateTime.minute(timeMoment.minute())
+      startDateTime.second(0)
+      await this.$store.dispatch('promotions/addScheduleTime', {
+        promotionId: id,
+        schedule: value,
+        startTime: startDateTime.format(format),
+        endTime: startDateTime.add(1, 'days').format(format)
       })
     },
     handleUpdatePromotion() {
@@ -385,6 +443,34 @@ export default {
       } else {
         this.formData.startDate = null
         this.formData.endDate = null
+      }
+    },
+    async getDefaultSchedules() {
+      try {
+        this.scheduleOptions = range(24).map(i => i < 10 ? '0' + i + ':00' : i + ':00')
+        await this.$store.dispatch('promotions/getDefaultSchedules')
+      } catch (e) {
+        console.warn('getDefaultSchedules:' + e)
+      }
+    },
+    handleCancelSchedule() {
+      this.checkSchedules = []
+      this.dialogScheduleVisible = false
+    },
+    async handleUpdateSchedule() {
+      if (this.checkSchedules.length > 0) {
+        try {
+          const params = { initialSchedules: this.checkSchedules }
+          this.scheduleUpdating = true
+          await this.$store.dispatch('promotions/updateDefaultSchedules', params)
+          this.scheduleUpdating = false
+          this.checkSchedules = []
+          this.dialogScheduleVisible = false
+        } catch (e) {
+          this.$message.warning('更新促销活动时段失败，请联系管理员!')
+        }
+      } else {
+        this.$message.warning('请选择需要更新的活动时段，最多5个！')
       }
     }
   }

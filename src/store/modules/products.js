@@ -1,6 +1,3 @@
-import isString from 'lodash/isString'
-import trim from 'lodash/trim'
-
 const queryTemplate = {
   offset: 1,
   limit: 20,
@@ -23,15 +20,7 @@ const state = {
 
 const mutations = {
   SET_SEARCH_DATA: (state, params) => {
-    Object.keys(state.search).forEach(key => {
-      if (key in params) {
-        if (isString(params[key])) {
-          state.search[key] = trim(params[key])
-        } else {
-          state.search[key] = params[key]
-        }
-      }
-    })
+    state.search = { ...state.search, ...params }
   },
   RESET_SEARCH_DATA: state => {
     state.search = { ...queryTemplate }

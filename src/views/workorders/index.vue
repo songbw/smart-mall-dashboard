@@ -113,6 +113,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import {
   getWorkOrderListApi
@@ -158,7 +159,7 @@ export default {
         return this.workOrdersQuery.mobile
       },
       set(value) {
-        this.$store.commit('workOrders/SET_SEARCH_DATA', { mobile: value })
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { mobile: trim(value) })
       }
     },
     queryStatus: {

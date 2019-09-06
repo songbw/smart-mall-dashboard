@@ -11,7 +11,9 @@ import {
   updatePromotionTypeApi,
   deletePromotionTypeApi,
   createPromotionScheduleApi,
-  deletePromotionScheduleApi
+  deletePromotionScheduleApi,
+  getPromotionDefaultSchedulesApi,
+  updatePromotionDefaultSchedulesApi
 } from '@/api/promotions'
 
 const promotionTemplate = {
@@ -29,13 +31,24 @@ const promotionTemplate = {
 }
 
 const state = {
+  query: {
+    name: '',
+    status: 0,
+    dailySchedule: false,
+    offset: 1,
+    limit: 20
+  },
   promotion: { ...promotionTemplate },
   promotionTypes: [],
   promotionTypeId: -1,
-  conflictedMpus: []
+  conflictedMpus: [],
+  defaultSchedules: []
 }
 
 const mutations = {
+  SET_SEARCH_DATA: (state, params) => {
+    state.query = Object.assign({}, state.query, params)
+  },
   RESET_DATA: state => {
     state.promotion = { ...promotionTemplate }
     state.promotion.promotionTypeId = state.promotionTypeId >= 0 ? state.promotionTypeId : null
@@ -108,6 +121,9 @@ const mutations = {
   },
   SET_CONFLICTED_MPUS: (state, mpus) => {
     state.conflictedMpus = [...mpus]
+  },
+  SET_DEFAULT_SCHEDULES: (state, schedules) => {
+    state.defaultSchedules = schedules
   }
 }
 
@@ -184,6 +200,21 @@ const actions = {
   async deleteScheduleTime({ commit }, params) {
     await deletePromotionScheduleApi(params)
     commit('DELETE_SCHEDULE', params.id)
+  },
+  async getDefaultSchedules({ commit }) {
+    const { data } = await getPromotionDefaultSchedulesApi()
+    if (data && data.result) {
+      const schedules = data.result.initialSchedules
+      if (Array.isArray(schedules)) {
+        commit('SET_DEFAULT_SCHEDULES', schedules)
+      }
+    }
+  },
+  async updateDefaultSchedules({ commit }, params) {
+    const res = await updatePromotionDefaultSchedulesApi(params)
+    if (res.code === 200) {
+      commit('SET_DEFAULT_SCHEDULES', params.initialSchedules)
+    }
   }
 }
 

@@ -155,6 +155,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import { exportOrdersApi, getOrderListApi, updateOrderRemarkApi } from '@/api/orders'
@@ -203,7 +204,7 @@ export default {
         return this.orderQuery.tradeNo
       },
       set(value) {
-        this.$store.commit('orders/SET_SEARCH_DATA', { tradeNo: value })
+        this.$store.commit('orders/SET_SEARCH_DATA', { tradeNo: trim(value) })
       }
     },
     querySubOrderId: {
@@ -211,7 +212,7 @@ export default {
         return this.orderQuery.subOrderId
       },
       set(value) {
-        this.$store.commit('orders/SET_SEARCH_DATA', { subOrderId: value })
+        this.$store.commit('orders/SET_SEARCH_DATA', { subOrderId: trim(value) })
       }
     },
     queryMobile: {
@@ -219,7 +220,7 @@ export default {
         return this.orderQuery.mobile
       },
       set(value) {
-        this.$store.commit('orders/SET_SEARCH_DATA', { mobile: value })
+        this.$store.commit('orders/SET_SEARCH_DATA', { mobile: trim(value) })
       }
     },
     querySubStatus: {

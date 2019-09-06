@@ -110,13 +110,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" align="center" width="100px">
+        <el-table-column label="状态" align="center" width="100">
           <template slot-scope="scope">
             <el-tag>{{ scope.row.status | statusFilter }}</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="300px">
+        <el-table-column label="操作" align="center" width="320">
           <template slot-scope="scope">
             <el-button
               size="mini"
@@ -184,6 +184,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
+import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import PreviewDialog from './components/previewDialog'
 import {
@@ -248,7 +249,7 @@ export default {
         return this.listQuery.name
       },
       set(value) {
-        this.$store.commit('aggregations/SET_SEARCH_DATA', { name: value })
+        this.$store.commit('aggregations/SET_SEARCH_DATA', { name: trim(value) })
       }
     },
     queryStatus: {

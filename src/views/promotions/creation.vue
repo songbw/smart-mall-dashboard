@@ -113,7 +113,6 @@ export default {
       this.gotoPromotionList()
     },
     gotoPromotionList() {
-      this.$store.commit('promotions/RESET_DATA')
       window.history.length > 1
         ? this.$router.go(-1)
         : this.$router.replace({ name: 'Promotions' })

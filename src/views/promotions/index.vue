@@ -1,11 +1,11 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true" :model="query">
+    <el-form :inline="true">
       <el-form-item label="活动名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
       <el-form-item label="活动状态">
-        <el-select v-model="query.status">
+        <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -15,7 +15,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="全天分时段活动">
-        <el-switch v-model="query.dailySchedule" />
+        <el-switch v-model="queryDailySchedule" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
@@ -191,8 +191,8 @@
     </el-table>
     <pagination
       :total="promotionTotal"
-      :page.sync="query.offset"
-      :limit.sync="query.limit"
+      :page.sync="queryOffset"
+      :limit.sync="queryLimit"
       @pagination="getPromotionData"
     />
   </div>
@@ -237,13 +237,6 @@ export default {
         value: 0,
         label: '全部'
       }].concat(PromotionStatusDefinition),
-      query: {
-        name: '',
-        status: 0,
-        dailySchedule: false,
-        offset: 1,
-        limit: 20
-      },
       dataLoading: false,
       promotionSelection: [],
       promotionData: [],
@@ -255,14 +248,47 @@ export default {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
       promotionTypes: 'promotionTypes',
-      promotionTypeId: 'promotionTypeId'
+      promotionTypeId: 'promotionTypeId',
+      promotionQuery: 'promotionQuery'
     }),
     queryName: {
       get() {
-        return this.query.name
+        return this.promotionQuery.name
       },
       set(value) {
-        this.query.name = trim(value)
+        this.$store.commit('promotions/SET_SEARCH_DATA', { name: trim(value) })
+      }
+    },
+    queryStatus: {
+      get() {
+        return this.promotionQuery.status
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_SEARCH_DATA', { status: value })
+      }
+    },
+    queryDailySchedule: {
+      get() {
+        return this.promotionQuery.dailySchedule
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_SEARCH_DATA', { dailySchedule: value })
+      }
+    },
+    queryOffset: {
+      get() {
+        return this.promotionQuery.offset
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_SEARCH_DATA', { offset: value })
+      }
+    },
+    queryLimit: {
+      get() {
+        return this.promotionQuery.limit
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_SEARCH_DATA', { limit: value })
       }
     },
     typeTabs: {
@@ -306,7 +332,7 @@ export default {
     async queryAllPromotionData() {
       this.dataLoading = true
       try {
-        const { data } = await getPromotionsApi({ offset: this.query.offset, limit: this.query.limit })
+        const { data } = await getPromotionsApi({ offset: this.queryOffset, limit: this.queryLimit })
         this.promotionData = data.result.list
         this.promotionTotal = data.result.total
       } catch (e) {
@@ -320,15 +346,15 @@ export default {
     getFilterParams() {
       const params = {}
       let needFilter = false
-      if (this.query.name) {
-        params.name = this.query.name
+      if (this.queryName) {
+        params.name = this.queryName
         needFilter = true
       }
-      if (this.query.status !== 0) {
-        params.status = this.query.status
+      if (this.queryStatus !== 0) {
+        params.status = this.queryStatus
         needFilter = true
       }
-      if (this.query.dailySchedule) {
+      if (this.queryDailySchedule) {
         params.dailySchedule = true
         needFilter = true
       }
@@ -340,8 +366,8 @@ export default {
         this.queryTypeId = '-1'
       }
       if (needFilter) {
-        params.offset = this.query.offset
-        params.limit = this.query.limit
+        params.offset = this.queryOffset
+        params.limit = this.queryLimit
         return params
       } else {
         return null
@@ -362,7 +388,7 @@ export default {
       }
     },
     handleFilter() {
-      this.query.offset = 1
+      this.queryOffset = 1
       this.getPromotionData()
     },
     handleSelectionChange(selection) {
@@ -439,8 +465,8 @@ export default {
         const params = { id: id }
         deletePromotionApi(params).then(() => {
           this.$message({ message: '活动删除成功！', type: 'success' })
-          if (this.promotionData.length === 1 && this.query.offset > 1) {
-            this.query.offset = this.query.offset - 1
+          if (this.promotionData.length === 1 && this.queryOffset > 1) {
+            this.queryOffset = this.queryOffset - 1
           }
           this.getPromotionData()
         }).catch(err => {

@@ -55,7 +55,7 @@
           <span>{{ scope.row.company.updateTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="280">
+      <el-table-column label="操作" align="center" width="320">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" @click="handleViewVendor(scope.$index)">
             查看
