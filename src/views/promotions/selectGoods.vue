@@ -201,10 +201,12 @@
               <el-input-number
                 :value="scope.row.discount > 0 ? scope.row.price - scope.row.discount : null"
                 :controls="false"
-                size="mini"
+                :precision="2"
+                :step="0.01"
                 :min="0"
                 :max="scope.row.price + 1"
                 step-strictly
+                size="mini"
                 @input="value => handleSetSecKillPrice(value, scope.row)"
                 @blur="event => handleConfirmEditDiscount(scope.row)"
               />
@@ -224,7 +226,7 @@
               />
             </template>
             <template v-else>
-              <span>{{ scope.row.discount > 0 ? scope.row.price - scope.row.discount : null }}</span>
+              <span>{{ scope.row.discount > 0 ? (scope.row.price - scope.row.discount).toFixed(2) : null }}</span>
               <el-button
                 v-if="viewOnly === false"
                 icon="el-icon-edit"
@@ -640,7 +642,7 @@ export default {
       return total
     },
     handleSetSecKillPrice(value, row) {
-      row.discount = row.price >= value ? row.price - value : 0
+      row.discount = row.price >= value ? (row.price - value).toFixed(2) : 0
     },
     handleCancelEditDiscount(row) {
       row.discount = row.originalDiscount
