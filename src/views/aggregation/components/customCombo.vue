@@ -80,13 +80,15 @@
         </el-form-item>
       </el-form>
     </div>
-    <el-form label-width="160px" label-position="right">
+    <el-form label-width="160px" label-position="right" style="margin-top: 10px">
+      <!--
       <el-form-item label="商品展示">
         <el-radio-group v-model="countPerLine">
           <el-radio label="2">1行2个</el-radio>
           <el-radio label="3">1行3个</el-radio>
         </el-radio-group>
       </el-form-item>
+      -->
       <el-form-item label="下边距">
         <el-select v-model="marginBottom">
           <el-option label="0px" value="0" />

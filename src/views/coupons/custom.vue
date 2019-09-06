@@ -22,7 +22,7 @@
         <el-input
           :value="formData.name"
           :readonly="viewOnly"
-          maxlength="20"
+          maxlength="30"
           style="width: 350px"
           @input="value => formData.name = value.trim()"
         />

@@ -47,12 +47,17 @@
           size="mini"
           @click="dialogSelectionVisible = true"
         >
-          选择优惠券
+          添加优惠券
         </el-button>
       </div>
       <div class="header-ops-container">
         <span>{{ `已选择${selectedItems.length}件商品` }}</span>
-        <el-button type="text" style="margin-left: 10px" @click="handleDeleteSelection">
+        <el-button
+          :disabled="selectedItems.length === 0"
+          type="text"
+          style="margin-left: 10px"
+          @click="handleDeleteSelection"
+        >
           删除
         </el-button>
       </div>
@@ -144,7 +149,12 @@ import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
 import CouponSelection from './couponSelection'
 import { couponType, couponSettings } from './templateType'
-import { CouponStatusDefinition } from '@/utils/constants'
+import {
+  coupon_status_ready_for_sale,
+  coupon_status_on_sale,
+  coupon_status_off_shelves,
+  CouponStatusDefinition
+} from '@/utils/constants'
 
 export default {
   name: 'CustomCoupon',
@@ -183,7 +193,19 @@ export default {
     },
     couponList: {
       get() {
-        return this.couponData.list
+        return this.couponData.list.map(coupon => {
+          const { releaseStartDate, releaseEndDate, status, ...rest } = coupon
+          const now = moment()
+          let newStatus = status
+          if (now.isBefore(releaseStartDate)) {
+            newStatus = coupon_status_ready_for_sale
+          } else if (now.isBetween(releaseStartDate, releaseEndDate)) {
+            newStatus = coupon_status_on_sale
+          } else if (now.isAfter(releaseEndDate)) {
+            newStatus = coupon_status_off_shelves
+          }
+          return { releaseStartDate, releaseEndDate, status: newStatus, ...rest }
+        })
       }
     },
     showTitle: {
@@ -310,7 +332,10 @@ export default {
     },
     onSelectionConfirmed(selection) {
       this.dialogSelectionVisible = false
-      this.$store.commit('aggregations/SET_COUPON_LIST', selection)
+      const filtered = selection.filter(item => this.couponList.findIndex(coupon => coupon.id === item.id) < 0)
+      if (filtered.length > 0) {
+        this.$store.commit('aggregations/SET_COUPON_LIST', this.couponData.list.concat(filtered))
+      }
     }
   }
 }
