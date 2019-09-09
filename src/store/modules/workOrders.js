@@ -4,7 +4,7 @@ const state = {
     pageSize: 20,
     typeId: null,
     status: null,
-    mobile: '',
+    receiverPhone: '',
     timeStart: null,
     timeEnd: null
   }

@@ -41,12 +41,20 @@ export const constantRoutes = [
     path: '/',
     component: Layout,
     redirect: '/dashboard',
-    children: [{
-      path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: { title: '首页', icon: 'dashboard' }
-    }]
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/dashboard/index'),
+        meta: { title: '首页', icon: 'dashboard' }
+      }, {
+        path: '/password/change',
+        name: 'PasswordChange',
+        component: () => import('@/views/dashboard/passwordChange'),
+        hidden: true,
+        meta: { requiresAuth: true }
+      }
+    ]
   },
   {
     path: '/goods',
@@ -320,13 +328,13 @@ export const constantRoutes = [
         path: 'manager',
         name: 'VendorManager',
         component: () => import('@/views/vendor/manager'),
-        meta: { title: '商户管理', icon: 'vendor', roles: [role_admin_name] }
+        meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name] }
       },
       {
         path: 'users',
         name: 'UserManager',
         component: () => import('@/views/vendor/userManager'),
-        meta: { title: '用户管理', icon: 'user-manager', roles: [role_admin_name] }
+        meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
       }
     ]
   },

@@ -18,6 +18,9 @@
             </el-dropdown-item>
           </router-link>
           <el-dropdown-item divided>
+            <span style="display:block;" @click="changePassword">修改密码</span>
+          </el-dropdown-item>
+          <el-dropdown-item>
             <span style="display:block;" @click="logout">退出登录</span>
           </el-dropdown-item>
         </el-dropdown-menu>
@@ -45,6 +48,9 @@ export default {
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
+    },
+    changePassword() {
+      this.$router.push('/password/change')
     },
     async logout() {
       try {

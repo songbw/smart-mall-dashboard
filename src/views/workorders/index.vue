@@ -63,9 +63,17 @@
       </el-table-column>
       <el-table-column label="子订单编号" align="center">
         <template slot-scope="scope">
-          <el-button type="text" @click="handleViewSubOrder(scope.row.orderId)">
-            {{ scope.row.orderId }}
-          </el-button>
+          <span>{{ scope.row.orderId }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="收货人姓名" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.receiverName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="收货人电话" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.receiverPhone }}</span>
         </template>
       </el-table-column>
       <el-table-column label="申请时间" align="center" width="180">
@@ -113,6 +121,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import {
@@ -147,7 +156,8 @@ export default {
       listLoading: false,
       workOrderData: [],
       workOrderTotal: 0,
-      workOrderSelection: []
+      workOrderSelection: [],
+      queryParams: null
     }
   },
   computed: {
@@ -156,10 +166,10 @@ export default {
     }),
     queryMobile: {
       get() {
-        return this.workOrdersQuery.mobile
+        return this.workOrdersQuery.receiverPhone
       },
       set(value) {
-        this.$store.commit('workOrders/SET_SEARCH_DATA', { mobile: trim(value) })
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { receiverPhone: trim(value) })
       }
     },
     queryStatus: {
@@ -216,11 +226,8 @@ export default {
   },
   methods: {
     getSearchParams() {
-      const params = {
-        pageIndex: this.queryOffset,
-        pageSize: this.queryLimit
-      }
-      const keys = ['mobile', 'timeStart', 'timeEnd']
+      const params = {}
+      const keys = ['receiverPhone', 'timeStart', 'timeEnd']
       keys.forEach(key => {
         if (!isEmpty(this.workOrdersQuery[key])) {
           params[key] = this.workOrdersQuery[key]
@@ -232,7 +239,11 @@ export default {
       if (this.queryTypeId > 0) {
         params.typeId = this.queryTypeId
       }
-      return params
+      if (!isEqual(this.queryParams, params)) {
+        this.queryParams = { ...params }
+        this.queryOffset = 1
+      }
+      return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getWorkOrderList() {
       try {
