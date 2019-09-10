@@ -155,7 +155,7 @@
               </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          <el-button v-else type="primary" icon="el-icon-view" @click="handleViewCoupon(scope.$index)">
+          <el-button v-else type="primary" icon="el-icon-view" @click="handleViewCoupon(scope.row.id)">
             查看
           </el-button>
         </template>

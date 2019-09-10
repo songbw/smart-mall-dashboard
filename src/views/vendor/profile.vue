@@ -348,20 +348,23 @@ export default {
       this.uploadFileList = fileList
     },
     async handleSubmitVendor() {
-      try {
-        await this.$confirm('提交后将不能修改信息, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-        await this.updateVendorProfile()
-        await this.$store.dispatch('vendor/submitProfile')
-        this.$message.success('企业信息提交成功，正在审核！')
-      } catch (e) {
-        console.log(`Submit vendor error: ${e}`)
-        const msg = this.getErrorMessage(e) || '企业信息提交失败，请联系管理人员！'
-        this.$message.error(msg)
-      }
+      this.$confirm('提交后将不能修改信息, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          await this.updateVendorProfile()
+          await this.$store.dispatch('vendor/submitProfile')
+          this.$message.success('企业信息提交成功，正在审核！')
+        } catch (e) {
+          console.log(`Submit vendor error: ${e}`)
+          const msg = this.getErrorMessage(e) || '企业信息提交失败，请联系管理人员！'
+          this.$message.error(msg)
+        }
+      }).catch(() => {
+        console.log(`Cancel submitting vendor`)
+      })
     }
   }
 }
