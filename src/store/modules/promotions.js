@@ -24,6 +24,7 @@ const promotionTemplate = {
   dailySchedule: false,
   startDate: '',
   endDate: '',
+  accountType: 0,
   discountType: 0,
   status: 1,
   promotionSkus: [],
@@ -35,6 +36,7 @@ const state = {
     name: '',
     status: 0,
     dailySchedule: false,
+    accountType: -1,
     offset: 1,
     limit: 20
   },

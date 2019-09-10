@@ -138,6 +138,20 @@ export const PromotionPublishedDefinition = [{
   label: '进行中'
 }]
 
+export const promotion_account_type_normal = 0
+export const promotion_account_type_sec_kill = 1
+export const promotion_account_type_premium = 2
+export const PromotionAccountTypeDefinition = [{
+  value: promotion_account_type_normal,
+  label: '普通类结算'
+}, {
+  value: promotion_account_type_sec_kill,
+  label: '秒杀类结算'
+}, {
+  value: promotion_account_type_premium,
+  label: '精品类结算'
+}]
+
 export const coupon_status_init = 1
 export const coupon_status_published = 2
 export const coupon_status_ready_for_sale = 3
