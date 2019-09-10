@@ -237,6 +237,7 @@
     <el-dialog
       :visible.sync="uploadDialogVisible"
       :close-on-click-modal="false"
+      :close-on-press-escape="false"
       :show-close="false"
       title="正在上传图片"
       width="20%"

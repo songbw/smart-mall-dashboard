@@ -92,7 +92,14 @@
       :company="currentVendor"
       @onConfirmed="vendorInfoDialogVisible = false"
     />
-    <el-dialog title="修改用户公司" :visible.sync="vendorEditDialogVisible" width="30%">
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="vendorEditDialogVisible"
+      title="修改用户公司"
+      width="30%"
+    >
       <el-form ref="vendorForm" v-loading="vendorLoading" :model="vendorForm" :rules="vendorRules" label-width="80px">
         <el-form-item label="登录名">
           <el-input :value="vendorForm.loginName" readonly />
@@ -114,6 +121,9 @@
       </div>
     </el-dialog>
     <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
       :visible.sync="userDialogVisible"
       title="创建商户管理员"
       width="30%"
@@ -159,7 +169,14 @@
         <el-button type="primary" @click="handleUserDialogConfirm">确定</el-button>
       </div>
     </el-dialog>
-    <el-dialog title="修改用户电话" :visible.sync="phoneEditDialogVisible" width="30%">
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="phoneEditDialogVisible"
+      title="修改用户电话"
+      width="30%"
+    >
       <el-form ref="phoneForm" :model="phoneForm" :rules="phoneRules" label-width="80px">
         <el-form-item label="登录名">
           <el-input :value="phoneForm.loginName" readonly />

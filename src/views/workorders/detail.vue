@@ -95,7 +95,13 @@
     />
     <el-button type="primary" @click="goBack">返回</el-button>
 
-    <el-dialog title="工单处理" :visible.sync="dialogFlowVisible">
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="dialogFlowVisible"
+      title="工单处理"
+    >
       <el-form ref="flowForm" :model="flowForm" :rules="flowRules" label-width="120px">
         <el-form-item label="处理选项" prop="status">
           <el-select
