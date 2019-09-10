@@ -137,9 +137,12 @@
       />
       <el-table-column label="商品SKU" align="center" width="140">
         <template slot-scope="scope">
-          <el-button type="text" @click="handleViewProduct(scope.$index)">
+          <router-link
+            :to="{ name: 'ShowProduct', params: { id: scope.row.id }}"
+            class="el-link el-link--primary is-underline"
+          >
             {{ scope.row.skuid }}
-          </el-button>
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="商品图" align="center" width="140">

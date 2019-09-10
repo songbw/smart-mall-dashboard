@@ -314,6 +314,7 @@ export default {
       if (changed) {
         updateBrandApi(params).then(() => {
           this.$message.success('更新品牌信息成功！')
+          this.getListData()
         }).catch((err) => {
           console.log('Brand update error:' + err)
           this.$message.error('更新品牌信息失败，请稍后重试!')
