@@ -99,7 +99,13 @@
       :users="currentVendor.users || []"
       @onConfirmed="detailVisible = false"
     />
-    <el-dialog :visible.sync="vendorDialogVisible" title="创建商户">
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="vendorDialogVisible"
+      title="创建商户"
+    >
       <el-form
         ref="vendorForm"
         :model="vendorProfile"

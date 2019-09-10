@@ -237,6 +237,7 @@
     <el-dialog
       :visible.sync="uploadDialogVisible"
       :close-on-click-modal="false"
+      :close-on-press-escape="false"
       :show-close="false"
       title="正在上传图片"
       width="20%"
@@ -548,8 +549,14 @@ export default {
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
     },
     handleBeforeUploadImage(file) {
+      const maxSize = 1024 * 1024
+      if (file.size > maxSize) {
+        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
+        return false
+      }
       this.uploadDialogVisible = true
       this.uploadPercentage = 0
+      return true
     },
     handleUploadImageProgress(event) {
       this.uploadPercentage = event.percent

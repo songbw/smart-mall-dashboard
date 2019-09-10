@@ -128,7 +128,13 @@
       </el-container>
     </el-container>
 
-    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible" center width="40%">
+    <el-dialog
+      :title="dialogFormTitle"
+      :visible.sync="dialogFormVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
       <el-form
         ref="categoryForm"
         v-loading="dialogLoading"

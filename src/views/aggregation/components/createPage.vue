@@ -58,8 +58,14 @@
       :visible.sync="groupDialogVisible"
       width="50%"
     >
-      <el-radio-group v-model="groupSelectId">
-        <el-radio v-for="group in aggregationGroups" :key="group.name" :label="group.id.toString()" border>
+      <el-radio-group v-model="groupSelectId" size="small">
+        <el-radio
+          v-for="group in aggregationGroups"
+          :key="group.name"
+          :label="group.id.toString()"
+          border
+          style="margin: 2px"
+        >
           {{ group.name }}
         </el-radio>
       </el-radio-group>

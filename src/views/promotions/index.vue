@@ -16,7 +16,7 @@
       </el-form-item>
     </el-form>
     <el-form inline>
-      <el-form-item label="活动状态">
+      <el-form-item label="结算类型">
         <el-select v-model="queryAccountType">
           <el-option
             v-for="item in accountTypeOptions"

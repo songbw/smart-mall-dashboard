@@ -80,7 +80,13 @@
         </el-form-item>
       </el-form>
     </el-main>
-    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
+    <el-dialog
+      :title="dialogFormTitle"
+      :visible.sync="dialogFormVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
       <el-form ref="ruleForm" :model="dialogValue" :rules="dialogRules" label-position="left" label-width="80px">
         <el-form-item label="名称">
           <el-input v-model="dialogValue.name" />
@@ -198,6 +204,7 @@ export default {
       this.dialogFormVisible = true
     },
     handleCancel() {
+      this.$refs.ruleForm.clearValidate()
       this.dialogFormVisible = false
     },
     handleSubmit() {

@@ -124,7 +124,13 @@
       :total="orderTotal"
       @pagination="getOrderList"
     />
-    <el-dialog title="物流信息" :visible.sync="deliveryDialogVisible">
+    <el-dialog
+      title="物流信息"
+      :visible.sync="deliveryDialogVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
       <el-form
         ref="deliveryForm"
         v-loading="expressLoading"

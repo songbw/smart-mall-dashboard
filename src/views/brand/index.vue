@@ -80,7 +80,13 @@
       @pagination="getBrandData"
     />
 
-    <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
+    <el-dialog
+      :title="dialogFormTitle"
+      :visible.sync="dialogFormVisible"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+    >
       <el-form ref="brandForm" :model="dialogValue" :rules="dialogRules" label-width="120">
         <el-form-item label="品牌全称" prop="brandName">
           <el-input
@@ -282,8 +288,8 @@ export default {
       this.dialogValue.brandLogo = url
     },
     handleCancel() {
-      this.dialogFormVisible = false
       this.$refs.brandForm.clearValidate()
+      this.dialogFormVisible = false
     },
     handleSubmit() {
       this.$refs.brandForm.validate(valid => {
@@ -314,6 +320,7 @@ export default {
       if (changed) {
         updateBrandApi(params).then(() => {
           this.$message.success('更新品牌信息成功！')
+          this.getListData()
         }).catch((err) => {
           console.log('Brand update error:' + err)
           this.$message.error('更新品牌信息失败，请稍后重试!')

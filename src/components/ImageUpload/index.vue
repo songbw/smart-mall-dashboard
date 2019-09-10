@@ -103,6 +103,11 @@ export default {
   },
   methods: {
     handleBeforeUploadImage(file) {
+      const maxSize = 1024 * 1024
+      if (file.size > maxSize) {
+        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
+        return false
+      }
       this.uploadingImage = true
       return true
     },

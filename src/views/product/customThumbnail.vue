@@ -1,7 +1,7 @@
 <template>
-  <el-card :body-style="{ padding: '0px' }">
+  <el-card :body-style="{ padding: '0px' }" style="min-width: 180px">
     <el-image :src="imageUrl" class="image" fit="contain" />
-    <div v-if="couldEdit" style="padding: 14px;">
+    <div v-if="couldEdit" style="display: flex;flex-direction: column;align-items: center">
       <el-upload
         ref="thumbnailUpload"
         :action="uploadUrl"
@@ -25,7 +25,7 @@
           {{ `修改主图 ${index + 1}` }}
         </el-button>
       </el-upload>
-      <el-button-group>
+      <el-button-group style="margin: 3px 0">
         <el-button
           size="mini"
           type="danger"
@@ -106,7 +106,12 @@ export default {
       this.$emit('uploadSuccess', { index: this.index, url: res.data.url })
     },
     handleBeforeUpload(file) {
-      this.$emit('beforeUpload', file)
+      const maxSize = 1024 * 1024
+      if (file.size > maxSize) {
+        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
+        return false
+      }
+      return true
     },
     handleUploadError(err) {
       this.$refs.thumbnailUpload.clearFiles()
