@@ -107,8 +107,8 @@ const CreationHeaders = [
   { field: 'image', label: '商品封面图', type: 'string' },
   { field: 'upc', label: '商品条形码', type: 'string' },
   { field: 'saleunit', label: '销售单位', type: 'string' },
-  { field: 'price', label: '销售价格', type: 'string' },
-  { field: 'sprice', label: '进货价格', type: 'string' },
+  { field: 'price', label: '销售价格(元)', type: 'string' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string' },
   { field: 'inventory', label: '商品库存', type: 'number' },
   { field: 'imagesUrl', label: '商品主图', type: 'string' },
   { field: 'introductionUrl', label: '商品描述图', type: 'string' }
@@ -191,6 +191,7 @@ export default {
       })
     },
     handleDialogCancel() {
+      this.loading = false
       this.clearDialogData()
       this.$emit('onSelectionCancelled')
     },
@@ -284,7 +285,7 @@ export default {
           }
         })
         if (!isEmpty(product)) {
-          if (this.isAdminUser()) {
+          if (this.isAdminUser) {
             if (this.formData.merchantId) {
               product.merchantId = this.formData.merchantId
             }
