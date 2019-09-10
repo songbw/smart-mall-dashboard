@@ -32,7 +32,7 @@
               <span>￥ {{ workOrderData.refundAmount }}</span>
             </el-form-item>
             <el-form-item label="更新时间:">
-              <span>{{ workOrderData.createTime | timeFilter }}</span>
+              <span>{{ workOrderData.updateTime | timeFilter }}</span>
             </el-form-item>
             <el-form-item label="累计退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
