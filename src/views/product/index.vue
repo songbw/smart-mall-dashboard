@@ -161,7 +161,7 @@
           <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="isAdminUser" label="销售价格(元)" align="center" width="120">
+      <el-table-column label="销售价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
             <el-input-number
