@@ -1,6 +1,11 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true">
+    <el-form label-width="120px">
+      <el-form-item label="子订单编号">
+        <el-input v-model="queryOrderId" :clearable="true" placeholder="输入子订单编号" style="width: 500px" />
+      </el-form-item>
+    </el-form>
+    <el-form :inline="true" label-width="120px">
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
       </el-form-item>
@@ -25,7 +30,7 @@
         </el-select>
       </el-form-item>
     </el-form>
-    <el-form :inline="true">
+    <el-form :inline="true" label-width="120px">
       <el-form-item label="申请开始日期">
         <el-date-picker
           v-model="queryStartDate"
@@ -188,6 +193,14 @@ export default {
         this.$store.commit('workOrders/SET_SEARCH_DATA', { typeId: value })
       }
     },
+    queryOrderId: {
+      get() {
+        return this.workOrdersQuery.orderId
+      },
+      set(value) {
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { orderId: value })
+      }
+    },
     queryStartDate: {
       get() {
         return this.workOrdersQuery.timeStart
@@ -227,7 +240,7 @@ export default {
   methods: {
     getSearchParams() {
       const params = {}
-      const keys = ['receiverPhone', 'timeStart', 'timeEnd']
+      const keys = ['receiverPhone', 'orderId', 'timeStart', 'timeEnd']
       keys.forEach(key => {
         if (!isEmpty(this.workOrdersQuery[key])) {
           params[key] = this.workOrdersQuery[key]

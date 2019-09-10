@@ -18,6 +18,9 @@
                 <div><span class="item-label">子订单状态：</span> {{ getSubStatus(scope.row) | statusFilter }}</div>
                 <div><span class="item-label">子订单号：</span> {{ scope.row.subOrderId }}</div>
               </div>
+              <div style="margin-top: 10px">
+                <span class="item-label">备注信息：</span> {{ scope.row.remark }}
+              </div>
               <div v-if="fetchedLogistics" style="margin-top: 10px">
                 <div class="item-label">物流信息：</div>
                 <el-timeline style="margin-top: 10px">

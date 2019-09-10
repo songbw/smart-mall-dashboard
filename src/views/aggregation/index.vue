@@ -398,7 +398,7 @@ export default {
       }
     },
     handleFilter() {
-      this.listQuery.offset = 1
+      this.queryOffset = 1
       this.getListData()
     },
     createPage() {

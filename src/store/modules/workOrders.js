@@ -3,6 +3,7 @@ const state = {
     pageIndex: 1,
     pageSize: 20,
     typeId: null,
+    orderId: '',
     status: null,
     receiverPhone: '',
     timeStart: null,

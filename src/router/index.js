@@ -51,8 +51,7 @@ export const constantRoutes = [
         path: '/password/change',
         name: 'PasswordChange',
         component: () => import('@/views/dashboard/passwordChange'),
-        hidden: true,
-        meta: { requiresAuth: true }
+        hidden: true
       }
     ]
   },

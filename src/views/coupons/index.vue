@@ -172,6 +172,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isEqual from 'lodash/isEqual'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
 import {
@@ -214,7 +215,8 @@ export default {
       }].concat(CouponStatusDefinition),
       dataLoading: false,
       couponData: [],
-      couponTotal: 0
+      couponTotal: 0,
+      queryParams: null
     }
   },
   computed: {
@@ -330,6 +332,10 @@ export default {
         params.releaseEndDate = this.queryEndDate
         needFilter = true
       }
+      if (!isEqual(this.queryParams, params)) {
+        this.queryParams = { ...params }
+        this.queryOffset = 1
+      }
       if (needFilter) {
         params.offset = this.queryOffset
         params.limit = this.queryLimit
@@ -349,10 +355,6 @@ export default {
       } finally {
         this.dataLoading = false
       }
-    },
-    handleFilter() {
-      this.queryOffset = 1
-      this.getCouponData()
     },
     handleCreateCoupon() {
       this.$router.push({ name: 'CreateCoupon' })

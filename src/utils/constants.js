@@ -57,7 +57,7 @@ export const suborder_status_waiting_deliver = 1
 export const suborder_status_delivered = 2
 export const suborder_status_completed = 3
 export const suborder_status_canceled = 4
-export const suborder_status_failed = 5
+export const suborder_status_requested_service = 5
 export const SubOrderStatusDefinitions = [{
   value: suborder_status_waiting_pay,
   label: '待付款' // 已下单
@@ -74,8 +74,8 @@ export const SubOrderStatusDefinitions = [{
   value: suborder_status_canceled,
   label: '已取消'
 }, {
-  value: suborder_status_failed,
-  label: '已失败'
+  value: suborder_status_requested_service,
+  label: '已申请售后'
 }]
 
 export const PaymentStatusDefinitions = [{

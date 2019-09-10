@@ -158,7 +158,7 @@ export default {
             } else {
               await this.getVendorProfile()
             }
-            this.$router.push({ path: '/' })
+            await this.$router.replace({ path: '/' })
           } catch (e) {
             console.warn('User Login:' + e)
             let msg = '系统服务有问题，请联系管理员！'

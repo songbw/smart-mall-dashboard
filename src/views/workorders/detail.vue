@@ -239,9 +239,9 @@ export default {
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
-        options = [3, 4]
+        options = [3]
       } else if (this.workOrderData.status === 2) {
-        options = [3, 4]
+        options = [3]
       } else if (this.workOrderData.status === 3) {
         options = [5, 6]
       } else if (this.workOrderData.status === 5) {

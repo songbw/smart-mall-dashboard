@@ -30,6 +30,16 @@ export function updateOrderRemarkApi(params) {
   })
 }
 
+export function updateSubOrderApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/order/subOrder',
+    method: 'put',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function getAddressApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/address/level',

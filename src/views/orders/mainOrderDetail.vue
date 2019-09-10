@@ -6,7 +6,6 @@
       :merchant-id="orderData.merchantId"
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
-      :remark="orderData.remark"
     />
     <receiver-info
       :receiver-name="orderData.receiverName"

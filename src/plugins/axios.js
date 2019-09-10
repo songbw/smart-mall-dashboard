@@ -24,7 +24,7 @@ const relogin = () => {
     })
     .catch(() => {
     })
-    .finally(() => location.reload())
+    .finally(() => location.reload(true))
 }
 const axiosService = apiKey => {
   if (axiosMap.has(apiKey)) {

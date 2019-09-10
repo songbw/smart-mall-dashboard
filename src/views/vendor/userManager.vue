@@ -70,7 +70,12 @@
           <el-button size="mini" type="info" @click="handleEditUserPhone(scope.$index)">
             修改电话
           </el-button>
-          <el-button size="mini" type="danger" @click="handleDeleteUser(scope.$index)">
+          <el-button
+            :disabled="scope.row.role === 'admin'"
+            size="mini"
+            type="danger"
+            @click="handleDeleteUser(scope.$index)"
+          >
             删除用户
           </el-button>
         </template>

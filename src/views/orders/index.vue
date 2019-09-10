@@ -113,7 +113,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订单状态" width="80">
+      <el-table-column align="center" label="订单状态" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.subStatus | OrderStatus }}</span>
         </template>
@@ -155,10 +155,11 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
-import { exportOrdersApi, getOrderListApi, updateOrderRemarkApi } from '@/api/orders'
+import { exportOrdersApi, getOrderListApi, updateSubOrderApi } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
 
@@ -187,7 +188,8 @@ export default {
       listLoading: false,
       orderData: [],
       orderTotal: 0,
-      merchantName: ''
+      merchantName: '',
+      queryParams: null
     }
   },
   computed: {
@@ -305,10 +307,7 @@ export default {
       }
     },
     getSearchParams() {
-      const params = {
-        pageIndex: this.queryOffset,
-        pageSize: this.queryLimit
-      }
+      const params = {}
       const keys = ['tradeNo', 'subOrderId', 'mobile', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
@@ -321,7 +320,11 @@ export default {
       if (this.queryVendor >= 0) {
         params.merchantId = this.queryVendor
       }
-      return params
+      if (!isEqual(this.queryParams, params)) {
+        this.queryParams = { ...params }
+        this.queryOffset = 1
+      }
+      return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getOrderList() {
       try {
@@ -359,7 +362,7 @@ export default {
         cancelButtonText: '取消'
       }).then(async({ value }) => {
         try {
-          await updateOrderRemarkApi({ id, remark: value })
+          await updateSubOrderApi({ id, remark: value })
           this.$message.success('更新订单备注信息成功！')
         } catch (e) {
           this.$message.error('更新订单备注信息失败！')

@@ -163,6 +163,7 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
+import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import {
@@ -195,6 +196,7 @@ export default {
     return {
       expressOptions: [],
       listLoading: false,
+      queryParams: null,
       orderQuery: {
         mobile: '',
         subStatus: 1,
@@ -253,9 +255,7 @@ export default {
   methods: {
     getSearchParams() {
       const params = {
-        subStatus: this.orderQuery.subStatus,
-        pageIndex: this.orderQuery.pageIndex,
-        pageSize: this.orderQuery.pageSize
+        subStatus: this.orderQuery.subStatus
       }
       const keys = ['mobile', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
@@ -263,7 +263,11 @@ export default {
           params[key] = this.orderQuery[key]
         }
       })
-      return params
+      if (!isEqual(this.queryParams, params)) {
+        this.queryParams = { ...params }
+        this.orderQuery.pageIndex = 1
+      }
+      return { ...params, pageIndex: this.orderQuery.pageIndex, pageSize: this.orderQuery.pageSize }
     },
     async getOrderList() {
       try {
@@ -308,7 +312,6 @@ export default {
     },
     onQueryStatusChanged(value) {
       this.orderQuery.subStatus = value
-      this.getOrderList()
     },
     onExpressSelected(value) {
       this.deliveryData.comCode = value

@@ -31,12 +31,6 @@
             <span class="item-text">{{ updatedAt | timeFilter }}</span>
           </el-col>
         </el-row>
-        <el-row class="item-row">
-          <el-col :span="12">
-            <span class="item-label">备注信息：</span>
-            <span class="item-text">{{ remark }}</span>
-          </el-col>
-        </el-row>
       </el-card>
     </el-col>
   </el-row>

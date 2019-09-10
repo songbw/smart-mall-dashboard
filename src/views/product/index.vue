@@ -350,6 +350,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
+import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import moment from 'moment'
 import {
@@ -422,7 +423,8 @@ export default {
         firstCategoryValue: null,
         secondCategoryValue: null,
         thirdCategoryValue: null
-      }
+      },
+      queryParams: null
     }
   },
   computed: {
@@ -643,7 +645,11 @@ export default {
       if (this.listState !== -2) {
         params.state = this.listState
       }
-      return params
+      if (!isEqual(this.queryParams, params)) {
+        this.queryParams = { ...params }
+        this.listOffset = 1
+      }
+      return { ...params }
     },
     async getFilterProducts(params) {
       try {
