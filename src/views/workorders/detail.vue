@@ -121,7 +121,7 @@
           <el-switch v-model="flowForm.handleFare" />
         </el-form-item>
         <el-form-item label="处理意见" prop="comments">
-          <el-input v-model="flowForm.comments" autocomplete="off" />
+          <el-input v-model="flowForm.comments" autocomplete="off" maxlength="50" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">

@@ -267,6 +267,7 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
+import trim from 'lodash/trim'
 import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -311,7 +312,7 @@ export default {
   data() {
     this.productInfo = null
     const validateValue = (rule, value, callback) => {
-      if (value == null) {
+      if (value === null || value === '') {
         switch (rule.field) {
           case 'merchantId':
             if (this.isAdminUser) {
@@ -665,6 +666,7 @@ export default {
       this.introductionUrls.splice(index, 1)
     },
     handleSubmit() {
+      this.productForm.name = trim(this.productForm.name)
       this.productForm.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : ''
       this.productForm.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : ''
       if (this.productForm.sprice > 0 &&

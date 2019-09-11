@@ -93,11 +93,12 @@ export function createVendorUserApi(params) {
 }
 
 export function updateVendorUserApi(params) {
+  const { userId, ...rest } = params
   return Vue.axios('vendor').request({
-    url: `/vendors/users/${params.userId}`,
+    url: `/vendors/users/${userId}`,
     method: 'put',
     data: {
-      phone: params.phone
+      ...rest
     }
   })
 }
@@ -116,5 +117,12 @@ export function createVendorProfileApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function getVendorRolesApi() {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users/roles/list`,
+    method: 'get'
   })
 }

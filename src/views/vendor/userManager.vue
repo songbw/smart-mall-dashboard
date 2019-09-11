@@ -48,9 +48,9 @@
       </el-table-column>
       <el-table-column label="公司名称" align="center">
         <template slot-scope="scope">
-          <el-button type="text" @click="handleViewVendorInfo(scope.$index)">
+          <span class="el-link el-link--primary is-underline" @click="handleViewVendorInfo(scope.$index)">
             {{ scope.row.company ? scope.row.company.name: '未填写公司' }}
-          </el-button>
+          </span>
         </template>
       </el-table-column>
       <el-table-column label="注册时间" align="center" width="180">
@@ -58,7 +58,7 @@
           <span>{{ scope.row.createTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="300">
+      <el-table-column label="操作" align="center" width="400">
         <template slot-scope="scope">
           <el-button
             type="warning"
@@ -69,6 +69,14 @@
           </el-button>
           <el-button size="mini" type="info" @click="handleEditUserPhone(scope.$index)">
             修改电话
+          </el-button>
+          <el-button
+            :disabled="scope.row.role === 'admin'"
+            size="mini"
+            type="success"
+            @click="handleEditUserRole(scope.$index)"
+          >
+            修改角色
           </el-button>
           <el-button
             :disabled="scope.row.role === 'admin'"
@@ -194,6 +202,34 @@
         <el-button type="primary" @click="handleSetUserPhone">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="roleEditDialogVisible"
+      title="修改用户角色"
+      width="30%"
+    >
+      <el-form ref="roleForm" v-loading="roleLoading" :model="roleForm" :rules="roleRules" label-width="80px">
+        <el-form-item label="登录名">
+          <el-input :value="roleForm.loginName" readonly />
+        </el-form-item>
+        <el-form-item label="企业列表" prop="role">
+          <el-select v-model="roleForm.role" placeholder="请选择角色">
+            <el-option
+              v-for="item in roleOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelSetRole">取消</el-button>
+        <el-button type="primary" @click="handleSetUserRole">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -209,7 +245,8 @@ import {
   setUserVendorApi,
   createVendorUserApi,
   updateVendorUserApi,
-  deleteVendorUserApi
+  deleteVendorUserApi,
+  getVendorRolesApi
 } from '@/api/vendor'
 import {
   vendor_status_approved
@@ -219,15 +256,13 @@ import {
   validPhone
 } from '@/utils/validate'
 
+const parseRole = role => role === 'admin' ? '平台管理员' : '商户管理员'
+
 export default {
   name: 'UserManager',
   filters: {
     roleFormat: role => {
-      if (role === 'admin') {
-        return '平台管理员'
-      } else {
-        return '商户管理员'
-      }
+      return parseRole(role)
     },
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -298,7 +333,7 @@ export default {
         companyId: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value === null) {
-              callback(new Error('请对应的企业'))
+              callback(new Error('请选择对应的企业'))
             } else {
               callback()
             }
@@ -335,12 +370,32 @@ export default {
           }
         }]
       },
-      vendorOptions: []
+      vendorOptions: [],
+      roleEditDialogVisible: false,
+      roleOptions: [],
+      roleLoading: false,
+      roleForm: {
+        userId: null,
+        loginName: '',
+        role: null
+      },
+      roleRules: {
+        role: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择对应的角色'))
+            } else {
+              callback()
+            }
+          }
+        }]
+      }
     }
   },
   created() {
     this.getUsersData()
     this.getVendorList()
+    this.getVendorRoleList()
   },
   methods: {
     async getUsersData() {
@@ -407,6 +462,12 @@ export default {
       this.phoneForm.phone = ''
       this.phoneEditDialogVisible = true
     },
+    handleEditUserRole(index) {
+      this.roleForm.userId = this.userData[index].id
+      this.roleForm.loginName = this.userData[index].loginName
+      this.roleForm.role = null
+      this.roleEditDialogVisible = true
+    },
     onVendorSelected(value) {
       this.vendorForm.companyId = value
     },
@@ -472,7 +533,7 @@ export default {
         const params = {
           loginName: this.userForm.loginName,
           password: this.userForm.password,
-          roleId: 2 // Vendor admin
+          roleId: 2 // Vendor role
         }
         if (!isEmpty(this.userForm.phone)) {
           params.phone = this.userForm.phone
@@ -536,6 +597,42 @@ export default {
       } catch (e) {
         console.warn('Delete user:' + e)
       }
+    },
+    async getVendorRoleList() {
+      try {
+        this.roleLoading = true
+        const { list } = await getVendorRolesApi()
+        if (Array.isArray(list) && list.length > 0) {
+          this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: parseRole(item.name) }))
+        }
+      } catch (e) {
+        console.warn('Get vendor role list error:' + e)
+      } finally {
+        this.roleLoading = false
+      }
+    },
+    handleCancelSetRole() {
+      this.roleEditDialogVisible = false
+      this.$refs.roleForm.clearValidate()
+    },
+    handleSetUserRole() {
+      this.$refs.roleForm.validate(async valid => {
+        if (valid) {
+          this.roleEditDialogVisible = false
+          try {
+            const roleId = this.roleOptions.find(option => option.value === this.roleForm.role).id
+            await updateVendorUserApi({
+              userId: this.roleForm.userId,
+              roleId
+            })
+            this.$message.success('修改用户角色成功！')
+            this.getUsersData()
+          } catch (e) {
+            console.warn('Vendor update role error:' + e)
+            this.$message.warning('修改用户角色失败，请联系管理员！')
+          }
+        }
+      })
     }
   }
 }

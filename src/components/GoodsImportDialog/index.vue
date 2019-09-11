@@ -249,8 +249,8 @@ export default {
     },
     isProductValid(product) {
       const price = Number.parseFloat(product.price)
-      const image = product.image || product.imageExtend
-      return !(Number.isNaN(price) || image === null)
+      const name = product.name
+      return !(Number.isNaN(price) || isEmpty(name))
     },
     generateData({ header, results }) {
       if (this.productCreation) {
@@ -284,7 +284,7 @@ export default {
             product[header.field] = this.parseValue(header.type, item[header.label])
           }
         })
-        if (!isEmpty(product)) {
+        if (!isEmpty(product) && !isEmpty(product.name)) {
           if (this.isAdminUser) {
             if (this.formData.merchantId) {
               product.merchantId = this.formData.merchantId
