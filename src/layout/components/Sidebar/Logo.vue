@@ -13,7 +13,6 @@
 </template>
 
 <script>
-import { title } from '@/settings'
 
 export default {
   name: 'SidebarLogo',

@@ -59,6 +59,7 @@
 
 <script>
 import moment from 'moment'
+import isNumber from 'lodash/isNumber'
 import {
   getMerchantSumDataApi,
   getMerchantOrderDataApi,
