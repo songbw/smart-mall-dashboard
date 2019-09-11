@@ -71,9 +71,12 @@
     >
       <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
-          <el-button type="text" @click="handleViewMainOrder(scope.row.id)">
+          <router-link
+            :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
+            class="el-link el-link--primary is-underline"
+          >
             {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
-          </el-button>
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column align="center" label="子订单编号" width="160">
@@ -135,7 +138,7 @@
           <el-button
             size="mini"
             type="info"
-            @click="handleEditOrderRemark(scope.row.id)"
+            @click="handleEditOrderRemark(scope.row.subId)"
           >
             备注
           </el-button>
