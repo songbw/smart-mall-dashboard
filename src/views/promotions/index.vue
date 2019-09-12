@@ -96,9 +96,12 @@
       />
       <el-table-column label="编号" align="center" width="50">
         <template slot-scope="scope">
-          <el-button type="text" @click="handleViewPromotion(scope.$index)">
+          <router-link
+            :to="{ name: 'ViewPromotion', params: { id: scope.row.id }}"
+            class="el-link el-link--primary is-underline"
+          >
             {{ scope.row.id }}
-          </el-button>
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="活动名称" align="center">

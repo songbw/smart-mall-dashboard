@@ -20,7 +20,7 @@
     >
       <el-button
         slot="trigger"
-        size="small"
+        :size="buttonSize"
         type="primary"
         icon="el-icon-picture"
       >
@@ -28,8 +28,8 @@
       </el-button>
       <el-button
         v-if="!autoUpload"
+        :size="buttonSize"
         style="margin-left: 10px;"
-        size="small"
         type="success"
         icon="el-icon-upload"
         @click="submitUpload"
@@ -73,6 +73,10 @@ export default {
     autoUpload: {
       type: Boolean,
       default: true
+    },
+    buttonSize: {
+      type: String,
+      default: 'small'
     },
     tip: {
       type: String,

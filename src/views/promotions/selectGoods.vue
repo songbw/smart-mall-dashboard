@@ -239,7 +239,35 @@
             </template>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="180">
+        <el-table-column label="限购数量" align="center" width="120">
+          <template slot-scope="scope">
+            <template>
+              <span>{{ scope.row.perLimited | limitFilter }}</span>
+              <el-button
+                v-if="viewOnly === false"
+                icon="el-icon-edit"
+                size="mini"
+                type="warning"
+                circle
+                style="margin-left: 10px"
+                @click="handleEditPerLimited(scope.row)"
+              />
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column label="促销封面图" align="center" width="140">
+          <template slot-scope="scope">
+            <image-upload
+              :image-url="scope.row.promotionImage"
+              :view-only="viewOnly"
+              button-size="mini"
+              path-name="promotions"
+              tip=""
+              @success="url => handleUploadImageSuccess(url, scope.row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="100">
           <template slot-scope="scope">
             <el-button
               :disabled="viewOnly"
@@ -275,6 +303,38 @@
         <el-button type="primary" @click="handleSaveGoods">确认</el-button>
       </div>
     </el-footer>
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="limitedEditDialogVisible"
+      title="修改限购数量"
+    >
+      <el-form ref="limitedForm" :model="limitedForm" :rules="limitedRules" label-width="80px">
+        <el-form-item label="商品名">
+          <el-input :value="limitedForm.name" readonly />
+        </el-form-item>
+        <el-form-item label="限购数量">
+          <el-radio-group v-model="perLimitedRadio">
+            <el-radio label="1">不限购</el-radio>
+            <el-radio label="0">限购</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="perLimitedRadio === '0'" prop="perLimited">
+          <el-input-number
+            v-model="perLimitedValue"
+            :step="1"
+            :min="1"
+            :max="100"
+            step-strictly
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancelSetPerLimited">取消</el-button>
+        <el-button type="primary" @click="handleSetUserPerLimited">确定</el-button>
+      </div>
+    </el-dialog>
   </el-container>
 </template>
 
@@ -285,16 +345,20 @@ import min from 'lodash/min'
 import Pagination from '@/components/Pagination'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
+import ImageUpload from '@/components/ImageUpload'
 import PromotionInfo from './promotionInfo'
 
 export default {
   name: 'SelectGoods',
-  components: { PromotionInfo, GoodsSelectionDialog, GoodsImportDialog, Pagination },
+  components: { PromotionInfo, GoodsSelectionDialog, GoodsImportDialog, Pagination, ImageUpload },
   filters: {
     dateFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() ? momentDate.format(format) : ''
+    },
+    limitFilter: limit => {
+      return limit === -1 || limit === null ? '不限购' : `${limit}`
     }
   },
   props: {
@@ -360,6 +424,24 @@ export default {
               callback(new Error('结束时间必须晚于开始时间'))
             } else {
               callback()
+            }
+          }
+        }]
+      },
+      limitedEditDialogVisible: false,
+      limitedForm: {
+        mpu: null,
+        name: '',
+        perLimited: -1,
+        originalLimited: -1
+      },
+      limitedRules: {
+        perLimited: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === -1 || value > 0) {
+              callback()
+            } else {
+              callback(new Error('请输入正确的限购数量'))
             }
           }
         }]
@@ -453,6 +535,26 @@ export default {
         } else {
           return []
         }
+      }
+    },
+    perLimitedRadio: {
+      get() {
+        return this.limitedForm.perLimited === -1 ? '1' : '0'
+      },
+      set(value) {
+        if (value === '1') {
+          this.limitedForm.perLimited = -1
+        } else {
+          this.limitedForm.perLimited = this.limitedForm.originalLimited > 0 ? this.limitedForm.originalLimited : 1
+        }
+      }
+    },
+    perLimitedValue: {
+      get() {
+        return this.limitedForm.perLimited
+      },
+      set(value) {
+        this.limitedForm.perLimited = value
       }
     }
   },
@@ -631,7 +733,8 @@ export default {
             ...addItem,
             name: sku.name,
             brand: sku.brand,
-            price: Number.parseFloat(sku.price)
+            price: Number.parseFloat(sku.price),
+            perLimited: -1
           })
           total++
         }
@@ -663,17 +766,21 @@ export default {
         return
       }
       row.editDiscount = false
-      this.$store.commit('promotions/SET_SKU_DISCOUNT', { mpu: row.mpu, discount: row.discount })
-
-      const addedIndex = this.addedItems.findIndex(item => item.mpu === row.mpu)
+      const params = { mpu: row.mpu, discount: row.discount }
+      this.$store.commit('promotions/SET_SKU_PROMOTION', params)
+      this.updateCachedSku(params)
+    },
+    updateCachedSku(params) {
+      const { mpu, ...rest } = params
+      const addedIndex = this.addedItems.findIndex(item => item.mpu === mpu)
       if (addedIndex >= 0) {
-        this.addedItems[addedIndex].discount = row.discount
+        this.addedItems[addedIndex] = { ...this.addedItems[addedIndex], ...rest }
       } else {
-        const updateIndex = this.updateItems.findIndex(item => item.mpu === row.mpu)
+        const updateIndex = this.updateItems.findIndex(item => item.mpu === mpu)
         if (updateIndex >= 0) {
-          this.updateItems[updateIndex].discount = row.discount
+          this.updateItems[updateIndex] = { ...this.updateItems[updateIndex], ...rest }
         } else {
-          this.updateItems.push({ mpu: row.mpu, discount: row.discount })
+          this.updateItems.push({ ...params })
         }
       }
     },
@@ -845,6 +952,37 @@ export default {
       } catch (e) {
         console.debug('Cancel delete conflicted skus')
       }
+    },
+    handleUploadImageSuccess(url, row) {
+      row.promotionImage = url
+      const params = { mpu: row.mpu, promotionImage: url }
+      this.$store.commit('promotions/SET_SKU_PROMOTION', params)
+      this.updateCachedSku(params)
+    },
+    handleEditPerLimited(row) {
+      this.limitedForm.mpu = row.mpu
+      this.limitedForm.name = row.name
+      this.limitedForm.perLimited = row.perLimited !== null ? row.perLimited : -1
+      this.limitedForm.originalLimited = this.limitedForm.perLimited
+      this.limitedEditDialogVisible = true
+    },
+    cancelSetPerLimited() {
+      this.limitedEditDialogVisible = false
+      this.$refs.limitedForm.clearValidate()
+    },
+    handleSetUserPerLimited() {
+      this.$refs.limitedForm.validate(valid => {
+        if (valid) {
+          const row = this.skuData.find(item => item.mpu === this.limitedForm.mpu)
+          if (row) {
+            row.perLimited = this.limitedForm.perLimited
+            const params = { mpu: row.mpu, perLimited: this.limitedForm.perLimited }
+            this.$store.commit('promotions/SET_SKU_PROMOTION', params)
+            this.updateCachedSku(params)
+          }
+          this.limitedEditDialogVisible = false
+        }
+      })
     }
   }
 }
