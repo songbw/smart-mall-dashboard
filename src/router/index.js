@@ -334,6 +334,13 @@ export const constantRoutes = [
         name: 'UserManager',
         component: () => import('@/views/vendor/userManager'),
         meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
+      },
+      {
+        path: 'roles',
+        name: 'RoleManager',
+        component: () => import('@/views/vendor/roles'),
+        meta: { title: '角色管理', icon: 'user-manager', roles: [role_admin_name] },
+        hidden: true
       }
     ]
   },

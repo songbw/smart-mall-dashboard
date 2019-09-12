@@ -126,3 +126,24 @@ export function getVendorRolesApi() {
     method: 'get'
   })
 }
+
+export function createVendorRoleApi(params) {
+  return Vue.axios('vendor').request({
+    url: `vendors/users/roles`,
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function updateVendorRoleApi(params) {
+  const { id, ...rest } = params
+  return Vue.axios('vendor').request({
+    url: `vendors/users/roles/${id}`,
+    method: 'put',
+    data: {
+      ...rest
+    }
+  })
+}
