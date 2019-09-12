@@ -82,10 +82,12 @@ const mutations = {
       state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
     }
   },
-  SET_SKU_DISCOUNT: (state, params) => {
-    const sku = state.promotion.promotionSkus.find(item => item.mpu === params.mpu)
-    if (sku) {
-      sku.discount = params.discount
+  SET_SKU_PROMOTION: (state, params) => {
+    const { mpu, ...rest } = params
+    const index = state.promotion.promotionSkus.findIndex(item => item.mpu === mpu)
+    if (index >= 0) {
+      const sku = state.promotion.promotionSkus[index]
+      state.promotion.promotionSkus[index] = { ...sku, ...rest }
     }
   },
   SET_SKUS_DISCOUNT: (state, params) => {

@@ -66,7 +66,12 @@
     >
       <el-table-column label="编号" align="center" width="50">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <router-link
+            :to="{ name: 'CouponDetail', params: { id: scope.row.id, readOnly: true }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ scope.row.id }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="名称" align="center">
