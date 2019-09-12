@@ -58,6 +58,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import {
   getCouponTagsApi,
@@ -105,8 +106,10 @@ export default {
           confirmButtonText: '创建',
           cancelButtonText: '取消'
         })
-        await createCouponTagApi({ name: value })
-        this.getCouponTags()
+        if (!isEmpty(value)) {
+          await createCouponTagApi({ name: value })
+          this.getCouponTags()
+        }
       } catch (e) {
         console.warn('CouponTag: create ' + e)
       }
@@ -117,8 +120,10 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        await updateCouponTagApi({ id: row.id, name: value })
-        this.getCouponTags()
+        if (!isEmpty(value)) {
+          await updateCouponTagApi({ id: row.id, name: value })
+          this.getCouponTags()
+        }
       } catch (e) {
         console.warn('CouponTag: create ' + e)
       }
