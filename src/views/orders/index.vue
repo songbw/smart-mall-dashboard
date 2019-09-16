@@ -22,7 +22,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="isAdminUser" label="供应商名">
+      <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名">
         <el-select :value="queryVendor" @change="onQueryVendorChanged">
           <el-option
             v-for="item in vendorOptions"
@@ -136,6 +136,7 @@
             查看
           </el-button>
           <el-button
+            v-if="!isWatcherUser"
             size="mini"
             type="info"
             @click="handleEditOrderRemark(scope.row.subId)"
@@ -198,6 +199,7 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
+      isWatcherUser: 'isWatcherUser',
       vendorApproved: 'vendorApproved',
       orderQuery: 'orderQuery'
     }),

@@ -43,7 +43,7 @@
           :label="item.label"
           :name="item.name"
         >
-          <div style="display: flex;justify-content: space-between">
+          <div v-if="!isWatcherUser" style="display: flex;justify-content: space-between">
             <el-button
               :disabled="!vendorApproved"
               type="primary"
@@ -116,7 +116,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="320">
+        <el-table-column label="操作" align="center" :width="isWatcherUser? '100': '350'">
           <template slot-scope="scope">
             <el-button
               size="mini"
@@ -125,6 +125,7 @@
               查看
             </el-button>
             <el-button
+              v-if="!isWatcherUser"
               type="primary"
               size="mini"
               @click="handleEdit(scope.$index)"
@@ -132,7 +133,8 @@
               编辑
             </el-button>
             <el-button
-              v-if="scope.row.status === 0"
+              v-if="!isWatcherUser"
+              :disabled="scope.row.status === onSaleStatus"
               type="warning"
               size="mini"
               @click="handlePublish(scope.$index)"
@@ -140,7 +142,8 @@
               发布
             </el-button>
             <el-button
-              v-else-if="scope.row.status === 1"
+              v-if="!isWatcherUser"
+              :disabled="scope.row.status !== onSaleStatus"
               type="warning"
               size="mini"
               @click="handleDisable(scope.$index)"
@@ -148,14 +151,7 @@
               下架
             </el-button>
             <el-button
-              v-else
-              type="warning"
-              size="mini"
-              @click="handlePublish(scope.$index)"
-            >
-              发布
-            </el-button>
-            <el-button
+              v-if="!isWatcherUser"
               :disabled="scope.row.status === onSaleStatus"
               type="danger"
               size="mini"
@@ -196,7 +192,9 @@ import {
 
 import {
   AggregationStatusOptions,
-  aggregation_on_sale_status
+  aggregation_editing_status,
+  aggregation_on_sale_status,
+  aggregation_off_shelves_status
 } from './constants'
 
 export default {
@@ -228,7 +226,9 @@ export default {
         value: 'desc',
         label: '降序'
       }],
+      onEditStatus: aggregation_editing_status,
       onSaleStatus: aggregation_on_sale_status,
+      onOffStatus: aggregation_off_shelves_status,
       aggregationList: [],
       aggregationTotal: 0,
       displayPageId: 0,
@@ -239,6 +239,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      isWatcherUser: 'isWatcherUser',
       vendorApproved: 'vendorApproved',
       listQuery: 'aggregationsQuery',
       aggregationGroups: 'aggregationGroups',

@@ -14,6 +14,7 @@ import {
   storage_key_role,
   storage_merchant_id,
   role_admin_name,
+  role_watcher_name,
   vendor_status_approved
 } from '@/utils/constants'
 
@@ -43,7 +44,7 @@ export default {
         if (!isEmpty(role)) {
           this.$store.commit('user/SET_ROLE', role)
         }
-        if (role_admin_name === role) {
+        if (role_admin_name === role || role_watcher_name === role) {
           await localForage.setItem(storage_merchant_id, 0)
         } else if (!isEmpty(token)) {
           await this.getVendorProfile()

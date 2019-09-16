@@ -5,7 +5,12 @@
         <el-card shadow="never">
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
-            <el-button :disabled="workOrderData.status === 6" type="primary" @click="handleShowFlowDialog">
+            <el-button
+              v-if="!isWatcherUser"
+              :disabled="workOrderData.status === 6"
+              type="primary"
+              @click="handleShowFlowDialog"
+            >
               处理
             </el-button>
           </div>
@@ -133,6 +138,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import OrderInfo from '@/components/Order/orderInfo'
@@ -242,6 +248,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      isWatcherUser: 'isWatcherUser'
+    }),
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
@@ -308,7 +317,7 @@ export default {
     },
     handleCancelFlow() {
       this.dialogFlowVisible = false
-      this.$refs.flowForm.resetFields()
+      this.$refs.flowForm.clearValidate()
     },
     handleFlowOptionChanged(value) {
       this.flowForm.status = value
