@@ -10,6 +10,10 @@
             <span class="item-label">订单状态：</span>
             <span class="item-text">{{ status | statusFilter }}</span>
           </el-col>
+          <el-col :span="12">
+            <span class="item-label">OpenID：</span>
+            <span class="item-text">{{ openId }}</span>
+          </el-col>
         </el-row>
         <el-row class="item-row">
           <el-col :span="12">
@@ -77,7 +81,7 @@ export default {
       type: String,
       default: ''
     },
-    remark: {
+    openId: {
       type: String,
       default: ''
     }
