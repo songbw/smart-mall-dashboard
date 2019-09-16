@@ -7,7 +7,7 @@
         </div>
         <el-table
           ref="SkuTable"
-          :data="skuList"
+          :data="skuData"
           style="width: 100%"
           border
           default-expand-all
@@ -122,6 +122,11 @@ export default {
       fetchedLogistics: false
     }
   },
+  computed: {
+    skuData() {
+      return this.skuList.map(item => ({ ...item, logisticsTimeline: [] }))
+    }
+  },
   watch: {
     skuList: function(val, oldVal) {
       if (val.length > 0 && !this.fetchedLogistics) {
@@ -132,13 +137,14 @@ export default {
   methods: {
     getLogisticsInfo() {
       let num = 0
-      this.skuList.forEach(sku => {
+      this.skuData.forEach(sku => {
+        num += 1
         if (!isEmpty(sku.logisticsId)) {
-          num += 1
           getLogisticsInfoApi({ orderId: sku.subOrderId }).then(res => {
             const query = res.data.result
             if (query && query.length > 0) {
               sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
+              console.debug(JSON.stringify(sku.logisticsTimeline))
             }
           }).catch(e => {
             console.warn('Order goods get logistics error:' + e)
@@ -146,7 +152,7 @@ export default {
           })
         }
       })
-      if (num === this.skuList.length) {
+      if (num > 0 && num === this.skuData.length) {
         this.fetchedLogistics = true
       }
     },
