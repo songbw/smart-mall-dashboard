@@ -15,7 +15,7 @@
         <el-button type="primary" icon="el-icon-search" @click="getBrandData">
           搜索
         </el-button>
-        <el-button v-if="isAdminUser" type="info" icon="el-icon-edit" @click="handleCreate">
+        <el-button v-if="!noEditPermission" type="info" icon="el-icon-edit" @click="handleCreate">
           新建品牌
         </el-button>
       </el-form-item>
@@ -60,9 +60,10 @@
             size="mini"
             @click="handleEdit(scope.$index)"
           >
-            {{ isAdminUser ? '编辑' : '查看' }}
+            {{ noEditPermission ? '查看' : '编辑' }}
           </el-button>
           <el-button
+            v-if="!noEditPermission"
             type="danger"
             size="mini"
             :disabled="scope.row.addTime === null"
@@ -291,6 +292,10 @@ export default {
       this.dialogFormVisible = false
     },
     handleSubmit() {
+      if (this.noEditPermission) {
+        this.handleCancel()
+        return
+      }
       this.$refs.brandForm.validate(valid => {
         if (valid) {
           if (this.dialogFormVisible) {

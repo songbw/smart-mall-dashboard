@@ -136,7 +136,7 @@ export default {
       this.dialogCreationVisible = false
       this.roleForm.name = ''
       this.roleForm.description = ''
-      this.$refs.roleForm.resetFields()
+      this.$refs.roleForm.clearValidate()
     },
     handleConfirmCreation() {
       this.$refs.roleForm.validate(async(valid) => {
@@ -159,8 +159,8 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        if (!isEmpty(value)) {
-          await updateVendorRoleApi({ id: row.id, description: value })
+        if (!isEmpty(value.trim())) {
+          await updateVendorRoleApi({ id: row.id, description: value.trim() })
           this.getVendorRoles()
         }
       } catch (e) {

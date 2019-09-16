@@ -7,6 +7,7 @@ export const storage_merchant_id = 'merchant_id'
 
 export const role_vendor_name = 'vendor'
 export const role_admin_name = 'admin'
+export const role_watcher_name = 'watcher'
 
 export const vendor_status_init = 0
 export const vendor_status_editing = 1

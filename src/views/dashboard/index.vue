@@ -11,6 +11,7 @@ import PageLoading from '@/components/PageLoading'
 import adminDashboard from './admin'
 import vendorDashboard from './vendor'
 import {
+  role_watcher_name,
   role_admin_name
 } from '@/utils/constants'
 
@@ -25,7 +26,9 @@ export default {
       if (isEmpty(this.userRole)) {
         return 'PageLoading'
       } else {
-        return this.userRole === role_admin_name ? 'adminDashboard' : 'vendorDashboard'
+        return this.userRole === role_watcher_name || this.userRole === role_admin_name
+          ? 'adminDashboard'
+          : 'vendorDashboard'
       }
     }
   },

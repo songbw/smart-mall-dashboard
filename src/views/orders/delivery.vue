@@ -36,7 +36,7 @@
         <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
-        <el-button icon="el-icon-coin" type="info" @click="handleBatchDelivery">
+        <el-button v-if="!isWatcherUser" icon="el-icon-coin" type="info" @click="handleBatchDelivery">
           批量发货
         </el-button>
       </el-form-item>
@@ -108,7 +108,7 @@
       >
         <template slot-scope="scope">
           <el-button
-            :disabled="orderQuery.subStatus === 2"
+            :disabled="isWatcherUser || orderQuery.subStatus === statusDelivered"
             size="mini"
             type="primary"
             @click="handleDeliverSubOrder(scope.row)"
@@ -200,6 +200,7 @@ export default {
   },
   data() {
     return {
+      statusDelivered: suborder_status_delivered,
       expressOptions: [],
       listLoading: false,
       queryParams: null,
@@ -248,6 +249,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      isWatcherUser: 'isWatcherUser',
       vendorApproved: 'vendorApproved'
     }),
     statusOptions() {

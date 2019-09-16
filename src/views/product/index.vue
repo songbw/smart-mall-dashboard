@@ -38,7 +38,7 @@
         <el-form-item label="商品MPU">
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
-        <el-form-item v-if="isAdminUser" label="供应商名">
+        <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名">
           <el-select :value="listVendor" @change="handleVendorChanged">
             <el-option
               v-for="item in vendorOptions"
@@ -61,7 +61,10 @@
           />
         </el-form-item>
       </el-form>
-      <div style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline">
+      <div
+        v-if="!isWatcherUser"
+        style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline"
+      >
         <div>
           <el-button
             :disabled="!vendorApproved"
@@ -100,6 +103,7 @@
             导出已选{{ productSelection.length }}个商品
           </el-button>
           <el-button
+            :disabled="!vendorApproved"
             :loading="productExporting"
             type="warning"
             icon="el-icon-download"
@@ -200,13 +204,13 @@
               circle
               @click="scope.row.editPrice=!scope.row.editPrice"
             />
-            <div v-if="scope.row.sprice" style="font-size: 12px">
+            <div v-if="!isWatcherUser && scope.row.sprice !== null" style="font-size: 12px">
               （底价:{{ getFloorPrice(scope.row) }}）
             </div>
           </template>
         </template>
       </el-table-column>
-      <el-table-column v-if="isAdminUser" label="供应商" align="center" width="120">
+      <el-table-column v-if="isAdminUser || isWatcherUser" label="供应商" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
@@ -223,7 +227,10 @@
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
-          <el-dropdown placement="bottom" trigger="click" @command="handleOpsAction">
+          <el-button v-if="isWatcherUser" type="primary" @click="handleViewProduct(scope.$index)">
+            查看商品
+          </el-button>
+          <el-dropdown v-else placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>
@@ -372,10 +379,10 @@ import CategorySelection from '@/components/CategorySelection'
 import {
   product_state_off_shelves,
   product_state_on_sale,
+  product_state_is_editing,
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
-import { product_state_is_editing } from '../../utils/constants'
 
 export default {
   name: 'Product',
@@ -433,6 +440,7 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
+      isWatcherUser: 'isWatcherUser',
       vendorId: 'vendorId',
       productQuery: 'productQuery',
       productVendors: 'productVendors',
@@ -634,7 +642,7 @@ export default {
       if (!isEmpty(this.listBrand)) {
         params.brand = this.listBrand
       }
-      if (this.isAdminUser) {
+      if (this.isAdminUser || this.isWatcherUser) {
         if (this.listVendor > 0) {
           params.merchantId = this.listVendor
         }

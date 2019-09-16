@@ -43,7 +43,7 @@
       </el-table-column>
       <el-table-column label="用户角色" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.role | roleFormat }}</span>
+          <span>{{ getRoleDescription(scope.row.role) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="公司名称" align="center">
@@ -256,14 +256,9 @@ import {
   validPhone
 } from '@/utils/validate'
 
-const parseRole = role => role === 'admin' ? '平台管理员' : '商户管理员'
-
 export default {
   name: 'UserManager',
   filters: {
-    roleFormat: role => {
-      return parseRole(role)
-    },
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
@@ -395,11 +390,13 @@ export default {
   created() {
     this.getUsersData()
     this.getVendorList()
-    this.getVendorRoleList()
   },
   methods: {
     async getUsersData() {
       try {
+        if (this.roleOptions.length === 0) {
+          await this.getVendorRoleList()
+        }
         const params = {
           page: this.queryOffset,
           limit: this.queryLimit
@@ -598,12 +595,16 @@ export default {
         console.warn('Delete user:' + e)
       }
     },
+    getRoleDescription(role) {
+      const find = this.roleOptions.find(option => option.value === role)
+      return find ? find.label : ''
+    },
     async getVendorRoleList() {
       try {
         this.roleLoading = true
         const { list } = await getVendorRolesApi()
         if (Array.isArray(list) && list.length > 0) {
-          this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: parseRole(item.name) }))
+          this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: item.description }))
         }
       } catch (e) {
         console.warn('Get vendor role list error:' + e)

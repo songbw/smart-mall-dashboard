@@ -18,7 +18,7 @@
       <el-form-item v-if="!createProduct" label="创建时间">
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
-      <el-form-item v-if="isAdminUser" label="商品供应商" prop="merchantId">
+      <el-form-item v-if="isAdminUser || isWatcherUser" label="商品供应商" prop="merchantId">
         <span v-if="viewProduct || productForm.merchantId === vendorAoyi">
           {{ getVendorName(productForm.merchantId) }}
         </span>
@@ -143,7 +143,7 @@
         <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
         <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
       </el-form-item>
-      <el-form-item label="进货价格(元)">
+      <el-form-item v-if="!isWatcherUser" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
@@ -425,6 +425,7 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
+      isWatcherUser: 'isWatcherUser',
       productVendors: 'productVendors',
       vendorId: 'vendorId'
     }),
@@ -517,7 +518,7 @@ export default {
       } else {
         params.id = this.$route.params.id
       }
-      if (!this.isAdminUser) {
+      if (!this.isAdminUser && !this.isWatcherUser) {
         params.merchantId = this.vendorId
       }
       this.loading = true
