@@ -25,6 +25,12 @@
             <span class="item-text">{{ merchantName }}</span>
           </el-col>
         </el-row>
+        <el-row v-if="hasSupplierOrder" class="item-row">
+          <el-col :span="12">
+            <span class="item-label"> {{ supplierName }}：</span>
+            <span class="item-text">{{ aoyiId }}</span>
+          </el-col>
+        </el-row>
         <el-row class="item-row">
           <el-col :span="12">
             <span class="item-label">下单时间：</span>
@@ -42,6 +48,7 @@
 
 <script>
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
 import {
   getVendorProfileApi
@@ -84,11 +91,31 @@ export default {
     openId: {
       type: String,
       default: ''
+    },
+    merchantNo: {
+      type: String,
+      default: ''
+    },
+    aoyiId: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
       merchantName: ''
+    }
+  },
+  computed: {
+    hasSupplierOrder: {
+      get() {
+        return !isEmpty(this.aoyiId) && !isEmpty(this.merchantNo)
+      }
+    },
+    supplierName: {
+      get() {
+        return this.merchantNo === '20' ? '苏宁单号' : ''
+      }
     }
   },
   watch: {

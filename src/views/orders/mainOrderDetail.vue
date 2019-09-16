@@ -7,6 +7,8 @@
       :created-at="orderData.createdAt"
       :updated-at="orderData.updatedAt"
       :open-id="orderData.openId"
+      :merchant-no="orderData.merchantNo"
+      :aoyi-id="orderData.aoyiId"
     />
     <receiver-info
       :receiver-name="orderData.receiverName"
