@@ -21,7 +21,7 @@
               <div style="margin-top: 10px">
                 <span class="item-label">备注信息：</span> {{ scope.row.remark }}
               </div>
-              <div v-if="fetchedLogistics" style="margin-top: 10px">
+              <div v-if="scope.row.fetchedLogistics" style="margin-top: 10px">
                 <div class="item-label">物流信息：</div>
                 <el-timeline style="margin-top: 10px">
                   <el-timeline-item
@@ -49,7 +49,7 @@
           </el-table-column>
           <el-table-column label="商品图" align="center" width="100">
             <template slot-scope="scope">
-              <el-image :src="scope.row.image" fit="contain" lazy />
+              <el-image :src="scope.row.image" fit="contain" lazy/>
             </template>
           </el-table-column>
           <el-table-column label="数量" align="center" width="50">
@@ -117,29 +117,23 @@ export default {
       }
     }
   },
-  data() {
-    return {
-      fetchedLogistics: false
-    }
-  },
   computed: {
     skuData() {
-      return this.skuList.map(item => ({ ...item, logisticsTimeline: [] }))
+      return this.skuList.map(item => ({ ...item, logisticsTimeline: [], fetchedLogistics: false }))
     }
   },
   watch: {
     skuList: function(val, oldVal) {
-      if (val.length > 0 && !this.fetchedLogistics) {
+      if (val.length > 0) {
         this.getLogisticsInfo()
       }
     }
   },
   methods: {
     getLogisticsInfo() {
-      let num = 0
       this.skuData.forEach(sku => {
-        num += 1
-        if (!isEmpty(sku.logisticsId)) {
+        if (!isEmpty(sku.logisticsId) && !sku.fetchedLogistics) {
+          sku.fetchedLogistics = true
           getLogisticsInfoApi({ orderId: sku.subOrderId }).then(res => {
             const query = res.data.result
             if (query && query.length > 0) {
@@ -152,9 +146,6 @@ export default {
           })
         }
       })
-      if (num > 0 && num === this.skuData.length) {
-        this.fetchedLogistics = true
-      }
     },
     getSubStatus(row) {
       return row.subStatus ? row.subStatus : row.status
