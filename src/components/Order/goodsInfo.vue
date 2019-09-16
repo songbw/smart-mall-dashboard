@@ -49,7 +49,7 @@
           </el-table-column>
           <el-table-column label="商品图" align="center" width="100">
             <template slot-scope="scope">
-              <el-image :src="scope.row.image" fit="contain" lazy/>
+              <el-image :src="scope.row.image" fit="contain" lazy />
             </template>
           </el-table-column>
           <el-table-column label="数量" align="center" width="50">

@@ -63,7 +63,8 @@
       </el-form>
       <div
         v-if="!isWatcherUser"
-        style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline">
+        style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline"
+      >
         <div>
           <el-button
             :disabled="!vendorApproved"

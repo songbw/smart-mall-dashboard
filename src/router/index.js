@@ -288,6 +288,21 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/members',
+    component: Layout,
+    redirect: '/members/index',
+    name: 'Members',
+    meta: { title: '会员', icon: 'members' },
+    children: [
+      {
+        path: 'index',
+        name: 'MembersManager',
+        component: () => import('@/views/members/index'),
+        meta: { title: '会员管理', icon: 'members' }
+      }
+    ]
+  },
+  {
     path: '/vendorInfo',
     component: Layout,
     redirect: '/vendorInfo/profile',
