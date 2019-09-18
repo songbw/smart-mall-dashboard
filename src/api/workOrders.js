@@ -30,3 +30,43 @@ export function createWorkOrderFlowApi(params) {
     data: { ...params }
   })
 }
+
+export function getReturnAddressListApi(params) {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/addresses/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getDefaultReturnAddressApi(params) {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/addresses/default',
+    method: 'get'
+  })
+}
+
+export function createReturnAddressApi(params) {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/addresses',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function updateReturnAddressApi(params) {
+  const { id, ...content } = params
+  return Vue.axios('work_orders').request({
+    url: `/workorders/addresses/${id}`,
+    method: 'put',
+    data: { ...content }
+  })
+}
+
+export function deleteReturnAddressApi(params) {
+  const { id } = params
+  return Vue.axios('work_orders').request({
+    url: `/workorders/addresses/${id}`,
+    method: 'delete'
+  })
+}

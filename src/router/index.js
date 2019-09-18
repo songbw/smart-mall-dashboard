@@ -267,8 +267,7 @@ export const constantRoutes = [
         path: 'returnAddress',
         name: 'ReturnAddress',
         component: () => import('@/views/workorders/returnAddress'),
-        meta: { title: '退换货地址', icon: 'return-address' },
-        hidden: true
+        meta: { title: '退货地址', icon: 'return-address' }
       }
     ]
   },

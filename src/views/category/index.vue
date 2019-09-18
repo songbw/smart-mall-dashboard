@@ -141,7 +141,7 @@
         :model="dialogValue"
         :rules="dialogRules"
         label-position="right"
-        label-width="160"
+        label-width="120px"
       >
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="所属父类">
           <el-input v-model="topCategoryHeaderTitle" readonly class="dialog-form-item" />
