@@ -138,7 +138,6 @@ export default {
             const query = res.data.result
             if (query && query.length > 0) {
               sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
-              console.debug(JSON.stringify(sku.logisticsTimeline))
             }
           }).catch(e => {
             console.warn('Order goods get logistics error:' + e)

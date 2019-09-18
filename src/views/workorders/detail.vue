@@ -27,19 +27,19 @@
             <el-form-item label="售后描述:">
               <span>{{ workOrderData.description }}</span>
             </el-form-item>
-            <el-form-item label="申请时间:">
-              <span>{{ workOrderData.createTime | timeFilter }}</span>
-            </el-form-item>
             <el-form-item label="申请数量:">
               <span>{{ workOrderData.returnedNum }}</span>
             </el-form-item>
-            <el-form-item label="退款金额:">
+            <el-form-item label="申请金额:">
               <span>￥ {{ workOrderData.refundAmount }}</span>
+            </el-form-item>
+            <el-form-item label="申请时间:">
+              <span>{{ workOrderData.createTime | timeFilter }}</span>
             </el-form-item>
             <el-form-item label="更新时间:">
               <span>{{ workOrderData.updateTime | timeFilter }}</span>
             </el-form-item>
-            <el-form-item label="累计退款:">
+            <el-form-item v-if="workOrderData.realRefundAmount" label="累计退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
           </el-form>
@@ -56,7 +56,14 @@
               :key="flow.id"
               :timestamp="flow.timeline"
             >
-              {{ flow.content }}
+              <span style="font-weight: bolder;margin-bottom: 10px">{{ flow.content }}</span>
+              <div v-if="flow.returnAddress" style="font-size: 13px">
+                <span>客户退货地址如下：</span>
+                <address-info :return-address="flow.returnAddress" />
+              </div>
+              <div v-if="flow.refund">
+                <span>发起退款金额：￥{{ flow.refund }}</span>
+              </div>
             </el-timeline-item>
           </el-timeline>
         </el-card>
@@ -122,11 +129,29 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 6" label="包含运费">
-          <el-switch v-model="flowForm.handleFare" />
+        <el-form-item v-if="flowForm.status === 3" label="退货地址">
+          <el-switch v-model="includeAddress" />
+          <el-button type="primary" size="mini" style="margin-left: 10px" @click="gotoReturnAddress">
+            修改地址
+          </el-button>
+          <div v-if="includeAddress && returnAddress.id >= 0">
+            <address-info
+              :return-address="returnAddress"
+            />
+          </div>
         </el-form-item>
-        <el-form-item label="处理意见" prop="comments">
-          <el-input v-model="flowForm.comments" autocomplete="off" maxlength="50" />
+        <el-form-item v-if="flowForm.status === 6" label="退款金额">
+          <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
+            <i class="el-icon-warning-outline">
+              主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
+              运费：￥{{ orderData.servFee }}，
+              申请退款金额：￥{{ workOrderData.refundAmount }}
+            </i>
+          </div>
+          <el-input-number v-model="flowForm.refund" :precision="2" :step="1" :min="0" :max="maxRefund" />
+        </el-form-item>
+        <el-form-item label="备注信息" prop="remark">
+          <el-input v-model="flowForm.remark" autocomplete="off" maxlength="50" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -145,14 +170,15 @@ import OrderInfo from '@/components/Order/orderInfo'
 import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
 import GoodsInfo from '@/components/Order/goodsInfo'
-
+import AddressInfo from './addressInfo'
 import {
   getOrderListApi
 } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
-  createWorkOrderFlowApi
+  createWorkOrderFlowApi,
+  getDefaultReturnAddressApi
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
@@ -178,7 +204,8 @@ export default {
     OrderInfo,
     ReceiverInfo,
     PaymentInfo,
-    GoodsInfo
+    GoodsInfo,
+    AddressInfo
   },
   filters: {
     workOrderStatus: status => {
@@ -203,6 +230,15 @@ export default {
     payFilter: status => {
       const find = PaymentStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
+    },
+    centFilter: cent => {
+      const yuan = Number.parseFloat(cent)
+      if (Number.isNaN(yuan)) {
+        return ''
+      } else {
+        const value = (yuan / 100).toFixed(2)
+        return `￥ ${value}`
+      }
     }
   },
   data() {
@@ -216,10 +252,14 @@ export default {
       workOrderData: {},
       flows: [],
       dialogFlowVisible: false,
+      includeAddress: false,
+      returnAddress: {
+        id: -1
+      },
       flowForm: {
         status: null,
-        handleFare: false,
-        comments: null
+        refund: 0,
+        remark: null
       },
       flowRules: {
         status: [{
@@ -233,11 +273,11 @@ export default {
           },
           trigger: 'blur'
         }],
-        comments: [{
+        remark: [{
           required: true,
           validator: (rule, value, callback) => {
             if (isEmpty(value)) {
-              callback(new Error('请输入处理说明'))
+              callback(new Error('请输入备注信息'))
             } else {
               callback()
             }
@@ -258,14 +298,19 @@ export default {
       } else if (this.workOrderData.status === 2) {
         options = [3]
       } else if (this.workOrderData.status === 3) {
-        options = [5, 6]
+        options = [6]
       } else if (this.workOrderData.status === 5) {
         options = [6]
       }
       return FlowStatusOptions.filter(option => options.includes(option.value))
+    },
+    maxRefund() {
+      const yuan = Number.parseFloat(this.orderData.paymentAmount)
+      return Number.isNaN(yuan) ? 1000000 : (yuan / 100)
     }
   },
   created() {
+    this.getDefaultReturnAddress()
     this.getWorkOrderData()
   },
   methods: {
@@ -285,19 +330,27 @@ export default {
       }
     },
     async getWorkFlows(id) {
-      try {
-        const data = await getWorkFlowListApi({ pageIndex: 1, pageSize: 100, workOrderId: id })
-        this.flows = data.rows.map(row => {
-          const format = 'YYYY-MM-DD HH:mm:ss'
-          const momentDate = moment(row.createTime)
-          const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
-          const find = FlowStatusOptions.find(option => option.value === row.status)
-          const content = find ? find.label + ' - ' + row.comments : row.comments
-          return { ...row, timeline, content }
+      getWorkFlowListApi({ pageIndex: 1, pageSize: 100, workOrderId: id })
+        .then(data => {
+          this.flows = data.rows.map(row => {
+            const format = 'YYYY-MM-DD HH:mm:ss'
+            const momentDate = moment(row.createTime)
+            const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
+            const find = FlowStatusOptions.find(option => option.value === row.status)
+            let flowComment = {}
+            try {
+              flowComment = { ...JSON.parse(row.comments) }
+            } catch (e) {
+              flowComment = {}
+            }
+            const remark = flowComment.remark ? flowComment.remark : row.comments
+            const content = find ? find.label + ' - ' + remark : remark
+            return { ...row, timeline, content, ...flowComment }
+          })
         })
-      } catch (e) {
-        console.warn('Get work flows error:' + e)
-      }
+        .catch(e => {
+          console.warn('Get work flows error:' + e)
+        })
     },
     async getOrderData(subOrderId) {
       try {
@@ -309,10 +362,21 @@ export default {
         console.warn('Work order get order detail error:' + e)
       }
     },
+    async getDefaultReturnAddress() {
+      try {
+        const data = await getDefaultReturnAddressApi()
+        if (data.id >= 0) {
+          this.returnAddress = { id: data.id, ...JSON.parse(data.content) }
+        }
+      } catch (e) {
+        console.warn('Get default return address error:' + e)
+      }
+    },
     handleShowFlowDialog() {
       this.flowForm.status = null
-      this.flowForm.handleFare = false
-      this.flowForm.comments = ''
+      this.flowForm.refund = 0
+      this.flowForm.remark = ''
+      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== 3 // 3 means 仅退款
       this.dialogFlowVisible = true
     },
     handleCancelFlow() {
@@ -328,10 +392,17 @@ export default {
           this.dialogFlowVisible = false
           try {
             const operator = this.$store.state.user.name
-            const { status, handleFare, comments } = this.flowForm
-            const params = { workOrderId: this.workOrderData.id, operator, status, comments }
+            const { status, refund, remark } = this.flowForm
+            const comments = { remark }
+            if (this.flowForm.status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
+              comments.returnAddress = this.returnAddress
+            }
             if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
-              params.handleFare = handleFare ? 1 : 0
+              comments.refund = refund
+            }
+            const params = { workOrderId: this.workOrderData.id, operator, status, comments: JSON.stringify(comments) }
+            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+              params.refund = refund
             }
             await createWorkOrderFlowApi(params)
             this.$message.success('处理工单成功！')
@@ -342,6 +413,10 @@ export default {
           }
         }
       })
+    },
+    gotoReturnAddress() {
+      this.handleCancelFlow()
+      this.$router.push({ name: 'ReturnAddress' })
     },
     goBack() {
       window.history.length > 1

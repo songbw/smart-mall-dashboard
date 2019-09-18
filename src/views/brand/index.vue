@@ -88,7 +88,7 @@
       :close-on-press-escape="false"
       :show-close="false"
     >
-      <el-form ref="brandForm" :model="dialogValue" :rules="dialogRules" label-width="120">
+      <el-form ref="brandForm" :model="dialogValue" :rules="dialogRules" label-width="120px">
         <el-form-item label="品牌全称" prop="brandName">
           <el-input
             :value="dialogValue.brandName"

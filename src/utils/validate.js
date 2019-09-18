@@ -17,6 +17,11 @@ export function validVerificationCode(str) {
   return reg.test(str)
 }
 
+export function validZipCode(str) {
+  const reg = /^[0-9]{6}$/
+  return reg.test(str)
+}
+
 export function validateURL(url) {
   const urlRegex = require('url-regex')
   return urlRegex({ exact: true }).test(url)
