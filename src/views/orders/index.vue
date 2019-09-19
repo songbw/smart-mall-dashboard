@@ -1,7 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :inline="true">
-      <el-form-item label="主订单号">
+      <el-form-item v-if="shouldShowAoyiId" label="苏宁单号">
+        <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" />
+      </el-form-item>
+      <el-form-item v-else label="主订单号">
         <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" />
       </el-form-item>
       <el-form-item label="子订单号">
@@ -74,13 +77,13 @@
       border
       style="width: 100%;"
     >
-      <el-table-column align="center" label="主订单编号" width="100">
+      <el-table-column align="center" label="主订单编号" width="120">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+            {{ shouldShowAoyiId ? scope.row.aoyiId : scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
           </router-link>
         </template>
       </el-table-column>
@@ -245,6 +248,7 @@ export default {
   },
   data() {
     return {
+      shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
       statusOptions: [{
         value: -1,
         label: '全部'
@@ -295,6 +299,14 @@ export default {
     }),
     vendorOptions() {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
+    },
+    queryAoyiId: {
+      get() {
+        return this.orderQuery.aoyiId
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { aoyiId: trim(value) })
+      }
     },
     queryTradeNo: {
       get() {
@@ -403,7 +415,7 @@ export default {
     },
     getSearchParams() {
       const params = {}
-      const keys = ['tradeNo', 'subOrderId', 'mobile', 'payDateStart', 'payDateEnd']
+      const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
           params[key] = this.orderQuery[key]
