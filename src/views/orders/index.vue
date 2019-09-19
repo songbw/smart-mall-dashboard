@@ -65,9 +65,10 @@
       </el-form-item>
     </el-form>
     <div style="margin-bottom: 10px">
-      <el-button icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
+      <el-button v-if="couldExportReconciliation" icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
         导出结算订单
       </el-button>
+      <span style="margin-left: 10px;font-size: 13px"><i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i></span>
     </div>
     <el-table
       ref="ordersTable"
@@ -249,6 +250,7 @@ export default {
   data() {
     return {
       shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
+      couldExportReconciliation: process.env.VUE_APP_HOST === 'FC-MALL',
       statusOptions: [{
         value: -1,
         label: '全部'
