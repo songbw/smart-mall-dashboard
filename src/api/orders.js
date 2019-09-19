@@ -73,7 +73,7 @@ export function exportOrdersApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/adminorder/export',
     method: 'get',
-    responseType: 'arraybuffer',
+    responseType: 'blob',
     params
   })
 }
@@ -95,5 +95,14 @@ export function uploadLogisticsApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function exportReconciliationApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/reconciliation',
+    method: 'get',
+    responseType: 'blob',
+    params
   })
 }
