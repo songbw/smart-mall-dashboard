@@ -1,6 +1,7 @@
 const queryTemplate = {
   pageIndex: 1,
   pageSize: 20,
+  aoyiId: '',
   tradeNo: '',
   subOrderId: '',
   mobile: '',
