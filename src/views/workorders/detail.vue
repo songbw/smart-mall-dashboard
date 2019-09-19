@@ -150,7 +150,7 @@
             />
           </div>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 6" label="退款金额">
+        <el-form-item v-if="flowForm.status === 6" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
               主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
@@ -292,6 +292,21 @@ export default {
               callback(new Error('请选择处理结果'))
             } else {
               callback()
+            }
+          },
+          trigger: 'blur'
+        }],
+        refund: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.flowForm.status !== 6) {
+              callback()
+            } else {
+              if (value <= 0) {
+                callback(new Error('请输入合适的退款金额'))
+              } else {
+                callback()
+              }
             }
           },
           trigger: 'blur'

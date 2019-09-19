@@ -6,7 +6,6 @@
     :show-close="false"
     title="导入商品"
     width="60%"
-    center
   >
     <input
       ref="excel-upload-input"
@@ -74,6 +73,11 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
+      <el-table-column v-if="productPromotion" label="促销价格(元)" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.discount ? Number.parseFloat(scope.row.price) - scope.row.discount : null }}</span>
+        </template>
+      </el-table-column>
     </el-table>
     <span slot="footer">
       <el-button @click="handleDialogCancel">取消</el-button>
@@ -114,6 +118,15 @@ const CreationHeaders = [
   { field: 'introductionUrl', label: '商品描述图', type: 'string' }
 ]
 
+const PromotionHeaders = [
+  { field: 'skuid', label: '商品SKU', type: 'string' },
+  { field: 'pprice', label: '促销价格(元)', type: 'string' }
+]
+
+const SkuHeaders = [
+  { field: 'skuid', label: '商品SKU', type: 'string' }
+]
+
 export default {
   name: 'GoodsImportDialog',
   props: {
@@ -122,6 +135,10 @@ export default {
       default: false
     },
     productCreation: {
+      type: Boolean,
+      default: false
+    },
+    productPromotion: {
       type: Boolean,
       default: false
     }
@@ -181,10 +198,11 @@ export default {
     },
     handleTemplate() {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = this.productCreation ? CreationHeaders.map(header => header.label) : ['skuID']
+        const pHeader = this.productPromotion ? PromotionHeaders : SkuHeaders
+        const tHeader = this.productCreation ? CreationHeaders : pHeader
         const data = []
         excel.export_json_to_excel({
-          header: tHeader,
+          header: tHeader.map(header => header.label),
           data,
           filename: '导入商品信息模板'
         })
@@ -255,6 +273,8 @@ export default {
     generateData({ header, results }) {
       if (this.productCreation) {
         this.parseSkuData(results)
+      } else if (this.productPromotion) {
+        this.parsePromotionData(results)
       } else {
         this.searchSkuData(results)
       }
@@ -299,18 +319,67 @@ export default {
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
     },
+    async parsePromotionData(results) {
+      let fetchedNum = 0
+      const parsedSkus = []
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i]
+        const product = {}
+        PromotionHeaders.forEach(header => {
+          if (header.label in result) {
+            product[header.field] = this.parseValue(header.type, result[header.label])
+          }
+        })
+        if ('skuid' in product && !isEmpty(product.skuid)) {
+          try {
+            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
+            fetchedNum++
+            this.percentage = Math.round(fetchedNum * 100 / results.length)
+            const data = response.data.result
+            if (data.total === 1) {
+              const fetchedData = data.list[0]
+              if (this.isProductValid(fetchedData)) {
+                const item = {
+                  skuid: fetchedData.skuid,
+                  mpu: fetchedData.mpu,
+                  price: fetchedData.price,
+                  name: fetchedData.name,
+                  brand: fetchedData.brand,
+                  imagePath: fetchedData.image,
+                  intro: ''
+                }
+                if ('pprice' in product) {
+                  const pprice = Number.parseFloat(product.pprice)
+                  const price = Number.parseFloat(item.price)
+                  if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
+                    item.discount = price > pprice ? (price - pprice) : 0
+                  }
+                }
+                parsedSkus.push(item)
+              }
+            }
+          } catch (err) {
+            console.log('GoodImport: search error ' + product.skuid)
+          }
+        }
+      }
+      this.excelResults = parsedSkus
+      this.loading = false
+      this.$message.info(`成功导入${parsedSkus.length}个商品，无效商品为${results.length - parsedSkus.length}个`)
+    },
     async searchSkuData(results) {
       const fetchedSkus = []
       let fetchedNum = 0
       for (let i = 0; i < results.length; i++) {
-        const skuID = results[i].skuID
+        const item = results[i]
+        const skuID = this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])
         if (skuID) {
           try {
             const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
             fetchedNum++
             this.percentage = Math.round(fetchedNum * 100 / results.length)
             const data = response.data.result
-            if (data.total > 0) {
+            if (data.total === 1) {
               const product = data.list[0]
               if (this.isProductValid(product)) {
                 const item = {

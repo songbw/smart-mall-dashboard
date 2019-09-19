@@ -293,6 +293,7 @@
       />
       <goods-import-dialog
         :dialog-visible="dialogImportVisible"
+        :product-promotion="true"
         @onSelectionCancelled="onGoodsImportCancelled"
         @onSelectionConfirmed="onGoodsImportConfirmed"
       />
@@ -715,17 +716,18 @@ export default {
       const toAdd = []
       for (const sku of skus) {
         const found = this.promotionData.promotionSkus.findIndex(item => item.mpu === sku.mpu)
+        const discount = 'discount' in sku ? sku.discount : 0
         if (found < 0) {
           const addItem = {
             skuid: sku.skuid,
             mpu: sku.mpu,
-            discount: 0,
+            discount,
             scheduleId: this.scheduleId
           }
           const deleteIndex = this.deleteItems.findIndex(item => item.mpu === sku.mpu)
           if (deleteIndex >= 0) {
             this.deleteItems.splice(deleteIndex, 1)
-            this.updateItems.push({ mpu: sku.mpu, discount: 0 })
+            this.updateItems.push({ mpu: sku.mpu, discount })
           } else {
             this.addedItems.push(addItem)
           }
