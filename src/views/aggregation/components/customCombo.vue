@@ -9,8 +9,7 @@
         <el-form-item label="活动标题">
           <el-input v-model="titleTextValue" />
         </el-form-item>
-        <el-form-item label="绑定促销活动">
-          <el-switch v-model="titleHasPromotionActivity" />
+        <el-form-item label="促销活动">
           <el-button
             v-if="titleHasPromotionActivity"
             :disabled="titlePromotionDailySchedule"
