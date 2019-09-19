@@ -61,6 +61,11 @@
                 <span>客户退货地址如下：</span>
                 <address-info :return-address="flow.returnAddress" />
               </div>
+              <div v-if="flow.logisticsInfo" style="font-size: 13px">
+                <div>客户退货物流信息如下：</div>
+                <div>物流公司：{{ flow.logisticsInfo.com }}</div>
+                <div>物流单号：{{ flow.logisticsInfo.order }}</div>
+              </div>
               <div v-if="flow.refund">
                 <span>发起退款金额：￥{{ flow.refund }}</span>
               </div>
@@ -131,7 +136,10 @@
         </el-form-item>
         <el-form-item v-if="flowForm.status === 3" label="退货地址">
           <el-switch v-model="includeAddress" />
-          <el-button type="primary" size="mini" style="margin-left: 10px" @click="gotoReturnAddress">
+          <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowAddressDialog">
+            选择地址
+          </el-button>
+          <el-button type="warning" size="mini" style="margin-left: 10px" @click="gotoReturnAddress">
             修改地址
           </el-button>
           <div v-if="includeAddress && returnAddress.id >= 0">
@@ -159,6 +167,13 @@
         <el-button type="primary" @click="handleCreateFlow">确定</el-button>
       </div>
     </el-dialog>
+    <address-selection
+      :dialog-visible="dialogAddressVisible"
+      :list-loading="returnAddressLoading"
+      :address-list="returnAddressList"
+      @onCancelled="dialogAddressVisible = false"
+      @onConfirmed="onReturnAddressSelected"
+    />
   </div>
 </template>
 
@@ -171,6 +186,7 @@ import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
 import GoodsInfo from '@/components/Order/goodsInfo'
 import AddressInfo from './addressInfo'
+import AddressSelection from './addressSelection'
 import {
   getOrderListApi
 } from '@/api/orders'
@@ -178,7 +194,8 @@ import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
   createWorkOrderFlowApi,
-  getDefaultReturnAddressApi
+  getDefaultReturnAddressApi,
+  getReturnAddressListApi
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
@@ -194,7 +211,7 @@ const FlowStatusOptions = [
   }, {
     value: 4, label: '审核失败'
   }, {
-    value: 5, label: '开始处理'
+    value: 5, label: '退货处理'
   }, {
     value: 6, label: '同意退款'
   }]
@@ -205,7 +222,8 @@ export default {
     ReceiverInfo,
     PaymentInfo,
     GoodsInfo,
-    AddressInfo
+    AddressInfo,
+    AddressSelection
   },
   filters: {
     workOrderStatus: status => {
@@ -256,6 +274,9 @@ export default {
       returnAddress: {
         id: -1
       },
+      dialogAddressVisible: false,
+      returnAddressLoading: false,
+      returnAddressList: [],
       flowForm: {
         status: null,
         refund: 0,
@@ -343,7 +364,7 @@ export default {
             } catch (e) {
               flowComment = {}
             }
-            const remark = flowComment.remark ? flowComment.remark : row.comments
+            const remark = flowComment.remark ? flowComment.remark : ''
             const content = find ? find.label + ' - ' + remark : remark
             return { ...row, timeline, content, ...flowComment }
           })
@@ -370,6 +391,35 @@ export default {
         }
       } catch (e) {
         console.warn('Get default return address error:' + e)
+      }
+    },
+    async getReturnAddressList() {
+      try {
+        this.returnAddressLoading = true
+        const data = await getReturnAddressListApi()
+        if (Array.isArray(data)) {
+          this.returnAddressList = data.map(item => ({
+            id: item.id,
+            isDefault: item.isDefault,
+            ...JSON.parse(item.content)
+          }))
+        }
+      } catch (e) {
+        console.warn('Get return address list error:' + e)
+      } finally {
+        this.returnAddressLoading = false
+      }
+    },
+    onReturnAddressSelected(addr) {
+      if (addr) {
+        this.returnAddress = addr
+      }
+      this.dialogAddressVisible = false
+    },
+    handleShowAddressDialog() {
+      this.dialogAddressVisible = true
+      if (this.returnAddressList.length === 0) {
+        this.getReturnAddressList()
       }
     },
     handleShowFlowDialog() {

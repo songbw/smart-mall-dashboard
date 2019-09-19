@@ -61,6 +61,11 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <div style="margin-bottom: 10px">
+      <el-button icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
+        导出结算订单
+      </el-button>
+    </div>
     <el-table
       ref="ordersTable"
       v-loading="listLoading"
@@ -152,6 +157,48 @@
       :total="orderTotal"
       @pagination="getOrderList"
     />
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="exportDialogVisible"
+      title="导出结算订单"
+    >
+      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="80px">
+        <el-form-item label="开始日期" prop="payStartDate">
+          <el-date-picker
+            v-model="exportForm.payStartDate"
+            placeholder="选择开始日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期" prop="payEndDate">
+          <el-date-picker
+            v-model="exportForm.payEndDate"
+            placeholder="选择结束日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名" prop="merchantId">
+          <el-select v-model="exportForm.merchantId">
+            <el-option
+              v-for="item in vendorOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelExport">取消</el-button>
+        <el-button type="primary" @click="handleConfirmExport">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -163,10 +210,25 @@ import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
-import { exportOrdersApi, getOrderListApi, updateSubOrderApi } from '@/api/orders'
+import {
+  exportOrdersApi,
+  getOrderListApi,
+  updateSubOrderApi,
+  exportReconciliationApi
+} from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
 
+const validateDates = (start, end) => {
+  const format = 'YYYY-MM-DD'
+  if (start && end) {
+    const startDate = moment(start, format)
+    const endDate = moment(end, format)
+    return endDate.isAfter(startDate)
+  } else {
+    return false
+  }
+}
 export default {
   name: 'Orders',
   components: { Pagination, OrderProduct },
@@ -192,8 +254,35 @@ export default {
       listLoading: false,
       orderData: [],
       orderTotal: 0,
-      merchantName: '',
-      queryParams: null
+      queryParams: null,
+      exportDialogVisible: false,
+      exportForm: {
+        merchantId: -1,
+        payStartDate: null,
+        payEndDate: null
+      },
+      exportRules: {
+        payStartDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.payEndDate === null) ||
+              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的开始日期'))
+            }
+          }
+        }],
+        payEndDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.payStartDate === null) ||
+              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的结束日期'))
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
@@ -201,7 +290,8 @@ export default {
       isAdminUser: 'isAdminUser',
       isWatcherUser: 'isWatcherUser',
       vendorApproved: 'vendorApproved',
-      orderQuery: 'orderQuery'
+      orderQuery: 'orderQuery',
+      vendorId: 'vendorId'
     }),
     vendorOptions() {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
@@ -381,11 +471,20 @@ export default {
     },
     onQueryVendorChanged(value) {
       this.queryVendor = value
-      const vendor = this.vendors.find(item => item.value === value)
-      if (vendor) {
-        this.merchantName = vendor.label
-      } else {
-        this.merchantName = ''
+    },
+    downloadBlobData(data, filename) {
+      try {
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download blob data error:' + e)
       }
     },
     async handleExportOrders() {
@@ -416,20 +515,43 @@ export default {
       this.getOrderList()
       try {
         const data = await exportOrdersApi(params)
-        const blob = new Blob([data])
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        const filename = `Orders_${this.merchantName}_${this.queryStartDate}_${this.queryEndDate}.xls`
-        link.href = url
-        link.setAttribute('download', filename)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        window.URL.revokeObjectURL(url)
+        const filename = `订单列表-${this.queryStartDate}-${this.queryEndDate}.xls`
+        this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
         this.$message.warning('未找到有效的订单数据！')
       }
+    },
+    handleCancelExport() {
+      this.$refs.exportForm.resetFields()
+      this.exportDialogVisible = false
+    },
+    handleConfirmExport() {
+      this.$refs.exportForm.validate(async valid => {
+        if (valid) {
+          this.exportDialogVisible = false
+          const params = {
+            payStartDate: this.exportForm.payStartDate,
+            payEndDate: this.exportForm.payEndDate
+          }
+          if (this.isAdminUser || this.isWatcherUser) {
+            if (this.exportForm.merchantId > 0) {
+              params.merchantId = this.exportForm.merchantId
+            }
+          } else {
+            params.merchantId = this.vendorId
+          }
+          this.$refs.exportForm.resetFields()
+          try {
+            const data = await exportReconciliationApi(params)
+            const filename = `结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+            this.downloadBlobData(data, filename)
+          } catch (e) {
+            console.warn('Order export error:' + e)
+            this.$message.warning('未找到有效的结算订单数据！')
+          }
+        }
+      })
     }
   }
 }
