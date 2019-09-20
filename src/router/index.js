@@ -311,7 +311,7 @@ export const constantRoutes = [
         name: 'MemberBalances',
         component: () => import('@/views/members/balances'),
         meta: { title: '余额管理', icon: 'balances', roles: [role_admin_name] },
-        hidden: false // process.env.VUE_APP_HOST !== 'WX-Mall'
+        hidden: process.env.VUE_APP_HOST !== 'WX-Mall'
       }
     ]
   },
