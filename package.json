@@ -9,6 +9,8 @@
     "dev:wx-mall": "vue-cli-service serve --mode wx-mall",
     "build": "vue-cli-service build --modern",
     "build:wx-mall": "vue-cli-service build --modern --mode wx-mall",
+    "build:gat-sn": "vue-cli-service build --modern --mode gat-sn",
+    "build:gat-zy": "vue-cli-service build --modern --mode gat-zy",
     "preview": "serve -n -d ./dist",
     "lint": "eslint --ext .js,.vue src",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml"
