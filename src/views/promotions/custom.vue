@@ -21,7 +21,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="活动标签" prop="tag">
+      <el-form-item v-if="hasTag" label="活动标签" prop="tag">
         <el-autocomplete
           v-model="formData.tag"
           :fetch-suggestions="queryTags"
@@ -31,7 +31,9 @@
       </el-form-item>
       <el-form-item label="全天分时段">
         <el-switch v-model="formData.dailySchedule" :disabled="scheduleDisabled" />
-        <span style="font-size: 12px;margin-left: 10px">创建后将不能修改</span>
+        <span style="font-size: 12px;margin-left: 10px">
+          <i class="el-icon-warning-outline" />创建后将不能修改
+        </span>
       </el-form-item>
       <el-form-item v-if="formData.dailySchedule" label="活动日期" prop="scheduleDate">
         <el-date-picker
@@ -87,6 +89,19 @@
           @input="onEndTimeChanged"
         />
       </el-form-item>
+      <el-form-item label="结算类型">
+        <el-select v-model="formData.accountType">
+          <el-option
+            v-for="item in accountTypeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <span style="font-size: 12px;margin-left: 10px">
+          <i class="el-icon-warning-outline" />此类型对应不同的服务费，请仔细选择！
+        </span>
+      </el-form-item>
       <el-form-item>
         <el-button @click="$emit('cancelCreation')">取消</el-button>
         <el-button type="primary" @click="savePromotion">{{ saveButtonLabel }}</el-button>
@@ -114,6 +129,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import range from 'lodash/range'
+import { PromotionAccountTypeDefinition } from '@/utils/constants'
 
 export default {
   name: 'CustomPromotion',
@@ -127,6 +143,7 @@ export default {
   },
   data() {
     return {
+      hasTag: false,
       scheduleDate: null,
       scheduleDisabled: false,
       startDate: null,
@@ -138,19 +155,21 @@ export default {
       scheduleOptions: [],
       scheduleUpdating: false,
       checkSchedules: [],
+      accountTypeOptions: [...PromotionAccountTypeDefinition],
       formData: {
         name: this.promotionData.name,
         promotionTypeId: this.promotionData.promotionTypeId,
         tag: this.promotionData.tag,
         dailySchedule: this.promotionData.dailySchedule,
         startDate: this.promotionData.startDate,
-        endDate: this.promotionData.endDate
+        endDate: this.promotionData.endDate,
+        accountType: this.promotionData.accountType
       },
       formRules: {
         name: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (isEmpty(value)) {
-              callback(new Error('请输入有效的优惠券名称'))
+              callback(new Error('请输入有效的活动名称'))
             } else {
               callback()
             }
@@ -167,8 +186,12 @@ export default {
         }],
         tag: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
-            if (isEmpty(this.formData.tag)) {
-              callback(new Error('请输入有效的活动标签'))
+            if (this.hasTag) {
+              if (isEmpty(this.formData.tag)) {
+                callback(new Error('请输入有效的活动标签'))
+              } else {
+                callback()
+              }
             } else {
               callback()
             }
@@ -274,8 +297,10 @@ export default {
       try {
         const id = await this.$store.dispatch('promotions/create', this.formData)
         await this.handleSetDiscountType(id)
-        for (const time of this.defaultSchedules) {
-          await this.addScheduleTime(time, id)
+        if (this.formData.dailySchedule) {
+          for (const time of this.defaultSchedules) {
+            await this.addScheduleTime(time, id)
+          }
         }
         this.$emit('onPromotionCreated')
       } catch (e) {

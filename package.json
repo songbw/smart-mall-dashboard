@@ -6,11 +6,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",
-    "dev:gat-sn": "vue-cli-service serve --mode gat-sn",
-    "dev:gat-zy": "vue-cli-service serve --mode gat-zy",
+    "dev:wx-mall": "vue-cli-service serve --mode wx-mall",
     "build": "vue-cli-service build --modern",
-    "build:gat-sn": "vue-cli-service build --mode gat-sn --modern",
-    "build:gat-zy": "vue-cli-service build --mode gat-zy --modern",
+    "build:wx-mall": "vue-cli-service build --modern --mode wx-mall",
     "preview": "serve -n -d ./dist",
     "lint": "eslint --ext .js,.vue src",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml"

@@ -14,6 +14,18 @@
           />
         </el-select>
       </el-form-item>
+    </el-form>
+    <el-form inline>
+      <el-form-item label="结算类型">
+        <el-select v-model="queryAccountType">
+          <el-option
+            v-for="item in accountTypeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="全天分时段活动">
         <el-switch v-model="queryDailySchedule" />
       </el-form-item>
@@ -114,9 +126,9 @@
           <span>{{ scope.row.dailySchedule ? '是' : '否' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="活动标签" align="center" width="100">
+      <el-table-column label="结算类型" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.tag }}</span>
+          <span>{{ scope.row.accountType | accountTypeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column label="活动状态" align="center" width="100">
@@ -219,7 +231,8 @@ import {
   promotion_status_off_shelves,
   promotion_status_ready_for_sale,
   promotion_status_on_sale,
-  PromotionStatusDefinition
+  PromotionStatusDefinition,
+  PromotionAccountTypeDefinition
 } from '@/utils/constants'
 
 export default {
@@ -228,6 +241,10 @@ export default {
   filters: {
     promotionStatus: (status) => {
       const find = PromotionStatusDefinition.find(item => item.value === status)
+      return find ? find.label : ''
+    },
+    accountTypeFilter: (type) => {
+      const find = PromotionAccountTypeDefinition.find(item => item.value === type)
       return find ? find.label : ''
     }
   },
@@ -240,6 +257,10 @@ export default {
         value: 0,
         label: '全部'
       }].concat(PromotionStatusDefinition),
+      accountTypeOptions: [{
+        value: -1,
+        label: '全部'
+      }].concat(PromotionAccountTypeDefinition),
       dataLoading: false,
       promotionSelection: [],
       promotionData: [],
@@ -276,6 +297,14 @@ export default {
       },
       set(value) {
         this.$store.commit('promotions/SET_SEARCH_DATA', { dailySchedule: value })
+      }
+    },
+    queryAccountType: {
+      get() {
+        return this.promotionQuery.accountType
+      },
+      set(value) {
+        this.$store.commit('promotions/SET_SEARCH_DATA', { accountType: value })
       }
     },
     queryOffset: {
@@ -359,6 +388,10 @@ export default {
       }
       if (this.queryDailySchedule) {
         params.dailySchedule = true
+        needFilter = true
+      }
+      if (this.queryAccountType > -1) {
+        params.accountType = this.queryAccountType
         needFilter = true
       }
       if (this.promotionTypeId >= 0) {
@@ -591,6 +624,7 @@ export default {
     },
     onTypeClicked(type) {
       if (this.queryTypeId !== type.name) {
+        this.queryOffset = 1
         this.getPromotionData()
       }
     },
