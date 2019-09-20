@@ -146,7 +146,7 @@ export default {
   },
   data() {
     return {
-      showBalance: true, // process.env.VUE_APP_HOST === 'WX-MALL',
+      showBalance: process.env.VUE_APP_HOST === 'WX-MALL',
       loadingProfile: false,
       profile: {
         id: null,
