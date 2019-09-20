@@ -167,6 +167,7 @@ export default {
       }
     },
     handleViewMember(id) {
+      this.$router.push({ name: 'MemberProfile', params: { id }})
     }
   }
 }
