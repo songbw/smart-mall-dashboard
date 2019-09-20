@@ -27,7 +27,6 @@ export default {
     async initApp() {
       try {
         await localForage.ready()
-        console.debug('App init localForage ' + localForage.driver())
         const token = await localForage.getItem(storage_key_token)
         if (!isEmpty(token)) {
           this.$store.commit('user/SET_TOKEN', token)

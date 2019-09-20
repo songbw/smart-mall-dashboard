@@ -127,8 +127,8 @@
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
-      <el-form-item v-if="isAdminUser || isWatcherUser" label="销售价格(元)" prop="price">
-        <span v-if="viewProduct"> {{ productForm.price }}</span>
+      <el-form-item label="销售价格(元)" prop="price">
+        <span v-if="viewProduct || !isAdminUser"> {{ productForm.price }}</span>
         <el-input-number
           v-else
           v-model="productForm.price"

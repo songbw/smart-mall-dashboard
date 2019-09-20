@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+console.info('App host ' + process.env.VUE_APP_HOST)
+
 import './plugins/element-ui'
 import './plugins/localforage'
 import './plugins/axios'
