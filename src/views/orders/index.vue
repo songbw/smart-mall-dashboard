@@ -250,7 +250,7 @@ export default {
   data() {
     return {
       shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
-      couldExportReconciliation: process.env.VUE_APP_HOST === 'FC-MALL',
+      couldExportReconciliation: process.env.VUE_APP_HOST === 'WX-MALL',
       statusOptions: [{
         value: -1,
         label: '全部'

@@ -291,13 +291,27 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/members/index',
     name: 'Members',
-    meta: { title: '会员', icon: 'members' },
+    meta: { title: '会员', icon: 'members', roles: [role_admin_name] },
     children: [
       {
         path: 'index',
-        name: 'MembersManager',
+        name: 'MemberManager',
         component: () => import('@/views/members/index'),
-        meta: { title: '会员管理', icon: 'members' }
+        meta: { title: '会员管理', icon: 'members-manager', roles: [role_admin_name] }
+      },
+      {
+        path: 'profile/:id',
+        name: 'MemberProfile',
+        component: () => import('@/views/members/profile'),
+        meta: { title: '会员详情', icon: 'member-profile', roles: [role_admin_name] },
+        hidden: true
+      },
+      {
+        path: 'balances',
+        name: 'MemberBalances',
+        component: () => import('@/views/members/balances'),
+        meta: { title: '余额管理', icon: 'balances', roles: [role_admin_name] },
+        hidden: false // process.env.VUE_APP_HOST !== 'WX-Mall'
       }
     ]
   },
