@@ -109,6 +109,7 @@
         </el-table-column>
       </el-table>
     </el-card>
+    <el-button type="primary" style="margin-top: 20px" @click="goBack">返回</el-button>
   </div>
 </template>
 
@@ -233,6 +234,11 @@ export default {
       } finally {
         this.loadingAddressList = false
       }
+    },
+    goBack() {
+      window.history.length > 1
+        ? this.$router.go(-1)
+        : this.$router.push('/members')
     }
   }
 }
