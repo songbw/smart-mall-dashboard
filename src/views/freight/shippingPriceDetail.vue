@@ -20,6 +20,11 @@
       <el-form-item label="是否默认">
         <span v-if="viewOnly">{{ shippingPriceForm.isDefault ? '是' : '否' }}</span>
         <el-switch v-else v-model="shippingPriceForm.isDefault" />
+        <span style="margin-left: 20px;font-size: 12px">
+          <i class="el-icon-warning-outline">
+            在计算订单运费时，如未找到商品指定运费模板，则使用默认模板。
+          </i>
+        </span>
       </el-form-item>
       <el-form-item label="计价模式">
         <el-radio-group v-model="shippingPriceForm.mode">
@@ -32,7 +37,7 @@
           </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="所属供应商">
+      <el-form-item v-if="hasVendor" label="所属供应商">
         <span v-if="viewOnly">
           {{ vendorName }}
         </span>
@@ -173,6 +178,7 @@ export default {
   name: 'ShippingPriceDetail',
   data() {
     return {
+      hasVendor: false,
       vendorLoading: false,
       modeOptions: ShippingPriceModeOptions,
       regionOptions: RegionList,
@@ -184,7 +190,7 @@ export default {
         id: -1,
         name: '',
         merchantId: 0,
-        isDefault: true,
+        isDefault: false,
         mode: shipping_price_unit_mode,
         regions: []
       },
@@ -256,7 +262,9 @@ export default {
         this.getShippingPriceDetail(id)
       }
     }
-    this.getVendorList()
+    if (this.hasVendor) {
+      this.getVendorList()
+    }
   },
   methods: {
     async getVendorList() {

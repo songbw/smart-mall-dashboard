@@ -12,7 +12,12 @@
     >
       <el-table-column label="模板编号" align="center" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <router-link
+            :to="{ name: 'ViewFreeShipping', params: { id: scope.row.id }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ scope.row.id }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="模板名称" align="center">
