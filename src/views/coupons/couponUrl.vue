@@ -154,7 +154,10 @@ export default {
       this.dialogSelectionVisible = false
       if (skus.length > 0) {
         this.$emit('urlChanged', {
-          url: 'route://commodity/' + skus[0].mpu
+          url: 'route://commodity/' + skus[0].mpu,
+          meta: {
+            commodityImage: skus[0].imagePath
+          }
         })
       }
     },
