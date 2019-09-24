@@ -20,7 +20,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="noCreatePermission" style="margin-bottom: 20px">
+    <div v-if="!noCreatePermission" style="margin-bottom: 20px">
       <el-button type="primary" icon="el-icon-plus" @click="handleCreateVendor">
         创建新商户
       </el-button>
