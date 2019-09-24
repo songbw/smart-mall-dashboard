@@ -65,7 +65,7 @@
         v-if="!isWatcherUser"
         style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline"
       >
-        <div>
+        <div v-if="!noCreatePermission">
           <el-button
             :disabled="!vendorApproved"
             type="primary"
@@ -243,7 +243,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
-                :disabled="isProductOnSale(scope.row.state)"
+                :disabled="isProductOnSale(scope.row.state) || noCreatePermission"
                 icon="el-icon-edit"
                 divided
               >
@@ -265,7 +265,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`delete:${scope.$index}`"
-                :disabled="isProductCouldDelete(scope.row) === false"
+                :disabled="isProductCouldDelete(scope.row) === false || noCreatePermission"
                 icon="el-icon-delete"
                 divided
               >
@@ -446,6 +446,9 @@ export default {
       productVendors: 'productVendors',
       vendorApproved: 'vendorApproved'
     }),
+    noCreatePermission() {
+      return this.isWatcherUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    },
     vendorOptions() {
       return [{ value: -1, label: '全部' }].concat(this.productVendors)
     },

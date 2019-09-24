@@ -30,7 +30,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="hasEditPermission" style="margin-bottom: 10px">
+    <div v-if="!noCreatePermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="handleCreateFirstClass">
         新建一级类别
       </el-button>
@@ -52,7 +52,7 @@
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
-              {{ hasEditPermission ? '编辑' : '查看' }}
+              {{ noCreatePermission ? '查看' : '编辑' }}
             </el-button>
             <el-button
               v-if="currentSelectedTopCategory.idate"
@@ -111,10 +111,10 @@
             <el-table-column label="操作" align="center" width="160">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
-                  {{ hasEditPermission ? '编辑' : '查看' }}
+                  {{ noCreatePermission ? '查看' : '编辑' }}
                 </el-button>
                 <el-button
-                  v-if="hasEditPermission && scope.row.idate"
+                  v-if="!noCreatePermission && scope.row.idate"
                   size="mini"
                   type="danger"
                   @click="handleDelete(scope.row)"
@@ -162,17 +162,17 @@
           <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="是否显示">
-          <el-switch v-model="dialogValue.isShow" :disabled="!hasEditPermission" />
+          <el-switch v-model="dialogValue.isShow" :disabled="noCreatePermission" />
         </el-form-item>
         <el-form-item label="类别排序">
-          <el-input v-if="!hasEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
+          <el-input v-if="noCreatePermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" />
           <div style="font-size: 13px;margin-left: 4rem">数值越小优先级越高</div>
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload
             :image-url="dialogValue.categoryIcon"
-            :view-only="!hasEditPermission"
+            :view-only="noCreatePermission"
             path-name="categories"
             image-width="200px"
             tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
@@ -264,14 +264,13 @@ export default {
   computed: {
     ...mapGetters({
       isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
       categoryData: 'categories',
       secondCategoryData: 'secondClassCategories'
     }),
-    hasEditPermission() {
-      return this.isAdminUser
+    noCreatePermission() {
+      return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
     },
     filterName: {
       get() {
@@ -347,7 +346,7 @@ export default {
       this.resetDialogValue()
     },
     handleSubmit() {
-      if (!this.hasEditPermission) {
+      if (this.noCreatePermission) {
         this.handleCancel()
         return
       }
