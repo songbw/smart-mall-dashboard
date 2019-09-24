@@ -52,7 +52,7 @@
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
-              {{ noCreatePermission ? '查看' : '编辑' }}
+              {{ !hasEditPermission ? '查看' : '编辑' }}
             </el-button>
             <el-button
               v-if="currentSelectedTopCategory.idate"
@@ -111,7 +111,7 @@
             <el-table-column label="操作" align="center" width="160">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
-                  {{ noCreatePermission ? '查看' : '编辑' }}
+                  {{ !hasEditPermission ? '查看' : '编辑' }}
                 </el-button>
                 <el-button
                   v-if="!noCreatePermission && scope.row.idate"
@@ -162,17 +162,17 @@
           <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="是否显示">
-          <el-switch v-model="dialogValue.isShow" :disabled="noCreatePermission" />
+          <el-switch v-model="dialogValue.isShow" :disabled="!hasEditPermission" />
         </el-form-item>
         <el-form-item label="类别排序">
-          <el-input v-if="noCreatePermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
+          <el-input v-if="!hasEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" />
           <div style="font-size: 13px;margin-left: 4rem">数值越小优先级越高</div>
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload
             :image-url="dialogValue.categoryIcon"
-            :view-only="noCreatePermission"
+            :view-only="!hasEditPermission"
             path-name="categories"
             image-width="200px"
             tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
@@ -181,7 +181,7 @@
         </el-form-item>
       </el-form>
       <div slot="footer">
-        <el-button @click="handleCancel">取消</el-button>
+        <el-button v-if="hasEditPermission" @click="handleCancel">取消</el-button>
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </div>
     </el-dialog>
@@ -269,6 +269,9 @@ export default {
       categoryData: 'categories',
       secondCategoryData: 'secondClassCategories'
     }),
+    hasEditPermission() {
+      return this.isAdminUser
+    },
     noCreatePermission() {
       return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
     },
@@ -346,7 +349,7 @@ export default {
       this.resetDialogValue()
     },
     handleSubmit() {
-      if (this.noCreatePermission) {
+      if (!this.hasEditPermission) {
         this.handleCancel()
         return
       }

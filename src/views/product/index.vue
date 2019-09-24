@@ -243,7 +243,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`edit:${scope.$index}`"
-                :disabled="isProductOnSale(scope.row.state) || noCreatePermission"
+                :disabled="isProductOnSale(scope.row.state) || !hasEditPermission"
                 icon="el-icon-edit"
                 divided
               >
@@ -257,7 +257,7 @@
                 上架商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-else-if="isAdminUser"
+                v-else-if="isAdminUser && isProductOnSale(scope.row.state)"
                 :command="`stop:${scope.$index}`"
                 icon="el-icon-sold-out"
               >
@@ -446,6 +446,9 @@ export default {
       productVendors: 'productVendors',
       vendorApproved: 'vendorApproved'
     }),
+    hasEditPermission() {
+      return !this.isWatcherUser
+    },
     noCreatePermission() {
       return this.isWatcherUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
     },
