@@ -61,7 +61,7 @@
             查看
           </el-button>
           <el-button
-            :disabled="scope.row.company.status !== statusReviewing"
+            :disabled="noCreatePermission || scope.row.company.status !== statusReviewing"
             type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -69,7 +69,7 @@
             批准
           </el-button>
           <el-button
-            :disabled="scope.row.company.status !== statusReviewing"
+            :disabled="noCreatePermission || scope.row.company.status !== statusReviewing"
             type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -77,7 +77,7 @@
             拒绝
           </el-button>
           <el-button
-            :disabled="scope.row.company.status === statusApproved"
+            :disabled="noCreatePermission || scope.row.company.status === statusApproved"
             type="danger"
             size="mini"
             @click="handleDeleteVendor(scope.$index)"
@@ -255,6 +255,9 @@ export default {
     }
   },
   computed: {
+    noCreatePermission() {
+      return process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    },
     vendorIndustry: {
       get() {
         const industry = this.vendorProfile.industry

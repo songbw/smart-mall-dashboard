@@ -561,6 +561,7 @@ export default {
       originalCategory: null,
       disableScenarioType: false,
       selectCategoryId: '',
+      couponImageSet: false,
       formData: {
         name: '',
         supplierMerchantId: null,
@@ -1226,6 +1227,7 @@ export default {
          */
     },
     handleImageUrlChanged(url) {
+      this.couponImageSet = true
       this.formData.imageUrl = url
     },
     handleTagSelected(value) {
@@ -1243,6 +1245,9 @@ export default {
         if (!isEmpty(mpu)) {
           this.formData.rules.scenario.type = 1
           this.formData.rules.scenario.couponMpus = [mpu]
+          if (data.meta && data.meta.commodityImage && !this.couponImageSet) {
+            this.formData.imageUrl = data.meta.commodityImage
+          }
         }
       } else {
         this.disableScenarioType = false

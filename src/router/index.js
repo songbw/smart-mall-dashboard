@@ -107,6 +107,60 @@ export const constantRoutes = [
         name: 'Brand',
         component: () => import('@/views/brand/index'),
         meta: { title: '品牌管理', icon: 'brands' }
+      },
+      {
+        path: 'freeShipping',
+        name: 'FreeShipping',
+        component: () => import('@/views/freight/freeShipping'),
+        meta: { title: '包邮模板', icon: 'free-shipping' }
+      },
+      {
+        path: 'createFreeShipping',
+        name: 'CreateFreeShipping',
+        component: () => import('@/views/freight/freeShippingDetail'),
+        meta: { title: '包邮模板', icon: 'free-shipping' },
+        hidden: true
+      },
+      {
+        path: 'viewFreeShipping/:id',
+        name: 'ViewFreeShipping',
+        component: () => import('@/views/freight/freeShippingDetail'),
+        meta: { title: '包邮模板', icon: 'free-shipping' },
+        hidden: true
+      },
+      {
+        path: 'editFreeShipping/:id',
+        name: 'EditFreeShipping',
+        component: () => import('@/views/freight/freeShippingDetail'),
+        meta: { title: '包邮模板', icon: 'free-shipping' },
+        hidden: true
+      },
+      {
+        path: 'shippingPrice',
+        name: 'ShippingPrice',
+        component: () => import('@/views/freight/shippingPrice'),
+        meta: { title: '运费模板', icon: 'shipping-price' }
+      },
+      {
+        path: 'createShippingPrice',
+        name: 'CreateShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '运费模板', icon: 'shipping-price' },
+        hidden: true
+      },
+      {
+        path: 'viewShippingPrice/:id',
+        name: 'ViewShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '运费模板', icon: 'shipping-price' },
+        hidden: true
+      },
+      {
+        path: 'editShippingPrice/:id',
+        name: 'EditShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '运费模板', icon: 'shipping-price' },
+        hidden: true
       }
     ]
   },

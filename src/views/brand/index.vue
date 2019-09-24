@@ -201,7 +201,7 @@ export default {
       isAdminUser: 'isAdminUser'
     }),
     noEditPermission() {
-      return !this.isAdminUser
+      return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
     },
     queryName: {
       get() {
