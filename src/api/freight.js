@@ -62,6 +62,14 @@ export function getFreeShippingDetailApi(params) {
   })
 }
 
+export function getMerchantFreeShippingApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminFreeShip/findByMerchantId',
+    method: 'get',
+    params
+  })
+}
+
 export function getShippingPriceListApi(params) {
   return Vue.axios('freights').request({
     url: '/freights/adminShip/find',
@@ -121,5 +129,41 @@ export function addShippingPriceRegionApi(params) {
     data: {
       ...params
     }
+  })
+}
+
+export function getMpuShippingPriceApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminShip/findByMpu',
+    method: 'get',
+    params
+  })
+}
+
+export function setMpuShippingPriceApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminShipMpu/create',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function updateMpuShippingPriceApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminShipMpu/update',
+    method: 'put',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function deleteMpuShippingPriceApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminShipMpu/delete',
+    method: 'delete',
+    params
   })
 }

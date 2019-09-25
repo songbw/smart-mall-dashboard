@@ -18,6 +18,7 @@
       <el-form-item v-if="!createProduct" label="创建时间">
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
+      <el-divider content-position="left">商品信息</el-divider>
       <el-form-item v-if="isAdminUser || isWatcherUser" label="商品供应商" prop="merchantId">
         <span v-if="viewProduct || productForm.merchantId === vendorAoyi">
           {{ getVendorName(productForm.merchantId) }}
@@ -89,36 +90,6 @@
         <span v-if="viewProduct"> {{ productForm.model }}</span>
         <el-input v-else v-model="productForm.model" maxlength="50" />
       </el-form-item>
-      <el-form-item label="商品重量">
-        <span v-if="viewProduct"> {{ productForm.weight }}</span>
-        <el-input v-else v-model="productForm.weight" maxlength="10" />
-      </el-form-item>
-      <el-form-item label="商品封面图">
-        <template>
-          <el-image v-if="productForm.image" :src="productForm.image" fit="contain" style="width: 200px" />
-          <el-upload
-            v-if="!viewProduct"
-            ref="coverUpload"
-            :action="uploadUrl"
-            :data="uploadCoverData"
-            :auto-upload="true"
-            :limit="1"
-            :show-file-list="true"
-            :before-upload="handleBeforeUpload"
-            :on-success="handleUploadCoverSuccess"
-            :on-error="handleUploadError"
-            :on-progress="handleUploadProgress"
-            accept="image/png, image/jpeg, image/jpg"
-            style="margin: 10px"
-            list-type="picture"
-            name="file"
-          >
-            <el-button slot="trigger" type="primary" icon="el-icon-picture">
-              选择封面图
-            </el-button>
-          </el-upload>
-        </template>
-      </el-form-item>
       <el-form-item label="商品条形码">
         <span v-if="viewProduct"> {{ productForm.upc }}</span>
         <el-input v-else v-model="productForm.upc" maxlength="30" />
@@ -150,6 +121,108 @@
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
+      </el-form-item>
+      <el-divider content-position="left">商品物流</el-divider>
+      <el-form-item label="包邮模板">
+        <router-link
+          v-if="freeShippingData"
+          :to="{ name: 'ViewFreeShipping', params: { id: freeShippingData.id }}"
+          class="el-link el-link--primary is-underline"
+        >
+          {{ freeShippingData.name }}
+        </router-link>
+        <span v-else>未设置包邮模板</span>
+        <el-button
+          v-if="!viewProduct"
+          type="info"
+          size="mini"
+          style="margin-left: 10px"
+          @click="$router.push({name: 'FreeShipping'})"
+        >
+          去修改
+        </el-button>
+        <span v-if="freeShippingData && freeShippingData.merchantId === 0" style="margin-left: 10px;">
+          <i class="el-icon-warning-outline">目前使用平台默认包邮模板</i>
+        </span>
+      </el-form-item>
+      <el-form-item label="运费模板">
+        <router-link
+          v-if="shippingPriceData"
+          :to="{ name: 'ViewShippingPrice', params: { id: shippingPriceData.id }}"
+          class="el-link el-link--primary is-underline"
+        >
+          {{ shippingPriceData.name }}
+        </router-link>
+        <span v-else>未设置运费模板</span>
+        <el-button
+          v-if="!viewProduct"
+          :loading="shippingPriceLoading"
+          type="primary"
+          size="mini"
+          style="margin-left: 10px"
+          @click="shippingPriceDialogVisible = true"
+        >
+          选择模板
+        </el-button>
+        <el-button
+          v-if="!viewProduct && mpuShippingPriceId !== null"
+          :loading="shippingPriceLoading"
+          type="danger"
+          size="mini"
+          style="margin-left: 10px"
+          @click="handleRemoveMpuShippingPrice"
+        >
+          清除模板
+        </el-button>
+        <el-button
+          v-if="!viewProduct"
+          type="info"
+          size="mini"
+          @click="$router.push({name: 'ShippingPrice'})"
+        >
+          去修改
+        </el-button>
+        <span v-if="mpuShippingPriceId === null && shippingPriceData !== null" style="margin-left: 10px;">
+          <i class="el-icon-warning-outline">目前使用平台默认运费模板</i>
+        </span>
+      </el-form-item>
+      <el-form-item label="商品重量(公斤)">
+        <span v-if="viewProduct"> {{ productForm.weight }}</span>
+        <el-input-number
+          v-else
+          v-model="productForm.weight"
+          :precision="3"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
+      </el-form-item>
+      <el-divider content-position="left">商品图片</el-divider>
+      <el-form-item label="商品封面图">
+        <template>
+          <el-image v-if="productForm.image" :src="productForm.image" fit="contain" style="width: 200px" />
+          <el-upload
+            v-if="!viewProduct"
+            ref="coverUpload"
+            :action="uploadUrl"
+            :data="uploadCoverData"
+            :auto-upload="true"
+            :limit="1"
+            :show-file-list="true"
+            :before-upload="handleBeforeUpload"
+            :on-success="handleUploadCoverSuccess"
+            :on-error="handleUploadError"
+            :on-progress="handleUploadProgress"
+            accept="image/png, image/jpeg, image/jpg"
+            style="margin: 10px"
+            list-type="picture"
+            name="file"
+          >
+            <el-button slot="trigger" type="primary" icon="el-icon-picture">
+              选择封面图
+            </el-button>
+          </el-upload>
+        </template>
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
@@ -258,6 +331,11 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <shipping-price-selection
+      :dialog-visible="shippingPriceDialogVisible"
+      @onCancelled="shippingPriceDialogVisible = false"
+      @onConfirmed="handleSelectShippingPrice"
+    />
   </div>
 </template>
 
@@ -273,14 +351,20 @@ import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
 import CategorySelection from '@/components/CategorySelection'
+import ShippingPriceSelection from './shippingPriceSelection'
 import {
   app_upload_url,
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
+import { getVendorListApi } from '@/api/vendor'
 import {
-  getVendorListApi
-} from '@/api/vendor'
+  getMerchantFreeShippingApi,
+  getMpuShippingPriceApi,
+  setMpuShippingPriceApi,
+  updateMpuShippingPriceApi,
+  deleteMpuShippingPriceApi
+} from '@/api/freight'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -288,7 +372,7 @@ const OP_CREATE = 3
 
 export default {
   name: 'ProductDetail',
-  components: { CustomIntroduction, CustomThumbnail, CategorySelection },
+  components: { CustomIntroduction, CustomThumbnail, CategorySelection, ShippingPriceSelection },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -359,6 +443,11 @@ export default {
       secondCategoryValue: null,
       thirdCategoryValue: null,
       floorPriceRate: 1.1,
+      shippingPriceDialogVisible: false,
+      freeShippingData: null,
+      shippingPriceLoading: false,
+      shippingPriceData: null,
+      mpuShippingPriceId: null,
       thumbnails: [],
       thumbnailUrls: [],
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
@@ -524,7 +613,7 @@ export default {
       this.loading = true
       searchProductsApi(params).then(response => {
         const data = response.data.result
-        if (data.total > 0) {
+        if (data.total === 1) {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
@@ -559,6 +648,10 @@ export default {
           this.uploadIntroductionData.pathName = this.introductionUploadPath
 
           this.getCategoryName(this.productForm.category)
+          this.getMerchantFreeShipping(this.productForm.merchantId)
+          this.getMpuShippingPrice(this.productForm.mpu)
+        } else {
+          this.$message.warning('获取商品失败，请联系管理员！')
         }
       }).catch(error => {
         console.log('getProductInfo:' + error)
@@ -588,6 +681,7 @@ export default {
     },
     handleMerchantChanged(value) {
       this.productForm.merchantId = value
+      this.getMerchantFreeShipping(value)
     },
     handleBrandChanged(value) {
       this.productForm.brandId = value
@@ -892,6 +986,86 @@ export default {
     },
     handleUploadProgress(event) {
       this.uploadPercent = event.percent
+    },
+    async getMerchantFreeShipping(merchantId) {
+      try {
+        const { code, data } = await getMerchantFreeShippingApi({ merchantId })
+        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
+          const shipMerchants = data.result.filter(item => item.merchantId === merchantId)
+          this.freeShippingData = shipMerchants.length > 0 ? shipMerchants[0] : data.result[0]
+        }
+      } catch (e) {
+        console.warn('Product get merchant free shipping error:' + e)
+      }
+    },
+    async getMpuShippingPrice(mpu) {
+      try {
+        this.shippingPriceLoading = true
+        const { code, data } = await getMpuShippingPriceApi({ mpu })
+        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
+          const shipMpus = data.result.filter(item => item.shipMpuId !== null)
+          this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
+          this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+        }
+      } catch (e) {
+        console.warn('Product get mpu shipping price error:' + e)
+      } finally {
+        this.shippingPriceLoading = false
+      }
+    },
+    async setMpuShippingPrice(template) {
+      try {
+        this.shippingPriceLoading = true
+        const { code, data } = await setMpuShippingPriceApi({ mpu: this.productForm.mpu, templateId: template.id })
+        if (code === 200) {
+          this.shippingPriceData = template
+          this.mpuShippingPriceId = data.result.id
+          this.$message.success('设置运费模板成功！')
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      } finally {
+        this.shippingPriceLoading = false
+      }
+    },
+    async updateMpuShippingPrice(template) {
+      try {
+        this.shippingPriceLoading = true
+        const { code } = await updateMpuShippingPriceApi({
+          id: this.mpuShippingPriceId,
+          mpu: this.productForm.mpu,
+          templateId: template.id
+        })
+        if (code === 200) {
+          this.shippingPriceData = template
+          this.$message.success('设置运费模板成功！')
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      } finally {
+        this.shippingPriceLoading = false
+      }
+    },
+    async handleRemoveMpuShippingPrice() {
+      try {
+        this.shippingPriceLoading = true
+        const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
+        if (code === 200) {
+          this.getMpuShippingPrice(this.productForm.mpu)
+        }
+      } catch (e) {
+        console.warn('Product remove shipping price error:' + e)
+      } finally {
+        this.shippingPriceLoading = false
+      }
+    },
+    handleSelectShippingPrice(template) {
+      this.shippingPriceDialogVisible = false
+      if (this.mpuShippingPriceId !== null) {
+        this.updateMpuShippingPrice(template)
+      } else {
+        this.setMpuShippingPrice(template)
+      }
     },
     goBack() {
       window.history.length > 1
