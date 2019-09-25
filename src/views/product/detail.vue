@@ -200,7 +200,11 @@
       <el-divider content-position="left">商品图片</el-divider>
       <el-form-item label="商品封面图">
         <template>
-          <el-image v-if="productForm.image" :src="productForm.image" fit="contain" style="width: 200px" />
+          <el-image v-if="productCover" :src="productCover" fit="contain" style="width: 200px">
+            <div slot="error" class="image-slot">
+              <i class="el-icon-picture-outline" />
+            </div>
+          </el-image>
           <el-upload
             v-if="!viewProduct"
             ref="coverUpload"
@@ -214,13 +218,24 @@
             :on-error="handleUploadError"
             :on-progress="handleUploadProgress"
             accept="image/png, image/jpeg, image/jpg"
-            style="margin: 10px"
             list-type="picture"
             name="file"
           >
             <el-button slot="trigger" type="primary" icon="el-icon-picture">
-              选择封面图
+              修改封面图
             </el-button>
+            <el-button
+              v-if="hasCustomCover"
+              type="danger"
+              icon="el-icon-delete"
+              style="margin-left: 20px"
+              @click="handleRemoveCoverImage"
+            >
+              删除封面图
+            </el-button>
+            <div slot="tip" class="el-upload__tip">
+              如果未上传，将以第一张主图作为封面图。
+            </div>
           </el-upload>
         </template>
       </el-form-item>
@@ -246,7 +261,7 @@
             multiple
           >
             <el-button slot="trigger" :disabled="thumbnails.length >= 5" type="primary" icon="el-icon-picture">
-              选择主图
+              添加主图
             </el-button>
             <div slot="tip" class="el-upload__tip">请选择商品的主图，最多支持5个</div>
           </el-upload>
@@ -301,7 +316,7 @@
               multiple
             >
               <el-button slot="trigger" :disabled="introductions.length >= 30" type="primary" icon="el-icon-picture">
-                选择描述图
+                添加描述图
               </el-button>
               <div slot="tip" class="el-upload__tip">请选择商品的详情图，最多支持30个</div>
             </el-upload>
@@ -448,6 +463,7 @@ export default {
       shippingPriceLoading: false,
       shippingPriceData: null,
       mpuShippingPriceId: null,
+      hasCoverImage: false,
       thumbnails: [],
       thumbnailUrls: [],
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
@@ -464,7 +480,7 @@ export default {
         category: null,
         model: null,
         image: null,
-        weight: null,
+        weight: 0,
         upc: null,
         saleunit: null,
         price: 0,
@@ -542,6 +558,17 @@ export default {
       } else {
         return '无进货价格'
       }
+    },
+    productCover() {
+      if (this.productForm.image !== null) {
+        return this.productForm.image
+      } else {
+        return this.thumbnailUrls.length > 0 ? this.thumbnailUrls[0] : null
+      }
+    },
+    hasCustomCover() {
+      const thumbnail = this.thumbnailUrls.length > 0 ? this.thumbnailUrls[0] : null
+      return this.productForm.image != null ? thumbnail === null || this.productForm.image !== thumbnail : false
     }
   },
   created() {
@@ -617,7 +644,7 @@ export default {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
-              if (key !== 'price' && key !== 'sprice') {
+              if (key !== 'price' && key !== 'sprice' && key !== 'weight') {
                 this.productForm[key] = this.productInfo[key]
               } else {
                 const value = Number.parseFloat(this.productInfo[key])
@@ -631,7 +658,12 @@ export default {
           if (!isEmpty(this.productForm.imagesUrl)) {
             this.thumbnails = this.productForm.imagesUrl.split(':')
             this.thumbnailUrls = this.thumbnails.map(img => this.$store.getters.cosUrl + img)
+            // Check if has custom cover image
+            if (this.productForm.image !== null && this.productForm.image === this.thumbnailUrls[0]) {
+              this.productForm.image = null
+            }
           }
+          this.hasCoverImage = this.productForm.image !== null
 
           this.introductions = []
           this.introductionUrls = []
@@ -761,9 +793,6 @@ export default {
       this.introductionUrls.splice(index, 1)
     },
     handleSubmit() {
-      this.productForm.name = trim(this.productForm.name)
-      this.productForm.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : ''
-      this.productForm.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : ''
       if (this.productForm.sprice > 0 &&
         this.productForm.price > 0 &&
         this.productForm.sprice > this.productForm.price) {
@@ -772,26 +801,33 @@ export default {
       }
       this.$refs.productForm.validate((valid) => {
         if (valid) {
+          const formData = { ...this.productForm }
+          formData.name = trim(formData.name)
+          formData.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : ''
+          formData.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : ''
+          if (formData.image === null && this.hasCoverImage) {
+            formData.image = ''
+          }
           if (this.createProduct) {
-            this.handleCreateProduct()
+            this.handleCreateProduct(formData)
           } else {
-            this.handleUpdateProduct()
+            this.handleUpdateProduct(formData)
           }
         } else {
           this.$message.warning('商品信息不完整，请仔细检查！')
         }
       })
     },
-    async handleCreateProduct() {
+    async handleCreateProduct(formData) {
       try {
         const params = {}
-        Object.keys(this.productForm).forEach(key => {
-          if (this.productForm[key] !== null) {
+        Object.keys(formData).forEach(key => {
+          if (formData[key] !== null) {
             if (key !== 'price' && key !== 'sprice') {
-              params[key] = this.productForm[key]
+              params[key] = formData[key]
             } else {
-              if (this.productForm[key] > 0) {
-                params[key] = this.productForm[key].toString()
+              if (formData[key] > 0) {
+                params[key] = formData[key].toString()
               }
             }
           }
@@ -814,19 +850,19 @@ export default {
         this.$message.error('创建产品信息失败！')
       }
     },
-    handleUpdateProduct() {
+    handleUpdateProduct(formData) {
       let changed = false
       const params = {
-        id: this.productForm.id
+        id: formData.id
       }
       const filterForm = {}
-      Object.keys(this.productForm).forEach(key => {
-        if (this.productForm[key] !== null) {
-          if (key !== 'price' && key !== 'sprice') {
-            filterForm[key] = this.productForm[key]
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null) {
+          if (key !== 'price' && key !== 'sprice' && key !== 'weight') {
+            filterForm[key] = formData[key]
           } else {
-            if (this.productForm[key] > 0) {
-              filterForm[key] = this.productForm[key].toString()
+            if (formData[key] > 0) {
+              filterForm[key] = formData[key].toString()
             }
           }
         }
@@ -864,6 +900,16 @@ export default {
       } else {
         this.goBack()
       }
+    },
+    handleRemoveCoverImage() {
+      this.$confirm('删除此商品的封面图，将以第一张主图作为封面图，是否继续此操作？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.productForm.image = null
+      }).catch(() => {
+      })
     },
     handleUploadCoverSuccess(res) {
       this.$refs.coverUpload.clearFiles()
@@ -999,18 +1045,26 @@ export default {
       }
     },
     async getMpuShippingPrice(mpu) {
+      let suc = false
       try {
         this.shippingPriceLoading = true
         const { code, data } = await getMpuShippingPriceApi({ mpu })
-        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
-          const shipMpus = data.result.filter(item => item.shipMpuId !== null)
-          this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
-          this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+        if (code === 200 && Array.isArray(data.result)) {
+          if (data.result.length > 0) {
+            const shipMpus = data.result.filter(item => item.shipMpuId !== null)
+            this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
+            this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+            suc = true
+          }
         }
       } catch (e) {
         console.warn('Product get mpu shipping price error:' + e)
       } finally {
         this.shippingPriceLoading = false
+      }
+      if (!suc) {
+        this.shippingPriceData = null
+        this.mpuShippingPriceId = null
       }
     },
     async setMpuShippingPrice(template) {
@@ -1019,7 +1073,7 @@ export default {
         const { code, data } = await setMpuShippingPriceApi({ mpu: this.productForm.mpu, templateId: template.id })
         if (code === 200) {
           this.shippingPriceData = template
-          this.mpuShippingPriceId = data.result.id
+          this.mpuShippingPriceId = data.id
           this.$message.success('设置运费模板成功！')
         }
       } catch (e) {
@@ -1046,18 +1100,25 @@ export default {
         this.shippingPriceLoading = false
       }
     },
-    async handleRemoveMpuShippingPrice() {
-      try {
-        this.shippingPriceLoading = true
-        const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
-        if (code === 200) {
-          this.getMpuShippingPrice(this.productForm.mpu)
+    handleRemoveMpuShippingPrice() {
+      this.$confirm('是否继续清除此商品的运费模板？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          this.shippingPriceLoading = true
+          const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
+          if (code === 200) {
+            this.getMpuShippingPrice(this.productForm.mpu)
+          }
+        } catch (e) {
+          console.warn('Product remove shipping price error:' + e)
+        } finally {
+          this.shippingPriceLoading = false
         }
-      } catch (e) {
-        console.warn('Product remove shipping price error:' + e)
-      } finally {
-        this.shippingPriceLoading = false
-      }
+      }).catch(() => {
+      })
     },
     handleSelectShippingPrice(template) {
       this.shippingPriceDialogVisible = false

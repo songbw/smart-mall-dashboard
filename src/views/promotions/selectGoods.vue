@@ -265,6 +265,15 @@
               tip=""
               @success="url => handleUploadImageSuccess(url, scope.row)"
             />
+            <el-button
+              :disabled="scope.row.promotionImage === ''"
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              @click="handleRemoveImage(scope.row)"
+            >
+              删除图片
+            </el-button>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" width="100">
@@ -958,6 +967,12 @@ export default {
     handleUploadImageSuccess(url, row) {
       row.promotionImage = url
       const params = { mpu: row.mpu, promotionImage: url }
+      this.$store.commit('promotions/SET_SKU_PROMOTION', params)
+      this.updateCachedSku(params)
+    },
+    handleRemoveImage(row) {
+      row.promotionImage = ''
+      const params = { mpu: row.mpu, promotionImage: '' }
       this.$store.commit('promotions/SET_SKU_PROMOTION', params)
       this.updateCachedSku(params)
     },

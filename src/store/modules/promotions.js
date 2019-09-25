@@ -68,10 +68,11 @@ const mutations = {
       state.promotion.promotionSkus = []
     } else {
       state.promotion.promotionSkus = state.promotion.promotionSkus.map(sku => {
-        const { price, discount, ...rest } = sku
+        const { price, discount, promotionImage, ...rest } = sku
         return {
           price: Number.parseFloat(price),
           discount: Number.parseFloat(discount),
+          promotionImage: promotionImage !== null ? promotionImage : '',
           ...rest
         }
       })
