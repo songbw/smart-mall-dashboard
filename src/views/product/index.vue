@@ -65,8 +65,9 @@
         v-if="!isWatcherUser"
         style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline"
       >
-        <div v-if="!noCreatePermission">
+        <div>
           <el-button
+            v-if="!noCreatePermission"
             :disabled="!vendorApproved"
             type="primary"
             icon="el-icon-goods"
@@ -75,6 +76,7 @@
             新建商品
           </el-button>
           <el-button
+            v-if="!noCreatePermission"
             :disabled="!vendorApproved"
             type="success"
             icon="el-icon-upload2"
@@ -298,7 +300,7 @@
         label-position="right"
         label-width="100px"
       >
-        <el-form-item v-if="isAdminUser" label="商品供应商">
+        <el-form-item v-if="!noCreatePermission && isAdminUser" label="商品供应商">
           <el-select v-model="selectionForm.merchantId" clearable>
             <el-option
               v-for="item in productVendors"
