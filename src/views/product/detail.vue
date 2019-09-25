@@ -999,18 +999,26 @@ export default {
       }
     },
     async getMpuShippingPrice(mpu) {
+      let suc = false
       try {
         this.shippingPriceLoading = true
         const { code, data } = await getMpuShippingPriceApi({ mpu })
-        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
-          const shipMpus = data.result.filter(item => item.shipMpuId !== null)
-          this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
-          this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+        if (code === 200 && Array.isArray(data.result)) {
+          if (data.result.length > 0) {
+            const shipMpus = data.result.filter(item => item.shipMpuId !== null)
+            this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
+            this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+            suc = true
+          }
         }
       } catch (e) {
         console.warn('Product get mpu shipping price error:' + e)
       } finally {
         this.shippingPriceLoading = false
+      }
+      if (!suc) {
+        this.shippingPriceData = null
+        this.mpuShippingPriceId = null
       }
     },
     async setMpuShippingPrice(template) {
@@ -1019,7 +1027,7 @@ export default {
         const { code, data } = await setMpuShippingPriceApi({ mpu: this.productForm.mpu, templateId: template.id })
         if (code === 200) {
           this.shippingPriceData = template
-          this.mpuShippingPriceId = data.result.id
+          this.mpuShippingPriceId = data.id
           this.$message.success('设置运费模板成功！')
         }
       } catch (e) {
@@ -1046,18 +1054,25 @@ export default {
         this.shippingPriceLoading = false
       }
     },
-    async handleRemoveMpuShippingPrice() {
-      try {
-        this.shippingPriceLoading = true
-        const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
-        if (code === 200) {
-          this.getMpuShippingPrice(this.productForm.mpu)
+    handleRemoveMpuShippingPrice() {
+      this.$confirm('是否继续清除此商品的运费模板？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          this.shippingPriceLoading = true
+          const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
+          if (code === 200) {
+            this.getMpuShippingPrice(this.productForm.mpu)
+          }
+        } catch (e) {
+          console.warn('Product remove shipping price error:' + e)
+        } finally {
+          this.shippingPriceLoading = false
         }
-      } catch (e) {
-        console.warn('Product remove shipping price error:' + e)
-      } finally {
-        this.shippingPriceLoading = false
-      }
+      }).catch(() => {
+      })
     },
     handleSelectShippingPrice(template) {
       this.shippingPriceDialogVisible = false
