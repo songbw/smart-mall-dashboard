@@ -205,6 +205,9 @@
           path-name="coupons"
           @success="handleImageUrlChanged"
         />
+        <el-button type="danger" icon="el-icon-delete" size="mini" @click="formData.imageUrl = ''">
+          删除图片
+        </el-button>
       </el-form-item>
       <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
@@ -645,7 +648,7 @@ export default {
           }
         }],
         releaseStartDate: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (value && this.formData.releaseEndDate &&
               moment(value).isAfter(this.formData.releaseEndDate)) {
               callback(new Error('开始时间必须早于结束时间'))
@@ -664,7 +667,7 @@ export default {
           }
         }],
         releaseEndDate: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
             if (value && this.formData.releaseStartDate &&
               moment(value).isBefore(this.formData.releaseStartDate)) {
@@ -681,7 +684,7 @@ export default {
           }
         }],
         effectiveStartDate: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             if (value && this.formData.effectiveEndDate &&
               moment(value).isAfter(this.formData.effectiveEndDate)) {
               callback(new Error('开始时间必须早于结束时间'))
@@ -703,7 +706,7 @@ export default {
           }
         }],
         effectiveEndDate: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+          required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
             if (value && this.formData.effectiveStartDate &&
               moment(value).isBefore(this.formData.effectiveStartDate)) {
