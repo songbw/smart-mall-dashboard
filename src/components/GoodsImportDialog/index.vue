@@ -99,6 +99,7 @@ import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
+import { product_state_on_sale } from '@/utils/constants'
 
 const CreationHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
@@ -265,14 +266,15 @@ export default {
       }
       return headers
     },
-    isProductValid(product) {
+    isSearchProductValid(product) {
       const price = Number.parseFloat(product.price)
       const name = product.name
-      return !(Number.isNaN(price) || isEmpty(name))
+      const state = Number.parseInt(product.state)
+      return !(Number.isNaN(price) || isEmpty(name) || state !== product_state_on_sale)
     },
     generateData({ header, results }) {
       if (this.productCreation) {
-        this.parseSkuData(results)
+        this.parseCreateSkuData(results)
       } else if (this.productPromotion) {
         this.parsePromotionData(results)
       } else {
@@ -295,7 +297,7 @@ export default {
         }
       }
     },
-    parseSkuData(results) {
+    parseCreateSkuData(results) {
       let count = 0
       results.forEach(item => {
         const product = {}
@@ -338,7 +340,7 @@ export default {
             const data = response.data.result
             if (data.total === 1) {
               const fetchedData = data.list[0]
-              if (this.isProductValid(fetchedData)) {
+              if (this.isSearchProductValid(fetchedData)) {
                 const item = {
                   skuid: fetchedData.skuid,
                   mpu: fetchedData.mpu,
@@ -381,7 +383,7 @@ export default {
             const data = response.data.result
             if (data.total === 1) {
               const product = data.list[0]
-              if (this.isProductValid(product)) {
+              if (this.isSearchProductValid(product)) {
                 const item = {
                   skuid: product.skuid,
                   mpu: product.mpu,
