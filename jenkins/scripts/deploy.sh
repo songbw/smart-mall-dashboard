@@ -1,33 +1,30 @@
 #!/usr/bin/expect
 
-export user=smartadmin
-export passwd=Smartautotech@123
-export host=192.168.200.37
-export port=22
-export src_dir=./
-export tag_dir=/data/server/wuximall-admin
-export name=dist.zip
-export tmp_dir=/tmp
+set user smartadmin
+set passwd Smartautotech@123
+set host 192.168.200.37
+set port 22
+set src_dir ./
+set tag_dir /data/server/wuxiadmall
+set name dist.zip
+set tmp_dir /tmp
 
 ##拷贝dist.zip文件到目标机器
+spawn sh -c "zip -r dist.zip dist"
 spawn sh -c " scp -P $port -r $src_dir$name $user@$host:$tag_dir"
 expect "password:"
 send "${passwd}\n"
-export timeout=30000
+set timeout 30000
 expect "$ "
 
 ##登录目标机器
-#spawn ssh $user@$host -p $port
-#expect "password:"
-#send "${passwd}\n"
-#expect "]$ "
-#send "cd $tag_dir\n"
-#expect "]$ "
+spawn ssh $user@$host -p $port
+expect "password:"
+send "${passwd}\n"
+expect "]$ "
+send "cd $tag_dir\n"
+expect "]$ "
 
-## 重启
-#send "cd ../bin/\n"
-#expect "]$ "
-#send "./stop.sh\n"
-#expect "]$ "
-#send "./start.sh\n"
-#expect "]$ "
+## 部署
+send "sh ./bin/release.sh\n"
+expect "]$ "
