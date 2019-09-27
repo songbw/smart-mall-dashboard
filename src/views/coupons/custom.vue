@@ -603,7 +603,8 @@ export default {
             points: 0
           },
           customer: {
-            type: 0
+            type: 0,
+            users: null
           },
           scenario: {
             type: 1,
@@ -1124,42 +1125,11 @@ export default {
     async handleUpdateCoupon() {
       const diff = { id: this.couponData.id }
       let hasDiff = false
-      const diffKeys = Object.keys(this.formData).filter(key =>
-        key !== 'rules' && !isEqual(this.formData[key], this.couponData[key]))
+      const diffKeys = Object.keys(this.formData).filter(key => !isEqual(this.formData[key], this.couponData[key]))
       if (!isEmpty(diffKeys)) {
         for (const key of diffKeys) {
           diff[key] = this.formData[key]
         }
-        hasDiff = true
-      }
-      const formRules = this.formData.rules
-      const couponRules = this.couponData.rules
-      const diffRules = {}
-      Object.keys(formRules).forEach(key => {
-        if (Array.isArray(formRules[key])) {
-          if (!isEqual(formRules[key], couponRules[key])) {
-            diffRules[key] = formRules[key]
-          }
-        } else if (Object.keys(formRules[key]).length > 0) {
-          const formValue = formRules[key]
-          const couponValue = couponRules[key]
-          const valDiff = {}
-          Object.keys(formValue).forEach(subKey => {
-            if (!isEqual(formValue[subKey], couponValue[subKey])) {
-              valDiff[subKey] = formValue[subKey]
-            }
-          })
-          if (!isEmpty(valDiff)) {
-            diffRules[key] = valDiff
-          }
-        } else {
-          if (!isEqual(formRules[key], couponRules[key])) {
-            diffRules[key] = formRules[key]
-          }
-        }
-      })
-      if (!isEmpty(diffRules)) {
-        diff.rules = diffRules
         hasDiff = true
       }
       if (hasDiff) {

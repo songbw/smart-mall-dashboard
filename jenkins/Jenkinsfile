@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install && npm run build:wx-mall'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'skip test...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh './jenkins/scripts/deploy.sh'
+            }
+        }
+    }
+}
