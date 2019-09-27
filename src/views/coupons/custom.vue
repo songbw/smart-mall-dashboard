@@ -913,6 +913,8 @@ export default {
       this.formData.imageUrl = this.couponData.imageUrl
       this.formData.url = this.couponData.url || 'about:blank'
       this.formData.description = this.couponData.description
+      const couponCategory = this.couponData.category
+      this.couponData.category = couponCategory === '' ? null : this.couponData.category
       this.formData.category = this.couponData.category
       this.selectCategoryId = this.formData.category ? this.formData.category.toString() : '0'
       if (Array.isArray(this.couponData.excludeDates)) {
@@ -971,6 +973,11 @@ export default {
         const categories = items.map(category => Number.parseInt(category))
         this.couponData.rules.scenario.categories = [...categories]
         this.formData.rules.scenario.categories = [...categories]
+      }
+      if (Array.isArray(this.couponData.rules.scenario.brands)) {
+        const items = this.couponData.rules.scenario.brands.filter(brand => !isEmpty(brand))
+        this.couponData.rules.scenario.brands = [...items]
+        this.formData.rules.scenario.brands = [...items]
       }
       this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription
     },
@@ -1117,24 +1124,50 @@ export default {
     async handleUpdateCoupon() {
       const diff = { id: this.couponData.id }
       let hasDiff = false
-      Object.keys(this.formData).forEach(key => {
-        if (isEqual(this.formData[key], this.couponData[key]) === false) {
-          if (key !== 'rules') {
-            diff[key] = this.formData[key]
-          } else {
-            diff.rules = {}
-            Object.keys(this.formData.rules).forEach(ruleKey => {
-              if (!isEqual(this.formData.rules[ruleKey], this.couponData.rules[ruleKey])) {
-                diff.rules[ruleKey] = this.formData.rules[ruleKey]
-              }
-            })
+      const diffKeys = Object.keys(this.formData).filter(key =>
+        key !== 'rules' && !isEqual(this.formData[key], this.couponData[key]))
+      if (!isEmpty(diffKeys)) {
+        for (const key of diffKeys) {
+          diff[key] = this.formData[key]
+        }
+        hasDiff = true
+      }
+      const formRules = this.formData.rules
+      const couponRules = this.couponData.rules
+      const diffRules = {}
+      Object.keys(formRules).forEach(key => {
+        if (Array.isArray(formRules[key])) {
+          if (!isEqual(formRules[key], couponRules[key])) {
+            diffRules[key] = formRules[key]
           }
-          hasDiff = true
+        } else if (Object.keys(formRules[key]).length > 0) {
+          const formValue = formRules[key]
+          const couponValue = couponRules[key]
+          const valDiff = {}
+          Object.keys(formValue).forEach(subKey => {
+            if (!isEqual(formValue[subKey], couponValue[subKey])) {
+              valDiff[subKey] = formValue[subKey]
+            }
+          })
+          if (!isEmpty(valDiff)) {
+            diffRules[key] = valDiff
+          }
+        } else {
+          if (!isEqual(formRules[key], couponRules[key])) {
+            diffRules[key] = formRules[key]
+          }
         }
       })
+      if (!isEmpty(diffRules)) {
+        diff.rules = diffRules
+        hasDiff = true
+      }
       if (hasDiff) {
         this.reviseCouponStatus(diff)
         this.reviseScenarioRules(diff)
+        if ('category' in diff && diff.category === null) {
+          diff.category = ''
+        }
         try {
           this.inSubmitting = true
           await updateCouponApi(diff)
@@ -1144,6 +1177,8 @@ export default {
         } finally {
           this.inSubmitting = false
         }
+      } else {
+        this.handleCancel()
       }
     },
     createOrUpdateCoupon() {
