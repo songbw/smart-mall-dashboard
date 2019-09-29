@@ -75,7 +75,7 @@
       </el-table-column>
       <el-table-column v-if="productPromotion" label="促销价格(元)" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.discount ? Number.parseFloat(scope.row.price) - scope.row.discount : null }}</span>
+          <span>{{ scope.row | promotionPrice }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -130,6 +130,13 @@ const SkuHeaders = [
 
 export default {
   name: 'GoodsImportDialog',
+  filters: {
+    promotionPrice: sku => {
+      const price = Math.round(Number.parseFloat(sku.price) * 100)
+      const discount = sku.discount > 0 ? Math.round(sku.discount * 100) : 0
+      return discount > 0 ? (price - discount) / 100 : null
+    }
+  },
   props: {
     dialogVisible: {
       type: Boolean,
@@ -354,7 +361,9 @@ export default {
                   const pprice = Number.parseFloat(product.pprice)
                   const price = Number.parseFloat(item.price)
                   if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
-                    item.discount = price > pprice ? (price - pprice) : 0
+                    const ipprice = Math.round(pprice * 100)
+                    const iprice = Math.round(price * 100)
+                    item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
                   }
                 }
                 parsedSkus.push(item)
