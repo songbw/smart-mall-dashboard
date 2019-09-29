@@ -670,9 +670,10 @@ export default {
         releaseEndDate: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
+            const startDate = moment(this.formData.releaseStartDate).add(1, 'hours')
             if (value && this.formData.releaseStartDate &&
-              moment(value).isBefore(this.formData.releaseStartDate)) {
-              callback(new Error('结束时间必须晚于开始时间'))
+              moment(value).isBefore(startDate)) {
+              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
             } else if (value && moment(value).isBefore(now)) {
               callback(new Error('结束时间必须晚于当前时间'))
             } else {
@@ -709,9 +710,10 @@ export default {
         effectiveEndDate: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
+            const startDate = moment(this.formData.effectiveStartDate).add(1, 'hours')
             if (value && this.formData.effectiveStartDate &&
-              moment(value).isBefore(this.formData.effectiveStartDate)) {
-              callback(new Error('结束时间必须晚于开始时间'))
+              moment(value).isBefore(startDate)) {
+              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
             } else if (value && moment(value).isBefore(now)) {
               callback(new Error('结束时间必须晚于当前时间'))
             } else if (value && this.formData.releaseEndDate &&
