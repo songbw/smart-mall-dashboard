@@ -161,6 +161,12 @@ export const constantRoutes = [
         component: () => import('@/views/freight/shippingPriceDetail'),
         meta: { title: '运费模板', icon: 'shipping-price' },
         hidden: true
+      },
+      {
+        path: 'bulletins',
+        name: 'Bulletins',
+        component: () => import('@/views/bulletins/index'),
+        meta: { title: '商品公告', icon: 'bulletins' }
       }
     ]
   },

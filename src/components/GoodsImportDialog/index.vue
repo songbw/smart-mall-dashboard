@@ -75,7 +75,7 @@
       </el-table-column>
       <el-table-column v-if="productPromotion" label="促销价格(元)" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.discount ? Number.parseFloat(scope.row.price) - scope.row.discount : null }}</span>
+          <span>{{ scope.row | promotionPrice }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -99,6 +99,7 @@ import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
+import { product_state_on_sale } from '@/utils/constants'
 
 const CreationHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
@@ -129,6 +130,13 @@ const SkuHeaders = [
 
 export default {
   name: 'GoodsImportDialog',
+  filters: {
+    promotionPrice: sku => {
+      const price = Math.round(Number.parseFloat(sku.price) * 100)
+      const discount = sku.discount > 0 ? Math.round(sku.discount * 100) : 0
+      return discount > 0 ? (price - discount) / 100 : null
+    }
+  },
   props: {
     dialogVisible: {
       type: Boolean,
@@ -265,14 +273,15 @@ export default {
       }
       return headers
     },
-    isProductValid(product) {
+    isSearchProductValid(product) {
       const price = Number.parseFloat(product.price)
       const name = product.name
-      return !(Number.isNaN(price) || isEmpty(name))
+      const state = Number.parseInt(product.state)
+      return !(Number.isNaN(price) || isEmpty(name) || state !== product_state_on_sale)
     },
     generateData({ header, results }) {
       if (this.productCreation) {
-        this.parseSkuData(results)
+        this.parseCreateSkuData(results)
       } else if (this.productPromotion) {
         this.parsePromotionData(results)
       } else {
@@ -295,7 +304,7 @@ export default {
         }
       }
     },
-    parseSkuData(results) {
+    parseCreateSkuData(results) {
       let count = 0
       results.forEach(item => {
         const product = {}
@@ -338,7 +347,7 @@ export default {
             const data = response.data.result
             if (data.total === 1) {
               const fetchedData = data.list[0]
-              if (this.isProductValid(fetchedData)) {
+              if (this.isSearchProductValid(fetchedData)) {
                 const item = {
                   skuid: fetchedData.skuid,
                   mpu: fetchedData.mpu,
@@ -352,7 +361,9 @@ export default {
                   const pprice = Number.parseFloat(product.pprice)
                   const price = Number.parseFloat(item.price)
                   if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
-                    item.discount = price > pprice ? (price - pprice) : 0
+                    const ipprice = Math.round(pprice * 100)
+                    const iprice = Math.round(price * 100)
+                    item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
                   }
                 }
                 parsedSkus.push(item)
@@ -381,7 +392,7 @@ export default {
             const data = response.data.result
             if (data.total === 1) {
               const product = data.list[0]
-              if (this.isProductValid(product)) {
+              if (this.isSearchProductValid(product)) {
                 const item = {
                   skuid: product.skuid,
                   mpu: product.mpu,

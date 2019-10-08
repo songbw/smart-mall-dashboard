@@ -554,7 +554,8 @@ export default {
     },
     floorPrice() {
       if (this.productForm.sprice) {
-        return (this.productForm.sprice * this.floorPriceRate).toFixed(2).toString()
+        const sprice = Number.parseFloat(this.productForm.sprice)
+        return (sprice * this.floorPriceRate).toFixed(2).toString()
       } else {
         return '无进货价格'
       }

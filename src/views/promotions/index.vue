@@ -543,12 +543,25 @@ export default {
       })
     },
     handlePublishPromotion(index) {
+      const dateNow = moment()
+      const promotion = this.promotionData[index]
+      if (dateNow.isAfter(promotion.endDate)) {
+        this.$confirm('活动结束时间需要晚于当前时间，请修改后重新发布！', '警告', {
+          confirmButtonText: '修改',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.handleEditPromotion(index)
+        }).catch(() => {
+        })
+        return
+      }
       this.$confirm('请确认是否发布此促销活动，发布后将不能修改？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
-        const id = this.promotionData[index].id
+        const id = promotion.id
         const params = { id: id, status: promotion_status_published }
         try {
           const res = await updatePromotionApi(params)

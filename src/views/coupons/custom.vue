@@ -603,7 +603,8 @@ export default {
             points: 0
           },
           customer: {
-            type: 0
+            type: 0,
+            users: null
           },
           scenario: {
             type: 1,
@@ -669,9 +670,10 @@ export default {
         releaseEndDate: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
+            const startDate = moment(this.formData.releaseStartDate).add(1, 'hours')
             if (value && this.formData.releaseStartDate &&
-              moment(value).isBefore(this.formData.releaseStartDate)) {
-              callback(new Error('结束时间必须晚于开始时间'))
+              moment(value).isBefore(startDate)) {
+              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
             } else if (value && moment(value).isBefore(now)) {
               callback(new Error('结束时间必须晚于当前时间'))
             } else {
@@ -708,9 +710,10 @@ export default {
         effectiveEndDate: [{
           required: true, trigger: 'change', validator: (rule, value, callback) => {
             const now = moment()
+            const startDate = moment(this.formData.effectiveStartDate).add(1, 'hours')
             if (value && this.formData.effectiveStartDate &&
-              moment(value).isBefore(this.formData.effectiveStartDate)) {
-              callback(new Error('结束时间必须晚于开始时间'))
+              moment(value).isBefore(startDate)) {
+              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
             } else if (value && moment(value).isBefore(now)) {
               callback(new Error('结束时间必须晚于当前时间'))
             } else if (value && this.formData.releaseEndDate &&
@@ -913,6 +916,8 @@ export default {
       this.formData.imageUrl = this.couponData.imageUrl
       this.formData.url = this.couponData.url || 'about:blank'
       this.formData.description = this.couponData.description
+      const couponCategory = this.couponData.category
+      this.couponData.category = couponCategory === '' ? null : this.couponData.category
       this.formData.category = this.couponData.category
       this.selectCategoryId = this.formData.category ? this.formData.category.toString() : '0'
       if (Array.isArray(this.couponData.excludeDates)) {
@@ -971,6 +976,11 @@ export default {
         const categories = items.map(category => Number.parseInt(category))
         this.couponData.rules.scenario.categories = [...categories]
         this.formData.rules.scenario.categories = [...categories]
+      }
+      if (Array.isArray(this.couponData.rules.scenario.brands)) {
+        const items = this.couponData.rules.scenario.brands.filter(brand => !isEmpty(brand))
+        this.couponData.rules.scenario.brands = [...items]
+        this.formData.rules.scenario.brands = [...items]
       }
       this.formData.rules.rulesDescription = this.couponData.rules.rulesDescription
     },
@@ -1117,24 +1127,19 @@ export default {
     async handleUpdateCoupon() {
       const diff = { id: this.couponData.id }
       let hasDiff = false
-      Object.keys(this.formData).forEach(key => {
-        if (isEqual(this.formData[key], this.couponData[key]) === false) {
-          if (key !== 'rules') {
-            diff[key] = this.formData[key]
-          } else {
-            diff.rules = {}
-            Object.keys(this.formData.rules).forEach(ruleKey => {
-              if (!isEqual(this.formData.rules[ruleKey], this.couponData.rules[ruleKey])) {
-                diff.rules[ruleKey] = this.formData.rules[ruleKey]
-              }
-            })
-          }
-          hasDiff = true
+      const diffKeys = Object.keys(this.formData).filter(key => !isEqual(this.formData[key], this.couponData[key]))
+      if (!isEmpty(diffKeys)) {
+        for (const key of diffKeys) {
+          diff[key] = this.formData[key]
         }
-      })
+        hasDiff = true
+      }
       if (hasDiff) {
         this.reviseCouponStatus(diff)
         this.reviseScenarioRules(diff)
+        if ('category' in diff && diff.category === null) {
+          diff.category = ''
+        }
         try {
           this.inSubmitting = true
           await updateCouponApi(diff)
@@ -1144,6 +1149,8 @@ export default {
         } finally {
           this.inSubmitting = false
         }
+      } else {
+        this.handleCancel()
       }
     },
     createOrUpdateCoupon() {

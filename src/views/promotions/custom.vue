@@ -248,10 +248,10 @@ export default {
               callback(new Error('请选择有效的结束时间'))
             } else {
               const format = 'YYYY-MM-DD HH:mm:ss'
-              const startDate = moment(this.formData.startDate, format)
+              const startDate = moment(this.formData.startDate, format).add(1, 'hours')
               const endDate = moment(this.formData.endDate, format)
-              if (!isEmpty(startDate) && endDate.isSameOrBefore(startDate)) {
-                callback(new Error('结束时间必须晚于开始时间'))
+              if (!isEmpty(this.formData.startDate) && endDate.isSameOrBefore(startDate)) {
+                callback(new Error('结束时间必须晚于开始时间至少一个小时'))
               } else {
                 callback()
               }

@@ -748,6 +748,17 @@ export default {
             perLimited: -1
           })
           total++
+        } else {
+          if (discount > 0) {
+            const params = { mpu: sku.mpu, discount }
+            const row = this.skuData.find(item => item.mpu === sku.mpu)
+            if (row) {
+              row.discount = discount
+              row.originalDiscount = discount
+            }
+            this.$store.commit('promotions/SET_SKU_PROMOTION', params)
+            this.updateCachedSku(params)
+          }
         }
       }
       if (total > 0) {
@@ -756,7 +767,9 @@ export default {
       return total
     },
     handleSetSecKillPrice(value, row) {
-      row.discount = row.price >= value ? (row.price - value).toFixed(2) : 0
+      const price = Math.round(row.price * 100)
+      const pprice = Math.round(value * 100)
+      row.discount = price >= pprice ? (price - pprice) / 100 : 0
     },
     handleCancelEditDiscount(row) {
       row.discount = row.originalDiscount
@@ -777,6 +790,7 @@ export default {
         return
       }
       row.editDiscount = false
+      row.originalDiscount = row.discount
       const params = { mpu: row.mpu, discount: row.discount }
       this.$store.commit('promotions/SET_SKU_PROMOTION', params)
       this.updateCachedSku(params)
