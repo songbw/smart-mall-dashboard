@@ -193,6 +193,10 @@ export default {
       const files = e.target.files
       const rawFile = files[0] // only use files[0]
       if (!rawFile) return
+      if (rawFile.size >= 1024 * 1024) {
+        this.$message.warning('请选择小于1M的文件')
+        return
+      }
       this.formData.fileName = rawFile.name
       this.$refs['excel-upload-input'].value = null // fix can't select the same excel
       this.readDate(rawFile).then(_ => {
