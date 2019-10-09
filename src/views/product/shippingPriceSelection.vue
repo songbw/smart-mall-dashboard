@@ -48,7 +48,12 @@
 </template>
 
 <script>
-import { getShippingPriceListApi } from '@/api/freight'
+import {
+  getShippingPriceListApi,
+  getMpuShippingPriceApi,
+  setMpuShippingPriceApi,
+  updateMpuShippingPriceApi
+} from '@/api/freight'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -58,6 +63,12 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    mpuList: {
+      type: Array,
+      default: function() {
+        return []
+      }
     }
   },
   data() {
@@ -91,6 +102,62 @@ export default {
         this.dataLoading = false
       }
     },
+    async getMpuShippingPrice(mpu) {
+      let id = null
+      try {
+        const { code, data } = await getMpuShippingPriceApi({ mpu })
+        if (code === 200 && Array.isArray(data.result)) {
+          if (data.result.length > 0) {
+            const shipMpus = data.result.filter(item => item.shipMpuId !== null)
+            const shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : null
+            id = shippingPriceData ? shippingPriceData.shipMpuId : null
+          }
+        }
+      } catch (e) {
+        console.warn('Product get mpu shipping price error:' + e)
+      }
+      return id
+    },
+    async setMpuShippingPrice(mpu, template) {
+      let id = null
+      try {
+        const { code, data } = await setMpuShippingPriceApi({ mpu, templateId: template.id })
+        if (code === 200) {
+          id = data.id
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      }
+      return id
+    },
+    async updateMpuShippingPrice(id, mpu, template) {
+      let sucId = null
+      try {
+        const { code } = await updateMpuShippingPriceApi({ id, mpu, templateId: template.id })
+        if (code === 200) {
+          sucId = id
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      }
+      return sucId
+    },
+    async handleSetMpuListTemplate() {
+      this.dataLoading = true
+      const mpuShipList = []
+      for (const mpu of this.mpuList) {
+        const shipMpuId = await this.getMpuShippingPrice(mpu)
+        let id = null
+        if (shipMpuId !== null) {
+          id = await this.updateMpuShippingPrice(shipMpuId, mpu, this.selectedItem)
+        } else {
+          id = await this.setMpuShippingPrice(mpu, this.selectedItem)
+        }
+        if (id !== null) mpuShipList.push(id)
+      }
+      this.dataLoading = false
+      this.$emit('onConfirmed', this.mpuList.length === mpuShipList.length)
+    },
     onDialogClosed() {
       this.pageNo = 1
       this.shippingPriceTotal = 0
@@ -100,11 +167,7 @@ export default {
       this.$emit('onCancelled')
     },
     handleDialogConfirm() {
-      if (this.selectedItem) {
-        this.$emit('onConfirmed', this.selectedItem)
-      } else {
-        this.$message.warning('请选择对应的运费模板！')
-      }
+      this.handleSetMpuListTemplate()
     },
     handleSelectionChange(val) {
       this.selectedItem = val

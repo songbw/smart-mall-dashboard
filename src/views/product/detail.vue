@@ -347,9 +347,10 @@
       </el-form-item>
     </el-form>
     <shipping-price-selection
+      :mpu-list="[productForm.mpu]"
       :dialog-visible="shippingPriceDialogVisible"
       @onCancelled="shippingPriceDialogVisible = false"
-      @onConfirmed="handleSelectShippingPrice"
+      @onConfirmed="handleConfirmShippingPrice"
     />
   </div>
 </template>
@@ -376,8 +377,6 @@ import { getVendorListApi } from '@/api/vendor'
 import {
   getMerchantFreeShippingApi,
   getMpuShippingPriceApi,
-  setMpuShippingPriceApi,
-  updateMpuShippingPriceApi,
   deleteMpuShippingPriceApi
 } from '@/api/freight'
 
@@ -1068,39 +1067,6 @@ export default {
         this.mpuShippingPriceId = null
       }
     },
-    async setMpuShippingPrice(template) {
-      try {
-        this.shippingPriceLoading = true
-        const { code, data } = await setMpuShippingPriceApi({ mpu: this.productForm.mpu, templateId: template.id })
-        if (code === 200) {
-          this.shippingPriceData = template
-          this.mpuShippingPriceId = data.id
-          this.$message.success('设置运费模板成功！')
-        }
-      } catch (e) {
-        console.warn('Product set shipping price error:' + e)
-      } finally {
-        this.shippingPriceLoading = false
-      }
-    },
-    async updateMpuShippingPrice(template) {
-      try {
-        this.shippingPriceLoading = true
-        const { code } = await updateMpuShippingPriceApi({
-          id: this.mpuShippingPriceId,
-          mpu: this.productForm.mpu,
-          templateId: template.id
-        })
-        if (code === 200) {
-          this.shippingPriceData = template
-          this.$message.success('设置运费模板成功！')
-        }
-      } catch (e) {
-        console.warn('Product set shipping price error:' + e)
-      } finally {
-        this.shippingPriceLoading = false
-      }
-    },
     handleRemoveMpuShippingPrice() {
       this.$confirm('是否继续清除此商品的运费模板？', '警告', {
         confirmButtonText: '确定',
@@ -1121,12 +1087,10 @@ export default {
       }).catch(() => {
       })
     },
-    handleSelectShippingPrice(template) {
+    handleConfirmShippingPrice(suc) {
       this.shippingPriceDialogVisible = false
-      if (this.mpuShippingPriceId !== null) {
-        this.updateMpuShippingPrice(template)
-      } else {
-        this.setMpuShippingPrice(template)
+      if (suc) {
+        this.getMpuShippingPrice(this.productForm.mpu)
       }
     },
     goBack() {

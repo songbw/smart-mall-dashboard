@@ -24,7 +24,7 @@
       </el-table-column>
       <el-table-column label="公告位置" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.posiiton === 'top' ? '顶部': '底部' }}</span>
+          <span>{{ scope.row.position === 'top' ? '顶部': '底部' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="供应商" align="center">
