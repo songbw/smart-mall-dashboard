@@ -7,7 +7,7 @@
             <span class="card-header-text">售后信息</span>
             <el-button
               v-if="!isWatcherUser"
-              :disabled="workOrderData.status === 6"
+              :disabled="workOrderData.status === 6 || workOrderData.status === 7"
               type="primary"
               @click="handleShowFlowDialog"
             >
@@ -150,7 +150,7 @@
             />
           </div>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 6" label="退款金额" prop="refund">
+        <el-form-item v-if="flowForm.status === 7" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
               主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
@@ -215,7 +215,9 @@ const FlowStatusOptions = [
   }, {
     value: 5, label: '退货处理'
   }, {
-    value: 6, label: '同意退款'
+    value: 7, label: '同意退款'
+  }, {
+    value: 6, label: '退款完成'
   }]
 export default {
   name: 'WorkOrderDetail',
@@ -299,7 +301,7 @@ export default {
         refund: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (this.flowForm.status !== 6) {
+            if (this.flowForm.status !== 7) {
               callback()
             } else {
               if (value <= 0) {
@@ -336,9 +338,9 @@ export default {
       } else if (this.workOrderData.status === 2) {
         options = [3]
       } else if (this.workOrderData.status === 3) {
-        options = [6]
+        options = [7]
       } else if (this.workOrderData.status === 5) {
-        options = [6]
+        options = [7]
       }
       return FlowStatusOptions.filter(option => options.includes(option.value))
     },
@@ -464,11 +466,11 @@ export default {
             if (this.flowForm.status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
               comments.returnAddress = this.returnAddress
             }
-            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+            if (this.flowForm.status === 7) { // 7为发起退款，是否包含运费
               comments.refund = refund
             }
             const params = { workOrderId: this.workOrderData.id, operator, status, comments: JSON.stringify(comments) }
-            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+            if (this.flowForm.status === 7) { // 7为发起退款，是否包含运费
               params.refund = refund
             }
             await createWorkOrderFlowApi(params)

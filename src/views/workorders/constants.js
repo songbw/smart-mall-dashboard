@@ -16,6 +16,9 @@ export const WorkOrderStatus = [{
 }, {
   value: 6,
   label: '处理完成'
+}, {
+  value: 7,
+  label: '退款中'
 }]
 
 export const WorkOrderTypes = [{
