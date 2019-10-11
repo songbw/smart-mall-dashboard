@@ -201,9 +201,10 @@ import {
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
-  PaymentStatusDefinitions
+  PaymentStatusDefinitions,
+  WorkOrderStatusDefinition
 } from '@/utils/constants'
-import { WorkOrderStatus, WorkOrderTypes } from './constants'
+import { WorkOrderTypes } from './constants'
 
 const FlowStatusOptions = [
   {
@@ -229,7 +230,7 @@ export default {
   },
   filters: {
     workOrderStatus: status => {
-      const find = WorkOrderStatus.find(option => option.value === status)
+      const find = WorkOrderStatusDefinition.find(option => option.value === status)
       return find ? find.label : status
     },
     orderStatus: status => {

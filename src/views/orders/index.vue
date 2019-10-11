@@ -68,7 +68,9 @@
       <el-button icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
         导出结算订单
       </el-button>
-      <span style="margin-left: 10px;font-size: 13px"><i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i></span>
+      <span style="margin-left: 10px;font-size: 13px"><i
+        class="el-icon-warning-outline"
+      >将导出所需时间段内已完成与已退款的订单列表</i></span>
     </div>
     <el-table
       ref="ordersTable"
@@ -128,6 +130,17 @@
       <el-table-column align="center" label="订单状态" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.subStatus | OrderStatus }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="售后状态" width="120">
+        <template slot-scope="scope">
+          <router-link
+            v-if="scope.row.workOrderId"
+            :to="{ name: 'ViewWorkOrder', params: { id: scope.row.workOrderId }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ scope.row.workOrderStatus | workOrderStatus }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column
@@ -221,7 +234,13 @@ import {
   exportReconciliationApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
-import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
+import { getWorkOrderListApi } from '@/api/workOrders'
+import {
+  SubOrderStatusDefinitions,
+  vendor_status_approved,
+  WorkOrderStatusDefinition,
+  suborder_status_requested_service
+} from '@/utils/constants'
 
 const validateDates = (start, end) => {
   const format = 'YYYY-MM-DD'
@@ -245,6 +264,10 @@ export default {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() ? momentDate.format(format) : ''
+    },
+    workOrderStatus: status => {
+      const find = WorkOrderStatusDefinition.find(option => option.value === status)
+      return find ? find.label : status
     }
   },
   data() {
@@ -445,13 +468,35 @@ export default {
           const params = this.getSearchParams()
           const { data } = await getOrderListApi(params)
           this.orderTotal = data.result.total
-          this.orderData = data.result.list
+          for (const order of data.result.list) {
+            const { subStatus, subOrderId, ...rest } = order
+            let workOrderId = null
+            let workOrderStatus = null
+            if (subStatus === suborder_status_requested_service) {
+              const workOrder = await this.getWorkOrder(subOrderId)
+              workOrderId = workOrder ? workOrder.id : null
+              workOrderStatus = workOrder ? workOrder.status : null
+            }
+            this.orderData.push({ subStatus, subOrderId, workOrderId, workOrderStatus, ...rest })
+          }
         }
       } catch (e) {
         console.warn('Orders List error: ' + e)
       } finally {
         this.listLoading = false
       }
+    },
+    async getWorkOrder(subOrderId) {
+      try {
+        const params = { orderId: subOrderId, pageIndex: 1, pageSize: 1 }
+        const data = await getWorkOrderListApi(params)
+        if (data && data.total === 1) {
+          return data.rows[0]
+        }
+      } catch (e) {
+        console.warn('Work orders List error: ' + e)
+      }
+      return null
     },
     handleViewMainOrder(orderId) {
       this.$router.push({

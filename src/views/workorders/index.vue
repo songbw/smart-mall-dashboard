@@ -129,17 +129,16 @@ import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
-import {
-  getWorkOrderListApi
-} from '@/api/workOrders'
-import { WorkOrderStatus, WorkOrderTypes } from './constants'
+import { getWorkOrderListApi } from '@/api/workOrders'
+import { WorkOrderStatusDefinition } from '@/utils/constants'
+import { WorkOrderTypes } from './constants'
 
 export default {
   name: 'WorkOrders',
   components: { Pagination },
   filters: {
     statusFilter: status => {
-      const find = WorkOrderStatus.find(option => option.value === status)
+      const find = WorkOrderStatusDefinition.find(option => option.value === status)
       return find ? find.label : status
     },
     timeFilter: date => {
@@ -153,7 +152,7 @@ export default {
       statusOptions: [{
         value: 0,
         label: '全部'
-      }].concat(WorkOrderStatus),
+      }].concat(WorkOrderStatusDefinition),
       typeOptions: [{
         value: 0,
         label: '全部'
