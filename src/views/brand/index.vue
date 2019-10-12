@@ -94,7 +94,9 @@
             :value="dialogValue.brandName"
             :readonly="noEditPermission"
             class="dialog-form-item"
-            @input="value => dialogValue.brandName = value.trim()"
+            maxlength="50"
+            @input="value => dialogValue.brandName = value"
+            @blur="dialogValue.brandName = dialogValue.brandName.trim()"
           />
         </el-form-item>
         <el-form-item label="中文名称" prop="brandCname">
@@ -102,7 +104,9 @@
             :value="dialogValue.brandCname"
             :readonly="noEditPermission"
             class="dialog-form-item"
-            @input="value => dialogValue.brandCname = value.trim()"
+            maxlength="50"
+            @input="value => dialogValue.brandCname = value"
+            @blur="dialogValue.brandCname = dialogValue.brandCname.trim()"
           />
         </el-form-item>
         <el-form-item label="英文名称">
@@ -110,7 +114,9 @@
             :value="dialogValue.brandEname"
             :readonly="noEditPermission"
             class="dialog-form-item"
-            @input="value => dialogValue.brandEname = value.trim()"
+            maxlength="50"
+            @input="value => dialogValue.brandEname = value"
+            @blur="dialogValue.brandEname = dialogValue.brandEname.trim()"
           />
         </el-form-item>
         <el-form-item label="品牌图标" prop="brandLogo">
@@ -340,6 +346,7 @@ export default {
       })
       createBrandApi(params).then(() => {
         this.$message.success('品牌创建成功！')
+        this.getListData()
       }).catch((err) => {
         console.log('Brand create error:' + err)
         this.$message.error('品牌创建成功失败，请稍后重试!')

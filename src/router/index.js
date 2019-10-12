@@ -94,7 +94,7 @@ export const constantRoutes = [
         path: 'sync',
         name: 'ProductSync',
         component: () => import('@/views/sync/index'),
-        meta: { title: '商品同步', icon: 'sync' }
+        meta: { title: '商品同步', icon: 'sync', roles: [role_admin_name] }
       }
     ]
   },

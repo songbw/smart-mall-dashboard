@@ -1,14 +1,14 @@
 import Vue from 'vue'
 
 export function getProfileApi() {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/companies/profile',
     method: 'get'
   })
 }
 
 export function createProfileApi(data) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/companies/profile',
     method: 'post',
     data
@@ -16,7 +16,7 @@ export function createProfileApi(data) {
 }
 
 export function updateProfileApi(data) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/companies/profile',
     method: 'put',
     data
@@ -24,14 +24,14 @@ export function updateProfileApi(data) {
 }
 
 export function submitProfileApi(data) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/companies/status',
     method: 'put'
   })
 }
 
 export function getVendorListApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/companies/list',
     method: 'get',
     params
@@ -43,7 +43,7 @@ export function reviewVendorProfileApi(params) {
     status: params.status,
     comments: params.comments
   }
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/companies/${params.id}/status`,
     method: 'put',
     data
@@ -51,14 +51,14 @@ export function reviewVendorProfileApi(params) {
 }
 
 export function deleteVendorApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/companies/${params.id}`,
     method: 'delete'
   })
 }
 
 export function getVendorUserListApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: '/vendors/users/list',
     method: 'get',
     params
@@ -66,7 +66,7 @@ export function getVendorUserListApi(params) {
 }
 
 export function setUserVendorApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/users/company`,
     method: 'put',
     data: {
@@ -76,14 +76,14 @@ export function setUserVendorApi(params) {
 }
 
 export function getVendorProfileApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/vendors/${params.id}`,
     method: 'get'
   })
 }
 
 export function createVendorUserApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/users`,
     method: 'post',
     data: {
@@ -94,7 +94,7 @@ export function createVendorUserApi(params) {
 
 export function updateVendorUserApi(params) {
   const { userId, ...rest } = params
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/users/${userId}`,
     method: 'put',
     data: {
@@ -104,14 +104,14 @@ export function updateVendorUserApi(params) {
 }
 
 export function deleteVendorUserApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/users/${params.id}`,
     method: 'delete'
   })
 }
 
 export function createVendorProfileApi(params) {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/companies/admin/profile`,
     method: 'post',
     data: {
@@ -121,15 +121,15 @@ export function createVendorProfileApi(params) {
 }
 
 export function getVendorRolesApi() {
-  return Vue.axios('vendor').request({
+  return Vue.axios('vendors').request({
     url: `/vendors/users/roles/list`,
     method: 'get'
   })
 }
 
 export function createVendorRoleApi(params) {
-  return Vue.axios('vendor').request({
-    url: `vendors/users/roles`,
+  return Vue.axios('vendors').request({
+    url: `/vendors/users/roles`,
     method: 'post',
     data: {
       ...params
@@ -139,8 +139,8 @@ export function createVendorRoleApi(params) {
 
 export function updateVendorRoleApi(params) {
   const { id, ...rest } = params
-  return Vue.axios('vendor').request({
-    url: `vendors/users/roles/${id}`,
+  return Vue.axios('vendors').request({
+    url: `/vendors/users/roles/${id}`,
     method: 'put',
     data: {
       ...rest

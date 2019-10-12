@@ -793,9 +793,13 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          updateProductApi(params).then(_ => {
-            this.$message({ message: '更新产品信息成功。', type: 'success' })
-            this.goBack()
+          updateProductApi(params).then(res => {
+            if (res.code === 200) {
+              this.$message({ message: '更新产品信息成功。', type: 'success' })
+              this.goBack()
+            } else {
+              this.$message.error('更新产品信息失败，请联系管理员')
+            }
           }).catch(error => {
             console.log('updateProductInfo:' + JSON.stringify(error))
             this.$message.error('更新产品信息失败！')

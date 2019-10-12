@@ -3,6 +3,7 @@
     <el-form label-width="120px" label-position="left">
       <el-form-item label="同步平台">
         <el-radio-group v-model="platformId">
+          <el-radio label="test">Test</el-radio>
           <el-radio label="09">关爱通自营</el-radio>
           <el-radio disabled label="10">关爱通苏宁</el-radio>
           <el-radio label="11">无锡市民卡商城</el-radio>
@@ -96,7 +97,7 @@
               >
                 <el-table-column label="商品SKU" align="center" width="150">
                   <template slot-scope="scope">
-                    <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+                    <el-link :href="'/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
                       {{ scope.row.skuid }}
                     </el-link>
                   </template>
@@ -179,6 +180,9 @@ import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import VendorSelection from '@/components/VendorSelection'
 import { vendor_status_approved } from '@/utils/constants'
+import { syncProductsApi } from '@/api/products'
+import { syncCategoriesApi } from '@/api/categories'
+import { syncBrandsApi } from '@/api/brands'
 import { getVendorListApi } from '@/api/vendor'
 import SyncCategory from './category'
 import BrandsSelection from './brandsSelection'
@@ -290,9 +294,19 @@ export default {
     },
     handleAddBrand(brand) {
       if (this.syncTab === 'products') {
-        this.selectedBrands.push(brand)
+        const index = this.selectedBrands.findIndex(item => item.value === brand.value)
+        if (index < 0) {
+          this.selectedBrands.push(brand)
+        } else {
+          this.$message.warning('此品牌已添加！')
+        }
       } else {
-        this.selectedSyncBrands.push(brand)
+        const index = this.selectedSyncBrands.findIndex(item => item.value === brand.value)
+        if (index < 0) {
+          this.selectedSyncBrands.push(brand)
+        } else {
+          this.$message.warning('此品牌已添加！')
+        }
       }
     },
     handleDeleteBrand(index) {
@@ -359,18 +373,23 @@ export default {
             params.merchants = this.selectedMerchants.map(item => item.id)
             break
           case 'category':
-            params.categories = validCategories
+            params.categories = validCategories.map(value => value.toString())
             break
           case 'brand':
             params.brands = this.selectedBrands.map(item => item.value)
             break
           case 'mpu':
-            params.mpus = this.selectedMpus.map(item => item.mpu)
+            params.mpus = this.selectedMpus.map(item => item.mpu.toString())
             break
           default:
             break
         }
-        console.debug(JSON.stringify(params))
+        const { code, msg } = await syncProductsApi(params)
+        if (code === 200) {
+          this.$message.success('商品同步成功，请登录对应同步平台查看！')
+        } else {
+          this.$message.warning(msg)
+        }
       }).catch(() => {
       })
     },
@@ -407,11 +426,37 @@ export default {
             categoryList = categoryList.concat(subList)
           }
         }
-        console.debug(categoryList)
+        const params = { platformId: this.platformId }
+        params.categories = categoryList
+        const { code, msg } = await syncCategoriesApi(params)
+        if (code === 200) {
+          this.$message.success('类别同步成功，请登录对应同步平台查看！')
+        } else {
+          this.$message.warning(msg)
+        }
       }).catch(() => {
       })
     },
     handleSyncBrands() {
+      if (this.selectedSyncBrands.length === 0) {
+        this.$message.warning('请添加所需同步的商品品牌！')
+        return
+      }
+      this.$confirm('此操作将覆盖指定同步平台相同的品牌信息，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        const params = { platformId: this.platformId }
+        params.brands = this.selectedSyncBrands.map(item => item.value)
+        const { code, msg } = await syncBrandsApi(params)
+        if (code === 200) {
+          this.$message.success('品牌同步成功，请登录对应同步平台查看！')
+        } else {
+          this.$message.warning(msg)
+        }
+      }).catch(() => {
+      })
     }
   }
 }
