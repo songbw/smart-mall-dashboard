@@ -990,6 +990,7 @@ export default {
           }
         }
         loading.close()
+        this.getListData()
       }
     },
     onGoodsImportCancelled() {

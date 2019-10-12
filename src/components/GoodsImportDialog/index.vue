@@ -325,6 +325,9 @@ export default {
           } else {
             product.merchantId = this.vendorId
           }
+          if (!('skuid' in product)) {
+            product.skuid = ''
+          }
           count++
           this.excelResults.push(product)
         }
