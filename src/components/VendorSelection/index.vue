@@ -6,20 +6,19 @@
     :show-close="false"
     :append-to-body="true"
     title="选择供应商"
+    @opened="onOpened"
   >
     <el-table
       ref="dialogSkuTable"
       v-loading="vendorLoading"
       :data="vendorData"
       style="width: 100%"
-      height="250"
+      height="500"
       border
-      highlight-current-row
-      @current-change="handleSelectionChange"
     >
       <el-table-column label="已选" align="center" width="55">
         <template slot-scope="scope">
-          <el-checkbox :value="selectedItem !== null && selectedItem.id === scope.row.id" />
+          <el-checkbox :value="isRowSelected(scope.row)" @change="value => handleSelectionChanged(value, scope.row)" />
         </template>
       </el-table-column>
       <el-table-column label="名称" align="center">
@@ -62,13 +61,17 @@ export default {
       default: function() {
         return []
       }
+    },
+    singleSelection: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
     return {
       pageNo: 1,
       pageSize: 10,
-      selectedItem: null
+      selectedItems: []
     }
   },
   computed: {
@@ -85,17 +88,30 @@ export default {
     }
   },
   methods: {
-    handleSelectionChange(val) {
-      this.selectedItem = val
+    onOpened() {
+      this.selectedItems = []
+      this.pageNo = 1
+    },
+    isRowSelected(row) {
+      const index = this.selectedItems.findIndex(item => item.id === row.id)
+      return index >= 0
+    },
+    handleSelectionChanged(value, row) {
+      if (this.singleSelection) this.selectedItems = []
+      if (value) {
+        this.selectedItems.push(row)
+      } else {
+        this.selectedItems = this.selectedItems.filter(item => item.id !== row.id)
+      }
     },
     handleCancel() {
       this.$emit('cancelled')
     },
     handleConfirm() {
-      if (this.selectedItem) {
-        this.$emit('confirmed', this.selectedItem)
+      if (this.selectedItems.length > 0) {
+        this.$emit('confirmed', this.selectedItems)
       } else {
-        this.$message.warning('请选择一个供应商！')
+        this.$message.warning('请选择所需供应商！')
       }
     }
   }

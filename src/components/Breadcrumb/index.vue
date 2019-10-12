@@ -39,7 +39,7 @@ export default {
 
       if (!this.isDashboard(first)) {
         matched = [{
-          path: '/dashboard',
+          path: '/',
           meta: {
             title: '首页'
           }

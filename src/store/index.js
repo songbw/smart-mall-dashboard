@@ -6,11 +6,6 @@ import user from './modules/user'
 import vendor from './modules/vendor'
 import products from './modules/products'
 import categories from './modules/categories'
-import aggregations from './modules/aggregations'
-import promotions from './modules/promotions'
-import coupons from './modules/coupons'
-import orders from './modules/orders'
-import workOrders from './modules/workOrders'
 
 Vue.use(Vuex)
 
@@ -22,12 +17,7 @@ const store = new Vuex.Store({
     user,
     vendor,
     products,
-    categories,
-    aggregations,
-    promotions,
-    coupons,
-    orders,
-    workOrders
+    categories
   },
   getters,
   strict: debug

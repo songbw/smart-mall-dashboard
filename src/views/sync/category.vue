@@ -1,15 +1,15 @@
 <template>
   <div style="display:flex;justify-content: start;margin-bottom: 10px">
     <category-selection
-      :first-selectable="!viewOnly && presetFirstCategory === null"
-      :first-value="presetFirstCategory || firstCategoryValue"
-      :second-selectable="!viewOnly"
+      :first-selectable="level > 0 "
+      :first-value="firstCategoryValue"
+      :second-selectable="level > 1"
       :second-value="secondCategoryValue"
-      :third-selectable="!viewOnly"
+      :third-selectable="level > 2"
       :third-value="thirdCategoryValue"
       @changed="handleCategorySelectionChanged"
     />
-    <el-button v-if="!viewOnly" type="danger" icon="el-icon-delete" @click="handleDeleteCategory">删除</el-button>
+    <el-button type="danger" icon="el-icon-delete" @click="handleDeleteCategory">删除</el-button>
   </div>
 </template>
 
@@ -17,12 +17,12 @@
 import CategorySelection from '@/components/CategorySelection'
 
 export default {
-  name: 'CouponCategory',
+  name: 'SyncCategory',
   components: { CategorySelection },
   props: {
-    viewOnly: {
-      type: Boolean,
-      default: true
+    level: {
+      type: Number,
+      default: 3
     },
     categoryValue: {
       type: Number,
@@ -31,10 +31,6 @@ export default {
     index: {
       type: Number,
       default: -1
-    },
-    presetFirstCategory: {
-      type: Number,
-      default: null
     }
   },
   data() {
@@ -46,14 +42,35 @@ export default {
   },
   created() {
     if (this.categoryValue !== -1) {
-      const firstValue = Number.parseInt(this.categoryValue.toString().substring(0, 2))
-      this.firstCategoryValue = Number.isNaN(firstValue) ? null : firstValue
-      const secondValue = Number.parseInt(this.categoryValue.toString().substring(0, 4))
-      this.secondCategoryValue = Number.isNaN(secondValue) ? null : secondValue
-      this.thirdCategoryValue = this.categoryValue
+      this.parseCategoryValue()
     }
   },
   methods: {
+    parseCategoryValue() {
+      switch (this.level) {
+        case 3: {
+          const firstValue = Number.parseInt(this.categoryValue.toString().substring(0, 2))
+          this.firstCategoryValue = Number.isNaN(firstValue) ? null : firstValue
+          const secondValue = Number.parseInt(this.categoryValue.toString().substring(0, 4))
+          this.secondCategoryValue = Number.isNaN(secondValue) ? null : secondValue
+          this.thirdCategoryValue = this.categoryValue
+          break
+        }
+        case 2: {
+          const firstValue = Number.parseInt(this.categoryValue.toString().substring(0, 2))
+          this.firstCategoryValue = Number.isNaN(firstValue) ? null : firstValue
+          this.secondCategoryValue = this.categoryValue
+          this.thirdCategoryValue = null
+          break
+        }
+        case 1: {
+          this.firstCategoryValue = this.categoryValue
+          this.secondCategoryValue = null
+          this.thirdCategoryValue = null
+          break
+        }
+      }
+    },
     handleCategorySelectionChanged(category) {
       const value = Number.isSafeInteger(category.value) ? category.value : null
       switch (category.level) {
@@ -74,12 +91,14 @@ export default {
       this.firstCategoryValue = value
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
-      this.$emit('categorySet', this.index, null)
+      const category = this.level === 1 ? value : null
+      this.$emit('categorySet', this.index, category)
     },
     handleSecondCategoryChanged(value) {
       this.secondCategoryValue = value
       this.thirdCategoryValue = null
-      this.$emit('categorySet', this.index, null)
+      const category = this.level === 2 ? value : null
+      this.$emit('categorySet', this.index, category)
     },
     handleThirdCategoryChanged(value) {
       this.thirdCategoryValue = value

@@ -27,21 +27,6 @@ const getters = {
   categoriesLoaded: state => state.categories.dataLoaded,
   categoriesLoading: state => state.categories.dataLoading,
   categories: state => state.categories.categoriesTree,
-  secondClassCategories: state => state.categories.secondClassTree,
-  aggregationsQuery: state => state.aggregations.search,
-  currentAggregation: state => state.aggregations.aggregation,
-  currentAggregationContent: state => state.aggregations.aggregation.content,
-  currentAggregationContentIndex: state => state.aggregations.contentIndex,
-  aggregationGroupId: state => state.aggregations.groupId,
-  aggregationGroups: state => state.aggregations.groups,
-  promotionQuery: state => state.promotions.query,
-  currentPromotion: state => state.promotions.promotion,
-  promotionTypes: state => state.promotions.promotionTypes,
-  promotionTypeId: state => state.promotions.promotionTypeId,
-  conflictedMpus: state => state.promotions.conflictedMpus,
-  defaultSchedules: state => state.promotions.defaultSchedules,
-  couponQuery: state => state.coupons.search,
-  orderQuery: state => state.orders.search,
-  workOrdersQuery: state => state.workOrders.search
+  secondClassCategories: state => state.categories.secondClassTree
 }
 export default getters

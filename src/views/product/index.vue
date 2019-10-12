@@ -92,14 +92,6 @@
           >
             修改已选{{ productSelection.length }}个商品
           </el-button>
-          <el-button
-            :disabled="productSelection.length === 0"
-            type="danger"
-            icon="el-icon-edit-outline"
-            @click="handleEditSelectionShipping"
-          >
-            修改已选运费模板
-          </el-button>
         </div>
         <div>
           <el-button
@@ -364,12 +356,6 @@
         <el-button type="primary" @click="confirmEditSelection">确定</el-button>
       </div>
     </el-dialog>
-    <shipping-price-selection
-      :mpu-list="selectedMpuList"
-      :dialog-visible="shippingPriceDialogVisible"
-      @onCancelled="handleCloseSelectionShipping"
-      @onConfirmed="handleCloseSelectionShipping"
-    />
   </div>
 </template>
 
@@ -399,11 +385,10 @@ import {
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
-import ShippingPriceSelection from './shippingPriceSelection'
 
 export default {
   name: 'Product',
-  components: { Pagination, CategorySelection, GoodsImportDialog, ShippingPriceSelection },
+  components: { Pagination, CategorySelection, GoodsImportDialog },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -436,10 +421,8 @@ export default {
       listLoading: false,
       productExporting: false,
       productSelection: [],
-      selectedMpuList: [],
       dialogImportVisible: false,
       editDialogVisible: false,
-      shippingPriceDialogVisible: false,
       brandLoading: false,
       brandOptions: [],
       selectionEditing: false,
@@ -990,6 +973,7 @@ export default {
           }
         }
         loading.close()
+        this.getListData()
       }
     },
     onGoodsImportCancelled() {
@@ -1080,17 +1064,6 @@ export default {
           this.editDialogVisible = false
           this.selectionEditing = false
         }
-      }
-    },
-    handleEditSelectionShipping() {
-      this.selectedMpuList = this.productSelection.map(item => item.mpu)
-      this.shippingPriceDialogVisible = true
-    },
-    handleCloseSelectionShipping(suc) {
-      this.shippingPriceDialogVisible = false
-      this.selectedMpuList = []
-      if (suc) {
-        this.$message.success('修改商品运费模板成功！')
       }
     }
   }

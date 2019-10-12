@@ -149,6 +149,10 @@ export default {
     productPromotion: {
       type: Boolean,
       default: false
+    },
+    onSale: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
@@ -281,7 +285,7 @@ export default {
       const price = Number.parseFloat(product.price)
       const name = product.name
       const state = Number.parseInt(product.state)
-      return !(Number.isNaN(price) || isEmpty(name) || state !== product_state_on_sale)
+      return !(Number.isNaN(price) || isEmpty(name) || (this.onSale && state !== product_state_on_sale))
     },
     generateData({ header, results }) {
       if (this.productCreation) {
@@ -324,6 +328,9 @@ export default {
             }
           } else {
             product.merchantId = this.vendorId
+          }
+          if (!('skuid' in product)) {
+            product.skuid = ''
           }
           count++
           this.excelResults.push(product)

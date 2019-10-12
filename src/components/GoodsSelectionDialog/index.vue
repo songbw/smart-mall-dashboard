@@ -160,7 +160,7 @@ import uniq from 'lodash/uniq'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
 import { searchProductsApi } from '@/api/products'
-import { getPromotionByIdApi } from '@/api/promotions'
+import { product_state_on_sale } from '@/utils/constants'
 
 export default {
   name: 'GoodsSelectionDialog',
@@ -177,6 +177,10 @@ export default {
     promotionId: {
       type: Number,
       default: -1
+    },
+    onSale: {
+      type: Boolean,
+      default: true
     },
     presetFirstCategory: {
       type: Number,
@@ -199,7 +203,7 @@ export default {
       },
       total: 0,
       offset: 1,
-      limit: 50,
+      limit: 40,
       dataLoading: false,
       firstCategoryValue: null,
       secondCategoryValue: null,
@@ -232,16 +236,14 @@ export default {
       this.handleDialogFilterSearch()
     },
     isProductValid(product) {
-      const price = Number.parseFloat(product.price)
-      return Number.isNaN(price) === false
+      if (this.onSale) {
+        const price = Number.parseFloat(product.price)
+        return Number.isNaN(price) === false
+      } else {
+        return true
+      }
     },
     handleDialogPromotionQuery() {
-      getPromotionByIdApi({ id: this.promotionId }).then(res => {
-        const data = res.data.result
-        this.dialogSkuData = data.promotionSkus
-      }).catch(err => {
-        console.log('handleDialogPromotionQuery:' + err)
-      })
     },
     handleDialogFilterClear() {
       this.offset = 1
@@ -259,9 +261,9 @@ export default {
             const params = {
               offset: 1,
               limit: 1,
-              state: 1,
               skuid: skuID
             }
+            if (this.onSale) params.state = product_state_on_sale
             this.dataLoading = true
             searchProductsApi(params).then(response => {
               const data = response.data.result
@@ -288,9 +290,9 @@ export default {
         this.thirdCategoryValue !== null) {
         const params = {
           offset: this.offset,
-          limit: this.limit,
-          state: 1
+          limit: this.limit
         }
+        if (this.onSale) params.state = product_state_on_sale
         if (this.dialogFilterForm.query !== '') {
           params.query = this.dialogFilterForm.query
         }
@@ -373,7 +375,7 @@ export default {
       this.$emit('onSelectionCancelled')
     },
     handleDialogConfirm() {
-      this.$emit('onSelectionConfirmed', Array.from(this.dialogSelectedItems))
+      this.$emit('onSelectionConfirmed', [...this.dialogSelectedItems])
       this.clearDialogData()
     },
     clearDialogData() {

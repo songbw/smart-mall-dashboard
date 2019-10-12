@@ -5,8 +5,6 @@ console.info('App host ' + process.env.VUE_APP_HOST)
 import './plugins/element-ui'
 import './plugins/localforage'
 import './plugins/axios'
-import './plugins/qriously'
-import './plugins/v-charts'
 import './plugins/scroll-to'
 
 import App from './App'
