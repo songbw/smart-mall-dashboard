@@ -122,6 +122,12 @@
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
       </el-form-item>
+      <el-form-item label="商品对比链接">
+        <el-link v-if="viewProduct" :href="productForm.compareUrl" target="_blank">
+          {{ productForm.compareUrl }}
+        </el-link>
+        <el-input v-else v-model="productForm.compareUrl" maxlength="100" />
+      </el-form-item>
       <el-divider content-position="left">商品图片</el-divider>
       <el-form-item label="商品封面图">
         <template>
@@ -396,7 +402,8 @@ export default {
         mpu: null,
         createdAt: null,
         imagesUrl: null,
-        introductionUrl: null
+        introductionUrl: null,
+        compareUrl: null
       },
       formRules: {
         merchantId: [{

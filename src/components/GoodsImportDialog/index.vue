@@ -116,7 +116,8 @@ const CreationHeaders = [
   { field: 'sprice', label: '进货价格(元)', type: 'string' },
   { field: 'inventory', label: '商品库存', type: 'number' },
   { field: 'imagesUrl', label: '商品主图', type: 'string' },
-  { field: 'introductionUrl', label: '商品描述图', type: 'string' }
+  { field: 'introductionUrl', label: '商品描述图', type: 'string' },
+  { field: 'compareUrl', label: '商品对比链接', type: 'string' }
 ]
 
 const PromotionHeaders = [
