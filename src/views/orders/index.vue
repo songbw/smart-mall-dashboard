@@ -468,6 +468,7 @@ export default {
           const params = this.getSearchParams()
           const { data } = await getOrderListApi(params)
           this.orderTotal = data.result.total
+          this.orderData = []
           for (const order of data.result.list) {
             const { subStatus, subOrderId, ...rest } = order
             let workOrderId = null
