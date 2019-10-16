@@ -24,6 +24,16 @@ export function getMemberBalanceApi(params) {
   })
 }
 
+export function rechargeMemberBalanceApi(params) {
+  return Vue.axios('members')({
+    url: '/ssoes/balance',
+    method: 'put',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function getMemberBalanceFlowApi(params) {
   return Vue.axios('members')({
     url: '/ssoes/balance/detail/all',

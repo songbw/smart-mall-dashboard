@@ -26,6 +26,7 @@
       <div slot="header">
         <span class="card-header-text">会员余额：{{ balanceAmount }}</span>
       </div>
+      <h4>余额交易记录</h4>
       <el-table
         v-loading="loadingBalance"
         :data="balanceFlowList"
@@ -182,9 +183,9 @@ export default {
           this.profile = data.user
           if (this.profile.openId) {
             if (this.showBalance) {
-              this.getMemberBalance(this.profile.openId)
+              this.getMemberBalance()
             }
-            this.getAddressList(this.profile.openId)
+            this.getAddressList()
           }
         }
       } catch (e) {
@@ -193,8 +194,9 @@ export default {
         this.loadingProfile = false
       }
     },
-    async getMemberBalance(openId) {
+    async getMemberBalance() {
       try {
+        const openId = this.profile.openId
         const { data } = getMemberBalanceApi({ openId })
         if (data && 'amount' in data) {
           this.balanceAmount = data.amount
@@ -204,9 +206,10 @@ export default {
         console.warn('Get member balance error:' + e)
       }
     },
-    async getBalanceFlow(openId) {
+    async getBalanceFlow() {
       try {
         this.loadingBalance = true
+        const openId = this.profile.openId
         const { data } = await getMemberBalanceFlowApi({
           openId,
           pageNo: this.balanceFlowPageNo,
@@ -225,6 +228,7 @@ export default {
     async getAddressList(openId) {
       try {
         this.loadingAddressList = true
+        const openId = this.profile.openId
         const { data } = await getMemberAddressListApi({ openId })
         if (data && Array.isArray(data.result)) {
           this.receivingAddressList = data.result
