@@ -46,6 +46,9 @@
             maxlength="30"
             style="width: 350px;margin-left: 10px"
           />
+          <span style="font-size: 12px;margin-left: 10px;">
+            <i class="el-icon-warning-outline">创建后，将不能修改。如需填写供应商SKU，请取消勾选“系统生成”。</i>
+          </span>
         </div>
         <span v-else>{{ productForm.skuid }}</span>
       </el-form-item>
@@ -112,7 +115,9 @@
       <el-form-item v-if="isAdminUser" label="销售底价(元)">
         <span style="margin-right: 10px"> {{ floorPrice }}</span>
         <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
-        <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
+        <span style="font-size: 12px;margin-left: 10px;">
+          <i class="el-icon-warning-outline">基于进货价的比率</i>
+        </span>
       </el-form-item>
       <el-form-item v-if="!isWatcherUser" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
