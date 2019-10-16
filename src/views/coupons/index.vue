@@ -255,7 +255,7 @@ export default {
           this.$store.commit('coupons/SET_SEARCH_DATA', { startDate: start.format('YYYY-MM-DD HH:mm:ss') })
         } else {
           if (value) {
-            this.$message.warn('开始日前必须早于结束日期')
+            this.$message.warning('开始日前必须早于结束日期')
           }
           this.$store.commit('coupons/SET_SEARCH_DATA', { startDate: null })
         }
@@ -271,7 +271,7 @@ export default {
           this.$store.commit('coupons/SET_SEARCH_DATA', { endDate: end.format('YYYY-MM-DD HH:mm:ss') })
         } else {
           if (value) {
-            this.$message.warn('结束日期必须晚于开始日期')
+            this.$message.warning('结束日期必须晚于开始日期')
           }
           this.$store.commit('coupons/SET_SEARCH_DATA', { endDate: null })
         }

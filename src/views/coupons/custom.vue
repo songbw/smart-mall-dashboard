@@ -1025,7 +1025,7 @@ export default {
       if (this.formData.rules.scenario.couponMpus.length + filterMpus.length <= 400) {
         this.formData.rules.scenario.couponMpus = concat(this.formData.rules.scenario.couponMpus, filterMpus)
       } else {
-        this.$message.warn('请重新选择活动商品，最多支持400个')
+        this.$message.warning('请重新选择活动商品，最多支持400个')
       }
       this.$refs['couponForm'].validateField(['couponMpus'])
     },
@@ -1039,7 +1039,7 @@ export default {
       if (this.formData.rules.scenario.excludeMpus.length + filterMpus.length <= 100) {
         this.formData.rules.scenario.excludeMpus = concat(this.formData.rules.scenario.excludeMpus, filterMpus)
       } else {
-        this.$message.warn('请重新选择活动排除商品，最多支持100个')
+        this.$message.warning('请重新选择活动排除商品，最多支持100个')
       }
     },
     handleDeleteExcludeMpus(mpus) {
@@ -1057,7 +1057,7 @@ export default {
       console.debug('index:' + index + ' value:' + value)
       if (value) {
         if (includes(this.formData.rules.scenario.categories, value)) {
-          this.$message.warn('此类别已添加，请选择其它类别')
+          this.$message.warning('此类别已添加，请选择其它类别')
         } else {
           this.formData.rules.scenario.categories[index] = value
         }
