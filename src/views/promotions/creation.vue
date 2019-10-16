@@ -68,8 +68,12 @@ export default {
 
       if (Number.isSafeInteger(id) && id !== -1) {
         this.dataLoading = true
-        this.$store.dispatch('promotions/findById', { id: id }).then(() => {
-          this.promotionReady = true
+        this.$store.dispatch('promotions/findById', { id: id }).then((res) => {
+          if (res.code === 200) {
+            this.promotionReady = true
+          } else {
+            this.$message.warning(res.msg)
+          }
         }).catch(err => {
           console.warn('getPromotionData:' + err)
           this.$message.warning('获取促销活动失败，请稍后重试！')
