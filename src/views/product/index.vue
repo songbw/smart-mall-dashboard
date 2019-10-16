@@ -217,6 +217,11 @@
           <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="类型" align="center" width="80">
+        <template slot-scope="scope">
+          <span>{{ scope.row.type === 1 ? '虚拟' : '实体' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.state | productState }}</span>
@@ -371,7 +376,8 @@ import {
   searchProductsApi,
   deleteProductApi,
   createProductApi,
-  exportProductsApi
+  exportProductsApi,
+  deleteVirtualProductApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
@@ -794,12 +800,15 @@ export default {
           const params = {
             id
           }
-          await deleteProductApi(params)
+          const { code } = await deleteProductApi(params)
+          if (code === 200) {
+            await deleteVirtualProductApi({ mpu: that.productsData[index].mpu })
+          }
           this.$message({ message: '产品删除成功！', type: 'success' })
           if (this.productsData.length === 1 && this.listOffset > 1) {
             this.listOffset = this.listOffset - 1
           }
-          that.getListData()
+          await that.getListData()
         } catch (e) {
           console.warn(`Delete product error: ${e}`)
         }

@@ -123,10 +123,50 @@
         <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
       </el-form-item>
       <el-form-item label="商品对比链接">
-        <el-link v-if="viewProduct" :href="productForm.compareUrl" target="_blank">
+        <el-link v-if="viewProduct" :href="productForm.compareUrl" target="_blank" type="primary">
           {{ productForm.compareUrl }}
         </el-link>
         <el-input v-else v-model="productForm.compareUrl" maxlength="100" />
+      </el-form-item>
+      <el-form-item label="商品类型">
+        <div v-if="createProduct">
+          <el-radio-group v-model="productForm.type">
+            <el-radio :label="0">实体商品</el-radio>
+            <el-radio :label="1">虚拟商品</el-radio>
+          </el-radio-group>
+        </div>
+        <span v-else>{{ isVirtualProduct ? '虚拟商品' : '实体商品' }}</span>
+      </el-form-item>
+      <el-divider v-if="isVirtualProduct" content-position="left">虚拟商品信息</el-divider>
+      <el-form-item v-if="isVirtualProduct" label="有效天数">
+        <span v-if="viewProduct"> {{ virtualProductForm.effectiveDays }}</span>
+        <span v-else>
+          <el-checkbox v-model="alwaysEffective">永久有效</el-checkbox>
+          <el-input-number
+            v-if="!alwaysEffective"
+            v-model="virtualProductForm.effectiveDays"
+            :min="1"
+            step-strictly
+            style="margin-left: 10px"
+          />
+        </span>
+        <span style="font-size: 12px;margin-left: 10px;">
+          <i class="el-icon-warning-outline">为下单成功后，虚拟商品的有效天数。</i>
+        </span>
+      </el-form-item>
+      <el-form-item v-if="isVirtualProduct" label="虚拟面额(元)">
+        <span v-if="viewProduct"> {{ virtualProductForm.parValue }}</span>
+        <el-input-number
+          v-else
+          v-model="virtualProductForm.parValue"
+          :precision="2"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
+        <span style="font-size: 12px;margin-left: 10px;">
+          <i class="el-icon-warning-outline">为虚拟商品价值，比如100元充值卡、100元蛋糕券。</i>
+        </span>
       </el-form-item>
       <el-divider content-position="left">商品图片</el-divider>
       <el-form-item label="商品封面图">
@@ -287,7 +327,14 @@ import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
-import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
+import {
+  createProductApi,
+  updateProductApi,
+  searchProductsApi,
+  createVirtualProductApi,
+  updateVirtualProductApi,
+  findVirtualProductInfoApi
+} from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
@@ -327,7 +374,6 @@ export default {
     }
   },
   data() {
-    this.productInfo = null
     const validateValue = (rule, value, callback) => {
       if (value === null || value === '') {
         switch (rule.field) {
@@ -382,6 +428,14 @@ export default {
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
       introductions: [],
       introductionUrls: [],
+      productInfo: null,
+      alwaysEffective: true,
+      virtualProductInfo: null,
+      virtualProductForm: {
+        id: null,
+        effectiveDays: null,
+        parValue: null
+      },
       productForm: {
         id: null,
         merchantId: null,
@@ -403,7 +457,8 @@ export default {
         createdAt: null,
         imagesUrl: null,
         introductionUrl: null,
-        compareUrl: null
+        compareUrl: null,
+        type: 0
       },
       formRules: {
         merchantId: [{
@@ -484,6 +539,11 @@ export default {
     hasCustomCover() {
       const thumbnail = this.thumbnailUrls.length > 0 ? this.thumbnailUrls[0] : null
       return this.productForm.image != null ? thumbnail === null || this.productForm.image !== thumbnail : false
+    },
+    isVirtualProduct: {
+      get() {
+        return this.productForm.type === 1
+      }
     }
   },
   created() {
@@ -539,7 +599,7 @@ export default {
         }
       }
     },
-    async getProductInfo() {
+    getProductInfo() {
       const params = {
         offset: 1,
         limit: 1
@@ -553,7 +613,7 @@ export default {
         params.merchantId = this.vendorId
       }
       this.loading = true
-      searchProductsApi(params).then(response => {
+      searchProductsApi(params).then(async response => {
         const data = response.data.result
         if (data.total === 1) {
           this.productInfo = data.list[0]
@@ -593,7 +653,9 @@ export default {
           this.uploadThumbnailData.pathName = this.thumbnailUploadPath
           this.introductionUploadPath = this.productInfo.category + '/' + this.productInfo.id + '/XTU'
           this.uploadIntroductionData.pathName = this.introductionUploadPath
-
+          if (this.productForm.type === 1) {
+            await this.getVirtualProductInfo(this.productForm.mpu)
+          }
           this.getCategoryName(this.productForm.category)
         } else {
           this.$message.warning('获取商品失败，请联系管理员！')
@@ -603,6 +665,21 @@ export default {
       }).finally(() => {
         this.loading = false
       })
+    },
+    async getVirtualProductInfo(mpu) {
+      try {
+        const { code, data } = await findVirtualProductInfoApi({ mpu })
+        if (code === 200) {
+          const virtualProduct = data.result
+          this.virtualProductInfo = { ...virtualProduct }
+          this.virtualProductForm.id = virtualProduct.id
+          this.virtualProductForm.effectiveDays = virtualProduct.effectiveDays
+          this.virtualProductForm.parValue = virtualProduct.parValue
+          this.alwaysEffective = virtualProduct.effectiveDays === -1
+        }
+      } catch (e) {
+        console.warn('Get virtual product info error: ' + e)
+      }
     },
     async remoteBrandOptions(query) {
       if (isEmpty(query)) {
@@ -730,6 +807,26 @@ export default {
         }
       })
     },
+    async handleCreateVirtualProduct(mpu) {
+      let ret = false
+      try {
+        const params = { mpu }
+        if (this.alwaysEffective) {
+          params.effectiveDays = -1
+        } else {
+          params.effectiveDays = this.virtualProductForm.effectiveDays > 0 ? this.virtualProductForm.effectiveDays : -1
+        }
+        params.parValue = this.virtualProductForm.parValue > 0 ? this.virtualProductForm.parValue : 0
+
+        const { code } = await createVirtualProductApi(params)
+        if (code === 200) {
+          ret = true
+        }
+      } catch (e) {
+        console.warn('Create virtual product error: ' + e)
+      }
+      return ret
+    },
     async handleCreateProduct(formData) {
       try {
         const params = {}
@@ -750,20 +847,54 @@ export default {
         if (this.autoSku) {
           params.skuid = ''
         }
-        const res = await createProductApi(params)
-        if (res.code === 200) {
-          this.$message({ message: '创建产品信息成功。', type: 'success' })
-          this.goBack()
+        this.loading = true
+        const { code, msg, data } = await createProductApi(params)
+        if (code === 200) {
+          let suc = true
+          if (this.isVirtualProduct) {
+            const mpu = data.result
+            suc = await this.handleCreateVirtualProduct(mpu)
+          }
+          if (suc) {
+            this.$message({ message: '创建产品信息成功。', type: 'success' })
+            this.goBack()
+          } else {
+            this.$message.error(msg || '创建商品信息失败，请联系管理员！')
+          }
         } else {
-          this.$message.error(res.msg || '创建商品信息失败，请联系管理员！')
+          this.$message.error(msg || '创建商品信息失败，请联系管理员！')
         }
       } catch (e) {
         console.warn('Create product error: ' + e)
         this.$message.error('创建产品信息失败！')
+      } finally {
+        this.loading = false
       }
+    },
+    async handleUpdateVirtualProduct() {
+      let ret = false
+      try {
+        const params = { ...this.virtualProductForm }
+        if (this.alwaysEffective) {
+          params.effectiveDays = -1
+        } else {
+          params.effectiveDays = this.virtualProductForm.effectiveDays > 0 ? this.virtualProductForm.effectiveDays : -1
+        }
+        params.parValue = this.virtualProductForm.parValue > 0 ? this.virtualProductForm.parValue : 0
+
+        const { code } = await updateVirtualProductApi(params)
+        if (code === 200) {
+          ret = true
+        }
+      } catch (e) {
+        console.warn('Create virtual product error: ' + e)
+      }
+      return ret
     },
     handleUpdateProduct(formData) {
       let changed = false
+      let virtualCreate = false
+      let virtualChanged = false
       const params = {
         id: formData.id
       }
@@ -794,23 +925,49 @@ export default {
           changed = true
         }
       }
-      if (changed) {
+      if (this.virtualProductForm.id !== null) {
+        const effectiveDays = this.alwaysEffective ? -1 : this.virtualProductForm.effectiveDays
+        if (this.virtualProductForm.parValue !== this.virtualProductInfo.parValue ||
+          effectiveDays !== this.virtualProductInfo.effectiveDays) {
+          virtualChanged = true
+        }
+      } else {
+        if (this.isVirtualProduct) {
+          virtualCreate = true
+        }
+      }
+      if (changed || virtualChanged || virtualCreate) {
         this.$confirm('请确定是否修改此商品的信息？', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        }).then(() => {
-          updateProductApi(params).then(res => {
-            if (res.code === 200) {
+        }).then(async() => {
+          try {
+            let suc = false
+            this.loading = true
+            if (changed) {
+              const { code } = await updateProductApi(params)
+              if (code === 200) {
+                suc = true
+              }
+            }
+            if (virtualCreate) {
+              suc = await this.handleCreateVirtualProduct(this.productForm.mpu)
+            }
+            if (virtualChanged) {
+              suc = await this.handleUpdateVirtualProduct()
+            }
+            if (suc) {
               this.$message({ message: '更新产品信息成功。', type: 'success' })
               this.goBack()
             } else {
               this.$message.error('更新产品信息失败，请联系管理员')
             }
-          }).catch(error => {
-            console.log('updateProductInfo:' + JSON.stringify(error))
-            this.$message.error('更新产品信息失败！')
-          })
+          } catch (e) {
+            console.log('updateProductInfo:' + e)
+          } finally {
+            this.loading = false
+          }
         }).catch(() => {
         })
       } else {

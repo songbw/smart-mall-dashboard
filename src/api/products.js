@@ -72,3 +72,35 @@ export function syncProductsApi(params) {
     }
   })
 }
+
+export function createVirtualProductApi(params) {
+  return Vue.axios('mproducts')({
+    url: '/equities/adminVirtual/create',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function updateVirtualProductApi(params) {
+  return Vue.axios('mproducts')({
+    url: '/equities/adminVirtual/update',
+    method: 'put',
+    data: { ...params }
+  })
+}
+
+export function deleteVirtualProductApi(params) {
+  return Vue.axios('mproducts')({
+    url: '/equities/adminVirtual/delete',
+    method: 'delete',
+    params
+  })
+}
+
+export function findVirtualProductInfoApi(params) {
+  return Vue.axios('mproducts')({
+    url: '/equities/adminVirtual/findByMpu',
+    method: 'get',
+    params
+  })
+}
