@@ -45,7 +45,12 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="120">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleRecharge(scope.$index)">
+          <el-button
+            :disabled="scope.row.userId === null"
+            type="primary"
+            size="mini"
+            @click="handleRecharge(scope.$index)"
+          >
             充值
           </el-button>
         </template>
@@ -58,48 +63,24 @@
       :limit.sync="query.pageSize"
       @pagination="getAllMemberBalances"
     />
-    <el-dialog
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-      :show-close="false"
-      :visible.sync="rechargeDialogVisible"
-      title="余额充值"
-    >
-      <el-form
-        ref="rechargeForm"
-        :model="rechargeForm"
-        :rules="rechargeRules"
-        label-position="right"
-        label-width="160px"
-      >
-        <el-form-item label="会员电话">
-          <el-input :value="rechargeForm.telephone" readonly />
-        </el-form-item>
-        <el-form-item label="充值额度(元)" prop="amount">
-          <el-input-number
-            v-model="rechargeForm.amount"
-            :precision="2"
-            :step="1"
-            :min="0"
-          />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="cancelRecharge">取消</el-button>
-        <el-button type="primary" @click="confirmRecharge">确定</el-button>
-      </div>
-    </el-dialog>
+    <recharge-balance
+      :dialog-visible="rechargeDialogVisible"
+      :telephone="rechargeTelephone"
+      @cancelled="cancelRecharge"
+      @confirmed="confirmRecharge"
+    />
   </div>
 </template>
 
 <script>
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
+import RechargeBalance from './recharge-balance'
 import { getAllMemberBalancesApi, rechargeMemberBalanceApi } from '@/api/members'
 
 export default {
   name: 'Balances',
-  components: { Pagination },
+  components: { Pagination, RechargeBalance },
   filters: {
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -120,22 +101,8 @@ export default {
         pageSize: 20
       },
       rechargeDialogVisible: false,
-      rechargeForm: {
-        id: -1,
-        telephone: '',
-        amount: 0
-      },
-      rechargeRules: {
-        amount: [{
-          required: true, validator: (rule, value, callback) => {
-            if (value > 0) {
-              callback()
-            } else {
-              callback(new Error('请输入有效的充值额度'))
-            }
-          }, trigger: 'blur'
-        }]
-      }
+      rechargeId: -1,
+      rechargeTelephone: ''
     }
   },
   created() {
@@ -161,19 +128,19 @@ export default {
       }
     },
     handleRecharge(index) {
-      this.rechargeForm.id = this.balanceList[index].id
-      this.rechargeForm.telephone = this.balanceList[index].telephone
-      this.rechargeForm.amount = 0
+      this.rechargeId = this.balanceList[index].id
+      this.rechargeTelephone = this.balanceList[index].telephone
       this.rechargeDialogVisible = true
     },
-    async rechargeBalance(params) {
-      this.$confirm(`是否充值余额：${params.amount}元？`, '警告', {
+    confirmRecharge(amount) {
+      this.rechargeDialogVisible = false
+      this.$confirm(`是否充值余额：${amount}元？`, '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi(params)
+          const { code, msg } = await rechargeMemberBalanceApi({ id: this.rechargeId, amount })
           if (code === 200) {
             this.$message.success('充值成功！')
             this.getAllMemberBalances()
@@ -187,19 +154,9 @@ export default {
       })
     },
     cancelRecharge() {
-      this.$refs.rechargeForm.clearValidate()
       this.rechargeDialogVisible = false
-      this.rechargeForm.id = -1
-      this.rechargeForm.telephone = ''
-      this.rechargeForm.amount = 0
-    },
-    confirmRecharge() {
-      this.$refs.rechargeForm.validate(async valid => {
-        if (valid) {
-          this.rechargeDialogVisible = false
-          this.rechargeBalance({ id: this.rechargeForm.id, amount: this.rechargeForm.amount })
-        }
-      })
+      this.rechargeId = -1
+      this.rechargeTelephone = ''
     }
   }
 }

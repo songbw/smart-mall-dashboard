@@ -22,9 +22,10 @@
         </el-form-item>
       </el-form>
     </el-card>
-    <el-card v-if="showBalance" shadow="never" style="margin-top: 20px">
+    <el-card v-if="showBalance && memberBalance" shadow="never" style="margin-top: 20px">
       <div slot="header">
-        <span class="card-header-text">会员余额：{{ balanceAmount }}</span>
+        <span class="card-header-text">会员余额：{{ memberBalance.amount }}</span>
+        <el-button size="small" type="warning" style="margin-left: 20px">充值</el-button>
       </div>
       <h4>余额交易记录</h4>
       <el-table
@@ -37,6 +38,7 @@
         <el-table-column label="交易主订单编号" align="center">
           <template slot-scope="scope">
             <router-link
+              v-if="scope.row.orderId"
               :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.orderId }}"
               class="el-link el-link--primary is-underline"
             >
@@ -111,6 +113,13 @@
       </el-table>
     </el-card>
     <el-button type="primary" style="margin-top: 20px" @click="goBack">返回</el-button>
+    <recharge-balance
+      :dialog-visible="rechargeDialogVisible"
+      :name="profile.name"
+      :telephone="profile.telephone"
+      @cancelled="rechargeDialogVisible = false"
+      @confirmed="confirmRecharge"
+    />
   </div>
 </template>
 
@@ -121,8 +130,10 @@ import {
   getMemberProfileApi,
   getMemberAddressListApi,
   getMemberBalanceApi,
-  getMemberBalanceFlowApi
+  getMemberBalanceFlowApi,
+  rechargeMemberBalanceApi
 } from '@/api/members'
+import RechargeBalance from './recharge-balance'
 import {
   BalanceFlowTypeDefinitions,
   BalanceFlowStatusDefinitions
@@ -130,7 +141,7 @@ import {
 
 export default {
   name: 'Profile',
-  components: { Pagination },
+  components: { Pagination, RechargeBalance },
   filters: {
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -158,14 +169,15 @@ export default {
         nickname: '',
         createdAt: ''
       },
-      balanceAmount: 0,
+      memberBalance: null,
       loadingBalance: false,
       balanceFlowTotal: 0,
       balanceFlowList: [],
       balanceFlowPageNo: 1,
       balanceFlowPageSize: 10,
       loadingAddressList: false,
-      receivingAddressList: []
+      receivingAddressList: [],
+      rechargeDialogVisible: false
     }
   },
   created() {
@@ -197,11 +209,11 @@ export default {
     async getMemberBalance() {
       try {
         const openId = this.profile.openId
-        const { data } = getMemberBalanceApi({ openId })
-        if (data && 'amount' in data) {
-          this.balanceAmount = data.amount
+        const { code, data } = getMemberBalanceApi({ openId })
+        if (code === 200 && data) {
+          this.memberBalance = { ...data }
         }
-        this.getBalanceFlow(openId)
+        this.getBalanceFlow()
       } catch (e) {
         console.warn('Get member balance error:' + e)
       }
@@ -238,6 +250,27 @@ export default {
       } finally {
         this.loadingAddressList = false
       }
+    },
+    confirmRecharge(amount) {
+      this.rechargeDialogVisible = false
+      this.$confirm(`是否充值余额：${amount}元？`, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const { code, msg } = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount })
+          if (code === 200) {
+            this.$message.success('充值成功！')
+            this.getBalanceFlow()
+          } else {
+            this.$message.warning(msg)
+          }
+        } catch (e) {
+          console.debug('Recharge balance error:' + e)
+        }
+      }).catch(() => {
+      })
     },
     goBack() {
       window.history.length > 1
