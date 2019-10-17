@@ -178,6 +178,10 @@ export default {
       type: Number,
       default: -1
     },
+    merchantId: {
+      type: Number,
+      default: 0
+    },
     presetFirstCategory: {
       type: Number,
       default: null
@@ -298,6 +302,9 @@ export default {
           params.categoryID = this.presetThirdCategory
         } else if (this.thirdCategoryValue !== null) {
           params.categoryID = this.thirdCategoryValue
+        }
+        if (this.merchantId > 0) {
+          params.merchantId = this.merchantId
         }
         this.dataLoading = true
         searchProductsApi(params).then(response => {

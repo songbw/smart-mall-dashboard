@@ -211,6 +211,7 @@
       </el-form-item>
       <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
+          :merchant-id="formData.supplierMerchantId"
           :first-class-category="formData.category"
           :read-only="viewOnly"
           :url="formData.url"
@@ -379,6 +380,7 @@
         <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
         <coupon-goods
           key="include"
+          :merchant-id="formData.supplierMerchantId"
           :first-class-category="formData.category"
           :mpu-list="formData.rules.scenario.couponMpus"
           :view-only="viewOnly || disableScenarioType"
@@ -392,6 +394,7 @@
         <coupon-goods
           key="exclude"
           :mpu-list="formData.rules.scenario.excludeMpus"
+          :merchant-id="formData.supplierMerchantId"
           :view-only="viewOnly"
           @contentAdd="handleAddExcludeMpus"
           @contentDelete="handleDeleteExcludeMpus"
@@ -420,6 +423,7 @@
           <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods
             key="exclude"
+            :merchant-id="formData.supplierMerchantId"
             :first-class-category="formData.category"
             :mpu-list="formData.rules.scenario.excludeMpus"
             :view-only="viewOnly"
@@ -868,17 +872,18 @@ export default {
       try {
         const params = {
           page: 1,
-          limit: 100,
+          limit: 1000,
           status: vendor_status_approved
         }
         this.vendorLoading = true
         const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(row => {
+        const vendorList = data.rows.map(row => {
           return {
             value: row.company.id.toString(),
             label: row.company.name
           }
         })
+        this.vendorOptions = [{ value: '0', label: '运营平台' }].concat(vendorList)
       } catch (e) {
         console.warn('Coupon get vendor list error:' + e)
       } finally {

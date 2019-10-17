@@ -84,6 +84,7 @@
       @pagination="updatePageList"
     />
     <goods-selection-dialog
+      :merchant-id="merchantId"
       :dialog-visible="dialogSelectionVisible"
       :preset-first-category="firstClassCategory"
       @onSelectionCancelled="onGoodsSelectionCancelled"
@@ -121,6 +122,10 @@ export default {
     viewOnly: {
       type: Boolean,
       default: true
+    },
+    merchantId: {
+      type: Number,
+      default: 0
     },
     firstClassCategory: {
       type: Number,

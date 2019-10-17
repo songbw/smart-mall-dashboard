@@ -23,6 +23,7 @@
         选择商品
       </el-button>
       <goods-selection-dialog
+        :merchant-id="merchantId"
         :preset-first-category="firstClassCategory"
         :dialog-visible="dialogSelectionVisible"
         :single-selection="true"
@@ -56,6 +57,10 @@ export default {
     firstClassCategory: {
       type: Number,
       default: null
+    },
+    merchantId: {
+      type: Number,
+      default: 0
     }
   },
   data() {
