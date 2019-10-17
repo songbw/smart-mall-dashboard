@@ -20,11 +20,8 @@
       </el-form-item>
       <el-divider content-position="left">商品信息</el-divider>
       <el-form-item v-if="isAdminUser || isWatcherUser" label="商品供应商" prop="merchantId">
-        <span v-if="viewProduct || productForm.merchantId === vendorAoyi">
-          {{ getVendorName(productForm.merchantId) }}
-        </span>
         <el-select
-          v-else
+          v-if="createProduct"
           :value="productForm.merchantId"
           style="width: 50%"
           @change="handleMerchantChanged"
@@ -36,6 +33,9 @@
             :value="item.value"
           />
         </el-select>
+        <span v-else>
+          {{ getVendorName(productForm.merchantId) }}
+        </span>
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
         <div v-if="createProduct">
