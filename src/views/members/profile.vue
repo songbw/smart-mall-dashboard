@@ -24,8 +24,12 @@
     </el-card>
     <el-card v-if="showBalance && memberBalance" shadow="never" style="margin-top: 20px">
       <div slot="header">
-        <span class="card-header-text">会员余额：{{ memberBalance.amount }}</span>
-        <el-button size="small" type="warning" style="margin-left: 20px">充值</el-button>
+        <span class="card-header-text">
+          会员余额：{{ memberBalance.amount > 0 ? (memberBalance.amount / 100).toFixed(2) : '' }}元
+        </span>
+        <el-button size="small" type="warning" style="margin-left: 20px" @click="rechargeDialogVisible = true">
+          充值
+        </el-button>
       </div>
       <h4>余额交易记录</h4>
       <el-table
@@ -35,20 +39,14 @@
         fit
         style="width: 100%; margin-top: 20px"
       >
-        <el-table-column label="交易主订单编号" align="center">
+        <el-table-column label="支付编号" align="center">
           <template slot-scope="scope">
-            <router-link
-              v-if="scope.row.orderId"
-              :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.orderId }}"
-              class="el-link el-link--primary is-underline"
-            >
-              <span>{{ scope.row.orderNo }}</span>
-            </router-link>
+            <span>{{ scope.row.orderNo }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="交易主总额" align="center" width="120">
+        <el-table-column label="交易总额(元)" align="center" width="120">
           <template slot-scope="scope">
-            <span>{{ scope.row.saleAmount }}</span>
+            <span>{{ (scope.row.saleAmount / 100).toFixed(2) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="交易类型" align="center" width="120">
@@ -161,6 +159,7 @@ export default {
     return {
       showBalance: process.env.VUE_APP_HOST === 'WX-MALL',
       loadingProfile: false,
+      platformOpenId: null,
       profile: {
         id: null,
         openId: '',
@@ -194,6 +193,7 @@ export default {
         if (data && data.user) {
           this.profile = data.user
           if (this.profile.openId) {
+            this.platformOpenId = process.env.VUE_APP_ID + this.profile.openId
             if (this.showBalance) {
               this.getMemberBalance()
             }
@@ -209,11 +209,11 @@ export default {
     async getMemberBalance() {
       try {
         const openId = this.profile.openId
-        const { code, data } = getMemberBalanceApi({ openId })
-        if (code === 200 && data) {
+        const { code, data } = await getMemberBalanceApi({ openId })
+        if (code === 200 && data !== null) {
           this.memberBalance = { ...data }
+          this.getBalanceFlow()
         }
-        this.getBalanceFlow()
       } catch (e) {
         console.warn('Get member balance error:' + e)
       }
@@ -237,10 +237,10 @@ export default {
         this.loadingBalance = false
       }
     },
-    async getAddressList(openId) {
+    async getAddressList() {
       try {
         this.loadingAddressList = true
-        const openId = this.profile.openId
+        const openId = this.platformOpenId
         const { data } = await getMemberAddressListApi({ openId })
         if (data && Array.isArray(data.result)) {
           this.receivingAddressList = data.result
@@ -259,10 +259,10 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount })
+          const { code, msg } = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount: amount * 100 })
           if (code === 200) {
             this.$message.success('充值成功！')
-            this.getBalanceFlow()
+            this.getMemberBalance()
           } else {
             this.$message.warning(msg)
           }

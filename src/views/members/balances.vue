@@ -28,9 +28,9 @@
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column label="余额总数" align="center" width="120">
+      <el-table-column label="余额总数(元)" align="center" width="120">
         <template slot-scope="scope">
-          <span>{{ scope.row.amount }}</span>
+          <span>{{ scope.row.amount > 0 ? (scope.row.amount / 100).toFixed(2) : '' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="余额状态" align="center" width="120">
@@ -140,7 +140,7 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi({ id: this.rechargeId, amount })
+          const { code, msg } = await rechargeMemberBalanceApi({ id: this.rechargeId, amount: amount * 100 })
           if (code === 200) {
             this.$message.success('充值成功！')
             this.getAllMemberBalances()

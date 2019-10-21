@@ -16,7 +16,7 @@
           placeholder="输入会员电话"
           style="max-width: 400px;"
           :clearable="true"
-          maxlength="10"
+          maxlength="20"
         />
       </el-form-item>
       <el-form-item>
