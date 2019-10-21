@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div style="margin-bottom: 10px">
+    <div v-if="hasEditPermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="gotoCreateFreeShipping">新建包邮模板</el-button>
     </div>
     <el-table
