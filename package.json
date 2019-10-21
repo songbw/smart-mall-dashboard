@@ -20,7 +20,7 @@
     "localforage": "^1.7.3",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
-    "nanoid": "^2.1.2",
+    "nanoid": "^2.1.4",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",
     "path-to-regexp": "^3.1.0",
@@ -38,9 +38,9 @@
     "xlsx": "^0.15.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.11.0",
-    "@vue/cli-plugin-eslint": "^3.11.0",
-    "@vue/cli-service": "^3.11.0",
+    "@vue/cli-plugin-babel": "^3.12.1",
+    "@vue/cli-plugin-eslint": "^3.12.1",
+    "@vue/cli-service": "^3.12.1",
     "babel-eslint": "^10.0.3",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
