@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div>
+    <div v-if="hasEditPermission">
       <el-button type="primary" @click="handleShowDialog">
         新增退货地址
       </el-button>
@@ -39,6 +39,7 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-if="hasEditPermission"
         label="操作"
         align="center"
         width="160"
@@ -144,6 +145,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
@@ -235,6 +237,12 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser'
+    }),
+    hasEditPermission() {
+      return this.isAdminUser
+    },
     provinceOptions() {
       return this.provinceList.length > 0 ? this.provinceList : []
     },
