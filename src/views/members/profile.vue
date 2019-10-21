@@ -22,12 +22,18 @@
         </el-form-item>
       </el-form>
     </el-card>
-    <el-card v-if="showBalance && memberBalance" shadow="never" style="margin-top: 20px">
+    <el-card v-if="showBalance" shadow="never" style="margin-top: 20px">
       <div slot="header">
         <span class="card-header-text">
-          会员余额：{{ memberBalance.amount > 0 ? (memberBalance.amount / 100).toFixed(2) : '' }}元
+          会员余额：{{ memberBalance && memberBalance.amount >= 0 ? (memberBalance.amount / 100).toFixed(2) : '0' }}元
         </span>
-        <el-button size="small" type="warning" style="margin-left: 20px" @click="rechargeDialogVisible = true">
+        <el-button
+          v-if="hasEditPermission"
+          size="small"
+          type="warning"
+          style="margin-left: 20px"
+          @click="rechargeDialogVisible = true"
+        >
           充值
         </el-button>
       </div>
@@ -122,13 +128,15 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
 import {
-  getMemberProfileApi,
+  getMemberProfileByIdApi,
   getMemberAddressListApi,
   getMemberBalanceApi,
   getMemberBalanceFlowApi,
+  createMemberBalanceApi,
   rechargeMemberBalanceApi
 } from '@/api/members'
 import RechargeBalance from './recharge-balance'
@@ -179,6 +187,14 @@ export default {
       rechargeDialogVisible: false
     }
   },
+  computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser'
+    }),
+    hasEditPermission() {
+      return this.isAdminUser
+    }
+  },
   created() {
     const id = this.$route.params.id
     if (id) {
@@ -189,7 +205,7 @@ export default {
     async getMemberProfile(id) {
       try {
         this.loadingProfile = true
-        const { data } = await getMemberProfileApi({ id })
+        const { data } = await getMemberProfileByIdApi({ id })
         if (data && data.user) {
           this.profile = data.user
           if (this.profile.openId) {
@@ -259,12 +275,21 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount: amount * 100 })
-          if (code === 200) {
+          let res = null
+          if (this.memberBalance !== null) {
+            res = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount: amount * 100 })
+          } else {
+            res = await createMemberBalanceApi({
+              openId: this.profile.openId,
+              telephone: this.profile.telephone,
+              amount: amount * 100
+            })
+          }
+          if (res.code === 200) {
             this.$message.success('充值成功！')
             this.getMemberBalance()
           } else {
-            this.$message.warning(msg)
+            this.$message.warning(res.msg)
           }
         } catch (e) {
           console.debug('Recharge balance error:' + e)

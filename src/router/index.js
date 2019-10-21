@@ -3,7 +3,8 @@ import Router from 'vue-router'
 import Layout from '@/layout'
 import {
   role_vendor_name,
-  role_admin_name
+  role_admin_name,
+  role_watcher_name
 } from '@/utils/constants'
 
 Vue.use(Router)
@@ -351,26 +352,26 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/members/index',
     name: 'Members',
-    meta: { title: '会员', icon: 'members', roles: [role_admin_name] },
+    meta: { title: '会员', icon: 'members', group: 'members', roles: [role_admin_name, role_watcher_name] },
     children: [
       {
         path: 'index',
         name: 'MemberManager',
         component: () => import('@/views/members/index'),
-        meta: { title: '会员管理', icon: 'members-manager', roles: [role_admin_name] }
+        meta: { title: '会员管理', icon: 'members-manager', group: 'members', roles: [role_admin_name, role_watcher_name] }
       },
       {
         path: 'profile/:id',
         name: 'MemberProfile',
         component: () => import('@/views/members/profile'),
-        meta: { title: '会员详情', icon: 'member-profile', roles: [role_admin_name] },
+        meta: { title: '会员详情', icon: 'member-profile', group: 'members', roles: [role_admin_name, role_watcher_name] },
         hidden: true
       },
       {
         path: 'balances',
         name: 'MemberBalances',
         component: () => import('@/views/members/balances'),
-        meta: { title: '余额管理', icon: 'balances', roles: [role_admin_name] },
+        meta: { title: '余额管理', icon: 'balances', group: 'members', roles: [role_admin_name, role_watcher_name] },
         hidden: process.env.VUE_APP_HOST !== 'WX-MALL'
       }
     ]

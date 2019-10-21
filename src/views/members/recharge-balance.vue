@@ -72,6 +72,7 @@ export default {
   },
   methods: {
     cancelRecharge() {
+      this.rechargeForm.amount = 0
       this.$refs.rechargeForm.clearValidate()
       this.$emit('cancelled')
     },

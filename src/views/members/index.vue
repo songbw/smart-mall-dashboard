@@ -20,7 +20,7 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="getMembers">
+        <el-button type="primary" icon="el-icon-search" @click="handleSearchMembers">
           搜索
         </el-button>
       </el-form-item>
@@ -76,9 +76,9 @@
     </el-table>
     <pagination
       :total="memberTotal"
-      :page.sync="listQuery.pageNo"
-      :limit.sync="listQuery.pageSize"
-      @pagination="getMembers"
+      :page.sync="queryPageNo"
+      :limit.sync="queryPageSize"
+      @pagination="getMemberList"
     />
   </div>
 </template>
@@ -88,7 +88,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
-import { getMembersApi } from '@/api/members'
+import { getMemberListApi } from '@/api/members'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -103,12 +103,6 @@ export default {
   },
   data() {
     return {
-      listQuery: {
-        name: '',
-        telephone: '',
-        pageNo: 1,
-        pageSize: 20
-      },
       listLoading: false,
       memberTotal: 0,
       memberList: []
@@ -116,17 +110,14 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      listQuery: 'membersQuery'
     }),
-    noEditPermission() {
-      return !this.isAdminUser
-    },
     queryName: {
       get() {
         return this.listQuery.name
       },
       set(value) {
-        this.listQuery.name = trim(value)
+        this.$store.commit('members/SET_MEMBERS_QUERY', { name: trim(value) })
       }
     },
     queryTelephone: {
@@ -134,15 +125,38 @@ export default {
         return this.listQuery.telephone
       },
       set(value) {
-        this.listQuery.telephone = trim(value)
+        this.$store.commit('members/SET_MEMBERS_QUERY', { telephone: trim(value) })
+      }
+    },
+    queryPageNo: {
+      get() {
+        return this.listQuery.pageNo
+      },
+      set(value) {
+        this.$store.commit('members/SET_MEMBERS_QUERY', { pageNo: value })
+      }
+    },
+    queryPageSize: {
+      get() {
+        return this.listQuery.pageSize
+      },
+      set(value) {
+        this.$store.commit('members/SET_MEMBERS_QUERY', { pageSize: value })
       }
     }
   },
   created() {
-    this.getMembers()
+    this.getMemberList()
+  },
+  beforeRouteLeave(to, from, next) {
+    const toGroup = to.meta.group || ''
+    if (toGroup !== this.$route.meta.group) {
+      this.$store.commit('members/RESET_MEMBERS_QUERY')
+    }
+    next()
   },
   methods: {
-    async getMembers() {
+    async getMemberList() {
       try {
         const params = {
           pageNo: this.listQuery.pageNo,
@@ -155,7 +169,7 @@ export default {
           params.telephone = this.queryTelephone
         }
         this.listLoading = true
-        const { data } = await getMembersApi(params)
+        const { data } = await getMemberListApi(params)
         if (data.userList) {
           this.memberTotal = data.userList.total
           this.memberList = data.userList.list
@@ -165,6 +179,10 @@ export default {
       } finally {
         this.listLoading = false
       }
+    },
+    handleSearchMembers() {
+      this.listQuery.pageNo = 1
+      this.getMemberList()
     },
     handleViewMember(id) {
       this.$router.push({ name: 'MemberProfile', params: { id }})

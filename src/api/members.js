@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-export function getMembersApi(params) {
+export function getMemberListApi(params) {
   return Vue.axios('members')({
     url: '/ssoes/user/list',
     method: 'get',
@@ -8,9 +8,17 @@ export function getMembersApi(params) {
   })
 }
 
-export function getMemberProfileApi(params) {
+export function getMemberProfileByIdApi(params) {
   return Vue.axios('members')({
     url: '/ssoes/user/profile',
+    method: 'get',
+    params
+  })
+}
+
+export function getMemberProfileByOpenIdApi(params) {
+  return Vue.axios('members')({
+    url: '/ssoes/user',
     method: 'get',
     params
   })
@@ -21,6 +29,16 @@ export function getMemberBalanceApi(params) {
     url: '/ssoes/balance',
     method: 'get',
     params
+  })
+}
+
+export function createMemberBalanceApi(params) {
+  return Vue.axios('members')({
+    url: '/ssoes/balance',
+    method: 'post',
+    data: {
+      ...params
+    }
   })
 }
 

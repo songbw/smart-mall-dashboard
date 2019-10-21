@@ -1,5 +1,21 @@
 <template>
   <div class="app-container">
+    <el-form inline @submit.prevent.native="() => {}">
+      <el-form-item label="会员电话">
+        <el-input
+          v-model="queryTelephone"
+          placeholder="输入会员电话"
+          style="max-width: 400px;"
+          :clearable="true"
+          maxlength="20"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="el-icon-search" @click="handleSearchBalances">
+          搜索
+        </el-button>
+      </el-form-item>
+    </el-form>
     <el-table
       v-loading="balancesLoading"
       :data="balanceList"
@@ -30,7 +46,7 @@
       </el-table-column>
       <el-table-column label="余额总数(元)" align="center" width="120">
         <template slot-scope="scope">
-          <span>{{ scope.row.amount > 0 ? (scope.row.amount / 100).toFixed(2) : '' }}</span>
+          <span>{{ scope.row.amount >= 0 ? (scope.row.amount / 100).toFixed(2) : '' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="余额状态" align="center" width="120">
@@ -43,7 +59,7 @@
           <span>{{ scope.row.updatedAt | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="120">
+      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="120">
         <template slot-scope="scope">
           <el-button
             :disabled="scope.row.userId === null"
@@ -58,9 +74,8 @@
     </el-table>
     <pagination
       :total="balanceTotal"
-      :page-sizes="[10, 20]"
-      :page.sync="query.pageNo"
-      :limit.sync="query.pageSize"
+      :page.sync="queryPageNo"
+      :limit.sync="queryPageSize"
       @pagination="getAllMemberBalances"
     />
     <recharge-balance
@@ -73,10 +88,12 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import RechargeBalance from './recharge-balance'
-import { getAllMemberBalancesApi, rechargeMemberBalanceApi } from '@/api/members'
+import { getAllMemberBalancesApi, rechargeMemberBalanceApi, getMemberProfileByOpenIdApi } from '@/api/members'
 
 export default {
   name: 'Balances',
@@ -105,27 +122,91 @@ export default {
       rechargeTelephone: ''
     }
   },
+  computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser',
+      listQuery: 'balancesQuery'
+    }),
+    hasEditPermission() {
+      return this.isAdminUser
+    },
+    queryTelephone: {
+      get() {
+        return this.listQuery.telephone
+      },
+      set(value) {
+        this.$store.commit('members/SET_BALANCES_QUERY', { telephone: value.trim() })
+      }
+    },
+    queryPageNo: {
+      get() {
+        return this.listQuery.pageNo
+      },
+      set(value) {
+        this.$store.commit('members/SET_BALANCES_QUERY', { pageNo: value })
+      }
+    },
+    queryPageSize: {
+      get() {
+        return this.listQuery.pageSize
+      },
+      set(value) {
+        this.$store.commit('members/SET_BALANCES_QUERY', { pageSize: value })
+      }
+    }
+  },
   created() {
     this.getAllMemberBalances()
+  },
+  beforeRouteLeave(to, from, next) {
+    const toGroup = to.meta.group || ''
+    if (toGroup !== this.$route.meta.group) {
+      this.$store.commit('members/RESET_BALANCES_QUERY')
+    }
+    next()
   },
   methods: {
     async getAllMemberBalances() {
       try {
-        this.loadingBalance = true
+        this.balancesLoading = true
         const params = {
-          pageNo: this.query.pageNo,
-          pageSize: this.query.pageSize
+          pageNo: this.queryPageNo,
+          pageSize: this.queryPageSize
+        }
+        if (!isEmpty(this.queryTelephone)) {
+          params.telephone = this.queryTelephone
         }
         const { data } = await getAllMemberBalancesApi(params)
         if (data && data.total > 0) {
           this.balanceTotal = data.total
           this.balanceList = data.list
+          for (const balance of this.balanceList) {
+            if (balance.userId === null && balance.openId !== null) {
+              balance.userId = await this.getMemberId(balance.openId)
+            }
+          }
         }
       } catch (e) {
         console.warn('Get all balances error:' + e)
       } finally {
-        this.loadingBalance = false
+        this.balancesLoading = false
       }
+    },
+    async getMemberId(openId) {
+      let memberId = null
+      try {
+        const { code, data } = await getMemberProfileByOpenIdApi({ openId, iAppId: process.env.VUE_APP_ID })
+        if (code === 200) {
+          memberId = data.user.id
+        }
+      } catch (e) {
+        console.warn('Get member id for balance list error:' + e)
+      }
+      return memberId
+    },
+    handleSearchBalances() {
+      this.queryPageNo = 1
+      this.getAllMemberBalances()
     },
     handleRecharge(index) {
       this.rechargeId = this.balanceList[index].id
