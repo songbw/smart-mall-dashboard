@@ -30,6 +30,11 @@
           <span>{{ scope.row.mode | modeFilter }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="所属供应商" align="center">
+        <template slot-scope="scope">
+          <span>{{ getMerchantName(scope.row.merchantId) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.createTime | dateFormat }}</span>
@@ -84,7 +89,8 @@ import {
   getFreeShippingListApi,
   deleteFreeShippingApi
 } from '@/api/freight'
-import { FreeShippingModeOptions } from './constants'
+import { getVendorListApi } from '@/api/vendor'
+import { FreeShippingModeOptions, vendor_status_approved } from './constants'
 
 export default {
   name: 'FreeShipping',
@@ -103,6 +109,7 @@ export default {
   data() {
     return {
       listLoading: false,
+      vendorList: [],
       freeShippingTotal: 0,
       freeShippingList: [],
       pageNo: 1,
@@ -113,14 +120,46 @@ export default {
     ...mapGetters({
       isAdminUser: 'isAdminUser'
     }),
+    vendorOptions() {
+      return [{ value: 0, label: '平台' }].concat(this.vendorList)
+    },
     hasEditPermission() {
       return this.isAdminUser
     }
   },
   created() {
-    this.getFreeShippingList()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      try {
+        await this.getVendorList()
+        await this.getFreeShippingList()
+      } catch (e) {
+        console.warn('Free shipping list error:' + e)
+      }
+    },
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 1000,
+          status: vendor_status_approved
+        }
+        this.listLoading = true
+        const data = await getVendorListApi(params)
+        this.vendorList = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Coupon get vendor list error:' + e)
+      } finally {
+        this.listLoading = false
+      }
+    },
     async getFreeShippingList() {
       try {
         this.listLoading = true
@@ -140,6 +179,10 @@ export default {
       } finally {
         this.listLoading = false
       }
+    },
+    getMerchantName(merchantId) {
+      const vendor = this.vendorOptions.find(option => option.value === merchantId)
+      return vendor ? vendor.label : ''
     },
     handleView(id) {
       this.$router.push({
