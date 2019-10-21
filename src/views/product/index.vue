@@ -384,6 +384,7 @@ import {
   product_state_off_shelves,
   product_state_on_sale,
   product_state_is_editing,
+  product_state_all,
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
@@ -407,7 +408,7 @@ export default {
     return {
       couldEditProduct: false,
       stateOptions: [{
-        value: -2,
+        value: product_state_all,
         label: '全部'
       }].concat(ProductStateOptions),
       editStateOptions: [{
@@ -621,7 +622,7 @@ export default {
         offset: this.listOffset,
         limit: this.listLimit
       }
-      if (this.listState !== -2) {
+      if (this.listState !== product_state_all) {
         params.state = this.listState
       }
 
@@ -665,7 +666,7 @@ export default {
         params.categoryID = this.thirdCategoryValue
       }
 
-      if (this.listState !== -2) {
+      if (this.listState !== product_state_all) {
         params.state = this.listState
       }
       if (!isEqual(this.queryParams, params)) {

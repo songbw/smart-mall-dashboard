@@ -472,7 +472,7 @@ export default {
         id: null,
         merchantId: null,
         skuid: null,
-        state: 0,
+        state: null,
         name: null,
         brandId: null, // Number
         brand: null,
