@@ -22,7 +22,7 @@
         </el-form-item>
       </el-form>
     </el-card>
-    <el-card v-if="showBalance" shadow="never" style="margin-top: 20px">
+    <el-card v-if="isWuxiMall" shadow="never" style="margin-top: 20px">
       <div slot="header">
         <span class="card-header-text">
           会员余额：{{ memberBalance && memberBalance.amount >= 0 ? (memberBalance.amount / 100).toFixed(2) : '0' }}元
@@ -73,12 +73,69 @@
       </el-table>
       <pagination
         :total="balanceFlowTotal"
-        :page-sizes="[10, 20]"
+        :page-sizes="[10]"
         :page.sync="balanceFlowPageNo"
         :limit.sync="balanceFlowPageSize"
         :auto-scroll="false"
         layout="prev, pager, next"
         @pagination="getBalanceFlow"
+      />
+    </el-card>
+    <el-card v-if="isWuxiMall" shadow="never" style="margin-top: 20px">
+      <div slot="header">
+        <span class="card-header-text">
+          惠民优选卡绑定情况
+        </span>
+      </div>
+      <el-radio-group v-model="cardValid" @change="getCardList">
+        <el-radio :label="1">有效卡</el-radio>
+        <el-radio :label="0">无效卡</el-radio>
+      </el-radio-group>
+      <el-table
+        v-loading="loadingCardList"
+        :data="cardData"
+        border
+        fit
+        style="width: 100%; margin-top: 20px"
+      >
+        <el-table-column label="卡面额(元)" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{ scope.row.amount | centFilter }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="卡余额(元)" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{ scope.row.balance | centFilter }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="卡号" align="center">
+          <template slot-scope="scope">
+            <span>{{ scope.row.cardnum }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="添加日期" align="center" width="200">
+          <template slot-scope="scope">
+            <span>{{ scope.row.addDate | cardDateFormat }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="有效截止日期" align="center" width="200">
+          <template slot-scope="scope">
+            <span>{{ scope.row.expiryDate | cardDateFormat }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" align="center" width="100">
+          <template slot-scope="scope">
+            <span>{{ scope.row.isvalid === '01' ? '有效' : '无效' }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+        :total="cardList.length"
+        :page-sizes="[10]"
+        :page.sync="cardPageNo"
+        :limit.sync="cardPageSize"
+        :auto-scroll="false"
+        layout="prev, pager, next"
       />
     </el-card>
     <el-card v-loading="loadingAddressList" shadow="never" style="margin-top: 20px">
@@ -130,12 +187,14 @@
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import {
   getMemberProfileByIdApi,
   getMemberAddressListApi,
   getMemberBalanceApi,
   getMemberBalanceFlowApi,
+  getMemberCardListApi,
   createMemberBalanceApi,
   rechargeMemberBalanceApi
 } from '@/api/members'
@@ -154,6 +213,11 @@ export default {
       const momentDate = moment(date)
       return date && momentDate.isValid() ? momentDate.format(format) : ''
     },
+    cardDateFormat: date => {
+      const format = 'YYYYMMDDHHmmss'
+      const momentDate = moment(date, format)
+      return date && momentDate.isValid() ? momentDate.format('YYYY-MM-DD') : ''
+    },
     typeFilter: type => {
       const find = BalanceFlowTypeDefinitions.find(item => item.value === type)
       return find ? find.label : ''
@@ -161,11 +225,19 @@ export default {
     statusFilter: status => {
       const find = BalanceFlowStatusDefinitions.find(item => item.value === status)
       return find ? find.label : ''
+    },
+    centFilter: cent => {
+      const yuan = Number.parseFloat(cent)
+      if (Number.isNaN(yuan)) {
+        return ''
+      } else {
+        return (yuan / 100).toFixed(2)
+      }
     }
   },
   data() {
     return {
-      showBalance: process.env.VUE_APP_HOST === 'WX-MALL',
+      isWuxiMall: process.env.VUE_APP_HOST === 'WX-MALL',
       loadingProfile: false,
       platformOpenId: null,
       profile: {
@@ -184,6 +256,11 @@ export default {
       balanceFlowPageSize: 10,
       loadingAddressList: false,
       receivingAddressList: [],
+      loadingCardList: false,
+      cardValid: 1,
+      cardList: [],
+      cardPageNo: 1,
+      cardPageSize: 10,
       rechargeDialogVisible: false
     }
   },
@@ -193,6 +270,17 @@ export default {
     }),
     hasEditPermission() {
       return this.isAdminUser
+    },
+    cardData: {
+      get() {
+        if (this.cardList.length > 0) {
+          const begin = (this.cardPageNo > 1 ? (this.cardPageNo - 1) : 0) * this.cardPageSize
+          const end = begin + this.cardPageSize
+          return this.cardList.slice(begin, end)
+        } else {
+          return []
+        }
+      }
     }
   },
   created() {
@@ -210,8 +298,11 @@ export default {
           this.profile = data.user
           if (this.profile.openId) {
             this.platformOpenId = process.env.VUE_APP_ID + this.profile.openId
-            if (this.showBalance) {
+            if (this.isWuxiMall) {
               this.getMemberBalance()
+              if (isEmpty(this.profile.telephone) === false) {
+                this.getCardList()
+              }
             }
             this.getAddressList()
           }
@@ -265,6 +356,22 @@ export default {
         console.warn('Get member profile error:' + e)
       } finally {
         this.loadingAddressList = false
+      }
+    },
+    async getCardList() {
+      try {
+        this.loadingCardList = true
+        const { code, data } = await getMemberCardListApi({
+          phonenum: this.profile.telephone,
+          isvalid: this.cardValid > 0
+        })
+        if (code === 200 && Array.isArray(data)) {
+          this.cardList = data
+        }
+      } catch (e) {
+        console.warn('Get member card list error:' + e)
+      } finally {
+        this.loadingCardList = false
       }
     },
     confirmRecharge(amount) {

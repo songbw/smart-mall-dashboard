@@ -79,3 +79,13 @@ export function getMemberAddressListApi(params) {
     params
   })
 }
+
+export function getMemberCardListApi(params) {
+  return Vue.axios('members')({
+    url: '/wocs/woc/cardinfo/getcardlist',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
