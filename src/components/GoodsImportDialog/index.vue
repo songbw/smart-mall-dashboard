@@ -98,6 +98,7 @@ import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import uniq from 'lodash/uniq'
+import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
 import { product_state_on_sale } from '@/utils/constants'
@@ -339,52 +340,57 @@ export default {
     async parsePromotionData(results) {
       let fetchedNum = 0
       const parsedSkus = []
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i]
+      const skus = results.map(item => {
         const product = {}
-        PromotionHeaders.forEach(header => {
-          if (header.label in result) {
-            product[header.field] = this.parseValue(header.type, result[header.label])
+        for (const header of PromotionHeaders) {
+          if (header.label in item) {
+            product[header.field] = this.parseValue(header.type, item[header.label])
           }
-        })
-        if ('skuid' in product && !isEmpty(product.skuid)) {
-          try {
-            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
-            fetchedNum++
-            this.percentage = Math.round(fetchedNum * 100 / results.length)
-            const data = response.data.result
-            if (data.total === 1) {
-              const fetchedData = data.list[0]
-              if (this.isSearchProductValid(fetchedData)) {
-                const item = {
-                  skuid: fetchedData.skuid,
-                  mpu: fetchedData.mpu,
-                  price: fetchedData.price,
-                  name: fetchedData.name,
-                  brand: fetchedData.brand,
-                  imagePath: fetchedData.image,
-                  intro: ''
-                }
-                if ('pprice' in product) {
-                  const pprice = Number.parseFloat(product.pprice)
-                  const price = Number.parseFloat(item.price)
-                  if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
-                    const ipprice = Math.round(pprice * 100)
-                    const iprice = Math.round(price * 100)
-                    item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
-                  }
-                }
-                parsedSkus.push(item)
+        }
+        return product
+      })
+      const filterSkus = uniqBy(skus.filter(item => 'skuid' in item && !isEmpty(item.skuid)), 'skuid')
+      for (const product of filterSkus) {
+        try {
+          const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
+          if (code !== 200) {
+            continue
+          }
+          fetchedNum++
+          this.percentage = Math.round(fetchedNum * 100 / results.length)
+          for (const fetchedData of data.result.list) {
+            if (this.isSearchProductValid(fetchedData)) {
+              const item = {
+                skuid: fetchedData.skuid,
+                mpu: fetchedData.mpu,
+                price: fetchedData.price,
+                name: fetchedData.name,
+                brand: fetchedData.brand,
+                imagePath: fetchedData.image,
+                intro: ''
               }
+              if ('pprice' in product) {
+                const pprice = Number.parseFloat(product.pprice)
+                const price = Number.parseFloat(item.price)
+                if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
+                  const ipprice = Math.round(pprice * 100)
+                  const iprice = Math.round(price * 100)
+                  item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
+                }
+              }
+              parsedSkus.push(item)
             }
-          } catch (err) {
-            console.log('GoodImport: search error ' + product.skuid)
           }
+        } catch (err) {
+          console.log('GoodImport: search error ' + product.skuid)
         }
       }
       this.excelResults = parsedSkus
       this.loading = false
-      this.$message.info(`成功导入${parsedSkus.length}个商品，无效商品为${results.length - parsedSkus.length}个`)
+      let msg = `成功导入${parsedSkus.length}个商品，`
+      msg += `重复商品为${skus.length - filterSkus.length}个，`
+      msg += `无效商品为${filterSkus.length - parsedSkus.length}个。`
+      this.$message.info(msg)
     },
     async searchSkuData(results) {
       const fetchedSkus = []
