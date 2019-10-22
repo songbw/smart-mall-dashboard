@@ -205,7 +205,7 @@
           path-name="coupons"
           @success="handleImageUrlChanged"
         />
-        <el-button type="danger" icon="el-icon-delete" size="mini" @click="formData.imageUrl = ''">
+        <el-button v-if="!viewOnly" type="danger" icon="el-icon-delete" size="mini" @click="formData.imageUrl = ''">
           删除图片
         </el-button>
       </el-form-item>
