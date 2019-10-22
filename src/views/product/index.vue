@@ -305,18 +305,6 @@
         label-position="right"
         label-width="100px"
       >
-        <el-form-item v-if="!noCreatePermission && isAdminUser" label="商品供应商">
-          <el-select v-model="selectionForm.merchantId" clearable>
-            <el-option
-              v-for="item in productVendors"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-              <span>{{ item.label }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="商品品牌">
           <el-select
             filterable
@@ -433,7 +421,6 @@ export default {
       brandOptions: [],
       selectionEditing: false,
       selectionForm: {
-        merchantId: null,
         state: null,
         brandId: null, // Number
         brand: null,
@@ -1040,7 +1027,7 @@ export default {
       }
     },
     async confirmEditSelection() {
-      const keys = ['merchantId', 'state', 'brandId', 'brand', 'category']
+      const keys = ['state', 'brandId', 'brand', 'category']
       const params = {}
       keys.forEach(key => {
         if (this.selectionForm[key] !== null) {
