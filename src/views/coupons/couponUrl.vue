@@ -41,6 +41,7 @@
 <script>
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
+import { UrlTypeOptions, getUrlType } from './constants'
 
 export default {
   name: 'CouponUrl',
@@ -65,22 +66,7 @@ export default {
   },
   data() {
     return {
-      typeOptions: [{
-        value: 'aggregation',
-        label: '聚合页'
-      }, {
-        value: 'commodity',
-        label: '单一商品'
-      }, {
-        value: 'listing',
-        label: '商品列表'
-      }, {
-        value: 'external',
-        label: '外部链接'
-      }, {
-        value: 'blank',
-        label: '无链接'
-      }],
+      typeOptions: UrlTypeOptions,
       dialogAggregationVisible: false,
       dialogSelectionVisible: false
     }
@@ -88,21 +74,7 @@ export default {
   computed: {
     displayType: {
       get() {
-        if (this.url !== null) {
-          if (this.url.startsWith('aggregation://')) {
-            return 'aggregation'
-          } else if (this.url.startsWith('route://commodity')) {
-            return 'commodity'
-          } else if (this.url.startsWith('route://listing')) {
-            return 'listing'
-          } else if (this.url.startsWith('about:blank')) {
-            return 'blank'
-          } else {
-            return 'external'
-          }
-        } else {
-          return 'blank'
-        }
+        return getUrlType(this.url)
       },
       set(value) {
         let url = ''
