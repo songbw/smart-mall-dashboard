@@ -75,6 +75,7 @@
           <el-input
             :value="addressForm.receiverName"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.receiverName = value.trim()"
           />
         </el-form-item>
@@ -82,6 +83,7 @@
           <el-input
             :value="addressForm.receiverPhone"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.receiverPhone = value.trim()"
           />
         </el-form-item>
@@ -89,6 +91,7 @@
           <el-input
             :value="addressForm.zipCode"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.zipCode = value.trim()"
           />
         </el-form-item>
