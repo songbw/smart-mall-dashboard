@@ -112,8 +112,13 @@ export default {
         this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
         return false
       }
-      this.uploadingImage = true
-      return true
+      if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        this.uploadingImage = true
+        return true
+      } else {
+        this.$message.warning('请选择正确的文件类型！')
+        return false
+      }
     },
     handleUploadImageSuccess(res) {
       const imageUrl = this.$store.getters.cosUrl + res.data.url
