@@ -97,6 +97,7 @@ import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
+import uniq from 'lodash/uniq'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
 import { product_state_on_sale } from '@/utils/constants'
@@ -388,14 +389,14 @@ export default {
     async searchSkuData(results) {
       const fetchedSkus = []
       let fetchedNum = 0
-      for (let i = 0; i < results.length; i++) {
-        const item = results[i]
-        const skuID = this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])
+      const skus = uniq(results.map(item => this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])))
+      for (let i = 0; i < skus.length; i++) {
+        const skuID = skus[i]
         if (skuID) {
           try {
             const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
             fetchedNum++
-            this.percentage = Math.round(fetchedNum * 100 / results.length)
+            this.percentage = Math.round(fetchedNum * 100 / skus.length)
             const data = response.data.result
             if (data.total === 1) {
               const product = data.list[0]
@@ -419,7 +420,10 @@ export default {
       }
       this.excelResults = fetchedSkus
       this.loading = false
-      this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
+      let msg = `成功导入${fetchedSkus.length}个商品，`
+      msg += `重复商品为${results.length - skus.length}个，`
+      msg += `无效商品为${skus.length - fetchedSkus.length}个。`
+      this.$message.info(msg)
     }
   }
 }
