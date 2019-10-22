@@ -68,7 +68,7 @@
       </el-form-item>
       <el-form-item label="发放总数" prop="releaseTotal">
         <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
-        <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" step-strictly />
+        <el-input-number v-else v-model="formData.releaseTotal" :max="100000000" :min="1" step-strictly />
       </el-form-item>
       <el-form-item label="有效日期">
         <div style="display: flex; justify-content: start">
@@ -282,6 +282,7 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice"
+              :max="100000000"
               :min="1"
               step-strictly
             />
@@ -300,9 +301,15 @@
           <span style="margin: 0 10px">元</span>
         </div>
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值">
+      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值(元)">
         <span v-if="viewOnly">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
-        <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" step-strictly />
+        <el-input-number
+          v-else
+          v-model="formData.rules.couponRules.cashCoupon.amount"
+          :max="100000000"
+          :min="0"
+          step-strictly
+        />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣">
         <div style="display: flex; justify-content: start">
@@ -312,6 +319,7 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.discountCoupon.fullPrice"
+              :max="100000000"
               :min="0"
               step-strictly
             />
@@ -354,7 +362,7 @@
       </el-form-item>
       <el-form-item v-if="formData.rules.collect.type === 3" label="所需积分">
         <span v-if="viewOnly">{{ formData.rules.collect.points }}</span>
-        <el-input-number v-else v-model="formData.rules.collect.points" :min="0" step-strictly />
+        <el-input-number v-else v-model="formData.rules.collect.points" :max="100000000" :min="0" step-strictly />
       </el-form-item>
       <el-form-item label="可用商品范围">
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
@@ -471,6 +479,7 @@
             <span v-else-if="formData.rules.couponRules.type === 1">
               <span>面值为
                 <span class="data-text">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
+                元
               </span>
             </span>
             <span v-else-if="formData.rules.couponRules.type === 2">

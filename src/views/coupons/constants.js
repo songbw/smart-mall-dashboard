@@ -15,10 +15,10 @@ export const CouponTypeOptions = [{
 }, {
   value: 2,
   label: '折扣券'
-}, {
+}/*, {
   value: 3,
   label: '服务券'
-}]
+}*/]
 
 export const CouponCollectOptions = [{
   value: 1,
