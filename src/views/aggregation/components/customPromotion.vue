@@ -681,13 +681,16 @@ export default {
     },
     onPromotionSelectionConfirmed(promotion) {
       this.dialogPromotionVisible = false
-      this.titlePromotionActivityId = promotion.id
-      this.titlePromotionActivityName = promotion.name
-      this.titlePromotionActivityStartDate = promotion.startDate
-      this.titlePromotionActivityEndDate = promotion.endDate
-      this.titleTargetType = 'promotion'
-      this.titleTargetUrl = 'route://promotion/' + promotion.id
-      this.titleTargetName = promotion.name
+      if (this.titlePromotionActivityId !== promotion.id) {
+        this.titlePromotionActivityId = promotion.id
+        this.titlePromotionActivityName = promotion.name
+        this.titlePromotionActivityStartDate = promotion.startDate
+        this.titlePromotionActivityEndDate = promotion.endDate
+        this.titleTargetType = 'promotion'
+        this.titleTargetUrl = 'route://promotion/' + promotion.id
+        this.titleTargetName = promotion.name
+        this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
+      }
     },
     onPromotionSelectionCancelled() {
       this.dialogPromotionVisible = false
