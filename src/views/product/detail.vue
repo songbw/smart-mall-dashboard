@@ -125,7 +125,7 @@
       </el-form-item>
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
-        <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
+        <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
       <el-form-item label="商品对比链接">
         <el-link v-if="viewProduct" :href="productForm.compareUrl" target="_blank" type="primary">
