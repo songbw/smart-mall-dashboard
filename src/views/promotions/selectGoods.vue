@@ -745,6 +745,7 @@ export default {
             name: sku.name,
             brand: sku.brand,
             price: Number.parseFloat(sku.price),
+            promotionImage: '',
             perLimited: -1
           })
           total++
