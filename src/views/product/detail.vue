@@ -120,7 +120,7 @@
       </el-form-item>
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
-        <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
+        <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
       <el-divider content-position="left">商品物流</el-divider>
       <el-form-item label="包邮模板">
