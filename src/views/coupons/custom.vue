@@ -1189,7 +1189,7 @@ export default {
               if (start.isBefore(effectiveStart) ||
                 end.isBefore(start) ||
                 end.isAfter(effectiveEnd)) {
-                this.$message.warning('排除日期必须处于此优惠券的有效日期之间！')
+                this.$message.warning('排除日期必须处于此优惠券的有效日期之间，并且开始日期必须早于结束日期！')
                 this.$scrollTo('#coupon-excludes')
                 return
               }
@@ -1198,6 +1198,12 @@ export default {
           if (this.selectCategoryId === '0' && this.formData.tags.length === 0) {
             this.$message.warning('此优惠券为全部类别，必须选择一个优惠券的标签！')
             this.$scrollTo('#coupon-tags')
+            return
+          }
+          if (this.formData.rules.couponRules.type === 0 &&
+            this.formData.rules.couponRules.fullReduceCoupon.fullPrice <
+            this.formData.rules.couponRules.fullReduceCoupon.reducePrice) {
+            this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
             return
           }
           if (this.formData.rules.collect.type === 4) {
