@@ -223,7 +223,7 @@ export default {
       dialogFormVisible: false,
       dialogParentName: '',
       dialogRules: {
-        categoryName: [{ required: true, trigger: 'change', validator: validateName }]
+        categoryName: [{ required: true, trigger: 'blur', validator: validateName }]
       },
       dialogValue: {
         categoryId: 0,
@@ -344,7 +344,6 @@ export default {
     handleCancel() {
       this.$refs.categoryForm.clearValidate()
       this.dialogFormVisible = false
-      this.resetDialogValue()
     },
     handleSubmit() {
       if (!this.hasEditPermission) {
@@ -380,7 +379,6 @@ export default {
       } finally {
         this.dialogFormVisible = false
         this.dialogLoading = false
-        this.resetDialogValue()
       }
     },
     async updateCategory() {
@@ -415,7 +413,6 @@ export default {
         }
       }
       this.dialogFormVisible = false
-      this.resetDialogValue()
     },
     handleTopCategoryClick(category) {
       this.searchCategoriesData = []
@@ -490,6 +487,7 @@ export default {
       if (toEdit === null) {
         toEdit = this.currentSelectedTopCategory
       }
+      this.resetDialogValue()
       if (toEdit) {
         this.editCategory = true
         this.dialogFormTitle = '编辑 ' + toEdit.categoryName
@@ -537,7 +535,7 @@ export default {
       this.editCategory = false
       this.dialogFormTitle = '新建一级类别'
       this.dialogValue.categoryClass = '1'
-      this.dialogValue.idate = moment()
+      this.dialogValue.idate = moment().format('YYYY-MM-DD HH:mm:ss')
       this.dialogFormVisible = true
     },
     handleCreateSubClass() {
@@ -552,7 +550,7 @@ export default {
           this.dialogValue.categoryClass = '3'
         }
         this.dialogValue.parentId = this.currentSelectedTopCategory.categoryId
-        this.dialogValue.idate = moment()
+        this.dialogValue.idate = moment().format('YYYY-MM-DD HH:mm:ss')
         this.dialogFormVisible = true
       }
     },
