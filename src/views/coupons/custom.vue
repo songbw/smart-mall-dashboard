@@ -96,7 +96,7 @@
           <span style="font-size: 12px;margin-left: 10px">用户可使用的日期区间</span>
         </div>
       </el-form-item>
-      <el-form-item id="coupon-excludes" label="排除日期">
+      <el-form-item v-if="enableExcludes" id="coupon-excludes" label="排除日期">
         <div>
           为有效期间的排除日期，禁止用户使用，最多支持5个区间
           <div
@@ -553,6 +553,7 @@ export default {
   },
   data() {
     return {
+      enableExcludes: false,
       appScopes: CouponAppScopes,
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
