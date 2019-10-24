@@ -114,6 +114,7 @@ export default {
       this.$refs.deliveryForm.validate(async(valid) => {
         if (valid) {
           this.$emit('confirmed', { ...this.deliveryData })
+          this.$refs.deliveryForm.resetFields()
         }
       })
     }

@@ -51,7 +51,12 @@
     >
       <el-table-column align="center" label="主订单编号" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}</span>
+          <router-link
+            :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ shouldShowAoyiId ? scope.row.aoyiId : scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column align="center" label="子订单编号" width="160">
@@ -172,6 +177,7 @@ export default {
   },
   data() {
     return {
+      shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
       statusDelivered: suborder_status_delivered,
       listLoading: false,
       queryParams: null,
