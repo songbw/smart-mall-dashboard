@@ -15,7 +15,7 @@
       @change="handleFileChange"
     >
     <el-form ref="importForm" :model="formData" :rules="formRules" label-width="160px">
-      <el-form-item v-if="productCreation && isAdminUser" label="供应商名" prop="merchantId">
+      <el-form-item v-if="needVendor" label="供应商名" prop="merchantId">
         <el-select :value="formData.merchantId" clearable @change="handleVendorChanged">
           <el-option
             v-for="item in productVendors"
@@ -121,6 +121,14 @@ const CreationHeaders = [
   { field: 'introductionUrl', label: '商品描述图', type: 'string' }
 ]
 
+const UpdateHeaders = [
+  { field: 'skuid', label: '商品SKU', type: 'string' },
+  { field: 'name', label: '商品名称', type: 'string' },
+  { field: 'price', label: '销售价格(元)', type: 'string' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string' },
+  { field: 'inventory', label: '商品库存', type: 'number' }
+]
+
 const PromotionHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
   { field: 'pprice', label: '促销价格(元)', type: 'string' }
@@ -148,6 +156,10 @@ export default {
       type: Boolean,
       default: false
     },
+    productUpdate: {
+      type: Boolean,
+      default: false
+    },
     productPromotion: {
       type: Boolean,
       default: false
@@ -160,7 +172,7 @@ export default {
         merchantId: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (value === null && this.productCreation && this.isAdminUser) {
+            if (value === null && this.needVendor) {
               callback(new Error('请选择商品供应商'))
             } else {
               callback()
@@ -182,7 +194,10 @@ export default {
       isAdminUser: 'isAdminUser',
       vendorId: 'vendorId',
       productVendors: 'productVendors'
-    })
+    }),
+    needVendor() {
+      return (this.productCreation || this.productUpdate) && this.isAdminUser
+    }
   },
   methods: {
     handleVendorChanged(value) {
@@ -218,12 +233,30 @@ export default {
       })
     },
     handleSelect() {
-      this.$refs['excel-upload-input'].click()
+      if (this.needVendor) {
+        this.$refs.importForm.validateField('merchantId', errorMessage => {
+          if (isEmpty(errorMessage)) {
+            this.$refs['excel-upload-input'].click()
+          }
+        })
+      } else {
+        this.$refs['excel-upload-input'].click()
+      }
+    },
+    getTemplateHeaders() {
+      if (this.productCreation) {
+        return CreationHeaders
+      } else if (this.productUpdate) {
+        return UpdateHeaders
+      } else if (this.productPromotion) {
+        return PromotionHeaders
+      } else {
+        return SkuHeaders
+      }
     },
     handleTemplate() {
       import('@/utils/Export2Excel').then(excel => {
-        const pHeader = this.productPromotion ? PromotionHeaders : SkuHeaders
-        const tHeader = this.productCreation ? CreationHeaders : pHeader
+        const tHeader = this.getTemplateHeaders()
         const data = []
         excel.export_json_to_excel({
           header: tHeader.map(header => header.label),
@@ -235,6 +268,7 @@ export default {
     handleDialogCancel() {
       this.loading = false
       this.clearDialogData()
+      this.$refs.importForm.clearValidate()
       this.$emit('onSelectionCancelled')
     },
     handleDialogConfirm() {
@@ -298,6 +332,8 @@ export default {
     generateData({ header, results }) {
       if (this.productCreation) {
         this.parseCreateSkuData(results)
+      } else if (this.productUpdate) {
+        this.parseUpdateSkuData(results)
       } else if (this.productPromotion) {
         this.parsePromotionData(results)
       } else {
@@ -344,6 +380,33 @@ export default {
           this.excelResults.push(product)
         }
       })
+      this.loading = false
+      this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
+    },
+    async parseUpdateSkuData(results) {
+      let count = 0
+      for (const item of results) {
+        const product = {}
+        UpdateHeaders.forEach(header => {
+          if (header.label in item) {
+            product[header.field] = this.parseValue(header.type, item[header.label])
+          }
+        })
+        if (!isEmpty(product) && !isEmpty(product.skuid)) {
+          let merchantId = this.vendorId
+          if (this.isAdminUser) {
+            if (this.formData.merchantId) {
+              merchantId = this.formData.merchantId
+            }
+          }
+          const { skuid, ...rest } = product
+          const { code, data } = await searchProductsApi({ offset: 1, limit: 1, skuid, merchantId })
+          if (code === 200 && data.result.total === 1) {
+            count++
+            this.excelResults.push({ id: data.result.list[0].id, skuid, ...rest })
+          }
+        }
+      }
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
     },
@@ -410,12 +473,13 @@ export default {
         const skuID = skus[i]
         if (skuID) {
           try {
-            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
+            const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
+            if (code !== 200) {
+              continue
+            }
             fetchedNum++
             this.percentage = Math.round(fetchedNum * 100 / skus.length)
-            const data = response.data.result
-            if (data.total === 1) {
-              const product = data.list[0]
+            for (const product of data.result.list) {
               if (this.isSearchProductValid(product)) {
                 const item = {
                   skuid: product.skuid,

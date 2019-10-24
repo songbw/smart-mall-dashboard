@@ -85,6 +85,15 @@
             批量创建
           </el-button>
           <el-button
+            v-if="hasEditPermission"
+            :disabled="!vendorApproved"
+            type="warning"
+            icon="el-icon-upload2"
+            @click="dialogUpdateVisible = true"
+          >
+            批量更新
+          </el-button>
+          <el-button
             :disabled="productSelection.length === 0"
             type="info"
             icon="el-icon-edit"
@@ -299,6 +308,12 @@
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
     />
+    <goods-import-dialog
+      :dialog-visible="dialogUpdateVisible"
+      :product-update="true"
+      @onSelectionCancelled="dialogUpdateVisible = false"
+      @onSelectionConfirmed="onGoodsUpdateConfirmed"
+    />
     <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
       <div style="font-size: 14px;margin-bottom: 10px">
         <i class="el-icon-warning-outline">如果无需修改对应属性，可以不选择！</i>
@@ -418,7 +433,7 @@ export default {
         value: product_state_off_shelves,
         label: '下架'
       }],
-      showMoreOptions: false,
+      showMoreOptions: true,
       floorPriceRate: 1.1,
       productsTotal: 0,
       productsData: [],
@@ -427,6 +442,7 @@ export default {
       productSelection: [],
       selectedMpuList: [],
       dialogImportVisible: false,
+      dialogUpdateVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
       brandLoading: false,
@@ -983,6 +999,26 @@ export default {
     },
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
+    },
+    async onGoodsUpdateConfirmed(skus) {
+      this.dialogUpdateVisible = false
+      if (skus.length > 0) {
+        const loading = this.$loading({
+          lock: true,
+          text: '正在更新商品...',
+          spinner: 'el-icon-loading'
+        })
+        for (const sku of skus) {
+          const { skuid, ...params } = sku
+          try {
+            await updateProductApi(params)
+          } catch (e) {
+            console.warn(`Good import update ${skuid} error: ${e}`)
+          }
+        }
+        loading.close()
+        this.getListData()
+      }
     },
     handleEditSelection() {
       Object.keys(this.selectionForm).forEach(key => {
