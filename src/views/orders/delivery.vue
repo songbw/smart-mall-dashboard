@@ -124,43 +124,15 @@
       :total="orderTotal"
       @pagination="getOrderList"
     />
-    <el-dialog
-      title="物流信息"
-      :visible.sync="deliveryDialogVisible"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-      :show-close="false"
-    >
-      <el-form
-        ref="deliveryForm"
-        v-loading="expressLoading"
-        :model="deliveryData"
-        :rules="deliveryRules"
-        label-width="100px"
-      >
-        <el-form-item label="物流公司" prop="comCode">
-          <el-select :value="deliveryData.comCode" placeholder="请选择物流公司" @change="onExpressSelected">
-            <el-option
-              v-for="item in expressOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="物流单号" prop="logisticsId">
-          <el-input v-model="deliveryData.logisticsId" placeholder="请输入对应物流公司单号" maxlength="30" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleCancelDeliver">取消</el-button>
-        <el-button type="primary" @click="handleSetDeliver">确定</el-button>
-      </div>
-    </el-dialog>
     <import-dialog
       :dialog-visible="importDialogVisible"
       @canceled="importDialogVisible = false"
       @finished="onImportFinished"
+    />
+    <express-selection
+      :dialog-visible="deliveryDialogVisible"
+      @cancelled="handleCancelDeliver"
+      @confirmed="handleSetDeliver"
     />
   </div>
 </template>
@@ -171,10 +143,10 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
+import ExpressSelection from '@/components/ExpressSelection'
 import OrderProduct from './OrderProduct'
 import {
   getOrderListApi,
-  getExpressCompanyApi,
   uploadLogisticsApi
 } from '@/api/orders'
 import {
@@ -186,7 +158,7 @@ import ImportDialog from './ImportDialog'
 
 export default {
   name: 'Orders',
-  components: { Pagination, OrderProduct, ImportDialog },
+  components: { Pagination, OrderProduct, ImportDialog, ExpressSelection },
   filters: {
     OrderStatus: status => {
       const find = SubOrderStatusDefinitions.find(option => option.value === status)
@@ -201,7 +173,6 @@ export default {
   data() {
     return {
       statusDelivered: suborder_status_delivered,
-      expressOptions: [],
       listLoading: false,
       queryParams: null,
       orderQuery: {
@@ -216,14 +187,10 @@ export default {
       orderTotal: 0,
       merchantName: '',
       deliveryDialogVisible: false,
-      expressLoading: false,
       importDialogVisible: false,
       deliveryData: {
         orderId: null,
-        subOrderId: null,
-        logisticsId: null,
-        logisticsContent: null,
-        comCode: null
+        subOrderId: null
       },
       deliveryRules: {
         comCode: [{
@@ -292,67 +259,37 @@ export default {
         this.listLoading = false
       }
     },
-    async getExpressList() {
-      try {
-        if (this.expressOptions.length === 0) {
-          const params = { pageNo: 1, pageSize: 100 }
-          this.expressLoading = true
-          const { data } = await getExpressCompanyApi(params)
-          this.expressOptions = data.result.list.map(item => {
-            return {
-              value: item.code,
-              label: item.name
-            }
-          })
-        }
-      } catch (e) {
-        console.warn('Delivery get express error: ' + e)
-        this.$message.warning('获取物流公司列表失败，请联系管理员！')
-      } finally {
-        this.expressLoading = false
-      }
-    },
     handleDeliverSubOrder(row) {
       this.deliveryData.orderId = row.id
       this.deliveryData.subOrderId = row.subOrderId
       this.deliveryDialogVisible = true
-      this.getExpressList()
     },
     onQueryStatusChanged(value) {
       this.orderQuery.subStatus = value
-    },
-    onExpressSelected(value) {
-      this.deliveryData.comCode = value
-      this.deliveryData.logisticsContent = this.expressOptions.find(option => option.value === value).label
+      this.getOrderList()
     },
     handleCancelDeliver() {
       this.deliveryDialogVisible = false
-      this.$refs.deliveryForm.clearValidate()
-      Object.keys(this.deliveryData).forEach(key => {
-        this.deliveryData[key] = null
-      })
     },
-    handleSetDeliver() {
-      this.$refs.deliveryForm.validate(async(valid) => {
-        if (valid) {
-          this.expressLoading = true
-          const params = {
-            total: 1,
-            logisticsList: [{ ...this.deliveryData }]
-          }
-          try {
-            uploadLogisticsApi(params)
-            this.$message.success('上传物流信息成功！')
-          } catch (e) {
-            console.warn('Delivery upload logistics error:' + e)
-            this.$message.error('上传物流信息失败，请联系管理员！')
-            this.getOrderList()
-          } finally {
-            this.expressLoading = false
-            this.deliveryDialogVisible = false
-          }
+    async handleSetDeliver(express) {
+      this.deliveryDialogVisible = false
+      this.listLoading = true
+      const params = {
+        total: 1,
+        logisticsList: [{ ...this.deliveryData, ...express }]
+      }
+      try {
+        const { code } = await uploadLogisticsApi(params)
+        if (code === 200) {
+          this.$message.success('上传物流信息成功！')
+          this.getOrderList()
         }
-      })
+      } catch (e) {
+        console.warn('Delivery upload logistics error:' + e)
+        this.$message.error('上传物流信息失败，请联系管理员！')
+      } finally {
+        this.listLoading = false
+      }
     },
     handleBatchDelivery() {
       this.importDialogVisible = true

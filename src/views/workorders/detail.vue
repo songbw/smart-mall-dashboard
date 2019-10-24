@@ -7,7 +7,7 @@
             <span class="card-header-text">售后信息</span>
             <el-button
               v-if="!isWatcherUser"
-              :disabled="workOrderData.status === 6 || workOrderData.status === 7"
+              :disabled="flowOptions.length === 0"
               type="primary"
               @click="handleShowFlowDialog"
             >
@@ -62,7 +62,7 @@
                 <address-info :return-address="flow.returnAddress" />
               </div>
               <div v-if="flow.logisticsInfo" style="font-size: 13px">
-                <div>客户退货物流信息如下：</div>
+                <div>物流信息如下：</div>
                 <div>物流公司：{{ flow.logisticsInfo.com }}</div>
                 <div>物流单号：{{ flow.logisticsInfo.order }}</div>
               </div>
@@ -150,6 +150,17 @@
             />
           </div>
         </el-form-item>
+        <el-form-item v-if="flowForm.status === 6" label="换货物流" prop="logisticsInfo">
+          <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowExpressDialog">
+            填写物流
+          </el-button>
+          <div v-if="flowForm.logisticsInfo.code">
+            <el-form inline>
+              <el-form-item label="物流公司"><span>{{ flowForm.logisticsInfo.com }}</span></el-form-item>
+              <el-form-item label="物流单号"><span>{{ flowForm.logisticsInfo.order }}</span></el-form-item>
+            </el-form>
+          </div>
+        </el-form-item>
         <el-form-item v-if="flowForm.status === 7" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
@@ -176,6 +187,11 @@
       @onCancelled="dialogAddressVisible = false"
       @onConfirmed="onReturnAddressSelected"
     />
+    <express-selection
+      :dialog-visible="expressDialogVisible"
+      @cancelled="expressDialogVisible = false"
+      @confirmed="handleSetExpress"
+    />
   </div>
 </template>
 
@@ -187,6 +203,7 @@ import OrderInfo from '@/components/Order/orderInfo'
 import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
 import GoodsInfo from '@/components/Order/goodsInfo'
+import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
 import {
@@ -203,22 +220,32 @@ import {
   OrderStatusDefinitions,
   PaymentStatusDefinitions
 } from '@/utils/constants'
-import { WorkOrderStatus, WorkOrderTypes } from './constants'
+import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
 
-const FlowStatusOptions = [
-  {
-    value: 2, label: '收到审核'
-  }, {
-    value: 3, label: '通过审核'
-  }, {
-    value: 4, label: '审核失败'
-  }, {
-    value: 5, label: '退货处理'
-  }, {
-    value: 7, label: '同意退款'
-  }, {
-    value: 6, label: '退款完成'
-  }]
+const RefundFlowStatusOptions = [{
+  value: 2, label: '收到审核'
+}, {
+  value: 3, label: '通过审核'
+}, {
+  value: 4, label: '审核失败'
+}, {
+  value: 5, label: '客户退货'
+}, {
+  value: 7, label: '同意退款'
+}, {
+  value: 6, label: '退款完成'
+}]
+const ChangeFlowStatusOptions = [{
+  value: 2, label: '收到审核'
+}, {
+  value: 3, label: '通过审核'
+}, {
+  value: 4, label: '审核失败'
+}, {
+  value: 5, label: '客户退货'
+}, {
+  value: 6, label: '换货处理'
+}]
 export default {
   name: 'WorkOrderDetail',
   components: {
@@ -227,7 +254,8 @@ export default {
     PaymentInfo,
     GoodsInfo,
     AddressInfo,
-    AddressSelection
+    AddressSelection,
+    ExpressSelection
   },
   filters: {
     workOrderStatus: status => {
@@ -270,6 +298,7 @@ export default {
       city: '',
       country: '',
       typeOptions: WorkOrderTypes,
+      changeGoodType: type_change_good,
       orderData: {},
       workOrderData: {},
       flows: [],
@@ -281,9 +310,15 @@ export default {
       dialogAddressVisible: false,
       returnAddressLoading: false,
       returnAddressList: [],
+      expressDialogVisible: false,
       flowForm: {
         status: null,
         refund: 0,
+        logisticsInfo: {
+          com: null,
+          code: null,
+          order: null
+        },
         remark: null
       },
       flowRules: {
@@ -323,6 +358,21 @@ export default {
             }
           },
           trigger: 'blur'
+        }],
+        logisticsInfo: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.flowForm.status !== 6) {
+              callback()
+            } else {
+              if (value.code === null) {
+                callback(new Error('请输入正确的物流信息'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
         }]
       }
     }
@@ -331,6 +381,9 @@ export default {
     ...mapGetters({
       isWatcherUser: 'isWatcherUser'
     }),
+    flowStatusOptions() {
+      return this.workOrderData.typeId === type_change_good ? ChangeFlowStatusOptions : RefundFlowStatusOptions
+    },
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
@@ -338,11 +391,13 @@ export default {
       } else if (this.workOrderData.status === 2) {
         options = [3]
       } else if (this.workOrderData.status === 3) {
-        options = [7]
+        options = this.workOrderData.typeId !== type_change_good ? [7] : [6]
       } else if (this.workOrderData.status === 5) {
-        options = [7]
+        options = this.workOrderData.typeId !== type_change_good ? [7] : [6]
+      } else if (this.workOrderData.status === 6) {
+        options = this.workOrderData.typeId !== type_change_good ? [] : [6]
       }
-      return FlowStatusOptions.filter(option => options.includes(option.value))
+      return this.flowStatusOptions.filter(option => options.includes(option.value))
     },
     maxRefund() {
       const yuan = Number.parseFloat(this.orderData.paymentAmount)
@@ -376,7 +431,7 @@ export default {
             const format = 'YYYY-MM-DD HH:mm:ss'
             const momentDate = moment(row.createTime)
             const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
-            const find = FlowStatusOptions.find(option => option.value === row.status)
+            const find = this.flowStatusOptions.find(option => option.value === row.status)
             let flowComment = {}
             try {
               flowComment = { ...JSON.parse(row.comments) }
@@ -441,11 +496,14 @@ export default {
         this.getReturnAddressList()
       }
     },
+    handleShowExpressDialog() {
+      this.expressDialogVisible = true
+    },
     handleShowFlowDialog() {
       this.flowForm.status = null
       this.flowForm.refund = 0
       this.flowForm.remark = ''
-      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== 3 // 3 means 仅退款
+      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== type_refund_only
       this.dialogFlowVisible = true
     },
     handleCancelFlow() {
@@ -454,6 +512,16 @@ export default {
     },
     handleFlowOptionChanged(value) {
       this.flowForm.status = value
+    },
+    handleSetExpress(express) {
+      this.expressDialogVisible = false
+      this.flowForm.logisticsInfo = {
+        com: express.logisticsContent,
+        code: express.comCode,
+        order: express.logisticsId
+      }
+      this.$refs.flowForm.validateField('logisticsInfo', (_) => {
+      })
     },
     handleCreateFlow() {
       this.$refs.flowForm.validate(async(valid) => {
@@ -465,6 +533,9 @@ export default {
             const comments = { remark }
             if (this.flowForm.status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
               comments.returnAddress = this.returnAddress
+            }
+            if (this.flowForm.status === 6 && this.workOrderData.typeId === type_change_good) {
+              comments.logisticsInfo = this.flowForm.logisticsInfo
             }
             if (this.flowForm.status === 7) { // 7为发起退款，是否包含运费
               comments.refund = refund
