@@ -95,6 +95,7 @@ import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import {
   validUserName,
+  validPassword,
   validPhone,
   validVerificationCode
 } from '@/utils/validate'
@@ -110,16 +111,14 @@ export default {
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('请输入长度不少于6位的密码'))
-      } else if (value === this.registerForm.username) {
-        callback(new Error('请输入与用户名不一致的密码'))
-      } else {
+      if (validPassword(value)) {
         callback()
+      } else {
+        callback(new Error('请输入以字母开头，包含大小写及数字的8-20位密码'))
       }
     }
     const validateConfirm = (rule, value, callback) => {
-      if (value.length < 6 || value !== this.registerForm.password) {
+      if (value !== this.registerForm.password) {
         callback(new Error('请确保输入同样密码'))
       } else {
         callback()

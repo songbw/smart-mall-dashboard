@@ -1,11 +1,15 @@
 <template>
   <el-container>
     <el-main>
-      <el-card shadow="never" style="width: 480px;" :body-style="{padding: '40px'}">
+      <el-card
+        shadow="never"
+        style="width: 480px;margin: 0 auto"
+        :body-style="{padding: '40px'}"
+      >
         <div slot="header">
           <div style="display: flex; justify-content: space-between; align-items: center">
             <div class="el-icon-user" style="font-size: 20px">
-              修改密码
+              重置密码
             </div>
           </div>
         </div>
@@ -76,19 +80,18 @@ import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import {
+  validPassword,
   validVerificationCode
 } from '@/utils/validate'
 
 export default {
-  name: 'PasswordChange',
+  name: 'PasswordReset',
   data() {
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('请输入长度不少于6位的密码'))
-      } else if (value === this.passwordForm.username) {
-        callback(new Error('请输入与用户名不一致的密码'))
-      } else {
+      if (validPassword(value)) {
         callback()
+      } else {
+        callback(new Error('请输入以字母开头，包含大小写及数字的8-20位密码'))
       }
     }
     const validateConfirm = (rule, value, callback) => {
@@ -212,6 +215,7 @@ export default {
       this.passwordForm.phone = this.userPhone
       this.$store.dispatch('user/passwordNew', this.passwordForm).then(() => {
         this.$message({ message: '密码修改成功！', type: 'success' })
+        this.gotoLogin()
       }).catch((e) => {
         const msg = this.getErrorMessage(e) || '密码修改失败，请联系管理员!'
         this.$message({

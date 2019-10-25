@@ -3,6 +3,7 @@ import {
   loginApi,
   registerApi,
   passwordNewApi,
+  passwordChangeApi,
   getVerificationCodeApi,
   getRoleApi,
   logoutApi
@@ -15,6 +16,7 @@ import {
   storage_key_role,
   storage_merchant_id
 } from '@/utils/constants'
+import { isEmpty } from 'element-ui/src/utils/util'
 
 const state = {
   token: '',
@@ -48,11 +50,13 @@ const actions = {
     commit('SET_TOKEN', data.token)
     commit('SET_PHONE', phone)
     commit('SET_ROLE', '')
-
-    await localForage.setItem(storage_key_token, data.token)
-    await localForage.setItem(storage_key_name, username)
-    await localForage.setItem(storage_key_phone, phone)
-    return data.token
+    const reset = isEmpty(phone) === false && data.loginCount === 0
+    if (reset === false) {
+      await localForage.setItem(storage_key_token, data.token)
+      await localForage.setItem(storage_key_name, username)
+      await localForage.setItem(storage_key_phone, phone)
+    }
+    return reset
   },
   async register({ commit }, params) {
     const name = params.username.trim()
@@ -66,6 +70,14 @@ const actions = {
     const phone = params.phone
     const code = params.code
     const data = await passwordNewApi({ name, phone, password: params.password.trim(), code })
+    return data.id
+  },
+  async passwordChange({ commit }, params) {
+    const data = await passwordChangeApi({
+      username: params.username,
+      oldPassword: params.oldPassword,
+      newPassword: params.newPassword
+    })
     return data.id
   },
   async getVerificationCode({ commit }, params) {

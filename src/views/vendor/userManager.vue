@@ -150,7 +150,7 @@
             @input="onLoginNameChanged"
           />
         </el-form-item>
-        <el-form-item label="用户密码" prop="password">
+        <el-form-item label="初始密码" prop="password">
           <el-input
             v-model="userForm.password"
             placeholder="请输入密码"

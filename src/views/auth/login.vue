@@ -90,8 +90,8 @@ export default {
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (isEmpty(value) || value.length < 6) {
-        callback(new Error('请输入不小于6位密码'))
+      if (isEmpty(value)) {
+        callback(new Error('请输入登录密码'))
       } else {
         if (value === this.loginForm.username) {
           callback(new Error('请输入与用户名不一致的密码'))
@@ -148,18 +148,19 @@ export default {
             this.loading = true
             const username = this.loginForm.username
             const password = this.loginForm.password
-            await this.$store.dispatch('user/login', {
-              username,
-              password
-            })
-            const role = await this.$store.dispatch('user/getRole')
-
-            if (role_admin_name === role || role_watcher_name === role) {
-              await localForage.setItem(storage_merchant_id, 0)
+            const needReset = await this.$store.dispatch('user/login', { username, password })
+            if (needReset) {
+              await this.$router.push({ path: '/password/reset' })
             } else {
-              await this.getVendorProfile()
+              const role = await this.$store.dispatch('user/getRole')
+
+              if (role_admin_name === role || role_watcher_name === role) {
+                await localForage.setItem(storage_merchant_id, 0)
+              } else {
+                await this.getVendorProfile()
+              }
+              await this.$router.replace({ path: '/' })
             }
-            await this.$router.replace({ path: '/' })
           } catch (e) {
             console.warn('User Login:' + e)
             let msg = '系统服务有问题，请联系管理员！'

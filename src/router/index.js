@@ -34,6 +34,13 @@ export const constantRoutes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/password/reset',
+    name: 'PasswordReset',
+    component: () => import('@/views/auth/passwordReset'),
+    hidden: true,
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
@@ -51,7 +58,7 @@ export const constantRoutes = [
       }, {
         path: '/password/change',
         name: 'PasswordChange',
-        component: () => import('@/views/dashboard/passwordChange'),
+        component: () => import('@/views/auth/passwordChange'),
         hidden: true
       }
     ]

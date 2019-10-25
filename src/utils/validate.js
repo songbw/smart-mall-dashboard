@@ -1,3 +1,5 @@
+import PasswordValidator from 'password-validator'
+
 export function isExternal(path) {
   return /^(https?:|mailto:|tel:)/.test(path)
 }
@@ -5,6 +7,19 @@ export function isExternal(path) {
 export function validUserName(str) {
   const reg = /^[a-zA-Z][a-zA-Z0-a.-]{2}/
   return reg.test(str)
+}
+
+export function validPassword(password) {
+  const schema = new PasswordValidator()
+  schema
+    .is().min(8)
+    .is().max(20)
+    .has().uppercase()
+    .has().lowercase()
+    .has().digits()
+    .has().not().spaces()
+    .has(/^[A-Za-z]/)
+  return schema.validate(password, { list: false })
 }
 
 export function validPhone(str) {

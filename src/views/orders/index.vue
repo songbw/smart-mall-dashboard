@@ -228,7 +228,7 @@ const validateDates = (start, end) => {
   if (start && end) {
     const startDate = moment(start, format)
     const endDate = moment(end, format)
-    return endDate.isAfter(startDate)
+    return endDate.isSameOrAfter(startDate)
   } else {
     return false
   }
