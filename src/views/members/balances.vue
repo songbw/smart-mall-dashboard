@@ -176,8 +176,8 @@ export default {
         if (!isEmpty(this.queryTelephone)) {
           params.telephone = this.queryTelephone
         }
-        const { data } = await getAllMemberBalancesApi(params)
-        if (data && data.total > 0) {
+        const { code, data } = await getAllMemberBalancesApi(params)
+        if (code === 200) {
           this.balanceTotal = data.total
           this.balanceList = data.list
           for (const balance of this.balanceList) {
@@ -185,6 +185,9 @@ export default {
               balance.userId = await this.getMemberId(balance.openId)
             }
           }
+        } else {
+          this.balanceTotal = 0
+          this.balanceList = []
         }
       } catch (e) {
         console.warn('Get all balances error:' + e)
