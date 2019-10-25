@@ -39,6 +39,9 @@
             <el-form-item label="更新时间:">
               <span>{{ workOrderData.updateTime | timeFilter }}</span>
             </el-form-item>
+            <el-form-item label="退款时间:">
+              <span>{{ workOrderData.refundTime | timeFilter }}</span>
+            </el-form-item>
             <el-form-item v-if="workOrderData.realRefundAmount" label="累计退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
@@ -272,7 +275,7 @@ export default {
       }
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
-      return momentDate.isValid() ? momentDate.format(format) : ''
+      return momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year') ? momentDate.format(format) : ''
     },
     invoiceFilter(state) {
       return state === '1' ? '需要' : '不需要'

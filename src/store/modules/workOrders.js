@@ -7,7 +7,9 @@ const state = {
     status: null,
     receiverPhone: '',
     timeStart: null,
-    timeEnd: null
+    timeEnd: null,
+    refundTimeStart: null,
+    refundTimeEnd: null
   }
 }
 

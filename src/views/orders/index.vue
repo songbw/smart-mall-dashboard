@@ -39,9 +39,27 @@
       </el-form-item>
     </el-form>
     <el-form :inline="true">
+      <el-form-item label="结算开始日期">
+        <el-date-picker
+          v-model="queryCompleteStartDate"
+          placeholder="选择开始日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+        />
+      </el-form-item>
+      <el-form-item label="结算结束日期">
+        <el-date-picker
+          v-model="queryCompleteEndDate"
+          placeholder="选择结束日期"
+          type="date"
+          value-format="yyyy-MM-dd"
+        />
+      </el-form-item>
+    </el-form>
+    <el-form :inline="true">
       <el-form-item label="支付开始日期">
         <el-date-picker
-          v-model="queryStartDate"
+          v-model="queryPayStartDate"
           placeholder="选择开始日期"
           type="date"
           value-format="yyyy-MM-dd"
@@ -49,7 +67,7 @@
       </el-form-item>
       <el-form-item label="支付结束日期">
         <el-date-picker
-          v-model="queryEndDate"
+          v-model="queryPayEndDate"
           placeholder="选择结束日期"
           type="date"
           value-format="yyyy-MM-dd"
@@ -59,7 +77,7 @@
         <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
-        <el-button icon="el-icon-download" type="success" @click="handleExportOrders">
+        <el-button v-if="false" icon="el-icon-download" type="success" @click="handleExportOrders">
           批量导出订单
         </el-button>
       </el-form-item>
@@ -68,7 +86,9 @@
       <el-button icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
         导出结算订单
       </el-button>
-      <span style="margin-left: 10px;font-size: 13px"><i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i></span>
+      <span style="margin-left: 10px;font-size: 13px">
+        <i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i>
+      </span>
     </div>
     <el-table
       ref="ordersTable"
@@ -121,6 +141,9 @@
             </div>
             <div class="text-item">
               支付：<span>{{ scope.row.paymentAt | timeFilter }}</span>
+            </div>
+            <div class="text-item">
+              结算：<span>{{ scope.row.completeTime | timeFilter }}</span>
             </div>
           </div>
         </template>
@@ -244,7 +267,7 @@ export default {
     timeFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
-      return momentDate.isValid() ? momentDate.format(format) : ''
+      return momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year') ? momentDate.format(format) : ''
     }
   },
   data() {
@@ -350,7 +373,7 @@ export default {
         this.$store.commit('orders/SET_SEARCH_DATA', { merchantId: value })
       }
     },
-    queryStartDate: {
+    queryPayStartDate: {
       get() {
         return this.orderQuery.payDateStart
       },
@@ -358,12 +381,28 @@ export default {
         this.$store.commit('orders/SET_SEARCH_DATA', { payDateStart: value })
       }
     },
-    queryEndDate: {
+    queryPayEndDate: {
       get() {
         return this.orderQuery.payDateEnd
       },
       set(value) {
         this.$store.commit('orders/SET_SEARCH_DATA', { payDateEnd: value })
+      }
+    },
+    queryCompleteStartDate: {
+      get() {
+        return this.orderQuery.completeDateStart
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { completeDateStart: value })
+      }
+    },
+    queryCompleteEndDate: {
+      get() {
+        return this.orderQuery.completeDateEnd
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { completeDateEnd: value })
       }
     },
     queryOffset: {
@@ -417,7 +456,8 @@ export default {
     },
     getSearchParams() {
       const params = {}
-      const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile', 'payDateStart', 'payDateEnd']
+      const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile',
+        'payDateStart', 'payDateEnd', 'completeDateStart', 'completeDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
           params[key] = this.orderQuery[key]
@@ -502,13 +542,13 @@ export default {
       }
     },
     async handleExportOrders() {
-      if (this.queryStartDate === null || this.queryEndDate === null) {
+      if (this.queryPayStartDate === null || this.queryPayEndDate === null) {
         this.$message.warning('请先选择导出订单的时间段！')
         return
       }
       const format = 'YYYY-MM-DD'
-      const startDate = moment(this.queryStartDate, format)
-      const endDate = moment(this.queryEndDate, format)
+      const startDate = moment(this.queryPayStartDate, format)
+      const endDate = moment(this.queryPayEndDate, format)
       if (startDate.isAfter(endDate)) {
         this.$message.warning('导出订单的开始时间必须早于结束时间！')
         return
@@ -520,8 +560,8 @@ export default {
       }
 
       const params = {
-        payStartDate: this.queryStartDate,
-        payEndDate: this.queryEndDate
+        payStartDate: this.queryPayStartDate,
+        payEndDate: this.queryPayEndDate
       }
       if (this.queryVendor >= 0) {
         params.merchantId = this.queryVendor
@@ -529,7 +569,7 @@ export default {
       this.getOrderList()
       try {
         const data = await exportOrdersApi(params)
-        const filename = `订单列表-${this.queryStartDate}-${this.queryEndDate}.xls`
+        const filename = `订单列表-${this.queryPayStartDate}-${this.queryPayEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)

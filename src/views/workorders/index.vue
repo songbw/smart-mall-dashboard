@@ -1,11 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form label-width="120px">
-      <el-form-item label="子订单编号">
-        <el-input v-model="queryOrderId" :clearable="true" placeholder="输入子订单编号" style="width: 500px" />
-      </el-form-item>
-    </el-form>
-    <el-form :inline="true" label-width="120px">
+    <el-form :inline="true" label-width="120px" label-position="left">
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
       </el-form-item>
@@ -30,7 +25,30 @@
         </el-select>
       </el-form-item>
     </el-form>
-    <el-form :inline="true" label-width="120px">
+    <el-form label-width="120px" label-position="left">
+      <el-form-item label="子订单编号">
+        <el-input v-model="queryOrderId" :clearable="true" placeholder="输入子订单编号" style="width: 500px" />
+      </el-form-item>
+    </el-form>
+    <el-form :inline="true" label-width="120px" label-position="left">
+      <el-form-item label="退款开始日期">
+        <el-date-picker
+          v-model="refundStartDate"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="选择开始日期"
+        />
+      </el-form-item>
+      <el-form-item label="退款结束日期">
+        <el-date-picker
+          v-model="refundEndDate"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="选择结束日期"
+        />
+      </el-form-item>
+    </el-form>
+    <el-form :inline="true" label-width="120px" label-position="left">
       <el-form-item label="申请开始日期">
         <el-date-picker
           v-model="queryStartDate"
@@ -84,6 +102,11 @@
       <el-table-column label="申请时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.createTime | timeFilter }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="退款时间" align="center" width="180">
+        <template slot-scope="scope">
+          <span>{{ scope.row.refundTime | timeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column label="售后类型" align="center" width="80">
@@ -145,7 +168,7 @@ export default {
     timeFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
-      return momentDate.isValid() ? momentDate.format(format) : ''
+      return momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year') ? momentDate.format(format) : ''
     }
   },
   data() {
@@ -217,6 +240,22 @@ export default {
         this.$store.commit('workOrders/SET_SEARCH_DATA', { timeEnd: value })
       }
     },
+    refundStartDate: {
+      get() {
+        return this.workOrdersQuery.refundTimeStart
+      },
+      set(value) {
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { refundTimeStart: value })
+      }
+    },
+    refundEndDate: {
+      get() {
+        return this.workOrdersQuery.refundTimeEnd
+      },
+      set(value) {
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { refundTimeEnd: value })
+      }
+    },
     queryOffset: {
       get() {
         return this.workOrdersQuery.pageIndex
@@ -240,7 +279,7 @@ export default {
   methods: {
     getSearchParams() {
       const params = {}
-      const keys = ['receiverPhone', 'orderId', 'timeStart', 'timeEnd']
+      const keys = ['receiverPhone', 'orderId', 'timeStart', 'timeEnd', 'refundTimeStart', 'refundTimeEnd']
       keys.forEach(key => {
         if (!isEmpty(this.workOrdersQuery[key])) {
           params[key] = this.workOrdersQuery[key]
