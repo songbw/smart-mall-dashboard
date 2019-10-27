@@ -56,7 +56,7 @@
         />
       </el-form-item>
     </el-form>
-    <el-form :inline="true">
+    <el-form inline>
       <el-form-item label="支付开始日期">
         <el-date-picker
           v-model="queryPayStartDate"
@@ -74,16 +74,16 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button icon="el-icon-search" type="primary" @click="getOrderList">
+        <el-button icon="el-icon-search" type="primary" @click="handleSearchOrders">
           搜索
         </el-button>
-        <el-button v-if="false" icon="el-icon-download" type="success" @click="handleExportOrders">
+        <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
           批量导出订单
         </el-button>
       </el-form-item>
     </el-form>
     <div v-if="couldExportReconciliation" style="margin-bottom: 10px">
-      <el-button icon="el-icon-download" type="danger" @click="exportDialogVisible = true">
+      <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
         导出结算订单
       </el-button>
       <span style="margin-left: 10px;font-size: 13px">
@@ -189,7 +189,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="exportDialogVisible"
-      title="导出结算订单"
+      :title="exportReconciliation ? '导出结算订单' : '导出订单'"
     >
       <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="80px">
         <el-form-item label="开始日期" prop="payStartDate">
@@ -284,6 +284,7 @@ export default {
       orderData: [],
       orderTotal: 0,
       queryParams: null,
+      exportReconciliation: false,
       exportDialogVisible: false,
       exportForm: {
         merchantId: -1,
@@ -541,14 +542,21 @@ export default {
         console.warn('Download blob data error:' + e)
       }
     },
+    handleSearchOrders() {
+      this.getOrderList()
+    },
+    handleShowExportDialog() {
+      this.exportReconciliation = false
+      this.exportDialogVisible = true
+    },
+    handleShowReconciliationDialog() {
+      this.exportReconciliation = true
+      this.exportDialogVisible = true
+    },
     async handleExportOrders() {
-      if (this.queryPayStartDate === null || this.queryPayEndDate === null) {
-        this.$message.warning('请先选择导出订单的时间段！')
-        return
-      }
       const format = 'YYYY-MM-DD'
-      const startDate = moment(this.queryPayStartDate, format)
-      const endDate = moment(this.queryPayEndDate, format)
+      const startDate = moment(this.exportForm.payStartDate, format)
+      const endDate = moment(this.exportForm.payEndDate, format)
       if (startDate.isAfter(endDate)) {
         this.$message.warning('导出订单的开始时间必须早于结束时间！')
         return
@@ -560,13 +568,17 @@ export default {
       }
 
       const params = {
-        payStartDate: this.queryPayStartDate,
-        payEndDate: this.queryPayEndDate
+        payStartDate: this.exportForm.payStartDate,
+        payEndDate: this.exportForm.payEndDate
       }
-      if (this.queryVendor >= 0) {
-        params.merchantId = this.queryVendor
+      if (this.isAdminUser || this.isWatcherUser) {
+        if (this.exportForm.merchantId > 0) {
+          params.merchantId = this.exportForm.merchantId
+        }
+      } else {
+        params.merchantId = this.vendorId
       }
-      this.getOrderList()
+      this.$refs.exportForm.resetFields()
       try {
         const data = await exportOrdersApi(params)
         const filename = `订单列表-${this.queryPayStartDate}-${this.queryPayEndDate}.xls`
@@ -576,33 +588,41 @@ export default {
         this.$message.warning('未找到有效的订单数据！')
       }
     },
+    async handleExportReconciliation() {
+      this.exportDialogVisible = false
+      const params = {
+        payStartDate: this.exportForm.payStartDate,
+        payEndDate: this.exportForm.payEndDate
+      }
+      if (this.isAdminUser || this.isWatcherUser) {
+        if (this.exportForm.merchantId > 0) {
+          params.merchantId = this.exportForm.merchantId
+        }
+      } else {
+        params.merchantId = this.vendorId
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportReconciliationApi(params)
+        const filename = `结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
     handleCancelExport() {
       this.$refs.exportForm.resetFields()
       this.exportDialogVisible = false
     },
     handleConfirmExport() {
-      this.$refs.exportForm.validate(async valid => {
+      this.$refs.exportForm.validate(valid => {
         if (valid) {
           this.exportDialogVisible = false
-          const params = {
-            payStartDate: this.exportForm.payStartDate,
-            payEndDate: this.exportForm.payEndDate
-          }
-          if (this.isAdminUser || this.isWatcherUser) {
-            if (this.exportForm.merchantId > 0) {
-              params.merchantId = this.exportForm.merchantId
-            }
+          if (this.exportReconciliation) {
+            this.handleExportReconciliation()
           } else {
-            params.merchantId = this.vendorId
-          }
-          this.$refs.exportForm.resetFields()
-          try {
-            const data = await exportReconciliationApi(params)
-            const filename = `结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
-            this.downloadBlobData(data, filename)
-          } catch (e) {
-            console.warn('Order export error:' + e)
-            this.$message.warning('未找到有效的结算订单数据！')
+            this.handleExportOrders()
           }
         }
       })

@@ -42,7 +42,7 @@
             <el-form-item label="退款时间:">
               <span>{{ workOrderData.refundTime | timeFilter }}</span>
             </el-form-item>
-            <el-form-item v-if="workOrderData.realRefundAmount" label="累计退款:">
+            <el-form-item v-if="workOrderData.realRefundAmount" label="实际退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
           </el-form>
