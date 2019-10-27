@@ -581,7 +581,7 @@ export default {
       this.$refs.exportForm.resetFields()
       try {
         const data = await exportOrdersApi(params)
-        const filename = `订单列表-${this.queryPayStartDate}-${this.queryPayEndDate}.xls`
+        const filename = `订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
