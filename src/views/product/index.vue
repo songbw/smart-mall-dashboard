@@ -760,26 +760,44 @@ export default {
         params: { id }
       })
     },
+    isReadyForSale(product) {
+      const price = Number.parseFloat(product.price)
+      return !(Number.isNaN(price) || price < 0 ||
+        isEmpty(product.image) ||
+        isEmpty(product.imagesUrl) ||
+        isEmpty(product.introductionUrl))
+    },
     handleProductOnSale(index) {
-      this.$confirm('是否继续上架此商品？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async() => {
-        try {
-          const id = this.productsData[index].id
-          const params = {
-            id,
-            state: product_state_on_sale
+      if (this.isReadyForSale(this.productsData[index])) {
+        this.$confirm('是否继续上架此商品？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async() => {
+          try {
+            const id = this.productsData[index].id
+            const params = {
+              id,
+              state: product_state_on_sale
+            }
+            await updateProductApi(params)
+            this.$message({ message: '产品上架成功！', type: 'success' })
+            this.getListData()
+          } catch (e) {
+            console.warn(`Update product state error: ${e}`)
           }
-          await updateProductApi(params)
-          this.$message({ message: '产品上架成功！', type: 'success' })
-          this.getListData()
-        } catch (e) {
-          console.warn(`Update product state error: ${e}`)
-        }
-      }).catch(() => {
-      })
+        }).catch(() => {
+        })
+      } else {
+        this.$confirm('此商品不满足上架条件，是否去修改此商品信息？', '提示', {
+          confirmButtonText: '去编辑',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.handleEditProduct(index)
+        }).catch(() => {
+        })
+      }
     },
     handleProductOffShelves(index) {
       const that = this
@@ -1079,29 +1097,38 @@ export default {
           params[key] = this.selectionForm[key]
         }
       })
-      if (isEmpty(params)) {
-        this.editDialogVisible = false
-      } else {
+      this.editDialogVisible = false
+
+      if (isEmpty(params) === false) {
         try {
-          const msg = `${params.state ? '商品状态，' : ''}
-          ${params.category ? '商品类别，' : ''}
-          ${params.brandId ? '商品品牌，' : ''}`
+          const msg = `${'state' in params ? '商品状态，' : ''}
+          ${'category' in params ? '商品类别，' : ''}
+          ${'brandId' in params ? '商品品牌，' : ''}`
           await this.$confirm(`批量修改商品：${msg}是否继续?`, '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           })
           this.selectionEditing = true
+          let warning = null
           for (const product of this.productSelection) {
+            if ('state' in params && params.state === product_state_on_sale) {
+              if (this.isReadyForSale(product) === false) {
+                warning = '部分商品上架失败，请修改商品信息！'
+                continue
+              }
+            }
             const id = product.id
             await updateProductApi({ id, ...params })
           }
           this.selectionEditing = false
           this.getListData()
+          if (warning !== null) {
+            this.$message.warning(warning)
+          }
         } catch (e) {
           console.warn('Product edit selection error:' + e)
         } finally {
-          this.editDialogVisible = false
           this.selectionEditing = false
         }
       }
@@ -1110,10 +1137,10 @@ export default {
       this.selectedMpuList = this.productSelection.map(item => item.mpu)
       this.shippingPriceDialogVisible = true
     },
-    handleCloseSelectionShipping(suc) {
+    handleCloseSelectionShipping(ret) {
       this.shippingPriceDialogVisible = false
       this.selectedMpuList = []
-      if (suc) {
+      if (ret.suc) {
         this.$message.success('修改商品运费模板成功！')
       }
     }

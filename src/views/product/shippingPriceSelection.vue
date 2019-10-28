@@ -156,7 +156,10 @@ export default {
         if (id !== null) mpuShipList.push(id)
       }
       this.dataLoading = false
-      this.$emit('onConfirmed', this.mpuList.length === mpuShipList.length)
+      this.$emit('onConfirmed', {
+        suc: mpuShipList.length > 0 && this.mpuList.length === mpuShipList.length,
+        template: this.selectedItem
+      })
     },
     onDialogClosed() {
       this.pageNo = 1

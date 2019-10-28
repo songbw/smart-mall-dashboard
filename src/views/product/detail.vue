@@ -165,7 +165,7 @@
           选择模板
         </el-button>
         <el-button
-          v-if="!viewProduct && mpuShippingPriceId !== null"
+          v-if="!viewProduct && shippingPriceData !== null"
           :loading="shippingPriceLoading"
           type="danger"
           size="mini"
@@ -182,7 +182,10 @@
         >
           去修改
         </el-button>
-        <span v-if="mpuShippingPriceId === null && shippingPriceData !== null" style="margin-left: 10px;">
+        <span
+          v-if="!createProduct && mpuShippingPriceId === null && shippingPriceData !== null"
+          style="margin-left: 10px;"
+        >
           <i class="el-icon-warning-outline">目前使用平台默认运费模板</i>
         </span>
       </el-form-item>
@@ -347,7 +350,7 @@
       </el-form-item>
     </el-form>
     <shipping-price-selection
-      :mpu-list="[productForm.mpu]"
+      :mpu-list="productForm.mpu !== null ? [productForm.mpu] : []"
       :dialog-visible="shippingPriceDialogVisible"
       @onCancelled="shippingPriceDialogVisible = false"
       @onConfirmed="handleConfirmShippingPrice"
@@ -377,6 +380,7 @@ import { getVendorListApi } from '@/api/vendor'
 import {
   getMerchantFreeShippingApi,
   getMpuShippingPriceApi,
+  setMpuShippingPriceApi,
   deleteMpuShippingPriceApi
 } from '@/api/freight'
 
@@ -818,6 +822,18 @@ export default {
         }
       })
     },
+    async setMpuShippingPrice(mpu, template) {
+      let id = null
+      try {
+        const { code, data } = await setMpuShippingPriceApi({ mpu, templateId: template.id })
+        if (code === 200) {
+          id = data.id
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      }
+      return id
+    },
     async handleCreateProduct(formData) {
       try {
         const params = {}
@@ -840,6 +856,9 @@ export default {
         }
         const res = await createProductApi(params)
         if (res.code === 200) {
+          if (this.shippingPriceData !== null) {
+            await this.setMpuShippingPrice(res.data.result, this.shippingPriceData)
+          }
           this.$message({ message: '创建产品信息成功。', type: 'success' })
           this.goBack()
         } else {
@@ -1079,10 +1098,14 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          this.shippingPriceLoading = true
-          const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
-          if (code === 200) {
-            this.getMpuShippingPrice(this.productForm.mpu)
+          if (this.mpuShippingPriceId !== null) {
+            this.shippingPriceLoading = true
+            const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
+            if (code === 200) {
+              this.getMpuShippingPrice(this.productForm.mpu)
+            }
+          } else {
+            this.shippingPriceData = null
           }
         } catch (e) {
           console.warn('Product remove shipping price error:' + e)
@@ -1092,10 +1115,12 @@ export default {
       }).catch(() => {
       })
     },
-    handleConfirmShippingPrice(suc) {
+    handleConfirmShippingPrice(ret) {
       this.shippingPriceDialogVisible = false
-      if (suc) {
+      if (ret.suc) {
         this.getMpuShippingPrice(this.productForm.mpu)
+      } else {
+        this.shippingPriceData = ret.template
       }
     },
     goBack() {
