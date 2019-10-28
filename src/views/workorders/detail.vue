@@ -63,7 +63,7 @@
                 </el-table-column>
                 <el-table-column label="退款状态" align="center">
                   <template slot-scope="scope">
-                    <span>{{ scope.row.status === 1 ? '成功' : '失败' }}</span>
+                    <span>{{ scope.row.status | refundStatus }}</span>
                   </template>
                 </el-table-column>
               </el-table>
@@ -273,6 +273,13 @@ const ChangeFlowStatusOptions = [{
 }, {
   value: 6, label: '换货处理'
 }]
+const RefundResultStatusOptions = [{
+  value: 1, label: '成功'
+}, {
+  value: 2, label: '失败'
+}, {
+  value: 3, label: '超时'
+}]
 export default {
   name: 'WorkOrderDetail',
   components: {
@@ -319,6 +326,10 @@ export default {
     payTypeFilter: type => {
       const find = PayTypeOptions.find(option => option.value === type)
       return find ? find.label : type
+    },
+    refundStatus: status => {
+      const find = RefundResultStatusOptions.find(option => option.value === status)
+      return find ? find.label : ''
     }
   },
   data() {
