@@ -45,6 +45,24 @@
             <el-form-item v-if="workOrderData.realRefundAmount" label="实际退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
+            <el-form-item v-if="refundList.length > 0" label="退款明细">
+              <el-table
+                :data="refundList"
+                style="width: 100%"
+                border
+              >
+                <el-table-column label="支付类型" align="center">
+                  <template slot-scope="scope">
+                    <span>{{ scope.row.payType | payTypeFilter }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="支付金额(元)" align="center">
+                  <template slot-scope="scope">
+                    <span>{{ scope.row.refundFee | centFilter }}</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-form-item>
           </el-form>
         </el-card>
       </el-col>
@@ -167,7 +185,7 @@
         <el-form-item v-if="flowForm.status === 7" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
-              主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
+              主订单实际支付金额：￥{{ orderData.paymentAmount | centFilter }}，
               运费：￥{{ orderData.servFee }}，
               申请退款金额：￥{{ workOrderData.refundAmount }}
             </i>
@@ -221,7 +239,8 @@ import {
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
-  PaymentStatusDefinitions
+  PaymentStatusDefinitions,
+  PayTypeOptions
 } from '@/utils/constants'
 import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
 
@@ -289,9 +308,12 @@ export default {
       if (Number.isNaN(yuan)) {
         return ''
       } else {
-        const value = (yuan / 100).toFixed(2)
-        return `￥ ${value}`
+        return (yuan / 100).toFixed(2)
       }
+    },
+    payTypeFilter: type => {
+      const find = PayTypeOptions.find(option => option.value === type)
+      return find ? find.label : type
     }
   },
   data() {
@@ -304,6 +326,7 @@ export default {
       changeGoodType: type_change_good,
       orderData: {},
       workOrderData: {},
+      refundList: [],
       flows: [],
       dialogFlowVisible: false,
       includeAddress: false,
@@ -419,6 +442,9 @@ export default {
         this.workOrderData = await getWorkOrderByIdApi({ id })
         const find = this.typeOptions.find(option => option.value === this.workOrderData.typeId)
         this.$set(this.workOrderData, 'typeName', find ? find.label : '')
+        if (isEmpty(this.workOrderData.comments) === false) {
+          this.refundList = JSON.parse(this.workOrderData.comments)
+        }
         await this.getWorkFlows(id)
         await this.getOrderData(this.workOrderData.orderId)
       } catch (e) {

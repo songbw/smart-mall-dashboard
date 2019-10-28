@@ -185,3 +185,17 @@ export const CouponPublishedDefinition = [{
   value: coupon_status_on_sale,
   label: '进行中'
 }]
+
+export const PayTypeOptions = [{
+  value: 'balance',
+  label: '余额'
+}, {
+  value: 'woa',
+  label: '联机账户'
+}, {
+  value: 'card',
+  label: '惠民卡'
+}, {
+  value: 'bank',
+  label: '快捷支付'
+}]

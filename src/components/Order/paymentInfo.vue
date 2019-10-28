@@ -63,6 +63,11 @@
               <span>{{ scope.row.actPayFee | centFilter }}</span>
             </template>
           </el-table-column>
+          <el-table-column label="支付状态" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.status === 1 ? '成功' : '异常' }}</span>
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
     </el-col>
@@ -72,22 +77,8 @@
 <script>
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
-import { PaymentStatusDefinitions } from '@/utils/constants'
+import { PaymentStatusDefinitions, PayTypeOptions } from '@/utils/constants'
 import { getPayInfoListApi } from '@/api/orders'
-
-const payTypeOptions = [{
-  value: 'balance',
-  label: '余额'
-}, {
-  value: 'woa',
-  label: '联机账户'
-}, {
-  value: 'card',
-  label: '惠民卡'
-}, {
-  value: 'bank',
-  label: '快捷支付'
-}]
 
 export default {
   name: 'PaymentInfo',
@@ -114,7 +105,7 @@ export default {
       }
     },
     payTypeFilter: type => {
-      const find = payTypeOptions.find(option => option.value === type)
+      const find = PayTypeOptions.find(option => option.value === type)
       return find ? find.label : type
     }
   },
