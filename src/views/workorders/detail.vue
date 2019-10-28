@@ -61,6 +61,11 @@
                     <span>{{ scope.row.refundFee | centFilter }}</span>
                   </template>
                 </el-table-column>
+                <el-table-column label="退款状态" align="center">
+                  <template slot-scope="scope">
+                    <span>{{ scope.row.status === 1 ? '成功' : '失败' }}</span>
+                  </template>
+                </el-table-column>
               </el-table>
             </el-form-item>
           </el-form>

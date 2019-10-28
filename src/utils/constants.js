@@ -194,7 +194,7 @@ export const PayTypeOptions = [{
   label: '联机账户'
 }, {
   value: 'card',
-  label: '惠民卡'
+  label: '惠民优选卡'
 }, {
   value: 'bank',
   label: '快捷支付'
