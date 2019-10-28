@@ -445,7 +445,7 @@ export default {
               if ('pprice' in product) {
                 const pprice = Number.parseFloat(product.pprice)
                 const price = Number.parseFloat(item.price)
-                if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
+                if (!Number.isNaN(pprice) && !Number.isNaN(price) && pprice > 0 && price > 0) {
                   const ipprice = Math.round(pprice * 100)
                   const iprice = Math.round(price * 100)
                   item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0

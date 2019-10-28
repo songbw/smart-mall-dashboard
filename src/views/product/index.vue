@@ -592,7 +592,7 @@ export default {
       try {
         const params = {
           page: 1,
-          limit: 100,
+          limit: 1000,
           status: vendor_status_approved
         }
         this.listLoading = true

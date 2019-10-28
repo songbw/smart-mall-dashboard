@@ -600,7 +600,7 @@ export default {
           this.loading = true
           const params = {
             page: 1,
-            limit: 100,
+            limit: 1000,
             status: vendor_status_approved
           }
           const data = await getVendorListApi(params)
