@@ -35,6 +35,7 @@
     </el-table>
     <pagination
       v-if="shippingPriceTotal > pageSize"
+      :auto-scroll="false"
       :total="shippingPriceTotal"
       :page.sync="pageNo"
       :limit.sync="pageSize"
