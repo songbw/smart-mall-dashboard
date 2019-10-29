@@ -69,7 +69,14 @@
           </el-table-column>
           <el-table-column label="活动减价(元)" align="center" width="110">
             <template slot-scope="scope">
-              <span>{{ scope.row.promotionDiscount }}</span>
+              <div>{{ scope.row.promotionDiscount }}</div>
+              <router-link
+                v-if="scope.row.promotionId > 0"
+                :to="{ name: 'ViewPromotion', params: { id: scope.row.promotionId }}"
+                class="el-link el-link--primary is-underline"
+              >
+                查看活动
+              </router-link>
             </template>
           </el-table-column>
           <el-table-column label="优惠券减价(元)" align="center" width="120">

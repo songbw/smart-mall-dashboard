@@ -149,7 +149,7 @@ export default {
   },
   methods: {
     getFilterParams() {
-      const params = {}
+      const params = { dailySchedule: false }
       if (this.query.name && this.query.name.trim()) {
         params.name = this.query.name.trim()
       }
