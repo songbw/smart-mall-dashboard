@@ -95,6 +95,8 @@ import Pagination from '@/components/Pagination'
 import RechargeBalance from './recharge-balance'
 import { getAllMemberBalancesApi, rechargeMemberBalanceApi, getMemberProfileByOpenIdApi } from '@/api/members'
 
+const couldRecharge = false
+
 export default {
   name: 'Balances',
   components: { Pagination, RechargeBalance },
@@ -128,7 +130,7 @@ export default {
       listQuery: 'balancesQuery'
     }),
     hasEditPermission() {
-      return this.isAdminUser
+      return couldRecharge && this.isAdminUser
     },
     queryTelephone: {
       get() {

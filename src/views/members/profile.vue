@@ -199,6 +199,8 @@ import {
   BalanceFlowStatusDefinitions
 } from './constants'
 
+const couldRecharge = false
+
 export default {
   name: 'Profile',
   components: { Pagination, RechargeBalance },
@@ -264,7 +266,7 @@ export default {
       isAdminUser: 'isAdminUser'
     }),
     hasEditPermission() {
-      return this.isAdminUser
+      return couldRecharge && this.isAdminUser
     },
     cardData: {
       get() {
