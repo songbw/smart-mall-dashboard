@@ -22,6 +22,13 @@ export const constantRoutes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/login/2fa',
+    name: 'Password2FA',
+    component: () => import('@/views/auth/login2FA'),
+    hidden: true,
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/register',
     component: () => import('@/views/auth/register'),
     hidden: true,
@@ -43,7 +50,8 @@ export const constantRoutes = [
   {
     path: '/404',
     component: () => import('@/views/404'),
-    hidden: true
+    hidden: true,
+    meta: { requiresAuth: false }
   },
   {
     path: '/',

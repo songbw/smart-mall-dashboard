@@ -1,6 +1,8 @@
 import localForage from 'localforage'
+import isEmpty from 'lodash/isEmpty'
 import {
   loginApi,
+  twoFactorAuthApi,
   registerApi,
   passwordNewApi,
   passwordChangeApi,
@@ -8,7 +10,6 @@ import {
   getRoleApi,
   logoutApi
 } from '@/api/auth'
-
 import {
   storage_key_token,
   storage_key_name,
@@ -16,7 +17,6 @@ import {
   storage_key_role,
   storage_merchant_id
 } from '@/utils/constants'
-import { isEmpty } from 'element-ui/src/utils/util'
 
 const state = {
   token: '',
@@ -55,8 +55,17 @@ const actions = {
       await localForage.setItem(storage_key_token, data.token)
       await localForage.setItem(storage_key_name, username)
       await localForage.setItem(storage_key_phone, phone)
+      await localForage.removeItem(storage_key_role)
     }
-    return reset
+    return { passwordReset: reset, twoFactorAuth: data.twoFactorAuth }
+  },
+  async twoFactorAuth({ commit }, params) {
+    const data = await twoFactorAuthApi(params)
+    commit('SET_TOKEN', data.token)
+    commit('SET_ROLE', data.role)
+    await localForage.setItem(storage_key_token, data.token)
+    await localForage.setItem(storage_key_role, data.role)
+    return data.role
   },
   async register({ commit }, params) {
     const name = params.username.trim()
