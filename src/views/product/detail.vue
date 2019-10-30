@@ -43,7 +43,7 @@
           <el-input
             v-if="!autoSku"
             v-model="productForm.skuid"
-            maxlength="30"
+            maxlength="15"
             style="width: 350px;margin-left: 10px"
           />
         </div>
@@ -118,12 +118,12 @@
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
-      <el-form-item label="商品库存">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
-      <el-divider content-position="left">商品物流</el-divider>
-      <el-form-item label="包邮模板">
+      <el-divider v-if="productForm.merchantId !== vendorAoyi" content-position="left">商品物流</el-divider>
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="包邮模板">
         <router-link
           v-if="freeShippingData"
           :to="{ name: 'ViewFreeShipping', params: { id: freeShippingData.id }}"
@@ -145,7 +145,7 @@
           <i class="el-icon-warning-outline">目前使用平台默认包邮模板</i>
         </span>
       </el-form-item>
-      <el-form-item label="运费模板">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="运费模板">
         <router-link
           v-if="shippingPriceData"
           :to="{ name: 'ViewShippingPrice', params: { id: shippingPriceData.id }}"
@@ -189,7 +189,7 @@
           <i class="el-icon-warning-outline">目前使用平台默认运费模板</i>
         </span>
       </el-form-item>
-      <el-form-item label="商品重量(公斤)">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品重量(公斤)">
         <span v-if="viewProduct"> {{ productForm.weight }}</span>
         <el-input-number
           v-else
