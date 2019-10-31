@@ -577,7 +577,7 @@ export default {
       couponData: null,
       originalCategory: null,
       disableScenarioType: false,
-      selectCategoryId: '',
+      selectCategoryId: '0',
       couponImageSet: false,
       formData: {
         name: '',
@@ -836,7 +836,7 @@ export default {
           if (!Number.isNaN(category)) {
             if (category === 0) {
               // 全场类
-              if (option.value !== 1 && option.value !== 2) {
+              if (option.value === 3) {
                 disabled = true
               }
             } else {
