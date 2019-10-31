@@ -26,13 +26,13 @@ export const CouponCollectOptions = [{
 }, {
   value: 2,
   label: '主动发放'
-}, /* {
+} /* {
   value: 3,
   label: '积分兑换'
-}, */ {
+}, {
   value: 4,
   label: '人工分配'
-}]
+}*/]
 
 export const CouponScenarioOptions = [{
   value: 1,
@@ -43,10 +43,10 @@ export const CouponScenarioOptions = [{
 }, {
   value: 3,
   label: '特定类别类'
-}/*, {
+}, {
   value: 4,
   label: '特定服务类'
-}*/]
+}]
 
 export const UsageStatusOptions = [{
   value: 1,

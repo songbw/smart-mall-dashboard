@@ -9,7 +9,7 @@
         <div slot="header">
           <div style="display: flex; justify-content: space-between; align-items: center">
             <div class="el-icon-user" style="font-size: 20px">
-              验证登录
+              手机验证登录
             </div>
           </div>
         </div>
@@ -19,10 +19,11 @@
           :rules="twoFactorRules"
           label-position="right"
           label-width="6rem"
+          @keyup.enter.native="handleSubmit"
         >
           <el-form-item label="手机号码">
             <div style="display: flex;justify-content: space-between">
-              <span style="width: 10rem"> {{ displayPhone }}</span>
+              <el-input :value="displayPhone" readonly style="width: 10rem" />
               <el-button
                 :disabled="timedOut < 60"
                 plain
