@@ -304,7 +304,7 @@ export default {
               return { code, status, collectedTime, consumedTime, openId: item.userOpenId }
             })
             allUserCodes = allUserCodes.concat(codeList)
-            pageTotal = data.pages
+            pageTotal = data.result.pages
           }
           this.allExportProgress = parseInt(params.offset * 100 / pageTotal, 10)
           params.offset = params.offset + 1

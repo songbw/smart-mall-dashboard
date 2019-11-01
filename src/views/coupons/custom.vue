@@ -1115,15 +1115,11 @@ export default {
       this.reviseScenarioRules(params)
       this.inSubmitting = true
       try {
-        const { data } = await createCouponApi(params)
-        const id = data.couponId
-        if (params.rules.collect.type === 4) {
-          this.$router.replace({
-            name: 'CouponUsages',
-            params: { id }
-          })
-        } else {
+        const { code, msg } = await createCouponApi(params)
+        if (code === 200) {
           this.$router.go(-1)
+        } else {
+          this.$message.warning(msg)
         }
       } catch (e) {
         console.warn('Create coupon:' + e)
@@ -1198,16 +1194,7 @@ export default {
             this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
             return
           }
-          if (this.formData.rules.collect.type === 4) {
-            await this.$confirm('此优惠券的领取方式为人工分配，需要提前批量生成或导入用户券码。是否继续？', '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'info'
-            })
-            this.createOrUpdateCoupon()
-          } else {
-            this.createOrUpdateCoupon()
-          }
+          this.createOrUpdateCoupon()
         } else {
           this.$message.warning('请检查输入错误的优惠券信息')
         }

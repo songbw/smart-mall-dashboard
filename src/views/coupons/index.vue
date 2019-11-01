@@ -393,6 +393,16 @@ export default {
         params: { id, readOnly: false }
       })
     },
+    handlePostStartCoupon(coupon) {
+      if (coupon.collectType === 4) {
+        this.$alert('此优惠券的领取方式为人工分配，需要在优惠券活动开始后，批量生成或导入用户券码。', '提示', {
+          confirmButtonText: '确定',
+          type: 'info',
+          callback: (_) => {
+          }
+        })
+      }
+    },
     async handleStartCoupon(id) {
       const dateNow = moment()
       const coupon = this.couponData.find(item => item.id === id)
@@ -414,8 +424,13 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await updateCouponApi({ id, status: coupon_status_published })
-        this.getCouponData()
+        const { code, msg } = await updateCouponApi({ id, status: coupon_status_published })
+        if (code === 200) {
+          this.getCouponData()
+          this.handlePostStartCoupon(coupon)
+        } else {
+          this.$message.warning(msg)
+        }
       } catch (e) {
         console.warn('Update coupon ' + e)
       }
