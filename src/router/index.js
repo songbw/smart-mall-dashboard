@@ -191,7 +191,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/coupons/index',
     name: 'Coupons',
-    meta: { title: '权益', icon: 'golds' },
+    meta: { title: '权益', icon: 'golds', roles: [role_admin_name, role_watcher_name] },
     children: [
       {
         path: 'index',
@@ -233,7 +233,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/marketing/aggregations',
     name: 'Marketing',
-    meta: { title: '营销', icon: 'marketing' },
+    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name, role_watcher_name] },
     children: [
       {
         path: 'aggregations',

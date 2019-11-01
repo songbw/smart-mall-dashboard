@@ -77,18 +77,25 @@
         <el-button icon="el-icon-search" type="primary" @click="handleSearchOrders">
           搜索
         </el-button>
-        <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
-          批量导出订单
-        </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="couldExportReconciliation" style="margin-bottom: 10px">
-      <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
-        导出结算订单
-      </el-button>
-      <span style="margin-left: 10px;font-size: 13px">
-        <i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i>
-      </span>
+    <div v-if="isAdminUser" style="display: flex;justify-content: space-between;margin-bottom: 12px">
+      <div>
+        <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
+          导出流水订单
+        </el-button>
+        <span style="margin-left: 10px;font-size: 13px">
+          <i class="el-icon-warning-outline">将导出所需时间段内已支付与已退款的订单列表</i>
+        </span>
+      </div>
+      <div>
+        <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
+          导出结算订单
+        </el-button>
+        <span style="margin-left: 10px;font-size: 13px">
+          <i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i>
+        </span>
+      </div>
     </div>
     <el-table
       ref="ordersTable"
@@ -273,7 +280,6 @@ export default {
   data() {
     return {
       shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
-      couldExportReconciliation: process.env.VUE_APP_HOST === 'WX-MALL',
       statusOptions: [{
         value: -1,
         label: '全部'
