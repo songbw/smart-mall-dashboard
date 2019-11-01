@@ -94,6 +94,16 @@
           <span>{{ scope.row.releaseNum }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="优惠券类型" align="center" width="120">
+        <template slot-scope="scope">
+          <span> {{ scope.row.couponType | couponTypeFilter }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="领取方式" align="center" width="120">
+        <template slot-scope="scope">
+          <span> {{ scope.row.collectType | couponCollectFilter }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" width="80">
         <template slot-scope="scope">
           <el-tag>{{ scope.row.status | couponStatusFilter }}</el-tag>
@@ -195,6 +205,11 @@ import {
   consumeCouponApi
 } from '@/api/coupons'
 
+import {
+  CouponTypeOptions,
+  CouponCollectOptions
+} from './constants'
+
 export default {
   name: 'Coupon',
   components: { Pagination },
@@ -202,6 +217,14 @@ export default {
     couponStatusFilter: (status) => {
       const item = CouponStatusDefinition.find(coupon => coupon.value === status)
       return item ? item.label : ''
+    },
+    couponTypeFilter: type => {
+      const find = CouponTypeOptions.find(option => option.value === type)
+      return find ? find.label : ''
+    },
+    couponCollectFilter: type => {
+      const find = CouponCollectOptions.find(option => option.value === type)
+      return find ? find.label : ''
     },
     dateFilter(date) {
       const format = 'YYYY-MM-DD'

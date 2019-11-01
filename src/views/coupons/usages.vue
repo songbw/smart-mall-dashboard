@@ -263,8 +263,12 @@ export default {
     async handleBatchCode() {
       this.batchCodeLoading = true
       try {
-        await batchUserCodeByIdApi({ couponId: this.couponId })
-        this.getUsageData()
+        const { code, msg } = await batchUserCodeByIdApi({ couponId: this.couponId })
+        if (code === 200) {
+          this.getUsageData()
+        } else {
+          this.$message.warning(msg)
+        }
       } catch (e) {
         console.warn('handleBatchCode:' + e)
       } finally {

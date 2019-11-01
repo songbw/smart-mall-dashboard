@@ -413,6 +413,8 @@ export default {
         this.userTotal = data.total
       } catch (e) {
         console.warn('Get vendor user list error:' + e)
+        this.userData = []
+        this.userTotal = 0
       } finally {
         this.dataLoading = false
       }

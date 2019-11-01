@@ -521,7 +521,7 @@ import CouponUrl from './couponUrl'
 import ImageUpload from '@/components/ImageUpload'
 import { createCouponApi, getCouponByIdApi, getCouponTagsApi, updateCouponApi } from '@/api/coupons'
 import { getVendorListApi } from '@/api/vendor'
-import { vendor_status_approved, coupon_status_distributing } from '@/utils/constants'
+import { vendor_status_approved } from '@/utils/constants'
 import {
   CouponAppScopes,
   CouponCollectOptions,
@@ -1106,20 +1106,12 @@ export default {
         }
       }
     },
-    reviseCouponStatus(data) {
-      if ('rules' in data && 'collect' in data.rules && 'type' in data.rules.collect) {
-        if (data.rules.collect.type === 4) { // 领取方式为人工分配，状态应为‘待分配’
-          data.status = coupon_status_distributing
-        }
-      }
-    },
     async handleCreateCoupon() {
       const params = {}
       merge(params, this.formData)
       if (this.autoCode) {
         params.rules.code = ''
       }
-      this.reviseCouponStatus(params)
       this.reviseScenarioRules(params)
       this.inSubmitting = true
       try {
@@ -1150,7 +1142,6 @@ export default {
         hasDiff = true
       }
       if (hasDiff) {
-        this.reviseCouponStatus(diff)
         this.reviseScenarioRules(diff)
         if ('category' in diff && diff.category === null) {
           diff.category = ''
