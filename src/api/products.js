@@ -62,3 +62,10 @@ export function exportProductsApi(params) {
     params
   })
 }
+
+export function getMerchantCodeListApi() {
+  return Vue.axios('products').request({
+    url: '/products/merchantCode/all',
+    method: 'get'
+  })
+}

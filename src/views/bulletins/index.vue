@@ -27,9 +27,9 @@
           <span>{{ scope.row.position === 'top' ? '顶部': '底部' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="供应商" align="center">
+      <el-table-column label="商品供应商" align="center">
         <template slot-scope="scope">
-          <span>{{ getVendorName(scope.row.merchantId) }}</span>
+          <span>{{ getVendorName(scope.row.merchantCode) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="是否启用" align="center" width="100">
@@ -111,7 +111,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="公告商户">
-          <span>{{ formVendorName }}</span>
+          <span>{{ bulletinForm.codeName }}</span>
           <el-button type="info" size="mini" style="margin-left: 10px" @click="vendorSelectionVisible = true">
             修改商户
           </el-button>
@@ -143,9 +143,10 @@
         <el-button type="primary" @click="imageDialogVisible = false">确定</el-button>
       </div>
     </el-dialog>
-    <vendor-selection
+    <vendor-code-selection
       :dialog-visible="vendorSelectionVisible"
       :vendor-list="vendorList"
+      :vendor-loading="vendorLoading"
       @cancelled="vendorSelectionVisible = false"
       @confirmed="handleVendorSelected"
     />
@@ -157,9 +158,7 @@ import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import ImageUpload from '@/components/ImageUpload'
-import VendorSelection from '@/components/VendorSelection'
-import { vendor_status_approved } from '@/utils/constants'
-import { getVendorListApi } from '@/api/vendor'
+import { getMerchantCodeListApi } from '@/api/products'
 import {
   getBulletinListApi,
   createBulletinApi,
@@ -167,13 +166,15 @@ import {
   deleteBulletinApi,
   updateBulletinStateApi
 } from '@/api/bulletins'
+import VendorCodeSelection from './VendorCodeSelection'
 
 export default {
   name: 'Bulletins',
-  components: { Pagination, ImageUpload, VendorSelection },
+  components: { Pagination, ImageUpload, VendorCodeSelection },
   data() {
     return {
       listLoading: false,
+      vendorLoading: false,
       vendorList: [],
       bulletinTotal: 0,
       bulletinList: [],
@@ -183,12 +184,13 @@ export default {
       dialogImageUrl: null,
       bulletinDialogVisible: false,
       vendorSelectionVisible: false,
-      formVendorName: '',
       bulletinForm: {
         id: -1,
         title: '',
         state: true,
         merchantId: 0,
+        merchantCode: 0,
+        codeName: '',
         position: 'top',
         imageUrl: null
       },
@@ -232,31 +234,22 @@ export default {
     },
     async getVendorList() {
       try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
+        this.vendorLoading = true
+        const { code, data } = await getMerchantCodeListApi()
+        if (code === 200) {
+          this.vendorList = data.result
         }
-        this.listLoading = true
-        const data = await getVendorListApi(params)
-        const vendors = data.rows.map(row => {
-          return {
-            id: row.company.id,
-            name: row.company.name
-          }
-        })
-        this.vendorList = [{ id: 0, name: '平台' }].concat(vendors)
       } catch (e) {
         console.warn('Product get vendor list error:' + e)
       } finally {
-        this.listLoading = false
+        this.vendorLoading = false
       }
     },
-    getVendorName(vendorId) {
-      if (this.vendorList.length > 0 && vendorId != null) {
-        const vendor = this.vendorList.find(option => option.id === vendorId)
+    getVendorName(vendorCode) {
+      if (this.vendorList.length > 0 && vendorCode != null) {
+        const vendor = this.vendorList.find(option => option.merchantCode === vendorCode)
         if (vendor) {
-          return vendor.name
+          return vendor.merchantName
         } else {
           return ''
         }
@@ -281,12 +274,16 @@ export default {
       this.bulletinForm.title = ''
       this.bulletinForm.state = true
       this.bulletinForm.merchantId = 0
+      this.bulletinForm.merchantCode = 0
+      this.bulletinForm.codeName = ''
       this.bulletinForm.position = 'top'
       this.bulletinForm.imageUrl = null
     },
     handleCreate() {
       this.resetFormData()
-      this.formVendorName = this.getVendorName(this.bulletinForm.merchantId)
+      if (this.vendorList.length === 0) {
+        this.getVendorList()
+      }
       this.bulletinDialogVisible = true
     },
     handleView(index) {
@@ -299,7 +296,9 @@ export default {
       Object.keys(this.bulletinForm).forEach(key => {
         this.bulletinForm[key] = bulletin[key]
       })
-      this.formVendorName = this.getVendorName(this.bulletinForm.merchantId)
+      if (this.vendorList.length === 0) {
+        this.getVendorList()
+      }
       this.bulletinDialogVisible = true
     },
     handleSetState(state, id) {
@@ -342,8 +341,9 @@ export default {
       })
     },
     handleVendorSelected(vendor) {
-      this.bulletinForm.merchantId = vendor.id
-      this.formVendorName = vendor.name
+      this.bulletinForm.merchantId = vendor.merchantId
+      this.bulletinForm.merchantCode = vendor.merchantCode
+      this.bulletinForm.codeName = vendor.merchantName
       this.vendorSelectionVisible = false
     },
     handleUploadImageSuccess(url) {
