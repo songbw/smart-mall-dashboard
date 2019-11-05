@@ -954,7 +954,7 @@ export default {
         this.listLoading = true
         this.exportingPriceProducts = true
         const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
-        const data = await exportFloorPriceApi({ floorPriceRate })
+        const data = await exportFloorPriceApi({ floorPriceRate, pageNo: 1, pageSize: 5000 })
         const blob = new Blob([data])
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
