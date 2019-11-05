@@ -112,16 +112,6 @@
         </div>
         <div>
           <el-button
-            v-if="false"
-            :disabled="productSelection.length === 0"
-            :loading="productExporting"
-            type="info"
-            icon="el-icon-download"
-            @click="handleExportSelection"
-          >
-            导出已选{{ productSelection.length }}个商品
-          </el-button>
-          <el-button
             :disabled="!vendorApproved"
             :loading="productExporting"
             type="warning"
@@ -142,6 +132,16 @@
           :min="1"
           :max="10"
         />
+      </el-form-item>
+      <el-form-item>
+        <el-tooltip content="导出上架商品中销售价异常列表" placement="top">
+          <el-button type="primary" @click="handleExportWithFloorPrice">
+            导出价格异常商品
+          </el-button>
+        </el-tooltip>
+        <el-button type="success" @click="dialogUpdatePriceVisible = true">
+          批量导入更新商品价格
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -314,6 +314,12 @@
       @onSelectionCancelled="dialogUpdateVisible = false"
       @onSelectionConfirmed="onGoodsUpdateConfirmed"
     />
+    <goods-import-dialog
+      :dialog-visible="dialogUpdatePriceVisible"
+      :update-price="true"
+      @onSelectionCancelled="dialogUpdatePriceVisible = false"
+      @onSelectionConfirmed="onUpdatePriceConfirmed"
+    />
     <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
       <div style="font-size: 14px;margin-bottom: 10px">
         <i class="el-icon-warning-outline">如果无需修改对应属性，可以不选择！</i>
@@ -388,7 +394,8 @@ import {
   searchProductsApi,
   deleteProductApi,
   createProductApi,
-  exportProductsApi
+  exportProductsApi,
+  exportFloorPriceApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
@@ -404,6 +411,7 @@ import {
   vendor_status_approved
 } from '@/utils/constants'
 import ShippingPriceSelection from './shippingPriceSelection'
+import { updatePriceOrStateApi } from '../../api/products'
 
 export default {
   name: 'Product',
@@ -443,6 +451,7 @@ export default {
       selectedMpuList: [],
       dialogImportVisible: false,
       dialogUpdateVisible: false,
+      dialogUpdatePriceVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
       brandLoading: false,
@@ -838,7 +847,7 @@ export default {
           if (this.productsData.length === 1 && this.listOffset > 1) {
             this.listOffset = this.listOffset - 1
           }
-          that.getListData()
+          await that.getListData()
         } catch (e) {
           console.warn(`Delete product error: ${e}`)
         }
@@ -929,10 +938,47 @@ export default {
     handleSelectionChange(selection) {
       this.productSelection = selection
     },
-    handleExportSelection() {
-      this.exportToFile(this.productSelection)
+    async handleExportWithFloorPrice() {
+      const floorPriceRate = Math.round(this.floorPriceRate * 100)
+      if (floorPriceRate < 100 || Number.isNaN(floorPriceRate)) {
+        this.$message.warning('请设置商品底价比率大于1！')
+        return
+      }
+      try {
+        this.listLoading = true
+        const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
+        const data = await exportFloorPriceApi({ floorPriceRate })
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Products export floor price error:' + e)
+      } finally {
+        this.listLoading = false
+      }
     },
-
+    async onUpdatePriceConfirmed(skus) {
+      this.dialogUpdatePriceVisible = false
+      try {
+        this.listLoading = true
+        for (let i = 0; i < skus.length; i += 100) {
+          const skuList = skus.slice(i, i + 100)
+            .map(item => ({ mpu: item.mpu, price: item.price, state: item.state }))
+          await updatePriceOrStateApi(skuList)
+        }
+      } catch (e) {
+        console.warn('Products update product price error:' + e)
+      } finally {
+        this.listLoading = false
+      }
+      this.getListData()
+    },
     async handleExportAllProducts() {
       const params = this.getFilterParams()
       try {

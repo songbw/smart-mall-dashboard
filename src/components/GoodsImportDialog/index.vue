@@ -129,6 +129,15 @@ const UpdateHeaders = [
   { field: 'inventory', label: '商品库存', type: 'number' }
 ]
 
+const UpdatePriceHeaders = [
+  { field: 'mpu', label: '商品MPU', type: 'string' },
+  { field: 'skuid', label: '商品SKU', type: 'string' },
+  { field: 'state', label: '商品状态', type: 'string' },
+  { field: 'name', label: '商品名称', type: 'string' },
+  { field: 'price', label: '销售价格(元)', type: 'string' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string' }
+]
+
 const PromotionHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
   { field: 'pprice', label: '促销价格(元)', type: 'string' }
@@ -161,6 +170,10 @@ export default {
       default: false
     },
     productPromotion: {
+      type: Boolean,
+      default: false
+    },
+    updatePrice: {
       type: Boolean,
       default: false
     }
@@ -196,7 +209,7 @@ export default {
       productVendors: 'productVendors'
     }),
     needVendor() {
-      return (this.productCreation || this.productUpdate) && this.isAdminUser
+      return !this.updatePrice && (this.productCreation || this.productUpdate) && this.isAdminUser
     }
   },
   methods: {
@@ -250,6 +263,8 @@ export default {
         return UpdateHeaders
       } else if (this.productPromotion) {
         return PromotionHeaders
+      } else if (this.updatePrice) {
+        return UpdatePriceHeaders
       } else {
         return SkuHeaders
       }
@@ -336,6 +351,8 @@ export default {
         this.parseUpdateSkuData(results)
       } else if (this.productPromotion) {
         this.parsePromotionData(results)
+      } else if (this.updatePrice) {
+        this.parseUpdatePriceSkuData(results)
       } else {
         this.searchSkuData(results)
       }
@@ -383,6 +400,23 @@ export default {
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
     },
+    parseUpdatePriceSkuData(results) {
+      let count = 0
+      for (const item of results) {
+        const product = {}
+        UpdatePriceHeaders.forEach(header => {
+          if (header.label in item) {
+            product[header.field] = this.parseValue(header.type, item[header.label])
+          }
+        })
+        if (!isEmpty(product) && !isEmpty(product.mpu)) {
+          count++
+          this.excelResults.push(product)
+        }
+      }
+      this.loading = false
+      this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
+    },
     async parseUpdateSkuData(results) {
       let count = 0
       for (const item of results) {
@@ -406,6 +440,9 @@ export default {
             this.excelResults.push({ id: data.result.list[0].id, skuid, ...rest })
           }
         }
+        if (!this.dialogVisible) {
+          break
+        }
       }
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
@@ -428,6 +465,9 @@ export default {
           const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
           if (code !== 200) {
             continue
+          }
+          if (!this.dialogVisible) {
+            break
           }
           fetchedNum++
           this.percentage = Math.round(fetchedNum * 100 / results.length)
@@ -476,6 +516,9 @@ export default {
             const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
             if (code !== 200) {
               continue
+            }
+            if (!this.dialogVisible) {
+              break
             }
             fetchedNum++
             this.percentage = Math.round(fetchedNum * 100 / skus.length)
