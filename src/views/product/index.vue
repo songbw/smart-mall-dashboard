@@ -135,11 +135,16 @@
       </el-form-item>
       <el-form-item>
         <el-tooltip content="导出上架商品中销售价异常列表" placement="top">
-          <el-button type="primary" @click="handleExportWithFloorPrice">
+          <el-button
+            :loading="exportingPriceProducts"
+            icon="el-icon-download"
+            type="primary"
+            @click="handleExportWithFloorPrice"
+          >
             导出价格异常商品
           </el-button>
         </el-tooltip>
-        <el-button type="success" @click="dialogUpdatePriceVisible = true">
+        <el-button type="success" icon="el-icon-upload2" @click="dialogUpdatePriceVisible = true">
           批量导入更新商品价格
         </el-button>
       </el-form-item>
@@ -454,6 +459,7 @@ export default {
       dialogUpdatePriceVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
+      exportingPriceProducts: false,
       brandLoading: false,
       brandOptions: [],
       selectionEditing: false,
@@ -946,6 +952,7 @@ export default {
       }
       try {
         this.listLoading = true
+        this.exportingPriceProducts = true
         const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
         const data = await exportFloorPriceApi({ floorPriceRate })
         const blob = new Blob([data])
@@ -961,6 +968,7 @@ export default {
         console.warn('Products export floor price error:' + e)
       } finally {
         this.listLoading = false
+        this.exportingPriceProducts = false
       }
     },
     async onUpdatePriceConfirmed(skus) {
