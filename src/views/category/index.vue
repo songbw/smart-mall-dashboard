@@ -143,11 +143,8 @@
         label-position="right"
         label-width="120px"
       >
-        <el-form-item v-if="dialogValue.categoryClass === '3'" label="所属父类">
-          <el-input v-model="topCategoryHeaderTitle" readonly class="dialog-form-item" />
-        </el-form-item>
-        <el-form-item v-if="dialogValue.categoryClass === '2'" label="所属父类">
-          <el-input v-model="firstClassCategoryName" readonly class="dialog-form-item" />
+        <el-form-item v-if="dialogValue.categoryClass !== '1'" label="所属父类">
+          <el-input :value="dialogParentName" readonly class="dialog-form-item" />
         </el-form-item>
         <el-form-item label="类别名称" prop="categoryName">
           <el-input
@@ -224,8 +221,9 @@ export default {
     return {
       dialogFormTitle: '',
       dialogFormVisible: false,
+      dialogParentName: '',
       dialogRules: {
-        categoryName: [{ required: true, trigger: 'change', validator: validateName }]
+        categoryName: [{ required: true, trigger: 'blur', validator: validateName }]
       },
       dialogValue: {
         categoryId: 0,
@@ -346,7 +344,6 @@ export default {
     handleCancel() {
       this.$refs.categoryForm.clearValidate()
       this.dialogFormVisible = false
-      this.resetDialogValue()
     },
     handleSubmit() {
       if (!this.hasEditPermission) {
@@ -382,7 +379,6 @@ export default {
       } finally {
         this.dialogFormVisible = false
         this.dialogLoading = false
-        this.resetDialogValue()
       }
     },
     async updateCategory() {
@@ -417,7 +413,6 @@ export default {
         }
       }
       this.dialogFormVisible = false
-      this.resetDialogValue()
     },
     handleTopCategoryClick(category) {
       this.searchCategoriesData = []
@@ -462,6 +457,7 @@ export default {
           })
           this.topCategoryHeaderTitle = ''
           this.currentSelectedTopCategory = null
+          this.firstClassCategoryName = ''
         }).catch(() => {
           this.filterName = ''
         })
@@ -469,17 +465,36 @@ export default {
         this.searchCategoriesData = []
       }
     },
+    getParentName(category) {
+      if (category.categoryClass === '3') {
+        const second = this.secondCategoryData.find(item => item.categoryId === category.parentId)
+        if (second) {
+          const first = this.categoryData.find(item => item.categoryId === second.parentId)
+          if (first) {
+            return first.categoryName + ' / ' + second.categoryName
+          }
+        }
+      } else if (category.categoryClass === '2') {
+        const first = this.categoryData.find(item => item.categoryId === category.parentId)
+        if (first) {
+          return first.categoryName
+        }
+      }
+      return ''
+    },
     handleEdit(category) {
       let toEdit = category
       if (toEdit === null) {
         toEdit = this.currentSelectedTopCategory
       }
+      this.resetDialogValue()
       if (toEdit) {
         this.editCategory = true
         this.dialogFormTitle = '编辑 ' + toEdit.categoryName
-        this.dialogFormVisible = true
         this.dialogValue = { ...toEdit }
+        this.dialogParentName = this.getParentName(toEdit)
         this.setUpdateValue(toEdit)
+        this.dialogFormVisible = true
       }
     },
     async handleDelete(category) {
@@ -520,7 +535,7 @@ export default {
       this.editCategory = false
       this.dialogFormTitle = '新建一级类别'
       this.dialogValue.categoryClass = '1'
-      this.dialogValue.idate = moment()
+      this.dialogValue.idate = moment().format('YYYY-MM-DD HH:mm:ss')
       this.dialogFormVisible = true
     },
     handleCreateSubClass() {
@@ -535,7 +550,7 @@ export default {
           this.dialogValue.categoryClass = '3'
         }
         this.dialogValue.parentId = this.currentSelectedTopCategory.categoryId
-        this.dialogValue.idate = moment()
+        this.dialogValue.idate = moment().format('YYYY-MM-DD HH:mm:ss')
         this.dialogFormVisible = true
       }
     },

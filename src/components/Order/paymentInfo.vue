@@ -23,22 +23,12 @@
         </el-row>
         <el-row class="item-row">
           <el-col :span="12">
-            <span class="item-label">支付金额：</span>
+            <span class="item-label">订单金额：</span>
             <span class="item-text">{{ paymentAmount | centFilter }}</span>
           </el-col>
           <el-col :span="12">
             <span class="item-label">支付时间：</span>
             <span class="item-text">{{ paymentAt | timeFilter }}</span>
-          </el-col>
-        </el-row>
-        <el-row class="item-row">
-          <el-col :span="12">
-            <span class="item-label">支付类型：</span>
-            <span class="item-text">{{ payType }}</span>
-          </el-col>
-          <el-col :span="12">
-            <span class="item-label">退款金额：</span>
-            <span class="item-text">{{ refundFee | centFilter }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -57,6 +47,23 @@
             <span class="item-text">￥ {{ servFee || '0.00' }}</span>
           </el-col>
         </el-row>
+        <el-table
+          v-if="payInfoList.length > 0"
+          :data="payInfoList"
+          style="width: 100%"
+          border
+        >
+          <el-table-column label="支付类型" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.payType | payTypeFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="支付金额(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.actPayFee | centFilter }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-card>
     </el-col>
   </el-row>
@@ -64,7 +71,23 @@
 
 <script>
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import { PaymentStatusDefinitions } from '@/utils/constants'
+import { getPayInfoListApi } from '@/api/orders'
+
+const payTypeOptions = [{
+  value: 'balance',
+  label: '余额'
+}, {
+  value: 'woa',
+  label: '联机账户'
+}, {
+  value: 'card',
+  label: '惠民卡'
+}, {
+  value: 'bank',
+  label: '快捷支付'
+}]
 
 export default {
   name: 'PaymentInfo',
@@ -89,6 +112,10 @@ export default {
         const value = (yuan / 100).toFixed(2)
         return `￥ ${value}`
       }
+    },
+    payTypeFilter: type => {
+      const find = payTypeOptions.find(option => option.value === type)
+      return find ? find.label : type
     }
   },
   props: {
@@ -135,6 +162,32 @@ export default {
     servFee: {
       type: Number,
       default: 0
+    }
+  },
+  data() {
+    return {
+      useWsPay: process.env.VUE_APP_HOST === 'WX-MALL',
+      payInfoList: []
+    }
+  },
+  watch: {
+    paymentNo: function(val, oldVal) {
+      if (this.useWsPay && val !== oldVal && isEmpty(val) === false) {
+        this.getPayInfoList()
+      }
+    }
+  },
+  methods: {
+    async getPayInfoList() {
+      try {
+        const params = { orderNo: this.paymentNo }
+        const { code, data } = await getPayInfoListApi(params)
+        if (code === 200) {
+          this.payInfoList = data
+        }
+      } catch (e) {
+        console.warn('Get WS pay info list error:' + e)
+      }
     }
   }
 }

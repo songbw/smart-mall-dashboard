@@ -97,6 +97,8 @@ import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
+import uniq from 'lodash/uniq'
+import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
 import { product_state_on_sale } from '@/utils/constants'
@@ -195,6 +197,16 @@ export default {
       if (!rawFile) return
       if (rawFile.size >= 1024 * 1024) {
         this.$message.warning('请选择小于1M的文件')
+        return
+      }
+      const mimeTyps = [
+        'application/vnd.ms-excel',
+        'application/vnd.sealed.xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template'
+      ]
+      if (mimeTyps.includes(rawFile.type) === false) {
+        this.$message.warning('请选择正确的文件格式')
         return
       }
       this.formData.fileName = rawFile.name
@@ -325,6 +337,9 @@ export default {
           } else {
             product.merchantId = this.vendorId
           }
+          if (!('skuid' in product)) {
+            product.skuid = ''
+          }
           count++
           this.excelResults.push(product)
         }
@@ -335,64 +350,69 @@ export default {
     async parsePromotionData(results) {
       let fetchedNum = 0
       const parsedSkus = []
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i]
+      const skus = results.map(item => {
         const product = {}
-        PromotionHeaders.forEach(header => {
-          if (header.label in result) {
-            product[header.field] = this.parseValue(header.type, result[header.label])
+        for (const header of PromotionHeaders) {
+          if (header.label in item) {
+            product[header.field] = this.parseValue(header.type, item[header.label])
           }
-        })
-        if ('skuid' in product && !isEmpty(product.skuid)) {
-          try {
-            const response = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
-            fetchedNum++
-            this.percentage = Math.round(fetchedNum * 100 / results.length)
-            const data = response.data.result
-            if (data.total === 1) {
-              const fetchedData = data.list[0]
-              if (this.isSearchProductValid(fetchedData)) {
-                const item = {
-                  skuid: fetchedData.skuid,
-                  mpu: fetchedData.mpu,
-                  price: fetchedData.price,
-                  name: fetchedData.name,
-                  brand: fetchedData.brand,
-                  imagePath: fetchedData.image,
-                  intro: ''
-                }
-                if ('pprice' in product) {
-                  const pprice = Number.parseFloat(product.pprice)
-                  const price = Number.parseFloat(item.price)
-                  if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
-                    const ipprice = Math.round(pprice * 100)
-                    const iprice = Math.round(price * 100)
-                    item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
-                  }
-                }
-                parsedSkus.push(item)
+        }
+        return product
+      })
+      const filterSkus = uniqBy(skus.filter(item => 'skuid' in item && !isEmpty(item.skuid)), 'skuid')
+      for (const product of filterSkus) {
+        try {
+          const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
+          if (code !== 200) {
+            continue
+          }
+          fetchedNum++
+          this.percentage = Math.round(fetchedNum * 100 / results.length)
+          for (const fetchedData of data.result.list) {
+            if (this.isSearchProductValid(fetchedData)) {
+              const item = {
+                skuid: fetchedData.skuid,
+                mpu: fetchedData.mpu,
+                price: fetchedData.price,
+                name: fetchedData.name,
+                brand: fetchedData.brand,
+                imagePath: fetchedData.image,
+                intro: ''
               }
+              if ('pprice' in product) {
+                const pprice = Number.parseFloat(product.pprice)
+                const price = Number.parseFloat(item.price)
+                if (!Number.isNaN(pprice) && !Number.isNaN(price)) {
+                  const ipprice = Math.round(pprice * 100)
+                  const iprice = Math.round(price * 100)
+                  item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
+                }
+              }
+              parsedSkus.push(item)
             }
-          } catch (err) {
-            console.log('GoodImport: search error ' + product.skuid)
           }
+        } catch (err) {
+          console.log('GoodImport: search error ' + product.skuid)
         }
       }
       this.excelResults = parsedSkus
       this.loading = false
-      this.$message.info(`成功导入${parsedSkus.length}个商品，无效商品为${results.length - parsedSkus.length}个`)
+      let msg = `成功导入${parsedSkus.length}个商品，`
+      msg += `重复商品为${skus.length - filterSkus.length}个，`
+      msg += `无效商品为${filterSkus.length - parsedSkus.length}个。`
+      this.$message.info(msg)
     },
     async searchSkuData(results) {
       const fetchedSkus = []
       let fetchedNum = 0
-      for (let i = 0; i < results.length; i++) {
-        const item = results[i]
-        const skuID = this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])
+      const skus = uniq(results.map(item => this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])))
+      for (let i = 0; i < skus.length; i++) {
+        const skuID = skus[i]
         if (skuID) {
           try {
             const response = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
             fetchedNum++
-            this.percentage = Math.round(fetchedNum * 100 / results.length)
+            this.percentage = Math.round(fetchedNum * 100 / skus.length)
             const data = response.data.result
             if (data.total === 1) {
               const product = data.list[0]
@@ -416,7 +436,10 @@ export default {
       }
       this.excelResults = fetchedSkus
       this.loading = false
-      this.$message.info(`成功导入${fetchedSkus.length}个商品，无效商品为${results.length - fetchedSkus.length}个`)
+      let msg = `成功导入${fetchedSkus.length}个商品，`
+      msg += `重复商品为${results.length - skus.length}个，`
+      msg += `无效商品为${skus.length - fetchedSkus.length}个。`
+      this.$message.info(msg)
     }
   }
 }

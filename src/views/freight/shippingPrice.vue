@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div style="margin-bottom: 10px">
+    <div v-if="hasEditPermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="gotoCreateShippingPrice">新建运费模板</el-button>
     </div>
     <el-table
@@ -116,8 +116,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser'
+      isAdminUser: 'isAdminUser'
     }),
     hasEditPermission() {
       return this.isAdminUser

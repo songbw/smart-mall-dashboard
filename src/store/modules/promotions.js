@@ -11,6 +11,7 @@ import {
   updatePromotionTypeApi,
   deletePromotionTypeApi,
   createPromotionScheduleApi,
+  updatePromotionScheduleApi,
   deletePromotionScheduleApi,
   getPromotionDefaultSchedulesApi,
   updatePromotionDefaultSchedulesApi
@@ -120,6 +121,14 @@ const mutations = {
     state.promotion.promotionSchedules.push(params)
     state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
   },
+  UPDATE_SCHEDULE: (state, params) => {
+    const found = state.promotion.promotionSchedules.find(item => item.id === params.id)
+    if (found) {
+      found.schedule = params.schedule
+      found.startTime = params.startTime
+      found.endTime = params.endTime
+    }
+  },
   DELETE_SCHEDULE: (state, id) => {
     const schedules = state.promotion.promotionSchedules
     state.promotion.promotionSchedules = schedules.filter(item => item.id !== id)
@@ -134,18 +143,28 @@ const mutations = {
 
 const actions = {
   async findById({ commit }, params) {
-    const { data } = await getPromotionByIdApi(params)
-    commit('SET_DATA', data.result)
+    const { code, msg, data } = await getPromotionByIdApi(params)
+    if (code === 200) {
+      commit('SET_DATA', data.result)
+    }
+    return { code, msg }
   },
   async create({ commit }, params) {
-    const { data } = await createPromotionApi(params)
-    const id = data.promotionId
-    commit('SET_DATA', { id, ...params })
-    return id
+    const { code, msg, data } = await createPromotionApi(params)
+    if (code === 200) {
+      const id = data.promotionId
+      commit('SET_DATA', { id, ...params })
+      return { id }
+    } else {
+      return { id: -1, msg }
+    }
   },
   async update({ commit }, params) {
-    await updatePromotionApi(params)
-    commit('SET_DATA', params)
+    const { code, msg } = await updatePromotionApi(params)
+    if (code === 200) {
+      commit('SET_DATA', params)
+    }
+    return { code, msg }
   },
   async addContent({ commit }, params) {
     return new Promise((resolve, reject) => {
@@ -198,9 +217,14 @@ const actions = {
     commit('SET_TYPE_LIST', list)
   },
   async addScheduleTime({ commit }, params) {
-    const { data } = await createPromotionScheduleApi(params)
-    commit('ADD_SCHEDULE', { id: data.scheduleId, ...params })
+    const { code, data } = await createPromotionScheduleApi(params)
+    if (code === 200) commit('ADD_SCHEDULE', { id: data.scheduleId, ...params })
     return data.scheduleId
+  },
+  async updateScheduleTime({ commit }, params) {
+    const { code } = await updatePromotionScheduleApi(params)
+    if (code === 200) commit('UPDATE_SCHEDULE', { ...params })
+    return code
   },
   async deleteScheduleTime({ commit }, params) {
     await deletePromotionScheduleApi(params)
@@ -216,8 +240,8 @@ const actions = {
     }
   },
   async updateDefaultSchedules({ commit }, params) {
-    const res = await updatePromotionDefaultSchedulesApi(params)
-    if (res.code === 200) {
+    const { code } = await updatePromotionDefaultSchedulesApi(params)
+    if (code === 200) {
       commit('SET_DEFAULT_SCHEDULES', params.initialSchedules)
     }
   }

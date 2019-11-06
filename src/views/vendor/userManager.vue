@@ -214,7 +214,7 @@
         <el-form-item label="登录名">
           <el-input :value="roleForm.loginName" readonly />
         </el-form-item>
-        <el-form-item label="企业列表" prop="role">
+        <el-form-item label="角色列表" prop="role">
           <el-select v-model="roleForm.role" placeholder="请选择角色">
             <el-option
               v-for="item in roleOptions"

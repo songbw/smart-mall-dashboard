@@ -554,6 +554,11 @@ export default {
         this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
         return false
       }
+      const imageTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      if (imageTypes.includes(file.type) === false) {
+        this.$message.warning('请选择正确的文件类型！')
+        return false
+      }
       this.uploadDialogVisible = true
       this.uploadPercentage = 0
       return true
@@ -681,13 +686,16 @@ export default {
     },
     onPromotionSelectionConfirmed(promotion) {
       this.dialogPromotionVisible = false
-      this.titlePromotionActivityId = promotion.id
-      this.titlePromotionActivityName = promotion.name
-      this.titlePromotionActivityStartDate = promotion.startDate
-      this.titlePromotionActivityEndDate = promotion.endDate
-      this.titleTargetType = 'promotion'
-      this.titleTargetUrl = 'route://promotion/' + promotion.id
-      this.titleTargetName = promotion.name
+      if (this.titlePromotionActivityId !== promotion.id) {
+        this.titlePromotionActivityId = promotion.id
+        this.titlePromotionActivityName = promotion.name
+        this.titlePromotionActivityStartDate = promotion.startDate
+        this.titlePromotionActivityEndDate = promotion.endDate
+        this.titleTargetType = 'promotion'
+        this.titleTargetUrl = 'route://promotion/' + promotion.id
+        this.titleTargetName = promotion.name
+        this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
+      }
     },
     onPromotionSelectionCancelled() {
       this.dialogPromotionVisible = false

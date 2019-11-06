@@ -276,13 +276,7 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item => {
-          if ('mpu' in item) {
-            return this.floorInfo.skus.findIndex(sku => sku.mpu === item.mpu)
-          } else {
-            return this.floorInfo.skus.findIndex(sku => sku.skuid === item.skuid)
-          }
-        })
+        this.selectedItems = val.map(item => item.mpu)
       } else {
         this.selectedItems = []
       }

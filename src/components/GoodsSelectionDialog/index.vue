@@ -178,6 +178,10 @@ export default {
       type: Number,
       default: -1
     },
+    merchantId: {
+      type: Number,
+      default: 0
+    },
     presetFirstCategory: {
       type: Number,
       default: null
@@ -251,38 +255,36 @@ export default {
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
     },
+    async handleFilterSkuList() {
+      this.dataLoading = true
+      const skus = uniq(this.dialogFilterForm.skus)
+      for (const skuId of skus) {
+        const params = {
+          offset: 1,
+          limit: 10,
+          state: 1,
+          skuid: skuId.trim()
+        }
+        try {
+          const { code, data } = await searchProductsApi(params)
+          if (code === 200) {
+            const products = data.result.list
+            for (const product of products) {
+              const index = this.dialogSkuData.findIndex(item => item.mpu === product.mpu)
+              if (index < 0 && this.isProductValid(product)) {
+                this.dialogSkuData.push(product)
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Good selection search error:' + e)
+        }
+      }
+      this.dataLoading = false
+    },
     handleDialogFilterSearch() {
       if (this.dialogFilterForm.skus.length > 0) {
-        const skus = uniq(this.dialogFilterForm.skus)
-        skus.forEach(skuID => {
-          if (skuID.trim()) {
-            const params = {
-              offset: 1,
-              limit: 1,
-              state: 1,
-              skuid: skuID
-            }
-            this.dataLoading = true
-            searchProductsApi(params).then(response => {
-              const data = response.data.result
-              if (data.total > 0) {
-                const product = data.list[0]
-                if (this.isProductValid(product)) {
-                  this.dialogSkuData.push(product)
-                }
-              } else {
-                this.dialogSkuData = []
-              }
-              this.total = this.dialogSkuData.length
-            }).catch(error => {
-              console.log('getProductInfo:' + error)
-              this.dialogSkuData = []
-              this.total = 0
-            }).finally(() => {
-              this.dataLoading = false
-            })
-          }
-        })
+        this.handleFilterSkuList()
       } else if (this.dialogFilterForm.query !== '' ||
         this.presetThirdCategory != null ||
         this.thirdCategoryValue !== null) {
@@ -298,6 +300,9 @@ export default {
           params.categoryID = this.presetThirdCategory
         } else if (this.thirdCategoryValue !== null) {
           params.categoryID = this.thirdCategoryValue
+        }
+        if (this.merchantId > 0) {
+          params.merchantId = this.merchantId
         }
         this.dataLoading = true
         searchProductsApi(params).then(response => {

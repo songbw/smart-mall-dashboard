@@ -308,18 +308,6 @@
         label-position="right"
         label-width="100px"
       >
-        <el-form-item v-if="!noCreatePermission && isAdminUser" label="商品供应商">
-          <el-select v-model="selectionForm.merchantId" clearable>
-            <el-option
-              v-for="item in productVendors"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-              <span>{{ item.label }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="商品品牌">
           <el-select
             filterable
@@ -396,6 +384,7 @@ import {
   product_state_off_shelves,
   product_state_on_sale,
   product_state_is_editing,
+  product_state_all,
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
@@ -419,7 +408,7 @@ export default {
     return {
       couldEditProduct: false,
       stateOptions: [{
-        value: -2,
+        value: product_state_all,
         label: '全部'
       }].concat(ProductStateOptions),
       editStateOptions: [{
@@ -444,7 +433,6 @@ export default {
       brandOptions: [],
       selectionEditing: false,
       selectionForm: {
-        merchantId: null,
         state: null,
         brandId: null, // Number
         brand: null,
@@ -634,7 +622,7 @@ export default {
         offset: this.listOffset,
         limit: this.listLimit
       }
-      if (this.listState !== -2) {
+      if (this.listState !== product_state_all) {
         params.state = this.listState
       }
 
@@ -678,7 +666,7 @@ export default {
         params.categoryID = this.thirdCategoryValue
       }
 
-      if (this.listState !== -2) {
+      if (this.listState !== product_state_all) {
         params.state = this.listState
       }
       if (!isEqual(this.queryParams, params)) {
@@ -990,6 +978,7 @@ export default {
           }
         }
         loading.close()
+        this.getListData()
       }
     },
     onGoodsImportCancelled() {
@@ -1047,7 +1036,7 @@ export default {
       }
     },
     async confirmEditSelection() {
-      const keys = ['merchantId', 'state', 'brandId', 'brand', 'category']
+      const keys = ['state', 'brandId', 'brand', 'category']
       const params = {}
       keys.forEach(key => {
         if (this.selectionForm[key] !== null) {
@@ -1058,8 +1047,7 @@ export default {
         this.editDialogVisible = false
       } else {
         try {
-          const msg = `${params.merchantId ? '供应商，' : ''}
-          ${params.state ? '商品状态，' : ''}
+          const msg = `${params.state ? '商品状态，' : ''}
           ${params.category ? '商品类别，' : ''}
           ${params.brandId ? '商品品牌，' : ''}`
           await this.$confirm(`批量修改商品：${msg}是否继续?`, '提示', {

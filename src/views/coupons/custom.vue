@@ -68,7 +68,7 @@
       </el-form-item>
       <el-form-item label="发放总数" prop="releaseTotal">
         <span v-if="viewOnly || isManualCollect">{{ formData.releaseTotal }}</span>
-        <el-input-number v-else v-model="formData.releaseTotal" :max="1000000" :min="1" step-strictly />
+        <el-input-number v-else v-model="formData.releaseTotal" :max="100000000" :min="1" step-strictly />
       </el-form-item>
       <el-form-item label="有效日期">
         <div style="display: flex; justify-content: start">
@@ -96,7 +96,7 @@
           <span style="font-size: 12px;margin-left: 10px">用户可使用的日期区间</span>
         </div>
       </el-form-item>
-      <el-form-item id="coupon-excludes" label="排除日期">
+      <el-form-item v-if="enableExcludes" id="coupon-excludes" label="排除日期">
         <div>
           为有效期间的排除日期，禁止用户使用，最多支持5个区间
           <div
@@ -205,12 +205,13 @@
           path-name="coupons"
           @success="handleImageUrlChanged"
         />
-        <el-button type="danger" icon="el-icon-delete" size="mini" @click="formData.imageUrl = ''">
+        <el-button v-if="!viewOnly" type="danger" icon="el-icon-delete" size="mini" @click="formData.imageUrl = ''">
           删除图片
         </el-button>
       </el-form-item>
       <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
+          :merchant-id="formData.supplierMerchantId"
           :first-class-category="formData.category"
           :read-only="viewOnly"
           :url="formData.url"
@@ -281,6 +282,7 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.fullReduceCoupon.fullPrice"
+              :max="100000000"
               :min="1"
               step-strictly
             />
@@ -299,9 +301,15 @@
           <span style="margin: 0 10px">元</span>
         </div>
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值">
+      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值(元)">
         <span v-if="viewOnly">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
-        <el-input-number v-else v-model="formData.rules.couponRules.cashCoupon.amount" :min="0" step-strictly />
+        <el-input-number
+          v-else
+          v-model="formData.rules.couponRules.cashCoupon.amount"
+          :max="100000000"
+          :min="0"
+          step-strictly
+        />
       </el-form-item>
       <el-form-item v-else-if="formData.rules.couponRules.type === 2" label="优惠折扣">
         <div style="display: flex; justify-content: start">
@@ -311,6 +319,7 @@
             <el-input-number
               v-else
               v-model="formData.rules.couponRules.discountCoupon.fullPrice"
+              :max="100000000"
               :min="0"
               step-strictly
             />
@@ -353,7 +362,7 @@
       </el-form-item>
       <el-form-item v-if="formData.rules.collect.type === 3" label="所需积分">
         <span v-if="viewOnly">{{ formData.rules.collect.points }}</span>
-        <el-input-number v-else v-model="formData.rules.collect.points" :min="0" step-strictly />
+        <el-input-number v-else v-model="formData.rules.collect.points" :max="100000000" :min="0" step-strictly />
       </el-form-item>
       <el-form-item label="可用商品范围">
         <span v-if="viewOnly">{{ formData.rules.scenario.type | couponScenarioFilter }}</span>
@@ -379,6 +388,7 @@
         <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
         <coupon-goods
           key="include"
+          :merchant-id="formData.supplierMerchantId"
           :first-class-category="formData.category"
           :mpu-list="formData.rules.scenario.couponMpus"
           :view-only="viewOnly || disableScenarioType"
@@ -392,6 +402,7 @@
         <coupon-goods
           key="exclude"
           :mpu-list="formData.rules.scenario.excludeMpus"
+          :merchant-id="formData.supplierMerchantId"
           :view-only="viewOnly"
           @contentAdd="handleAddExcludeMpus"
           @contentDelete="handleDeleteExcludeMpus"
@@ -420,6 +431,7 @@
           <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods
             key="exclude"
+            :merchant-id="formData.supplierMerchantId"
             :first-class-category="formData.category"
             :mpu-list="formData.rules.scenario.excludeMpus"
             :view-only="viewOnly"
@@ -467,6 +479,7 @@
             <span v-else-if="formData.rules.couponRules.type === 1">
               <span>面值为
                 <span class="data-text">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
+                元
               </span>
             </span>
             <span v-else-if="formData.rules.couponRules.type === 2">
@@ -540,6 +553,7 @@ export default {
   },
   data() {
     return {
+      enableExcludes: false,
       appScopes: CouponAppScopes,
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
@@ -868,17 +882,18 @@ export default {
       try {
         const params = {
           page: 1,
-          limit: 100,
+          limit: 1000,
           status: vendor_status_approved
         }
         this.vendorLoading = true
         const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(row => {
+        const vendorList = data.rows.map(row => {
           return {
             value: row.company.id.toString(),
             label: row.company.name
           }
         })
+        this.vendorOptions = [{ value: '0', label: '运营平台' }].concat(vendorList)
       } catch (e) {
         console.warn('Coupon get vendor list error:' + e)
       } finally {
@@ -1025,7 +1040,7 @@ export default {
       if (this.formData.rules.scenario.couponMpus.length + filterMpus.length <= 400) {
         this.formData.rules.scenario.couponMpus = concat(this.formData.rules.scenario.couponMpus, filterMpus)
       } else {
-        this.$message.warn('请重新选择活动商品，最多支持400个')
+        this.$message.warning('请重新选择活动商品，最多支持400个')
       }
       this.$refs['couponForm'].validateField(['couponMpus'])
     },
@@ -1039,7 +1054,7 @@ export default {
       if (this.formData.rules.scenario.excludeMpus.length + filterMpus.length <= 100) {
         this.formData.rules.scenario.excludeMpus = concat(this.formData.rules.scenario.excludeMpus, filterMpus)
       } else {
-        this.$message.warn('请重新选择活动排除商品，最多支持100个')
+        this.$message.warning('请重新选择活动排除商品，最多支持100个')
       }
     },
     handleDeleteExcludeMpus(mpus) {
@@ -1057,7 +1072,7 @@ export default {
       console.debug('index:' + index + ' value:' + value)
       if (value) {
         if (includes(this.formData.rules.scenario.categories, value)) {
-          this.$message.warn('此类别已添加，请选择其它类别')
+          this.$message.warning('此类别已添加，请选择其它类别')
         } else {
           this.formData.rules.scenario.categories[index] = value
         }
@@ -1175,7 +1190,7 @@ export default {
               if (start.isBefore(effectiveStart) ||
                 end.isBefore(start) ||
                 end.isAfter(effectiveEnd)) {
-                this.$message.warning('排除日期必须处于此优惠券的有效日期之间！')
+                this.$message.warning('排除日期必须处于此优惠券的有效日期之间，并且开始日期必须早于结束日期！')
                 this.$scrollTo('#coupon-excludes')
                 return
               }
@@ -1184,6 +1199,12 @@ export default {
           if (this.selectCategoryId === '0' && this.formData.tags.length === 0) {
             this.$message.warning('此优惠券为全部类别，必须选择一个优惠券的标签！')
             this.$scrollTo('#coupon-tags')
+            return
+          }
+          if (this.formData.rules.couponRules.type === 0 &&
+            this.formData.rules.couponRules.fullReduceCoupon.fullPrice <
+            this.formData.rules.couponRules.fullReduceCoupon.reducePrice) {
+            this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
             return
           }
           if (this.formData.rules.collect.type === 4) {

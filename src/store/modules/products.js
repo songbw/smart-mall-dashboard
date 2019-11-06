@@ -1,3 +1,5 @@
+import { product_state_all } from '@/utils/constants'
+
 const queryTemplate = {
   offset: 1,
   limit: 20,
@@ -5,7 +7,7 @@ const queryTemplate = {
   skuid: '',
   brand: '',
   mpu: '',
-  state: -2,
+  state: product_state_all,
   vendorId: -1,
   firstCategoryId: null,
   secondCategoryId: null,

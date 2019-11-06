@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div>
+    <div v-if="hasEditPermission">
       <el-button type="primary" @click="handleShowDialog">
         新增退货地址
       </el-button>
@@ -39,6 +39,7 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-if="hasEditPermission"
         label="操作"
         align="center"
         width="160"
@@ -74,6 +75,7 @@
           <el-input
             :value="addressForm.receiverName"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.receiverName = value.trim()"
           />
         </el-form-item>
@@ -81,6 +83,7 @@
           <el-input
             :value="addressForm.receiverPhone"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.receiverPhone = value.trim()"
           />
         </el-form-item>
@@ -88,6 +91,7 @@
           <el-input
             :value="addressForm.zipCode"
             class="dialog-form-item"
+            maxlength="20"
             @input="value => addressForm.zipCode = value.trim()"
           />
         </el-form-item>
@@ -144,6 +148,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
@@ -235,6 +240,12 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      isAdminUser: 'isAdminUser'
+    }),
+    hasEditPermission() {
+      return this.isAdminUser
+    },
     provinceOptions() {
       return this.provinceList.length > 0 ? this.provinceList : []
     },

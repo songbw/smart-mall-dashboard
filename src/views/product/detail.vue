@@ -20,11 +20,8 @@
       </el-form-item>
       <el-divider content-position="left">商品信息</el-divider>
       <el-form-item v-if="isAdminUser || isWatcherUser" label="商品供应商" prop="merchantId">
-        <span v-if="viewProduct || productForm.merchantId === vendorAoyi">
-          {{ getVendorName(productForm.merchantId) }}
-        </span>
         <el-select
-          v-else
+          v-if="createProduct"
           :value="productForm.merchantId"
           style="width: 50%"
           @change="handleMerchantChanged"
@@ -36,6 +33,9 @@
             :value="item.value"
           />
         </el-select>
+        <span v-else>
+          {{ getVendorName(productForm.merchantId) }}
+        </span>
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
         <div v-if="createProduct">
@@ -120,7 +120,7 @@
       </el-form-item>
       <el-form-item label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
-        <el-input-number v-else v-model="productForm.inventory" :min="0" step-strictly />
+        <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
       <el-divider content-position="left">商品物流</el-divider>
       <el-form-item label="包邮模板">
@@ -472,7 +472,7 @@ export default {
         id: null,
         merchantId: null,
         skuid: null,
-        state: 0,
+        state: null,
         name: null,
         brandId: null, // Number
         brand: null,
@@ -1015,6 +1015,11 @@ export default {
       const maxSize = 1024 * 1024
       if (file.size > maxSize) {
         this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
+        return false
+      }
+      const imageTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      if (imageTypes.includes(file.type) === false) {
+        this.$message.warning('请选择正确的文件类型！')
         return false
       }
       this.uploadPercent = 0

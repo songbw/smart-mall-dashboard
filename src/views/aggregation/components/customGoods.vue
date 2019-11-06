@@ -223,7 +223,7 @@ export default {
     },
     onGoodsFloorDeleteSelection(floorIndex, selection) {
       const floor = {}
-      floor.skus = this.goodsList[floorIndex].skus.filter((sku, index) => !selection.includes(index))
+      floor.skus = this.goodsList[floorIndex].skus.filter(sku => !selection.includes(sku.mpu))
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     }
   }

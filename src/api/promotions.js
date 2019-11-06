@@ -120,6 +120,14 @@ export function createPromotionScheduleApi(params) {
   })
 }
 
+export function updatePromotionScheduleApi(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/schedule/update',
+    method: 'put',
+    data: { ...params }
+  })
+}
+
 export function deletePromotionScheduleApi(params) {
   return Vue.axios('promotions').request({
     url: '/equities/adminPromotion/schedule/delete',

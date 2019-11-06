@@ -144,6 +144,20 @@ export default {
       const files = e.target.files
       const rawFile = files[0] // only use files[0]
       if (!rawFile) return
+      if (rawFile.size >= 1024 * 1024) {
+        this.$message.warning('请选择小于1M的文件')
+        return
+      }
+      const mimeTyps = [
+        'application/vnd.ms-excel',
+        'application/vnd.sealed.xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template'
+      ]
+      if (mimeTyps.includes(rawFile.type) === false) {
+        this.$message.warning('请选择正确的文件格式')
+        return
+      }
       this.fileName = rawFile.name
       this.$refs['excel-upload-input'].value = null // fix can't select the same excel
       this.readDate(rawFile).then(_ => {

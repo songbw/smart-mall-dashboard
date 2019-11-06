@@ -11,6 +11,7 @@ import promotions from './modules/promotions'
 import coupons from './modules/coupons'
 import orders from './modules/orders'
 import workOrders from './modules/workOrders'
+import members from './modules/members'
 
 Vue.use(Vuex)
 
@@ -27,7 +28,8 @@ const store = new Vuex.Store({
     promotions,
     coupons,
     orders,
-    workOrders
+    workOrders,
+    members
   },
   getters,
   strict: debug

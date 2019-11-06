@@ -53,11 +53,6 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="活动标签" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.tag }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="活动状态" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.status | promotionStatus }}</span>

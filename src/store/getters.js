@@ -42,6 +42,8 @@ const getters = {
   defaultSchedules: state => state.promotions.defaultSchedules,
   couponQuery: state => state.coupons.search,
   orderQuery: state => state.orders.search,
-  workOrdersQuery: state => state.workOrders.search
+  workOrdersQuery: state => state.workOrders.search,
+  membersQuery: state => state.members.membersQuery,
+  balancesQuery: state => state.members.balancesQuery
 }
 export default getters

@@ -295,14 +295,18 @@ export default {
     async handleCreatePromotion() {
       this.promotionLoading = true
       try {
-        const id = await this.$store.dispatch('promotions/create', this.formData)
-        await this.handleSetDiscountType(id)
-        if (this.formData.dailySchedule) {
-          for (const time of this.defaultSchedules) {
-            await this.addScheduleTime(time, id)
+        const { id, msg } = await this.$store.dispatch('promotions/create', this.formData)
+        if (id >= 0) {
+          await this.handleSetDiscountType(id)
+          if (this.formData.dailySchedule) {
+            for (const time of this.defaultSchedules) {
+              await this.addScheduleTime(time, id)
+            }
           }
+          this.$emit('onPromotionCreated')
+        } else {
+          this.$message.warning(msg)
         }
-        this.$emit('onPromotionCreated')
       } catch (e) {
         console.warn('CreatePromotion error: ' + e)
         this.$message.warning('创建促销活动失败，请联系管理员！')
@@ -325,7 +329,7 @@ export default {
         endTime: startDateTime.add(1, 'days').format(format)
       })
     },
-    handleUpdatePromotion() {
+    async handleUpdatePromotion() {
       let changed = false
       const params = { id: this.promotionData.id }
       Object.keys(this.formData).forEach(key => {
@@ -335,14 +339,39 @@ export default {
         }
       })
       if (changed) {
-        this.$store.dispatch('promotions/update', params).then(() => {
-          this.$emit('onPromotionCreated')
-        }).catch(err => {
-          console.warn('updatePromotion:' + err)
-        })
+        try {
+          const { code, msg } = await this.$store.dispatch('promotions/update', params)
+          if (code === 200) {
+            if (this.formData.dailySchedule) {
+              for (const schedule of this.promotionData.promotionSchedules) {
+                await this.updateScheduleTime(schedule)
+              }
+            }
+            this.$emit('onPromotionCreated')
+          } else {
+            this.$message.warning(msg)
+          }
+        } catch (e) {
+          console.warn('updatePromotion:' + e)
+        }
       } else {
         this.$emit('onPromotionCreated')
       }
+    },
+    async updateScheduleTime(scheduleTime) {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const timeFormat = 'HH:mm'
+      const startDateTime = moment(this.formData.startDate, format)
+      const timeMoment = moment(scheduleTime.schedule, timeFormat)
+      startDateTime.hour(timeMoment.hour())
+      startDateTime.minute(timeMoment.minute())
+      startDateTime.second(0)
+      await this.$store.dispatch('promotions/updateScheduleTime', {
+        id: scheduleTime.id,
+        schedule: scheduleTime.schedule,
+        startTime: startDateTime.format(format),
+        endTime: startDateTime.add(1, 'days').format(format)
+      })
     },
     async savePromotion() {
       try {
