@@ -1,14 +1,14 @@
 <template>
   <div class="app-container">
     <el-form :inline="true">
-      <el-form-item v-if="shouldShowAoyiId" label="苏宁单号">
-        <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" />
-      </el-form-item>
-      <el-form-item v-else label="主订单号">
+      <el-form-item label="主订单号">
         <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" />
       </el-form-item>
       <el-form-item label="子订单号">
         <el-input v-model="querySubOrderId" :clearable="true" placeholder="输入子订单编号" />
+      </el-form-item>
+      <el-form-item label="苏宁单号">
+        <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
@@ -79,23 +79,22 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="isAdminUser" style="display: flex;justify-content: space-between;margin-bottom: 12px">
-      <div>
+    <div v-if="isAdminUser" style="display: flex;justify-content: start;margin-bottom: 12px">
+      <el-tooltip content="导出所需时间段内已支付与已退款的订单列表">
         <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
           导出流水订单
         </el-button>
-        <span style="margin-left: 10px;font-size: 13px">
-          <i class="el-icon-warning-outline">将导出所需时间段内已支付与已退款的订单列表</i>
-        </span>
-      </div>
-      <div>
+      </el-tooltip>
+      <el-tooltip content="导出所需时间段内已完成与已退款的订单列表">
         <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
-        <span style="margin-left: 10px;font-size: 13px">
-          <i class="el-icon-warning-outline">将导出所需时间段内已完成与已退款的订单列表</i>
-        </span>
-      </div>
+      </el-tooltip>
+      <el-tooltip content="根据支付类型导出所需时间段内已完成与已退款的交易列表">
+        <el-button icon="el-icon-download" type="warning" @click="handleShowPaymentExportDialog">
+          导出支付交易订单
+        </el-button>
+      </el-tooltip>
     </div>
     <el-table
       ref="ordersTable"
@@ -111,7 +110,7 @@
             :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ shouldShowAoyiId ? scope.row.aoyiId : scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
           </router-link>
         </template>
       </el-table-column>
@@ -215,7 +214,19 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名" prop="merchantId">
+        <el-form-item v-if="exportPayment && (isAdminUser || isWatcherUser)" label="支付类型" prop="payType">
+          <el-select v-model="exportForm.payType">
+            <el-option
+              v-for="item in paymentOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else-if="isAdminUser || isWatcherUser" label="供应商名" prop="merchantId">
           <el-select v-model="exportForm.merchantId">
             <el-option
               v-for="item in vendorOptions"
@@ -248,7 +259,8 @@ import {
   exportOrdersApi,
   getOrderListApi,
   updateSubOrderApi,
-  exportReconciliationApi
+  exportReconciliationApi,
+  exportPaymentBillApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
@@ -257,8 +269,9 @@ const validateDates = (start, end) => {
   const format = 'YYYY-MM-DD'
   if (start && end) {
     const startDate = moment(start, format)
+    const maxEndDate = moment(start, format).add(3, 'months')
     const endDate = moment(end, format)
-    return endDate.isSameOrAfter(startDate)
+    return endDate.isSameOrAfter(startDate) && endDate.isSameOrBefore(maxEndDate)
   } else {
     return false
   }
@@ -279,23 +292,34 @@ export default {
   },
   data() {
     return {
-      shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
       statusOptions: [{
         value: -1,
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
+      paymentOptions: [{
+        value: 'balance',
+        label: '余额支付'
+      }, {
+        value: 'woa',
+        label: '联机账户'
+      }, {
+        value: 'card',
+        label: '惠民优选卡'
+      }],
       vendorLoading: false,
       vendors: [],
       listLoading: false,
       orderData: [],
       orderTotal: 0,
       queryParams: null,
+      exportPayment: false,
       exportReconciliation: false,
       exportDialogVisible: false,
       exportForm: {
         merchantId: -1,
         payStartDate: null,
-        payEndDate: null
+        payEndDate: null,
+        payType: null
       },
       exportRules: {
         payStartDate: [{
@@ -304,7 +328,7 @@ export default {
               validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
               callback()
             } else {
-              callback(new Error('请选择合适导出的开始日期'))
+              callback(new Error('请选择合适导出的开始日期，区间最多3个月'))
             }
           }
         }],
@@ -314,7 +338,16 @@ export default {
               validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
               callback()
             } else {
-              callback(new Error('请选择合适导出的结束日期'))
+              callback(new Error('请选择合适导出的结束日期， 区间最多3个月'))
+            }
+          }
+        }],
+        payType: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.exportPayment && value === null) {
+              callback(new Error('请选择合适支付类型'))
+            } else {
+              callback()
             }
           }
         }]
@@ -553,10 +586,17 @@ export default {
     },
     handleShowExportDialog() {
       this.exportReconciliation = false
+      this.exportPayment = false
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
       this.exportReconciliation = true
+      this.exportPayment = false
+      this.exportDialogVisible = true
+    },
+    handleShowPaymentExportDialog() {
+      this.exportReconciliation = false
+      this.exportPayment = true
       this.exportDialogVisible = true
     },
     async handleExportOrders() {
@@ -617,6 +657,25 @@ export default {
         this.$message.warning('未找到有效的结算订单数据！')
       }
     },
+    async handleExportPayment() {
+      this.exportDialogVisible = false
+      const params = {
+        startDate: this.exportForm.payStartDate,
+        endDate: this.exportForm.payEndDate,
+        payType: this.exportForm.payType
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportPaymentBillApi(params)
+        const payOption = this.paymentOptions.find(item => item.value === params.payType)
+        const payLabel = payOption ? payOption.label : ''
+        const filename = `${payLabel}-交易订单列表-${params.startDate}-${params.endDate}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
     handleCancelExport() {
       this.$refs.exportForm.resetFields()
       this.exportDialogVisible = false
@@ -627,6 +686,8 @@ export default {
           this.exportDialogVisible = false
           if (this.exportReconciliation) {
             this.handleExportReconciliation()
+          } else if (this.exportPayment) {
+            this.handleExportPayment()
           } else {
             this.handleExportOrders()
           }

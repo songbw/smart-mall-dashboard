@@ -107,6 +107,17 @@ export function exportReconciliationApi(params) {
   })
 }
 
+export function exportPaymentBillApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/bill',
+    method: 'post',
+    responseType: 'blob',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function getPayInfoListApi(params) {
   return Vue.axios('orders').request({
     url: '/aggpays/wspay/query/pay',
