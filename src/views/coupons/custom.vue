@@ -521,7 +521,7 @@ import CouponUrl from './couponUrl'
 import ImageUpload from '@/components/ImageUpload'
 import { createCouponApi, getCouponByIdApi, getCouponTagsApi, updateCouponApi } from '@/api/coupons'
 import { getVendorListApi } from '@/api/vendor'
-import { vendor_status_approved, coupon_status_distributing } from '@/utils/constants'
+import { vendor_status_approved } from '@/utils/constants'
 import {
   CouponAppScopes,
   CouponCollectOptions,
@@ -577,7 +577,7 @@ export default {
       couponData: null,
       originalCategory: null,
       disableScenarioType: false,
-      selectCategoryId: '',
+      selectCategoryId: '0',
       couponImageSet: false,
       formData: {
         name: '',
@@ -836,7 +836,7 @@ export default {
           if (!Number.isNaN(category)) {
             if (category === 0) {
               // 全场类
-              if (option.value !== 1 && option.value !== 2) {
+              if (option.value === 3) {
                 disabled = true
               }
             } else {
@@ -1106,32 +1106,20 @@ export default {
         }
       }
     },
-    reviseCouponStatus(data) {
-      if ('rules' in data && 'collect' in data.rules && 'type' in data.rules.collect) {
-        if (data.rules.collect.type === 4) { // 领取方式为人工分配，状态应为‘待分配’
-          data.status = coupon_status_distributing
-        }
-      }
-    },
     async handleCreateCoupon() {
       const params = {}
       merge(params, this.formData)
       if (this.autoCode) {
         params.rules.code = ''
       }
-      this.reviseCouponStatus(params)
       this.reviseScenarioRules(params)
       this.inSubmitting = true
       try {
-        const { data } = await createCouponApi(params)
-        const id = data.couponId
-        if (params.rules.collect.type === 4) {
-          this.$router.replace({
-            name: 'CouponUsages',
-            params: { id }
-          })
-        } else {
+        const { code, msg } = await createCouponApi(params)
+        if (code === 200) {
           this.$router.go(-1)
+        } else {
+          this.$message.warning(msg)
         }
       } catch (e) {
         console.warn('Create coupon:' + e)
@@ -1150,7 +1138,6 @@ export default {
         hasDiff = true
       }
       if (hasDiff) {
-        this.reviseCouponStatus(diff)
         this.reviseScenarioRules(diff)
         if ('category' in diff && diff.category === null) {
           diff.category = ''
@@ -1207,16 +1194,7 @@ export default {
             this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
             return
           }
-          if (this.formData.rules.collect.type === 4) {
-            await this.$confirm('此优惠券的领取方式为人工分配，需要提前批量生成或导入用户券码。是否继续？', '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'info'
-            })
-            this.createOrUpdateCoupon()
-          } else {
-            this.createOrUpdateCoupon()
-          }
+          this.createOrUpdateCoupon()
         } else {
           this.$message.warning('请检查输入错误的优惠券信息')
         }

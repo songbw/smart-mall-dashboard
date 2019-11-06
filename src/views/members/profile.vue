@@ -50,22 +50,17 @@
             <span>{{ scope.row.orderNo }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="交易总额(元)" align="center" width="120">
+        <el-table-column label="交易总额(元)" align="center" width="140">
           <template slot-scope="scope">
             <span>{{ (scope.row.saleAmount / 100).toFixed(2) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="交易类型" align="center" width="120">
+        <el-table-column label="交易类型" align="center" width="140">
           <template slot-scope="scope">
             <span>{{ scope.row.type | typeFilter }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="交易状态" align="center" width="120">
-          <template slot-scope="scope">
-            <span>{{ scope.row.status | statusFilter }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="交易时间" align="center" width="200">
+        <el-table-column label="交易时间" align="center" width="220">
           <template slot-scope="scope">
             <span>{{ scope.row.createdAt | dateFormat }}</span>
           </template>
@@ -204,6 +199,8 @@ import {
   BalanceFlowStatusDefinitions
 } from './constants'
 
+const couldRecharge = false
+
 export default {
   name: 'Profile',
   components: { Pagination, RechargeBalance },
@@ -269,7 +266,7 @@ export default {
       isAdminUser: 'isAdminUser'
     }),
     hasEditPermission() {
-      return this.isAdminUser
+      return couldRecharge && this.isAdminUser
     },
     cardData: {
       get() {

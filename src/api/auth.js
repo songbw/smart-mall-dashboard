@@ -32,6 +32,14 @@ export function passwordNewApi(data) {
   })
 }
 
+export function passwordChangeApi(data) {
+  return Vue.axios('auth').request({
+    url: '/vendors/users/password',
+    method: 'put',
+    data
+  })
+}
+
 export function getVerificationCodeApi(params) {
   return Vue.axios('auth').request({
     url: '/vendors/users/verification_code',

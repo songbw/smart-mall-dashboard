@@ -1,5 +1,10 @@
 <template>
   <div class="components-container">
+    <el-form label-width="8rem">
+      <el-form-item label="两边是否预留空白">
+        <el-switch v-model="hotZoneHasMargin" />
+      </el-form-item>
+    </el-form>
     <hotzone
       v-if="hotZoneImage"
       ref="imageHotZone"
@@ -93,6 +98,15 @@ export default {
             settings: { ...hotZoneSettings }
           }
         }
+      }
+    },
+    hotZoneHasMargin: {
+      get() {
+        return 'hasMargin' in this.hotZoneInfo.settings ? this.hotZoneInfo.settings.hasMargin : true
+      },
+      set(value) {
+        const settings = { ...this.hotZoneInfo.settings, ...{ hasMargin: value }}
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     },
     hotZoneImage: {

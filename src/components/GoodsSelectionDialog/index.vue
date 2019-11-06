@@ -203,7 +203,7 @@ export default {
       },
       total: 0,
       offset: 1,
-      limit: 50,
+      limit: 40,
       dataLoading: false,
       firstCategoryValue: null,
       secondCategoryValue: null,
@@ -261,7 +261,7 @@ export default {
       for (const skuId of skus) {
         const params = {
           offset: 1,
-          limit: 10,
+          limit: this.limit,
           state: 1,
           skuid: skuId.trim()
         }
@@ -280,6 +280,7 @@ export default {
           console.warn('Good selection search error:' + e)
         }
       }
+      this.total = this.dialogSkuData.length
       this.dataLoading = false
     },
     handleDialogFilterSearch() {

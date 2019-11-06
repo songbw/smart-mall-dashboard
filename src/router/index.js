@@ -22,6 +22,13 @@ export const constantRoutes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/login/2fa',
+    name: 'Password2FA',
+    component: () => import('@/views/auth/login2FA'),
+    hidden: true,
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/register',
     component: () => import('@/views/auth/register'),
     hidden: true,
@@ -34,9 +41,17 @@ export const constantRoutes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/password/reset',
+    name: 'PasswordReset',
+    component: () => import('@/views/auth/passwordReset'),
+    hidden: true,
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/404',
     component: () => import('@/views/404'),
-    hidden: true
+    hidden: true,
+    meta: { requiresAuth: false }
   },
   {
     path: '/',
@@ -51,7 +66,7 @@ export const constantRoutes = [
       }, {
         path: '/password/change',
         name: 'PasswordChange',
-        component: () => import('@/views/dashboard/passwordChange'),
+        component: () => import('@/views/auth/passwordChange'),
         hidden: true
       }
     ]
@@ -176,7 +191,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/coupons/index',
     name: 'Coupons',
-    meta: { title: '权益', icon: 'golds' },
+    meta: { title: '权益', icon: 'golds', roles: [role_admin_name, role_watcher_name] },
     children: [
       {
         path: 'index',
@@ -218,7 +233,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/marketing/aggregations',
     name: 'Marketing',
-    meta: { title: '营销', icon: 'marketing' },
+    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name, role_watcher_name] },
     children: [
       {
         path: 'aggregations',

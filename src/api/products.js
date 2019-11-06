@@ -62,3 +62,27 @@ export function exportProductsApi(params) {
     params
   })
 }
+
+export function exportFloorPriceApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/export/price',
+    method: 'get',
+    responseType: 'arraybuffer',
+    params
+  })
+}
+
+export function updatePriceOrStateApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/price/state',
+    method: 'put',
+    data: params
+  })
+}
+
+export function getMerchantCodeListApi() {
+  return Vue.axios('products').request({
+    url: '/products/merchantCode/all',
+    method: 'get'
+  })
+}

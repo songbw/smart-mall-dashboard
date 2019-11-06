@@ -85,6 +85,15 @@
             批量创建
           </el-button>
           <el-button
+            v-if="hasEditPermission"
+            :disabled="!vendorApproved"
+            type="warning"
+            icon="el-icon-upload2"
+            @click="dialogUpdateVisible = true"
+          >
+            批量更新
+          </el-button>
+          <el-button
             :disabled="productSelection.length === 0"
             type="info"
             icon="el-icon-edit"
@@ -102,16 +111,6 @@
           </el-button>
         </div>
         <div>
-          <el-button
-            v-if="false"
-            :disabled="productSelection.length === 0"
-            :loading="productExporting"
-            type="info"
-            icon="el-icon-download"
-            @click="handleExportSelection"
-          >
-            导出已选{{ productSelection.length }}个商品
-          </el-button>
           <el-button
             :disabled="!vendorApproved"
             :loading="productExporting"
@@ -133,6 +132,21 @@
           :min="1"
           :max="10"
         />
+      </el-form-item>
+      <el-form-item>
+        <el-tooltip content="导出上架商品中销售价异常列表" placement="top">
+          <el-button
+            :loading="exportingPriceProducts"
+            icon="el-icon-download"
+            type="primary"
+            @click="handleExportWithFloorPrice"
+          >
+            导出价格异常商品
+          </el-button>
+        </el-tooltip>
+        <el-button type="success" icon="el-icon-upload2" @click="dialogUpdatePriceVisible = true">
+          批量导入更新商品价格
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -299,6 +313,18 @@
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
     />
+    <goods-import-dialog
+      :dialog-visible="dialogUpdateVisible"
+      :product-update="true"
+      @onSelectionCancelled="dialogUpdateVisible = false"
+      @onSelectionConfirmed="onGoodsUpdateConfirmed"
+    />
+    <goods-import-dialog
+      :dialog-visible="dialogUpdatePriceVisible"
+      :update-price="true"
+      @onSelectionCancelled="dialogUpdatePriceVisible = false"
+      @onSelectionConfirmed="onUpdatePriceConfirmed"
+    />
     <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
       <div style="font-size: 14px;margin-bottom: 10px">
         <i class="el-icon-warning-outline">如果无需修改对应属性，可以不选择！</i>
@@ -373,7 +399,8 @@ import {
   searchProductsApi,
   deleteProductApi,
   createProductApi,
-  exportProductsApi
+  exportProductsApi,
+  exportFloorPriceApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
@@ -389,6 +416,7 @@ import {
   vendor_status_approved
 } from '@/utils/constants'
 import ShippingPriceSelection from './shippingPriceSelection'
+import { updatePriceOrStateApi } from '../../api/products'
 
 export default {
   name: 'Product',
@@ -418,7 +446,7 @@ export default {
         value: product_state_off_shelves,
         label: '下架'
       }],
-      showMoreOptions: false,
+      showMoreOptions: true,
       floorPriceRate: 1.1,
       productsTotal: 0,
       productsData: [],
@@ -427,8 +455,11 @@ export default {
       productSelection: [],
       selectedMpuList: [],
       dialogImportVisible: false,
+      dialogUpdateVisible: false,
+      dialogUpdatePriceVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
+      exportingPriceProducts: false,
       brandLoading: false,
       brandOptions: [],
       selectionEditing: false,
@@ -576,7 +607,7 @@ export default {
       try {
         const params = {
           page: 1,
-          limit: 100,
+          limit: 1000,
           status: vendor_status_approved
         }
         this.listLoading = true
@@ -744,26 +775,44 @@ export default {
         params: { id }
       })
     },
+    isReadyForSale(product) {
+      const price = Number.parseFloat(product.price)
+      return !(Number.isNaN(price) || price < 0 ||
+        isEmpty(product.image) ||
+        isEmpty(product.imagesUrl) ||
+        isEmpty(product.introductionUrl))
+    },
     handleProductOnSale(index) {
-      this.$confirm('是否继续上架此商品？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async() => {
-        try {
-          const id = this.productsData[index].id
-          const params = {
-            id,
-            state: product_state_on_sale
+      if (this.isReadyForSale(this.productsData[index])) {
+        this.$confirm('是否继续上架此商品？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async() => {
+          try {
+            const id = this.productsData[index].id
+            const params = {
+              id,
+              state: product_state_on_sale
+            }
+            await updateProductApi(params)
+            this.$message({ message: '产品上架成功！', type: 'success' })
+            this.getListData()
+          } catch (e) {
+            console.warn(`Update product state error: ${e}`)
           }
-          await updateProductApi(params)
-          this.$message({ message: '产品上架成功！', type: 'success' })
-          this.getListData()
-        } catch (e) {
-          console.warn(`Update product state error: ${e}`)
-        }
-      }).catch(() => {
-      })
+        }).catch(() => {
+        })
+      } else {
+        this.$confirm('此商品不满足上架条件，是否去修改此商品信息？', '提示', {
+          confirmButtonText: '去编辑',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.handleEditProduct(index)
+        }).catch(() => {
+        })
+      }
     },
     handleProductOffShelves(index) {
       const that = this
@@ -804,7 +853,7 @@ export default {
           if (this.productsData.length === 1 && this.listOffset > 1) {
             this.listOffset = this.listOffset - 1
           }
-          that.getListData()
+          await that.getListData()
         } catch (e) {
           console.warn(`Delete product error: ${e}`)
         }
@@ -895,10 +944,49 @@ export default {
     handleSelectionChange(selection) {
       this.productSelection = selection
     },
-    handleExportSelection() {
-      this.exportToFile(this.productSelection)
+    async handleExportWithFloorPrice() {
+      const floorPriceRate = Math.round(this.floorPriceRate * 100)
+      if (floorPriceRate < 100 || Number.isNaN(floorPriceRate)) {
+        this.$message.warning('请设置商品底价比率大于1！')
+        return
+      }
+      try {
+        this.listLoading = true
+        this.exportingPriceProducts = true
+        const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
+        const data = await exportFloorPriceApi({ floorPriceRate, pageNo: 1, pageSize: 5000 })
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Products export floor price error:' + e)
+      } finally {
+        this.listLoading = false
+        this.exportingPriceProducts = false
+      }
     },
-
+    async onUpdatePriceConfirmed(skus) {
+      this.dialogUpdatePriceVisible = false
+      try {
+        this.listLoading = true
+        for (let i = 0; i < skus.length; i += 100) {
+          const skuList = skus.slice(i, i + 100)
+            .map(item => ({ mpu: item.mpu, price: item.price, state: item.state }))
+          await updatePriceOrStateApi(skuList)
+        }
+      } catch (e) {
+        console.warn('Products update product price error:' + e)
+      } finally {
+        this.listLoading = false
+      }
+      this.getListData()
+    },
     async handleExportAllProducts() {
       const params = this.getFilterParams()
       try {
@@ -984,6 +1072,26 @@ export default {
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
     },
+    async onGoodsUpdateConfirmed(skus) {
+      this.dialogUpdateVisible = false
+      if (skus.length > 0) {
+        const loading = this.$loading({
+          lock: true,
+          text: '正在更新商品...',
+          spinner: 'el-icon-loading'
+        })
+        for (const sku of skus) {
+          const { skuid, ...params } = sku
+          try {
+            await updateProductApi(params)
+          } catch (e) {
+            console.warn(`Good import update ${skuid} error: ${e}`)
+          }
+        }
+        loading.close()
+        this.getListData()
+      }
+    },
     handleEditSelection() {
       Object.keys(this.selectionForm).forEach(key => {
         this.selectionForm[key] = null
@@ -1043,29 +1151,38 @@ export default {
           params[key] = this.selectionForm[key]
         }
       })
-      if (isEmpty(params)) {
-        this.editDialogVisible = false
-      } else {
+      this.editDialogVisible = false
+
+      if (isEmpty(params) === false) {
         try {
-          const msg = `${params.state ? '商品状态，' : ''}
-          ${params.category ? '商品类别，' : ''}
-          ${params.brandId ? '商品品牌，' : ''}`
+          const msg = `${'state' in params ? '商品状态，' : ''}
+          ${'category' in params ? '商品类别，' : ''}
+          ${'brandId' in params ? '商品品牌，' : ''}`
           await this.$confirm(`批量修改商品：${msg}是否继续?`, '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           })
           this.selectionEditing = true
+          let warning = null
           for (const product of this.productSelection) {
+            if ('state' in params && params.state === product_state_on_sale) {
+              if (this.isReadyForSale(product) === false) {
+                warning = '部分商品上架失败，请修改商品信息！'
+                continue
+              }
+            }
             const id = product.id
             await updateProductApi({ id, ...params })
           }
           this.selectionEditing = false
           this.getListData()
+          if (warning !== null) {
+            this.$message.warning(warning)
+          }
         } catch (e) {
           console.warn('Product edit selection error:' + e)
         } finally {
-          this.editDialogVisible = false
           this.selectionEditing = false
         }
       }
@@ -1074,10 +1191,10 @@ export default {
       this.selectedMpuList = this.productSelection.map(item => item.mpu)
       this.shippingPriceDialogVisible = true
     },
-    handleCloseSelectionShipping(suc) {
+    handleCloseSelectionShipping(ret) {
       this.shippingPriceDialogVisible = false
       this.selectedMpuList = []
-      if (suc) {
+      if (ret.suc) {
         this.$message.success('修改商品运费模板成功！')
       }
     }

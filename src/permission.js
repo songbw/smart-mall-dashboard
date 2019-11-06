@@ -29,12 +29,10 @@ router.beforeEach(async(to, from, next) => {
     return
   }
   const needAuth = to.matched.reduce(
-    (auth, record) => auth && ('requiresAuth' in record.meta ? record.meta.requiresAuth : true),
-    true)
+    (auth, record) => auth || ('requiresAuth' in record.meta ? record.meta.requiresAuth : true), false)
 
   const authRoles = to.matched.reduce(
-    (roles, record) => roles.concat('roles' in record.meta ? record.meta.roles : []),
-    [])
+    (roles, record) => roles.concat('roles' in record.meta ? record.meta.roles : []), [])
 
   const roles = uniq(authRoles)
 

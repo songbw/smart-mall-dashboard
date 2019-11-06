@@ -89,7 +89,6 @@
         row-key="id"
         border
         fit
-        highlight-current-row
         style="width: 100%;"
       >
         <el-table-column label="编号" align="center" width="60">
@@ -107,6 +106,12 @@
         <el-table-column label="创建日期" align="center" width="150">
           <template slot-scope="scope">
             <span>{{ scope.row.effectiveDate | dateFilter }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="是否主页" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{ scope.row.homePage ? '是' : '否' }}</span>
           </template>
         </el-table-column>
 
@@ -422,13 +427,23 @@ export default {
       })
     },
     handleDisable(index) {
+      const aggregation = this.aggregationList[index]
+      if (aggregation.status === aggregation_on_sale_status && aggregation.homePage === true) {
+        this.$alert('此聚合页为正在使用主页，请先发布其他主页。', '警告', {
+          confirmButtonText: '确定',
+          type: 'warning',
+          callback: _ => {
+          }
+        })
+        return
+      }
       this.$confirm('下架此页，将导致客户端不可访问，是否继续下架？', '警告', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         this.listLoading = true
-        updateAggregationApi({ id: this.aggregationList[index].id, status: 2 }).then(() => {
+        updateAggregationApi({ id: aggregation.id, status: 2 }).then(() => {
           this.getListData()
         }).catch(error => {
           this.listLoading = false

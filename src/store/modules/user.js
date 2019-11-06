@@ -1,13 +1,15 @@
 import localForage from 'localforage'
+import isEmpty from 'lodash/isEmpty'
 import {
   loginApi,
+  twoFactorAuthApi,
   registerApi,
   passwordNewApi,
+  passwordChangeApi,
   getVerificationCodeApi,
   getRoleApi,
   logoutApi
 } from '@/api/auth'
-
 import {
   storage_key_token,
   storage_key_name,
@@ -48,11 +50,22 @@ const actions = {
     commit('SET_TOKEN', data.token)
     commit('SET_PHONE', phone)
     commit('SET_ROLE', '')
-
+    const reset = isEmpty(phone) === false && data.loginCount === 0
+    if (reset === false) {
+      await localForage.setItem(storage_key_token, data.token)
+      await localForage.setItem(storage_key_name, username)
+      await localForage.setItem(storage_key_phone, phone)
+      await localForage.removeItem(storage_key_role)
+    }
+    return { passwordReset: reset, twoFactorAuth: data.twoFactorAuth }
+  },
+  async twoFactorAuth({ commit }, params) {
+    const data = await twoFactorAuthApi(params)
+    commit('SET_TOKEN', data.token)
+    commit('SET_ROLE', data.role)
     await localForage.setItem(storage_key_token, data.token)
-    await localForage.setItem(storage_key_name, username)
-    await localForage.setItem(storage_key_phone, phone)
-    return data.token
+    await localForage.setItem(storage_key_role, data.role)
+    return data.role
   },
   async register({ commit }, params) {
     const name = params.username.trim()
@@ -66,6 +79,14 @@ const actions = {
     const phone = params.phone
     const code = params.code
     const data = await passwordNewApi({ name, phone, password: params.password.trim(), code })
+    return data.id
+  },
+  async passwordChange({ commit }, params) {
+    const data = await passwordChangeApi({
+      username: params.username,
+      oldPassword: params.oldPassword,
+      newPassword: params.newPassword
+    })
     return data.id
   },
   async getVerificationCode({ commit }, params) {

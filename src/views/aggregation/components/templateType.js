@@ -65,7 +65,8 @@ export const couponSettings = {
 
 export const hotZoneSettings = {
   imageUrl: '',
-  imageKey: ''
+  imageKey: '',
+  hasMargin: true
 }
 
 export const comboSettings = {

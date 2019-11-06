@@ -303,7 +303,8 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.$emit('deleteSelection', this.index, [index])
+        const mpu = this.skuData[index].mpu
+        this.$emit('deleteSelection', this.index, [mpu])
       } catch (e) {
         console.warn('Goods delete row error:' + e)
       }

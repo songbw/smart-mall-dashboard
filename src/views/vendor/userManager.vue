@@ -150,7 +150,7 @@
             @input="onLoginNameChanged"
           />
         </el-form-item>
-        <el-form-item label="用户密码" prop="password">
+        <el-form-item label="初始密码" prop="password">
           <el-input
             v-model="userForm.password"
             placeholder="请输入密码"
@@ -413,6 +413,8 @@ export default {
         this.userTotal = data.total
       } catch (e) {
         console.warn('Get vendor user list error:' + e)
+        this.userData = []
+        this.userTotal = 0
       } finally {
         this.dataLoading = false
       }
@@ -427,7 +429,7 @@ export default {
       try {
         const params = {
           page: 1,
-          limit: 100,
+          limit: 1000,
           status: vendor_status_approved
         }
         this.vendorLoading = true

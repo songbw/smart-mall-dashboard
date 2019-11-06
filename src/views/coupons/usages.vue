@@ -68,14 +68,14 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="needBatchCode" style="margin: 10px 0">
+    <div style="margin: 10px 0">
       <el-button :disabled="couponUsageTotal <= 0" type="primary" @click="handleExportUserCode">
         导出用户券码
       </el-button>
-      <el-button type="info" @click="handleBatchCode">
+      <el-button v-if="needBatchCode" type="info" @click="handleBatchCode">
         批量生成券码
       </el-button>
-      <el-button type="warning" @click="handleImportUserCode">批量导入券码</el-button>
+      <el-button v-if="false" type="warning" @click="handleImportUserCode">批量导入券码</el-button>
     </div>
     <el-table
       ref="productsTable"
@@ -87,7 +87,7 @@
       highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="用户券码" align="center" width="180">
+      <el-table-column label="用户券码" align="center" width="220">
         <template slot-scope="scope">
           <span>{{ scope.row.userCouponCode }}</span>
         </template>
@@ -156,6 +156,15 @@ import {
   batchUserCodeByIdApi
 } from '@/api/coupons'
 
+const timeFormat = time => {
+  const format = 'YYYY-MM-DD HH:mm:ss'
+  const momentDate = moment(time)
+  if (momentDate.isValid()) {
+    return momentDate.format(format)
+  } else {
+    return ''
+  }
+}
 export default {
   name: 'CouponUsages',
   components: { Pagination },
@@ -164,15 +173,7 @@ export default {
       const usage = UsageStatusOptions.find(option => status === option.value)
       return usage ? usage.label : ''
     },
-    timeFormat: time => {
-      const format = 'YYYY-MM-DD HH:mm:ss'
-      const momentDate = moment(time)
-      if (momentDate.isValid()) {
-        return momentDate.format(format)
-      } else {
-        return ''
-      }
-    }
+    timeFormat: time => timeFormat(time)
   },
   data() {
     return {
@@ -262,8 +263,12 @@ export default {
     async handleBatchCode() {
       this.batchCodeLoading = true
       try {
-        await batchUserCodeByIdApi({ couponId: this.couponId })
-        this.getUsageData()
+        const { code, msg } = await batchUserCodeByIdApi({ couponId: this.couponId })
+        if (code === 200) {
+          this.getUsageData()
+        } else {
+          this.$message.warning(msg)
+        }
       } catch (e) {
         console.warn('handleBatchCode:' + e)
       } finally {
@@ -278,21 +283,29 @@ export default {
       this.allExportProgress = 0
       this.allExportCancelled = false
       this.exportDialogVisible = true
-      const allUserCodes = []
+      let allUserCodes = []
       const params = this.getFilterParams()
       params.offset = 1
       params.limit = 100
 
       let pageTotal = 0
       let suc = true
-      let res = null
-      let data = null
+
       do {
         try {
-          res = await getCouponUsageByIdApi(params)
-          data = res.result
-          data.list.forEach(item => allUserCodes.push({ code: item.userCouponCode }))
-          pageTotal = data.pages
+          const { code, data } = await getCouponUsageByIdApi(params)
+          if (code === 200) {
+            const codeList = data.result.list.map(item => {
+              const code = item.userCouponCode
+              const statusOption = UsageStatusOptions.find(option => option.value === item.status)
+              const status = statusOption ? statusOption.label : ''
+              const collectedTime = timeFormat(item.collectedTime)
+              const consumedTime = timeFormat(item.consumedTime)
+              return { code, status, collectedTime, consumedTime, openId: item.userOpenId }
+            })
+            allUserCodes = allUserCodes.concat(codeList)
+            pageTotal = data.result.pages
+          }
           this.allExportProgress = parseInt(params.offset * 100 / pageTotal, 10)
           params.offset = params.offset + 1
         } catch (e) {
@@ -310,8 +323,8 @@ export default {
     },
     exportToFile(dataList) {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['用户券码']
-        const filterVal = ['code']
+        const tHeader = ['用户券码', '状态', '领取时间', '消费时间', '领取用户OpenID']
+        const filterVal = ['code', 'status', 'collectedTime', 'consumedTime', 'openId']
         const data = this.formatJson(filterVal, dataList)
         excel.export_json_to_excel({
           header: tHeader,
@@ -321,14 +334,7 @@ export default {
       })
     },
     formatJson(filterVal, jsonData) {
-      return jsonData.map(v => filterVal.map(j => {
-        if (j !== 'status') {
-          return v[j]
-        } else {
-          const usage = UsageStatusOptions.find(option => status === option.value)
-          return usage ? usage.label : ''
-        }
-      }))
+      return jsonData.map(v => filterVal.map(j => v[j]))
     },
     handleImportUserCode() {
       this.$message.warning('此功能稍后提供')

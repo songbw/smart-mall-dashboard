@@ -43,11 +43,16 @@
           <el-input
             v-if="!autoSku"
             v-model="productForm.skuid"
-            maxlength="30"
+            maxlength="15"
             style="width: 350px;margin-left: 10px"
           />
         </div>
         <span v-else>{{ productForm.skuid }}</span>
+        <span v-if="productForm.merchantId === vendorAoyi" style="font-size: 12px;margin-left: 10px">
+          <i class="el-icon-warning-outline">
+            奥义商品SKU规则：以10开始为奥义自营，20开始为苏宁易购，30开始为唯品会，50开始为天猫精选，60开始为京东
+          </i>
+        </span>
       </el-form-item>
       <el-form-item v-if="!createProduct" label="商品状态">
         <span>{{ productForm.state | productState }}</span>
@@ -118,12 +123,12 @@
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
-      <el-form-item label="商品库存">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
-      <el-divider content-position="left">商品物流</el-divider>
-      <el-form-item label="包邮模板">
+      <el-divider v-if="productForm.merchantId !== vendorAoyi" content-position="left">商品物流</el-divider>
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="包邮模板">
         <router-link
           v-if="freeShippingData"
           :to="{ name: 'ViewFreeShipping', params: { id: freeShippingData.id }}"
@@ -145,7 +150,7 @@
           <i class="el-icon-warning-outline">目前使用平台默认包邮模板</i>
         </span>
       </el-form-item>
-      <el-form-item label="运费模板">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="运费模板">
         <router-link
           v-if="shippingPriceData"
           :to="{ name: 'ViewShippingPrice', params: { id: shippingPriceData.id }}"
@@ -165,7 +170,7 @@
           选择模板
         </el-button>
         <el-button
-          v-if="!viewProduct && mpuShippingPriceId !== null"
+          v-if="!viewProduct && shippingPriceData !== null"
           :loading="shippingPriceLoading"
           type="danger"
           size="mini"
@@ -182,11 +187,14 @@
         >
           去修改
         </el-button>
-        <span v-if="mpuShippingPriceId === null && shippingPriceData !== null" style="margin-left: 10px;">
+        <span
+          v-if="!createProduct && mpuShippingPriceId === null && shippingPriceData !== null"
+          style="margin-left: 10px;"
+        >
           <i class="el-icon-warning-outline">目前使用平台默认运费模板</i>
         </span>
       </el-form-item>
-      <el-form-item label="商品重量(公斤)">
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品重量(公斤)">
         <span v-if="viewProduct"> {{ productForm.weight }}</span>
         <el-input-number
           v-else
@@ -347,7 +355,7 @@
       </el-form-item>
     </el-form>
     <shipping-price-selection
-      :mpu-list="[productForm.mpu]"
+      :mpu-list="productForm.mpu !== null ? [productForm.mpu] : []"
       :dialog-visible="shippingPriceDialogVisible"
       @onCancelled="shippingPriceDialogVisible = false"
       @onConfirmed="handleConfirmShippingPrice"
@@ -377,6 +385,7 @@ import { getVendorListApi } from '@/api/vendor'
 import {
   getMerchantFreeShippingApi,
   getMpuShippingPriceApi,
+  setMpuShippingPriceApi,
   deleteMpuShippingPriceApi
 } from '@/api/freight'
 
@@ -596,7 +605,7 @@ export default {
           this.loading = true
           const params = {
             page: 1,
-            limit: 100,
+            limit: 1000,
             status: vendor_status_approved
           }
           const data = await getVendorListApi(params)
@@ -818,6 +827,18 @@ export default {
         }
       })
     },
+    async setMpuShippingPrice(mpu, template) {
+      let id = null
+      try {
+        const { code, data } = await setMpuShippingPriceApi({ mpu, templateId: template.id })
+        if (code === 200) {
+          id = data.id
+        }
+      } catch (e) {
+        console.warn('Product set shipping price error:' + e)
+      }
+      return id
+    },
     async handleCreateProduct(formData) {
       try {
         const params = {}
@@ -840,6 +861,9 @@ export default {
         }
         const res = await createProductApi(params)
         if (res.code === 200) {
+          if (this.shippingPriceData !== null) {
+            await this.setMpuShippingPrice(res.data.result, this.shippingPriceData)
+          }
           this.$message({ message: '创建产品信息成功。', type: 'success' })
           this.goBack()
         } else {
@@ -1079,10 +1103,14 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          this.shippingPriceLoading = true
-          const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
-          if (code === 200) {
-            this.getMpuShippingPrice(this.productForm.mpu)
+          if (this.mpuShippingPriceId !== null) {
+            this.shippingPriceLoading = true
+            const { code } = await deleteMpuShippingPriceApi({ id: this.mpuShippingPriceId })
+            if (code === 200) {
+              this.getMpuShippingPrice(this.productForm.mpu)
+            }
+          } else {
+            this.shippingPriceData = null
           }
         } catch (e) {
           console.warn('Product remove shipping price error:' + e)
@@ -1092,10 +1120,12 @@ export default {
       }).catch(() => {
       })
     },
-    handleConfirmShippingPrice(suc) {
+    handleConfirmShippingPrice(ret) {
       this.shippingPriceDialogVisible = false
-      if (suc) {
+      if (ret.suc) {
         this.getMpuShippingPrice(this.productForm.mpu)
+      } else {
+        this.shippingPriceData = ret.template
       }
     },
     goBack() {

@@ -7,6 +7,8 @@ const queryTemplate = {
   mobile: '',
   payDateStart: null,
   payDateEnd: null,
+  completeDateStart: null,
+  completeDateEnd: null,
   subStatus: -1,
   merchantId: -1
 }
