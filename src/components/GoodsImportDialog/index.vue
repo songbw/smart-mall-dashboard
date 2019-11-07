@@ -362,7 +362,7 @@ export default {
         if (isString(value)) {
           return value
         } else {
-          return value ? value.toString() : null
+          return value != null ? value.toString() : null
         }
       } else {
         if (isNumber(value)) {
