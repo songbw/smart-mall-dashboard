@@ -157,6 +157,7 @@
 
 <script>
 import uniq from 'lodash/uniq'
+import isEmpty from 'lodash/isEmpty'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
 import { searchProductsApi } from '@/api/products'
@@ -197,6 +198,7 @@ export default {
   },
   data() {
     return {
+      filterSkuString: '',
       dialogFilterForm: {
         skus: [],
         query: ''
@@ -215,11 +217,14 @@ export default {
   computed: {
     filterSkus: {
       get() {
-        return this.dialogFilterForm.skus.join(',')
+        return this.filterSkuString
       },
       set(newValue) {
+        this.filterSkuString = newValue
         if (newValue.trim()) {
-          this.dialogFilterForm.skus = Array.from(newValue.split(','))
+          this.dialogFilterForm.skus = newValue.trim().split(',')
+            .map(item => item.trim())
+            .filter(item => !isEmpty(item))
         } else {
           this.dialogFilterForm.skus = []
         }
