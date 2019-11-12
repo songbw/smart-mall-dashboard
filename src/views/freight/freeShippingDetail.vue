@@ -123,6 +123,7 @@ import {
 import { getVendorListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
 import {
+  hasVendorSpecific,
   free_shipping_amount_mode,
   FreeShippingModeOptions,
   RegionList
@@ -215,7 +216,9 @@ export default {
         this.getFreeShippingDetail(id)
       }
     }
-    this.getVendorList()
+    if (hasVendorSpecific) {
+      this.getVendorList()
+    }
   },
   methods: {
     async getVendorList() {

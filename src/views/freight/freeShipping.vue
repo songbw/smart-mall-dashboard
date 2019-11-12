@@ -10,7 +10,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="模板编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewFreeShipping', params: { id: scope.row.id }}"
@@ -90,7 +90,8 @@ import {
   deleteFreeShippingApi
 } from '@/api/freight'
 import { getVendorListApi } from '@/api/vendor'
-import { FreeShippingModeOptions, vendor_status_approved } from './constants'
+import { FreeShippingModeOptions, hasVendorSpecific } from './constants'
+import { vendor_status_approved } from '@/utils/constants'
 
 export default {
   name: 'FreeShipping',
@@ -133,7 +134,9 @@ export default {
   methods: {
     async prepareData() {
       try {
-        await this.getVendorList()
+        if (hasVendorSpecific) {
+          await this.getVendorList()
+        }
         await this.getFreeShippingList()
       } catch (e) {
         console.warn('Free shipping list error:' + e)

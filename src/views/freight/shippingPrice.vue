@@ -10,7 +10,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="模板编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewShippingPrice', params: { id: scope.row.id }}"
