@@ -71,7 +71,7 @@ export function deliveryUploadApi(params) {
 
 export function exportOrdersApi(params) {
   return Vue.axios('orders').request({
-    url: '/orders/adminorder/export',
+    url: '/orders/adminorder/export/admin',
     method: 'get',
     responseType: 'blob',
     params
@@ -100,7 +100,7 @@ export function uploadLogisticsApi(params) {
 
 export function exportReconciliationApi(params) {
   return Vue.axios('orders').request({
-    url: '/orders/adminorder/export/reconciliation',
+    url: '/orders/adminorder/export/admin/reconciliation',
     method: 'get',
     responseType: 'blob',
     params
