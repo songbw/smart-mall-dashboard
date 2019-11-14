@@ -169,7 +169,6 @@ export default {
             balance[header.field] = this.parseValue(header.type, item[header.label])
           }
         })
-        balance.amount = balance.amount * 100
         if (!isEmpty(balance) && !isEmpty(balance.telephone)) {
           count++
           this.excelResults.push(balance)

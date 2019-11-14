@@ -80,6 +80,15 @@ export function batchInitBalancesApi(params) {
   })
 }
 
+export function exportBalanceRecordsApi(params) {
+  return Vue.axios('orders').request({
+    url: '/ssoes/balance/export/sum',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
 export function getMemberAddressListApi(params) {
   return Vue.axios('members')({
     url: '/orders/admin/receiver/user',

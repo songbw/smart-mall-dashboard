@@ -24,6 +24,7 @@
         </el-button>
         <el-button
           v-if="hasBalanceExportPermission"
+          :loading="balanceExporting"
           type="success"
           icon="el-icon-download"
           @click="exportDialogVisible = true"
@@ -147,7 +148,8 @@ import {
   getAllMemberBalancesApi,
   rechargeMemberBalanceApi,
   getMemberProfileByOpenIdApi,
-  batchInitBalancesApi
+  batchInitBalancesApi,
+  exportBalanceRecordsApi
 } from '@/api/members'
 import { MemberPermissions } from '@/utils/role-permissions'
 import BalancesImport from './balances-import'
@@ -190,6 +192,7 @@ export default {
       importDialogVisible: false,
       rechargeId: -1,
       rechargeTelephone: '',
+      balanceExporting: false,
       exportDialogVisible: false,
       exportForm: {
         startDate: null,
@@ -359,7 +362,7 @@ export default {
           this.balancesLoading = true
           for (let i = 0; i < balances.length; i += 100) {
             const balanceList = balances.slice(i, i + 100)
-              .map(item => ({ username: this.userName, ...item }))
+              .map(item => ({ username: this.userName, amount: item.amount * 100, telephone: item.telephone }))
             await batchInitBalancesApi(balanceList)
           }
           this.getAllMemberBalances()
@@ -370,6 +373,38 @@ export default {
         }
       }
     },
+    downloadBlobData(data, filename) {
+      try {
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download blob data error:' + e)
+      }
+    },
+    async handleExportBalances() {
+      try {
+        this.balanceExporting = true
+        const params = {
+          start: this.exportForm.startDate,
+          end: this.exportForm.endDate
+        }
+        const data = await exportBalanceRecordsApi(params)
+        const filename = `余额记录单-${params.start}-${params.end}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      } finally {
+        this.balanceExporting = false
+      }
+    },
     handleCancelExport() {
       this.$refs.exportForm.resetFields()
       this.exportDialogVisible = false
@@ -378,6 +413,7 @@ export default {
       this.$refs.exportForm.validate(valid => {
         if (valid) {
           this.exportDialogVisible = false
+          this.handleExportBalances()
         }
       })
     }
