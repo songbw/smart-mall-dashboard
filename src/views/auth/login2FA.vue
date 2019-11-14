@@ -181,7 +181,7 @@ export default {
             if (res && res.status >= 400 && res.status < 500) {
               if (res && res.data) {
                 const data = res.data
-                if (data.error && Number.parseInt(data.error) === 400003) {
+                if (data.error && Number.parseInt(data.error) === 400004) {
                   msg = '手机验证码无效，请确认后重试！'
                 } else {
                   msg = '用户手机号码无效，请确认后重试！'
