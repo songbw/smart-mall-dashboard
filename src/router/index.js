@@ -182,7 +182,7 @@ export const constantRoutes = [
         path: 'bulletins',
         name: 'Bulletins',
         component: () => import('@/views/bulletins/index'),
-        meta: { title: '商品公告', icon: 'bulletins' }
+        meta: { title: '商品公告', icon: 'bulletins', roles: [role_admin_name] }
       }
     ]
   },
@@ -191,7 +191,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/coupons/index',
     name: 'Coupons',
-    meta: { title: '权益', icon: 'golds', roles: [role_admin_name, role_watcher_name] },
+    meta: { title: '权益', icon: 'golds', roles: [role_admin_name] },
     children: [
       {
         path: 'index',
@@ -233,7 +233,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/marketing/aggregations',
     name: 'Marketing',
-    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name, role_watcher_name] },
+    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name] },
     children: [
       {
         path: 'aggregations',
@@ -352,7 +352,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/statistics/index',
     name: 'StatisticsManager',
-    meta: { title: '统计', icon: 'statistics' },
+    meta: { title: '统计', icon: 'statistics', roles: [role_admin_name] },
     children: [
       {
         path: 'index',

@@ -20,7 +20,7 @@
             <span class="item-label">主订单号：</span>
             <span class="item-text">{{ tradeNo }}</span>
           </el-col>
-          <el-col :span="12">
+          <el-col v-if="hasVendorPermission" :span="12">
             <span class="item-label">供应商名：</span>
             <span class="item-text">{{ merchantName }}</span>
           </el-col>
@@ -47,12 +47,12 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
-import {
-  getVendorProfileApi
-} from '@/api/vendor'
+import { getVendorProfileApi } from '@/api/vendor'
+import { OrderPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'OrderInfo',
@@ -107,6 +107,12 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      userPermissions: 'userPermissions'
+    }),
+    hasVendorPermission() {
+      return this.userPermissions.includes(OrderPermissions.vendor)
+    },
     hasSupplierOrder: {
       get() {
         return !isEmpty(this.aoyiId) && !isEmpty(this.merchantNo)

@@ -169,6 +169,7 @@ export default {
             balance[header.field] = this.parseValue(header.type, item[header.label])
           }
         })
+        balance.amount = balance.amount * 100
         if (!isEmpty(balance) && !isEmpty(balance.telephone)) {
           count++
           this.excelResults.push(balance)
@@ -188,7 +189,7 @@ export default {
         if (isNumber(value)) {
           return value
         } else {
-          const val = Number.parseInt(value)
+          const val = Number.parseFloat(value).toFixed(2)
           return Number.isNaN(val) ? null : val
         }
       }

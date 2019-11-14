@@ -79,18 +79,21 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="hasExportPermission" style="display: flex;justify-content: start;margin-bottom: 12px">
-      <el-tooltip content="导出所需时间段内已支付与已退款的订单列表">
+    <div
+      v-if="hasExportPermission || hasPayExportPermission"
+      style="display: flex;justify-content: start;margin-bottom: 12px"
+    >
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已支付与已退款的订单列表">
         <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
           导出流水订单
         </el-button>
       </el-tooltip>
-      <el-tooltip content="导出所需时间段内已完成与已退款的订单列表">
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表">
         <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
       </el-tooltip>
-      <el-tooltip content="根据支付类型导出所需时间段内已完成与已退款的交易列表">
+      <el-tooltip v-if="hasPayExportPermission" content="根据支付类型导出所需时间段内已完成与已退款的交易列表">
         <el-button icon="el-icon-download" type="warning" @click="handleShowPaymentExportDialog">
           导出支付交易订单
         </el-button>
@@ -197,7 +200,7 @@
       :visible.sync="exportDialogVisible"
       :title="exportReconciliation ? '导出结算订单' : '导出订单'"
     >
-      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="80px">
+      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
         <el-form-item label="开始日期" prop="payStartDate">
           <el-date-picker
             v-model="exportForm.payStartDate"
@@ -370,6 +373,9 @@ export default {
     },
     hasExportPermission() {
       return this.userPermissions.includes(OrderPermissions.export)
+    },
+    hasPayExportPermission() {
+      return this.userPermissions.includes(OrderPermissions.payExport)
     },
     hasVendorPermission() {
       return this.userPermissions.includes(OrderPermissions.vendor)

@@ -22,6 +22,14 @@
         >
           批量初始化余额
         </el-button>
+        <el-button
+          v-if="hasBalanceExportPermission"
+          type="success"
+          icon="el-icon-download"
+          @click="exportDialogVisible = true"
+        >
+          导出余额记录
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -96,6 +104,36 @@
       @onSelectionCancelled="importDialogVisible = false"
       @onSelectionConfirmed="handleImportBalances"
     />
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="exportDialogVisible"
+      title="导出余额记录"
+    >
+      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
+        <el-form-item label="开始日期" prop="startDate">
+          <el-date-picker
+            v-model="exportForm.startDate"
+            placeholder="选择开始日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期" prop="endDate">
+          <el-date-picker
+            v-model="exportForm.endDate"
+            placeholder="选择结束日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelExport">取消</el-button>
+        <el-button type="primary" @click="handleConfirmExport">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,7 +153,17 @@ import { MemberPermissions } from '@/utils/role-permissions'
 import BalancesImport from './balances-import'
 
 const couldRecharge = true
-
+const validateDates = (start, end) => {
+  const format = 'YYYY-MM-DD'
+  if (start && end) {
+    const startDate = moment(start, format)
+    const maxEndDate = moment(start, format).add(3, 'months')
+    const endDate = moment(end, format)
+    return endDate.isSameOrAfter(startDate) && endDate.isSameOrBefore(maxEndDate)
+  } else {
+    return false
+  }
+}
 export default {
   name: 'Balances',
   components: { Pagination, RechargeBalance, BalancesImport },
@@ -141,7 +189,34 @@ export default {
       rechargeDialogVisible: false,
       importDialogVisible: false,
       rechargeId: -1,
-      rechargeTelephone: ''
+      rechargeTelephone: '',
+      exportDialogVisible: false,
+      exportForm: {
+        startDate: null,
+        endDate: null
+      },
+      exportRules: {
+        startDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.endDate === null) ||
+              validateDates(this.exportForm.startDate, this.exportForm.endDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的开始日期，区间最多3个月'))
+            }
+          }
+        }],
+        endDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.startDate === null) ||
+              validateDates(this.exportForm.startDate, this.exportForm.endDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的结束日期， 区间最多3个月'))
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
@@ -155,6 +230,9 @@ export default {
     },
     hasBalanceEditPermission() {
       return couldRecharge && this.userPermissions.includes(MemberPermissions.balanceUpdate)
+    },
+    hasBalanceExportPermission() {
+      return this.userPermissions.includes(MemberPermissions.balanceExport)
     },
     queryTelephone: {
       get() {
@@ -291,6 +369,17 @@ export default {
           this.balancesLoading = false
         }
       }
+    },
+    handleCancelExport() {
+      this.$refs.exportForm.resetFields()
+      this.exportDialogVisible = false
+    },
+    handleConfirmExport() {
+      this.$refs.exportForm.validate(valid => {
+        if (valid) {
+          this.exportDialogVisible = false
+        }
+      })
     }
   }
 }

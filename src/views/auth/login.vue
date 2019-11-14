@@ -166,8 +166,8 @@ export default {
                 await this.$router.push({ path: '/login/2fa' })
               } else {
                 const role = await this.$store.dispatch('user/getRole')
-
                 if (role_admin_name === role || role_watcher_name === role) {
+                  this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
                   await storageSetItem(storage_merchant_id, 0)
                 } else {
                   await this.getVendorProfile()

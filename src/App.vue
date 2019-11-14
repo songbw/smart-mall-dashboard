@@ -54,6 +54,7 @@ export default {
           this.$store.commit('user/SET_PERMISSIONS', permissions)
         }
         if (role_admin_name === role || role_watcher_name === role) {
+          this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
           await storageSetItem(storage_merchant_id, 0)
         } else if (!isEmpty(token)) {
           await this.getVendorProfile()

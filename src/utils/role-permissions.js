@@ -50,6 +50,7 @@ export const OrderPermissions = {
   update: 'order:update',
   view: 'order:view',
   export: 'order:export',
+  payExport: 'order:payexport',
   vendor: 'order:vendor'
 }
 
@@ -61,7 +62,8 @@ export const WorkOrderPermissions = {
 export const MemberPermissions = {
   view: 'member:view',
   balanceView: 'balance:view',
-  balanceUpdate: 'balance:update'
+  balanceUpdate: 'balance:update',
+  balanceExport: 'balance:export'
 }
 
 export const VendorPermissions = {
@@ -73,5 +75,6 @@ export const VendorPermissions = {
 
 export const RolePermissions = {
   update: 'role:update',
+  create: 'role:create',
   view: 'role:view'
 }

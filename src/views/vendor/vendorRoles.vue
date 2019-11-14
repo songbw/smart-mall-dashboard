@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="hasEditPermission" style="margin-bottom: 10px">
+    <div v-if="hasCreatePermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="dialogCreationVisible = true">创建角色</el-button>
     </div>
     <el-table
@@ -160,6 +160,9 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions'
     }),
+    hasCreatePermission() {
+      return this.userPermissions.includes(RolePermissions.create)
+    },
     hasViewPermission() {
       return this.userPermissions.includes(RolePermissions.view)
     },
