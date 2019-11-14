@@ -12,6 +12,7 @@
       :open-id="orderData.openId"
       :merchant-no="orderData.merchantNo"
       :aoyi-id="orderData.aoyiId"
+      :sale-amount="orderData.saleAmount"
     />
     <receiver-info
       :receiver-name="orderData.receiverName"

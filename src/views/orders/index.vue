@@ -217,7 +217,7 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item v-if="exportPayment && hasExportPermission" label="支付类型" prop="payType">
+        <el-form-item v-if="exportPayment" label="支付类型" prop="payType">
           <el-select v-model="exportForm.payType">
             <el-option
               v-for="item in paymentOptions"

@@ -109,7 +109,7 @@
           <span>{{ scope.row.refundTime | timeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="售后类型" align="center" width="80">
+      <el-table-column label="售后类型" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.typeName }}</span>
         </template>

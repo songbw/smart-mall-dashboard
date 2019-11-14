@@ -11,8 +11,8 @@
             <span class="item-text">{{ status | statusFilter }}</span>
           </el-col>
           <el-col :span="12">
-            <span class="item-label">OpenID：</span>
-            <span class="item-text">{{ openId }}</span>
+            <span class="item-label">订单总额：</span>
+            <span class="item-text">{{ saleAmount }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -39,6 +39,12 @@
           <el-col :span="12">
             <span class="item-label">更新时间：</span>
             <span class="item-text">{{ updatedAt | timeFilter }}</span>
+          </el-col>
+        </el-row>
+        <el-row class="item-row">
+          <el-col :span="12">
+            <span class="item-label">OpenID：</span>
+            <span class="item-text">{{ openId }}</span>
           </el-col>
         </el-row>
       </el-card>
@@ -99,6 +105,10 @@ export default {
     aoyiId: {
       type: String,
       default: ''
+    },
+    saleAmount: {
+      type: Number,
+      default: 0
     }
   },
   data() {
