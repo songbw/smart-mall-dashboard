@@ -522,7 +522,7 @@ export default {
         }],
         price: [{
           required: true, validator: (rule, value, callback) => {
-            if (this.hasPricePermission()) {
+            if (this.hasSalePricePermission) {
               if (isNumber(value) && value > 0) {
                 callback()
               } else {
