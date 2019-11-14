@@ -153,8 +153,8 @@ import {
 } from '@/api/members'
 import { MemberPermissions } from '@/utils/role-permissions'
 import BalancesImport from './balances-import'
+import { couldRecharge } from './constants'
 
-const couldRecharge = true
 const validateDates = (start, end) => {
   const format = 'YYYY-MM-DD'
   if (start && end) {

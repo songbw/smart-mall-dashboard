@@ -194,10 +194,8 @@ import {
   rechargeMemberBalanceApi
 } from '@/api/members'
 import RechargeBalance from './recharge-balance'
-import { BalanceFlowTypeDefinitions, BalanceFlowStatusDefinitions } from './constants'
+import { BalanceFlowTypeDefinitions, BalanceFlowStatusDefinitions, couldRecharge } from './constants'
 import { MemberPermissions } from '@/utils/role-permissions'
-
-const couldRecharge = true
 
 export default {
   name: 'Profile',

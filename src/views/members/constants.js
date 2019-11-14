@@ -1,3 +1,4 @@
+export const couldRecharge = true
 export const balance_flow_type_init = -1
 export const balance_flow_type_pay = 0
 export const balance_flow_type_refund = 1
