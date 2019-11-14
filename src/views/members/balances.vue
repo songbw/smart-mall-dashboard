@@ -14,6 +14,14 @@
         <el-button type="primary" icon="el-icon-search" @click="handleSearchBalances">
           搜索
         </el-button>
+        <el-button
+          v-if="hasBalanceEditPermission"
+          type="warning"
+          icon="el-icon-upload2"
+          @click="importDialogVisible = true"
+        >
+          批量初始化余额
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -59,10 +67,9 @@
           <span>{{ scope.row.updatedAt | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="120">
+      <el-table-column v-if="hasBalanceEditPermission" label="操作" align="center" width="120">
         <template slot-scope="scope">
           <el-button
-            :disabled="scope.row.userId === null"
             type="primary"
             size="mini"
             @click="handleRecharge(scope.$index)"
@@ -84,6 +91,11 @@
       @cancelled="cancelRecharge"
       @confirmed="confirmRecharge"
     />
+    <balances-import
+      :dialog-visible="importDialogVisible"
+      @onSelectionCancelled="importDialogVisible = false"
+      @onSelectionConfirmed="handleImportBalances"
+    />
   </div>
 </template>
 
@@ -93,13 +105,20 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import RechargeBalance from './recharge-balance'
-import { getAllMemberBalancesApi, rechargeMemberBalanceApi, getMemberProfileByOpenIdApi } from '@/api/members'
+import {
+  getAllMemberBalancesApi,
+  rechargeMemberBalanceApi,
+  getMemberProfileByOpenIdApi,
+  batchInitBalancesApi
+} from '@/api/members'
+import { MemberPermissions } from '@/utils/role-permissions'
+import BalancesImport from './balances-import'
 
-const couldRecharge = false
+const couldRecharge = true
 
 export default {
   name: 'Balances',
-  components: { Pagination, RechargeBalance },
+  components: { Pagination, RechargeBalance, BalancesImport },
   filters: {
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -120,17 +139,22 @@ export default {
         pageSize: 20
       },
       rechargeDialogVisible: false,
+      importDialogVisible: false,
       rechargeId: -1,
       rechargeTelephone: ''
     }
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userName: 'userName',
+      userPermissions: 'userPermissions',
       listQuery: 'balancesQuery'
     }),
-    hasEditPermission() {
-      return couldRecharge && this.isAdminUser
+    hasBalanceViewPermission() {
+      return this.userPermissions.includes(MemberPermissions.balanceView)
+    },
+    hasBalanceEditPermission() {
+      return couldRecharge && this.userPermissions.includes(MemberPermissions.balanceUpdate)
     },
     queryTelephone: {
       get() {
@@ -169,39 +193,43 @@ export default {
   },
   methods: {
     async getAllMemberBalances() {
-      try {
-        this.balancesLoading = true
-        const params = {
-          pageNo: this.queryPageNo,
-          pageSize: this.queryPageSize
-        }
-        if (!isEmpty(this.queryTelephone)) {
-          params.telephone = this.queryTelephone
-        }
-        const { code, data } = await getAllMemberBalancesApi(params)
-        if (code === 200) {
-          this.balanceTotal = data.total
-          this.balanceList = data.list
-          for (const balance of this.balanceList) {
-            if (balance.userId === null && balance.openId !== null) {
-              balance.userId = await this.getMemberId(balance.openId)
-            }
+      if (this.hasBalanceViewPermission) {
+        try {
+          this.balancesLoading = true
+          const params = {
+            pageNo: this.queryPageNo,
+            pageSize: this.queryPageSize
           }
-        } else {
-          this.balanceTotal = 0
-          this.balanceList = []
+          if (!isEmpty(this.queryTelephone)) {
+            params.telephone = this.queryTelephone
+          }
+          const { code, data } = await getAllMemberBalancesApi(params)
+          if (code === 200) {
+            this.balanceTotal = data.total
+            this.balanceList = data.list
+            for (const balance of this.balanceList) {
+              if (balance.userId === null && balance.openId !== null) {
+                balance.userId = await this.getMemberId(balance.openId)
+              }
+            }
+          } else {
+            this.balanceTotal = 0
+            this.balanceList = []
+          }
+        } catch (e) {
+          console.warn('Get all balances error:' + e)
+        } finally {
+          this.balancesLoading = false
         }
-      } catch (e) {
-        console.warn('Get all balances error:' + e)
-      } finally {
-        this.balancesLoading = false
+      } else {
+        this.$message.warning('没有查看余额的权限，请联系管理员！')
       }
     },
     async getMemberId(openId) {
       let memberId = null
       try {
         const { code, data } = await getMemberProfileByOpenIdApi({ openId, iAppId: process.env.VUE_APP_ID })
-        if (code === 200) {
+        if (code === 200 && data.user !== null) {
           memberId = data.user.id
         }
       } catch (e) {
@@ -226,7 +254,9 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi({ id: this.rechargeId, amount: amount * 100 })
+          const { code, msg } = await rechargeMemberBalanceApi({
+            id: this.rechargeId, amount: amount * 100, username: this.userName
+          })
           if (code === 200) {
             this.$message.success('充值成功！')
             this.getAllMemberBalances()
@@ -243,6 +273,24 @@ export default {
       this.rechargeDialogVisible = false
       this.rechargeId = -1
       this.rechargeTelephone = ''
+    },
+    async handleImportBalances(balances) {
+      this.importDialogVisible = false
+      if (balances.length > 0) {
+        try {
+          this.balancesLoading = true
+          for (let i = 0; i < balances.length; i += 100) {
+            const balanceList = balances.slice(i, i + 100)
+              .map(item => ({ username: this.userName, ...item }))
+            await batchInitBalancesApi(balanceList)
+          }
+          this.getAllMemberBalances()
+        } catch (e) {
+          console.warn('Import balances error:' + e)
+        } finally {
+          this.balancesLoading = false
+        }
+      }
     }
   }
 }

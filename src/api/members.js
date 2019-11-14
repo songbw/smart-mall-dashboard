@@ -72,6 +72,14 @@ export function getAllMemberBalancesApi(params) {
   })
 }
 
+export function batchInitBalancesApi(params) {
+  return Vue.axios('members')({
+    url: '/ssoes/balance/init',
+    method: 'post',
+    data: params
+  })
+}
+
 export function getMemberAddressListApi(params) {
   return Vue.axios('members')({
     url: '/orders/admin/receiver/user',

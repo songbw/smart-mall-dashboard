@@ -2,13 +2,12 @@ import Vue from 'vue'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import isEmpty from 'lodash/isEmpty'
-import localForage from 'localforage'
-// import { Message } from 'element-ui'
 import store from '@/store'
 import {
   storage_key_token,
   storage_merchant_id
 } from '@/utils/constants'
+import { storageGetItem } from '@/utils/storage'
 
 const axiosMap = new Map()
 const relogin = () => {
@@ -39,8 +38,8 @@ const axiosService = apiKey => {
     service.interceptors.request.use(
       async config => {
         try {
-          const token = await localForage.getItem(storage_key_token)
-          const id = await localForage.getItem(storage_merchant_id)
+          const token = await storageGetItem(storage_key_token)
+          const id = await storageGetItem(storage_merchant_id)
           if (!isEmpty(token)) {
             config.headers['Authorization'] = `Bearer ${token}`
           }

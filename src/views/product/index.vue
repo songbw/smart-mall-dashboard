@@ -38,7 +38,7 @@
         <el-form-item label="商品MPU">
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
-        <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名">
+        <el-form-item v-if="hasVendorPermission" label="供应商名">
           <el-select :value="listVendor" @change="handleVendorChanged">
             <el-option
               v-for="item in vendorOptions"
@@ -62,12 +62,12 @@
         </el-form-item>
       </el-form>
       <div
-        v-if="!isWatcherUser"
+        v-if="hasCreatePermission || hasUpdatePermission || hasExportPermission"
         style="margin-bottom: 10px;display: flex;justify-content: space-between;align-items: baseline"
       >
         <div>
           <el-button
-            v-if="!noCreatePermission"
+            v-if="hasCreatePermission"
             :disabled="!vendorApproved"
             type="primary"
             icon="el-icon-goods"
@@ -76,7 +76,7 @@
             新建商品
           </el-button>
           <el-button
-            v-if="!noCreatePermission"
+            v-if="hasCreatePermission"
             :disabled="!vendorApproved"
             type="success"
             icon="el-icon-upload2"
@@ -85,7 +85,7 @@
             批量创建
           </el-button>
           <el-button
-            v-if="hasEditPermission"
+            v-if="hasUpdatePermission"
             :disabled="!vendorApproved"
             type="warning"
             icon="el-icon-upload2"
@@ -94,6 +94,7 @@
             批量更新
           </el-button>
           <el-button
+            v-if="hasUpdatePermission"
             :disabled="productSelection.length === 0"
             type="info"
             icon="el-icon-edit"
@@ -102,6 +103,7 @@
             修改已选{{ productSelection.length }}个商品
           </el-button>
           <el-button
+            v-if="hasUpdatePermission"
             :disabled="productSelection.length === 0"
             type="danger"
             icon="el-icon-edit-outline"
@@ -112,6 +114,7 @@
         </div>
         <div>
           <el-button
+            v-if="hasExportPermission"
             :disabled="!vendorApproved"
             :loading="productExporting"
             type="warning"
@@ -123,7 +126,7 @@
         </div>
       </div>
     </div>
-    <el-form v-if="isAdminUser" inline @submit.prevent.native="() => {}">
+    <el-form v-if="hasSalePricePermission && hasCostPricePermission" inline @submit.prevent.native="() => {}">
       <el-form-item label="底价比率">
         <el-input-number
           v-model="floorPriceRate"
@@ -192,7 +195,7 @@
           <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="销售价格(元)" align="center" width="120">
+      <el-table-column label="销售价格(元)" align="center" width="160">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
             <el-input-number
@@ -219,7 +222,7 @@
             />
           </template>
           <template v-else>
-            <span style="padding-right: 10px">{{ scope.row.price }}</span>
+            <span v-if="hasSalePricePermission" style="padding-right: 10px">{{ scope.row.price }}</span>
             <el-button
               v-if="scope.row.price && couldEditProduct"
               icon="el-icon-edit"
@@ -228,13 +231,16 @@
               circle
               @click="scope.row.editPrice=!scope.row.editPrice"
             />
-            <div v-if="!isWatcherUser && scope.row.sprice !== null" style="font-size: 12px">
-              （底价:{{ getFloorPrice(scope.row) }}）
+            <div v-if="hasSalePricePermission && hasCostPricePermission && scope.row.sprice !== null">
+              <span style="font-size: 12px">(底价:{{ getFloorPrice(scope.row) }})</span>
+            </div>
+            <div v-if="hasCostPricePermission && scope.row.sprice !== null">
+              <span style="font-size: 12px">(进价:{{ scope.row.sprice }})</span>
             </div>
           </template>
         </template>
       </el-table-column>
-      <el-table-column v-if="isAdminUser || isWatcherUser" label="供应商" align="center" width="120">
+      <el-table-column v-if="hasVendorPermission" label="供应商" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ getVendorName(scope.row.merchantId) }}</span>
         </template>
@@ -251,45 +257,45 @@
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
-          <el-button v-if="isWatcherUser" type="primary" @click="handleViewProduct(scope.$index)">
-            查看商品
-          </el-button>
-          <el-dropdown v-else placement="bottom" trigger="click" @command="handleOpsAction">
+          <el-dropdown placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
+                v-if="hasViewPermission"
                 :command="`view:${scope.$index}`"
                 icon="el-icon-view"
               >
                 查看商品
               </el-dropdown-item>
               <el-dropdown-item
+                v-if="hasUpdatePermission"
                 :command="`edit:${scope.$index}`"
-                :disabled="isProductOnSale(scope.row.state) || !hasEditPermission"
+                :disabled="isProductOnSale(scope.row.state)"
                 icon="el-icon-edit"
                 divided
               >
                 编辑商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-if="isAdminUser && !isProductOnSale(scope.row.state)"
+                v-if="hasStatePermission && !isProductOnSale(scope.row.state)"
                 :command="`start:${scope.$index}`"
                 icon="el-icon-sell"
               >
                 上架商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-else-if="isAdminUser && isProductOnSale(scope.row.state)"
+                v-else-if="hasStatePermission && isProductOnSale(scope.row.state)"
                 :command="`stop:${scope.$index}`"
                 icon="el-icon-sold-out"
               >
                 下架商品
               </el-dropdown-item>
               <el-dropdown-item
+                v-if="hasDeletePermission"
                 :command="`delete:${scope.$index}`"
-                :disabled="isProductCouldDelete(scope.row) === false || noCreatePermission"
+                :disabled="isProductCouldDelete(scope.row) === false || !hasCreatePermission"
                 icon="el-icon-delete"
                 divided
               >
@@ -362,7 +368,7 @@
             @changed="onEditCategorySelectionChanged"
           />
         </el-form-item>
-        <el-form-item v-if="isAdminUser" label="商品状态">
+        <el-form-item v-if="hasStatePermission" label="商品状态">
           <el-select v-model="selectionForm.state" clearable>
             <el-option
               v-for="item in editStateOptions"
@@ -400,7 +406,8 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
-  exportFloorPriceApi
+  exportFloorPriceApi,
+  updatePriceOrStateApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
@@ -415,8 +422,8 @@ import {
   ProductStateOptions,
   vendor_status_approved
 } from '@/utils/constants'
+import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
-import { updatePriceOrStateApi } from '../../api/products'
 
 export default {
   name: 'Product',
@@ -477,18 +484,38 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser',
       vendorId: 'vendorId',
       productQuery: 'productQuery',
       productVendors: 'productVendors',
-      vendorApproved: 'vendorApproved'
+      vendorApproved: 'vendorApproved',
+      userPermissions: 'userPermissions'
     }),
-    hasEditPermission() {
-      return !this.isWatcherUser
+    hasViewPermission() {
+      return this.userPermissions.includes(ProductPermissions.view)
     },
-    noCreatePermission() {
-      return this.isWatcherUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    hasCreatePermission() {
+      return this.userPermissions.includes(ProductPermissions.create)
+    },
+    hasUpdatePermission() {
+      return this.userPermissions.includes(ProductPermissions.update)
+    },
+    hasDeletePermission() {
+      return this.userPermissions.includes(ProductPermissions.delete)
+    },
+    hasSalePricePermission() {
+      return this.userPermissions.includes(ProductPermissions.salePrice)
+    },
+    hasCostPricePermission() {
+      return this.userPermissions.includes(ProductPermissions.costPrice)
+    },
+    hasStatePermission() {
+      return this.userPermissions.includes(ProductPermissions.state)
+    },
+    hasVendorPermission() {
+      return this.userPermissions.includes(ProductPermissions.vendor)
+    },
+    hasExportPermission() {
+      return this.userPermissions.includes(ProductPermissions.export)
     },
     vendorOptions() {
       return [{ value: -1, label: '全部' }].concat(this.productVendors)
@@ -636,7 +663,7 @@ export default {
       }
     },
     async getListData() {
-      if (this.vendorApproved) {
+      if (this.vendorApproved && this.hasViewPermission) {
         const params = this.getFilterParams()
         if (params) {
           params.offset = this.listOffset
@@ -686,7 +713,7 @@ export default {
       if (!isEmpty(this.listBrand)) {
         params.brand = this.listBrand
       }
-      if (this.isAdminUser || this.isWatcherUser) {
+      if (this.hasVendorPermission) {
         if (this.listVendor > 0) {
           params.merchantId = this.listVendor
         }
@@ -736,17 +763,21 @@ export default {
       return Number.isNaN(value) ? false : value === product_state_is_editing
     },
     handleFilter() {
-      if (this.firstCategoryValue != null) {
-        if (this.secondCategoryValue === null) {
-          this.$message.warning('请选择商品二级类别！')
-          return
-        } else if (this.thirdCategoryValue === null) {
-          this.$message.warning('请选择商品三级类别！')
-          return
+      if (this.hasViewPermission) {
+        if (this.firstCategoryValue != null) {
+          if (this.secondCategoryValue === null) {
+            this.$message.warning('请选择商品二级类别！')
+            return
+          } else if (this.thirdCategoryValue === null) {
+            this.$message.warning('请选择商品三级类别！')
+            return
+          }
         }
+        this.listOffset = 1
+        this.getListData()
+      } else {
+        this.$message.warning('没有查看商品权限，请联系管理员！')
       }
-      this.listOffset = 1
-      this.getListData()
     },
     getFloorPrice(row) {
       const sprice = Number.parseFloat(row.sprice)

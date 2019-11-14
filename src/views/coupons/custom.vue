@@ -529,6 +529,7 @@ import {
   CouponTypeOptions,
   CustomerTypeOptions
 } from './constants'
+import { CouponPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'CustomCoupon',
@@ -806,10 +807,14 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userPermissions: 'userPermissions',
       categoriesOption: 'categories',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading'
     }),
+    hasEditPermission() {
+      return this.userPermissions.includes(CouponPermissions.update)
+    },
     categoryOptions: {
       get() {
         if (this.categoriesLoaded) {
@@ -1163,6 +1168,10 @@ export default {
       }
     },
     async handleSubmit() {
+      if (this.hasEditPermission) {
+        this.$message.warning('没有创建或修改优惠券权限，请联系管理员！')
+        return
+      }
       try {
         const valid = await this.$refs['couponForm'].validate()
         if (valid) {

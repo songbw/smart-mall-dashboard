@@ -25,7 +25,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="isAdminUser || isWatcherUser" label="供应商名">
+      <el-form-item v-if="hasVendorPermission" label="供应商名">
         <el-select :value="queryVendor" @change="onQueryVendorChanged">
           <el-option
             v-for="item in vendorOptions"
@@ -79,7 +79,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="isAdminUser" style="display: flex;justify-content: start;margin-bottom: 12px">
+    <div v-if="hasExportPermission" style="display: flex;justify-content: start;margin-bottom: 12px">
       <el-tooltip content="导出所需时间段内已支付与已退款的订单列表">
         <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
           导出流水订单
@@ -174,7 +174,7 @@
             查看
           </el-button>
           <el-button
-            v-if="!isWatcherUser"
+            v-if="hasEditPermission"
             size="mini"
             type="info"
             @click="handleEditOrderRemark(scope.row.subId)"
@@ -214,7 +214,7 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item v-if="exportPayment && (isAdminUser || isWatcherUser)" label="支付类型" prop="payType">
+        <el-form-item v-if="exportPayment && hasExportPermission" label="支付类型" prop="payType">
           <el-select v-model="exportForm.payType">
             <el-option
               v-for="item in paymentOptions"
@@ -226,7 +226,7 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-else-if="isAdminUser || isWatcherUser" label="供应商名" prop="merchantId">
+        <el-form-item v-else-if="hasVendorPermission" label="供应商名" prop="merchantId">
           <el-select v-model="exportForm.merchantId">
             <el-option
               v-for="item in vendorOptions"
@@ -264,6 +264,7 @@ import {
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
+import { OrderPermissions } from '@/utils/role-permissions'
 
 const validateDates = (start, end) => {
   const format = 'YYYY-MM-DD'
@@ -356,12 +357,23 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser',
+      userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
       orderQuery: 'orderQuery',
       vendorId: 'vendorId'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(OrderPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(OrderPermissions.update)
+    },
+    hasExportPermission() {
+      return this.userPermissions.includes(OrderPermissions.export)
+    },
+    hasVendorPermission() {
+      return this.userPermissions.includes(OrderPermissions.vendor)
+    },
     vendorOptions() {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
     },
@@ -516,21 +528,25 @@ export default {
       return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getOrderList() {
-      try {
-        if (this.vendorApproved) {
-          if (this.vendors.length === 0) {
-            await this.getVendorList()
+      if (this.hasViewPermission) {
+        try {
+          if (this.vendorApproved) {
+            if (this.vendors.length === 0) {
+              await this.getVendorList()
+            }
+            this.listLoading = true
+            const params = this.getSearchParams()
+            const { data } = await getOrderListApi(params)
+            this.orderTotal = data.result.total
+            this.orderData = data.result.list
           }
-          this.listLoading = true
-          const params = this.getSearchParams()
-          const { data } = await getOrderListApi(params)
-          this.orderTotal = data.result.total
-          this.orderData = data.result.list
+        } catch (e) {
+          console.warn('Orders List error: ' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Orders List error: ' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看订单权限，请联系管理员！')
       }
     },
     handleViewMainOrder(orderId) {
@@ -585,16 +601,19 @@ export default {
       this.getOrderList()
     },
     handleShowExportDialog() {
+      this.exportForm.merchantId = -1
       this.exportReconciliation = false
       this.exportPayment = false
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
+      this.exportForm.merchantId = -1
       this.exportReconciliation = true
       this.exportPayment = false
       this.exportDialogVisible = true
     },
     handleShowPaymentExportDialog() {
+      this.exportForm.payType = null
       this.exportReconciliation = false
       this.exportPayment = true
       this.exportDialogVisible = true
@@ -617,7 +636,7 @@ export default {
         payStartDate: this.exportForm.payStartDate,
         payEndDate: this.exportForm.payEndDate
       }
-      if (this.isAdminUser || this.isWatcherUser) {
+      if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
           params.merchantId = this.exportForm.merchantId
         }
@@ -640,7 +659,7 @@ export default {
         payStartDate: this.exportForm.payStartDate,
         payEndDate: this.exportForm.payEndDate
       }
-      if (this.isAdminUser || this.isWatcherUser) {
+      if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
           params.merchantId = this.exportForm.merchantId
         }

@@ -29,7 +29,7 @@
           </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item v-if="isAdminUser || isWatcherUser" label="所属供应商">
+      <el-form-item label="所属供应商">
         <span v-if="viewOnly">
           {{ vendorName }}
         </span>
@@ -74,7 +74,7 @@
               :controls="false"
               size="mini"
               :min="0"
-              :max="10000"
+              :max="1000000"
               step-strictly
             />
             <span>{{ unitName }} 包邮</span>
@@ -111,7 +111,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import {
   createFreeShippingApi,
@@ -185,10 +184,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser'
-    }),
     vendorOptions() {
       return [{ value: 0, label: '平台' }].concat(this.vendorList)
     },

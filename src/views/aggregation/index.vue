@@ -43,7 +43,7 @@
           :label="item.label"
           :name="item.name"
         >
-          <div v-if="!isWatcherUser" style="display: flex;justify-content: space-between">
+          <div v-if="hasEditPermission" style="display: flex;justify-content: space-between">
             <el-button
               :disabled="!vendorApproved"
               type="primary"
@@ -91,7 +91,7 @@
         fit
         style="width: 100%;"
       >
-        <el-table-column label="编号" align="center" width="60">
+        <el-table-column label="编号" align="center" width="80">
           <template slot-scope="scope">
             <span>{{ scope.row.id }}</span>
           </template>
@@ -121,16 +121,17 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" :width="isWatcherUser? '100': '350'">
+        <el-table-column label="操作" align="center" :width="hasEditPermission? '350': '100'">
           <template slot-scope="scope">
             <el-button
+              v-if="hasViewPermission"
               size="mini"
               @click="handleView(scope.$index)"
             >
               查看
             </el-button>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               type="primary"
               size="mini"
               @click="handleEdit(scope.$index)"
@@ -138,7 +139,7 @@
               编辑
             </el-button>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               :disabled="scope.row.status === onSaleStatus"
               type="warning"
               size="mini"
@@ -147,7 +148,7 @@
               发布
             </el-button>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               :disabled="scope.row.status !== onSaleStatus"
               type="warning"
               size="mini"
@@ -156,7 +157,7 @@
               下架
             </el-button>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               :disabled="scope.row.status === onSaleStatus"
               type="danger"
               size="mini"
@@ -194,7 +195,7 @@ import {
   deleteAggregationApi,
   updateAggregationApi
 } from '@/api/aggregations'
-
+import { AggregationPermissions } from '@/utils/role-permissions'
 import {
   AggregationStatusOptions,
   aggregation_editing_status,
@@ -244,12 +245,18 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isWatcherUser: 'isWatcherUser',
+      userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
       listQuery: 'aggregationsQuery',
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(AggregationPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(AggregationPermissions.update)
+    },
     queryName: {
       get() {
         return this.listQuery.name
@@ -325,7 +332,7 @@ export default {
   methods: {
     async getAggregationGroups() {
       try {
-        if (this.vendorApproved) {
+        if (this.vendorApproved && this.hasViewPermission) {
           await this.$store.dispatch('aggregations/getGroups', { offset: 1, limit: 100 })
         }
       } catch (e) {
@@ -334,11 +341,15 @@ export default {
     },
     getListData() {
       if (this.vendorApproved) {
-        const params = this.getFilterParams()
-        if (params) {
-          this.queryFilterData(params)
+        if (this.hasViewPermission) {
+          const params = this.getFilterParams()
+          if (params) {
+            this.queryFilterData(params)
+          } else {
+            this.queryAllData()
+          }
         } else {
-          this.queryAllData()
+          this.$message.warning('没有查看聚合页权限，请联系管理员！')
         }
       }
     },

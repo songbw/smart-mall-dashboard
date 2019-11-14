@@ -92,6 +92,7 @@ import {
 import { getVendorListApi } from '@/api/vendor'
 import { FreeShippingModeOptions, hasVendorSpecific } from './constants'
 import { vendor_status_approved } from '@/utils/constants'
+import { FreightPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'FreeShipping',
@@ -119,13 +120,16 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions'
     }),
-    vendorOptions() {
-      return [{ value: 0, label: '平台' }].concat(this.vendorList)
+    hasViewPermission() {
+      return this.userPermissions.includes(FreightPermissions.view)
     },
     hasEditPermission() {
-      return this.isAdminUser
+      return this.userPermissions.includes(FreightPermissions.update)
+    },
+    vendorOptions() {
+      return [{ value: 0, label: '平台' }].concat(this.vendorList)
     }
   },
   created() {
@@ -164,23 +168,27 @@ export default {
       }
     },
     async getFreeShippingList() {
-      try {
-        this.listLoading = true
-        const params = { pageNo: this.pageNo, pageSize: this.pageSize }
-        const { data } = await getFreeShippingListApi(params)
-        if (data && data.result) {
-          const res = data.result
-          if (Array.isArray(res.list)) {
-            this.freeShippingList = res.list
+      if (this.hasViewPermission) {
+        try {
+          this.listLoading = true
+          const params = { pageNo: this.pageNo, pageSize: this.pageSize }
+          const { data } = await getFreeShippingListApi(params)
+          if (data && data.result) {
+            const res = data.result
+            if (Array.isArray(res.list)) {
+              this.freeShippingList = res.list
+            }
+            if (res.pageInfo) {
+              this.freeShippingTotal = res.pageInfo.totalCount
+            }
           }
-          if (res.pageInfo) {
-            this.freeShippingTotal = res.pageInfo.totalCount
-          }
+        } catch (e) {
+          console.warn('Get free shipping list error:' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Get free shipping list error:' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看包邮模板权限，请联系管理员！')
       }
     },
     getMerchantName(merchantId) {

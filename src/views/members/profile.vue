@@ -28,7 +28,7 @@
           会员余额：{{ memberBalance && memberBalance.amount >= 0 ? (memberBalance.amount / 100).toFixed(2) : '0' }}元
         </span>
         <el-button
-          v-if="hasEditPermission"
+          v-if="hasBalanceEditPermission"
           size="small"
           type="warning"
           style="margin-left: 20px"
@@ -194,12 +194,10 @@ import {
   rechargeMemberBalanceApi
 } from '@/api/members'
 import RechargeBalance from './recharge-balance'
-import {
-  BalanceFlowTypeDefinitions,
-  BalanceFlowStatusDefinitions
-} from './constants'
+import { BalanceFlowTypeDefinitions, BalanceFlowStatusDefinitions } from './constants'
+import { MemberPermissions } from '@/utils/role-permissions'
 
-const couldRecharge = false
+const couldRecharge = true
 
 export default {
   name: 'Profile',
@@ -263,10 +261,14 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions',
+      userName: 'userName'
     }),
-    hasEditPermission() {
-      return couldRecharge && this.isAdminUser
+    hasBalanceViewPermission() {
+      return this.userPermissions.includes(MemberPermissions.balanceView)
+    },
+    hasBalanceEditPermission() {
+      return couldRecharge && this.userPermissions.includes(MemberPermissions.balanceUpdate)
     },
     cardData: {
       get() {
@@ -311,15 +313,17 @@ export default {
       }
     },
     async getMemberBalance() {
-      try {
-        const openId = this.profile.openId
-        const { code, data } = await getMemberBalanceApi({ openId })
-        if (code === 200 && data !== null) {
-          this.memberBalance = { ...data }
-          this.getBalanceFlow()
+      if (this.hasBalanceViewPermission) {
+        try {
+          const openId = this.profile.openId
+          const { code, data } = await getMemberBalanceApi({ openId })
+          if (code === 200 && data !== null) {
+            this.memberBalance = { ...data }
+            this.getBalanceFlow()
+          }
+        } catch (e) {
+          console.warn('Get member balance error:' + e)
         }
-      } catch (e) {
-        console.warn('Get member balance error:' + e)
       }
     },
     async getBalanceFlow() {
@@ -381,7 +385,11 @@ export default {
         try {
           let res = null
           if (this.memberBalance !== null) {
-            res = await rechargeMemberBalanceApi({ id: this.memberBalance.id, amount: amount * 100 })
+            res = await rechargeMemberBalanceApi({
+              id: this.memberBalance.id,
+              amount: amount * 100,
+              username: this.userName
+            })
           } else {
             res = await createMemberBalanceApi({
               openId: this.profile.openId,

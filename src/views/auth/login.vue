@@ -69,7 +69,6 @@
 </template>
 
 <script>
-import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import {
@@ -78,6 +77,7 @@ import {
   storage_merchant_id,
   vendor_status_approved
 } from '@/utils/constants'
+import { storageSetItem } from '@/utils/storage'
 
 export default {
   name: 'Login',
@@ -168,7 +168,7 @@ export default {
                 const role = await this.$store.dispatch('user/getRole')
 
                 if (role_admin_name === role || role_watcher_name === role) {
-                  await localForage.setItem(storage_merchant_id, 0)
+                  await storageSetItem(storage_merchant_id, 0)
                 } else {
                   await this.getVendorProfile()
                 }
@@ -200,9 +200,9 @@ export default {
       try {
         const { status, id } = await this.$store.dispatch('vendor/getProfile')
         if (status === vendor_status_approved) {
-          await localForage.setItem(storage_merchant_id, id)
+          await storageSetItem(storage_merchant_id, id)
         } else {
-          await localForage.setItem(storage_merchant_id, -1)
+          await storageSetItem(storage_merchant_id, -1)
         }
       } catch (e) {
         console.warn('Login vendor profile error:' + e)

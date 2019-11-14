@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div v-if="isAdminUser" style="margin-bottom: 10px">
+    <div v-if="hasEditPermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="handleCreate">创建标签</el-button>
     </div>
     <el-table
@@ -12,7 +12,7 @@
       highlight-current-row
       style="width: 60%;"
     >
-      <el-table-column label="标签编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -23,7 +23,7 @@
         </template>
       </el-table-column>
       <el-table-column
-        v-if="isAdminUser"
+        v-if="hasEditPermission"
         label="操作"
         align="center"
         width="230"
@@ -66,6 +66,7 @@ import {
   updateCouponTagApi,
   deleteCouponTagApi
 } from '@/api/coupons'
+import { CouponPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'CouponTags',
@@ -81,8 +82,11 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
-    })
+      userPermissions: 'userPermissions'
+    }),
+    hasEditPermission() {
+      return this.userPermissions.includes(CouponPermissions.update)
+    }
   },
   created() {
     this.getCouponTags()

@@ -6,7 +6,7 @@
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               :disabled="flowOptions.length === 0"
               type="primary"
               @click="handleShowFlowDialog"
@@ -232,9 +232,7 @@ import GoodsInfo from '@/components/Order/goodsInfo'
 import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
-import {
-  getOrderListApi
-} from '@/api/orders'
+import { getOrderListApi } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
@@ -248,6 +246,7 @@ import {
   PayTypeOptions
 } from '@/utils/constants'
 import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
+import { WorkOrderPermissions } from '@/utils/role-permissions'
 
 const RefundFlowStatusOptions = [{
   value: 2, label: '收到审核'
@@ -421,8 +420,11 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isWatcherUser: 'isWatcherUser'
+      userPermissions: 'userPermissions'
     }),
+    hasEditPermission() {
+      return this.userPermissions.includes(WorkOrderPermissions.update)
+    },
     flowStatusOptions() {
       return this.workOrderData.typeId === type_change_good ? ChangeFlowStatusOptions : RefundFlowStatusOptions
     },

@@ -12,7 +12,7 @@
       <el-form-item label="页面名称" prop="name">
         <el-input v-model="pageName" />
       </el-form-item>
-      <el-form-item v-if="isAdminUser" label="主页设置" prop="homePage">
+      <el-form-item v-if="hasHomePermission" label="主页设置" prop="homePage">
         <el-switch v-model="homePage" />
       </el-form-item>
       <el-form-item label="背景色" prop="backgroundColor">
@@ -83,10 +83,8 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { searchAggregationsApi } from '@/api/aggregations'
 import ImageUpload from '@/components/ImageUpload'
-
-import {
-  aggregation_on_sale_status
-} from '../constants'
+import { AggregationPermissions } from '@/utils/role-permissions'
+import { aggregation_on_sale_status } from '../constants'
 
 export default {
   name: 'CreationForm',
@@ -118,11 +116,17 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userPermissions: 'userPermissions',
       pageInfo: 'currentAggregation',
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId'
     }),
+    hasHomePermission() {
+      return this.userPermissions.includes(AggregationPermissions.home)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(AggregationPermissions.update)
+    },
     pageName: {
       get() {
         return this.pageInfo.name
@@ -353,16 +357,20 @@ export default {
       this.$emit('cancelCreation')
     },
     onSubmit() {
-      const pageID = this.pageInfo.id
-      this.$refs.ruleForm.validate(async(valid) => {
-        if (valid) {
-          if (pageID === -1) {
-            this.createPage()
-          } else {
-            this.updatePage()
+      if (this.hasEditPermission) {
+        const pageID = this.pageInfo.id
+        this.$refs.ruleForm.validate(async(valid) => {
+          if (valid) {
+            if (pageID === -1) {
+              this.createPage()
+            } else {
+              this.updatePage()
+            }
           }
-        }
-      })
+        })
+      } else {
+        this.$message.warning('没有创建或修改聚合页权限，请联系管理员！')
+      }
     },
     handleChangeGroup() {
       if (this.pageInfo.groupId > 0) {

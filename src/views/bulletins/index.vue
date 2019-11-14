@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div>
-      <el-button v-if="!noEditPermission" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button v-if="hasEditPermission" type="primary" icon="el-icon-edit" @click="handleCreate">
         新建公告
       </el-button>
     </div>
@@ -12,7 +12,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="公告编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -36,7 +36,7 @@
         <template slot-scope="scope">
           <span>{{ scope.row.state ? '是' : '否' }}</span>
           <el-switch
-            v-if="!noEditPermission"
+            v-if="hasEditPermission"
             :value="scope.row.state"
             style="margin-left: 10px"
             @change="value => handleSetState(value, scope.row.id)"
@@ -58,7 +58,7 @@
             查看
           </el-button>
           <el-button
-            v-if="!noEditPermission"
+            v-if="hasEditPermission"
             :disabled="scope.row.state"
             type="warning"
             size="mini"
@@ -67,7 +67,7 @@
             编辑
           </el-button>
           <el-button
-            v-if="!noEditPermission"
+            v-if="hasEditPermission"
             type="danger"
             size="mini"
             :disabled="scope.row.state"
@@ -167,6 +167,7 @@ import {
   updateBulletinStateApi
 } from '@/api/bulletins'
 import VendorCodeSelection from './VendorCodeSelection'
+import { BulletinPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'Bulletins',
@@ -218,10 +219,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions'
     }),
-    noEditPermission() {
-      return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    hasViewPermission() {
+      return this.userPermissions.includes(BulletinPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(BulletinPermissions.update)
     }
   },
   created() {
@@ -256,17 +260,21 @@ export default {
       }
     },
     async getBulletinList() {
-      try {
-        this.listLoading = true
-        const { code, data } = await getBulletinListApi({ pageNo: this.pageNo, pageSize: this.pageSize })
-        if (code === 200 && data.result) {
-          this.bulletinList = data.result.list
-          this.bulletinTotal = data.result.pageInfo.totalCount
+      if (this.hasViewPermission) {
+        try {
+          this.listLoading = true
+          const { code, data } = await getBulletinListApi({ pageNo: this.pageNo, pageSize: this.pageSize })
+          if (code === 200 && data.result) {
+            this.bulletinList = data.result.list
+            this.bulletinTotal = data.result.pageInfo.totalCount
+          }
+        } catch (e) {
+          console.warn('Get bulletin list error:' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Get bulletin list error:' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看公告权限，请联系管理员！')
       }
     },
     resetFormData() {
