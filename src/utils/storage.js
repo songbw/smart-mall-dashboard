@@ -30,5 +30,5 @@ const storageRemoveItem = async function(key) {
   storageMap.delete(key)
 }
 
-module.exports = { storageSetItem, storageGetItem, storageRemoveItem }
+export { storageSetItem, storageGetItem, storageRemoveItem }
 
