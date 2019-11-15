@@ -571,7 +571,7 @@ export default {
         return this.productQuery.query
       },
       set(value) {
-        this.$store.commit('products/SET_SEARCH_DATA', { query: trim(value) })
+        this.$store.commit('products/SET_SEARCH_DATA', { query: value })
       }
     },
     listSkuId: {
