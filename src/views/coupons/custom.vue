@@ -1168,7 +1168,7 @@ export default {
       }
     },
     async handleSubmit() {
-      if (this.hasEditPermission) {
+      if (this.hasEditPermission === false) {
         this.$message.warning('没有创建或修改优惠券权限，请联系管理员！')
         return
       }
