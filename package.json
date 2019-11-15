@@ -26,7 +26,7 @@
     "nanoid": "^2.1.3",
     "normalize.css": "^8.0.1",
     "nprogress": "^0.2.0",
-    "path-to-regexp": "^3.1.0",
+    "path-to-regexp": "^3.2.0",
     "script-loader": "^0.7.2",
     "url-regex": "^5.0.0",
     "v-charts": "^1.19.0",
@@ -37,8 +37,8 @@
     "vue-qriously": "^1.1.1",
     "vue-router": "^3.1.3",
     "vue-scrollto": "^2.17.1",
-    "vuex": "^3.1.1",
-    "xlsx": "^0.15.1"
+    "vuex": "^3.1.2",
+    "xlsx": "^0.15.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.12.0",

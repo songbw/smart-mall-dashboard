@@ -320,6 +320,7 @@ export default {
     },
     onQueryStatusChanged(value) {
       this.orderQuery.subStatus = value
+      this.getOrderList()
     },
     onExpressSelected(value) {
       this.deliveryData.comCode = value
