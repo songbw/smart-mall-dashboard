@@ -78,6 +78,15 @@ export function exportOrdersApi(params) {
   })
 }
 
+export function exportVendorOrdersApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
 export function getExpressCompanyApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/kuaidi/all',
@@ -101,6 +110,15 @@ export function uploadLogisticsApi(params) {
 export function exportReconciliationApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/adminorder/export/admin/reconciliation',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+export function exportVendorReconciliationApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/reconciliation',
     method: 'get',
     responseType: 'blob',
     params

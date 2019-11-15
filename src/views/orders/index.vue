@@ -263,7 +263,9 @@ import {
   getOrderListApi,
   updateSubOrderApi,
   exportReconciliationApi,
-  exportPaymentBillApi
+  exportPaymentBillApi,
+  exportVendorOrdersApi,
+  exportVendorReconciliationApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
@@ -651,7 +653,8 @@ export default {
       }
       this.$refs.exportForm.resetFields()
       try {
-        const data = await exportOrdersApi(params)
+        const data = this.hasVendorPermission
+          ? await exportOrdersApi(params) : await exportVendorOrdersApi(params)
         const filename = `订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
@@ -674,7 +677,8 @@ export default {
       }
       this.$refs.exportForm.resetFields()
       try {
-        const data = await exportReconciliationApi(params)
+        const data = this.hasVendorPermission
+          ? await exportReconciliationApi(params) : await exportVendorReconciliationApi(params)
         const filename = `结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
