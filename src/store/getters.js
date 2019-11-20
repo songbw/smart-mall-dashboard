@@ -7,13 +7,13 @@ import {
 const getters = {
   appReady: state => state.app.ready,
   sidebar: state => state.app.sidebar,
+  operationCode: state => state.app.operationCode,
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,
   userName: state => state.user.name,
   userPhone: state => state.user.phone,
   userRole: state => state.user.role,
-  isAdminUser: state => role_admin_name === state.user.role,
-  isWatcherUser: state => role_watcher_name === state.user.role,
+  userPermissions: state => state.user.permissions,
   vendorLoading: state => state.user.role === '' ||
     (role_admin_name !== state.user.role && role_watcher_name !== state.user.role && state.vendor.profile.id === -2),
   vendorProfile: state => state.vendor.profile,

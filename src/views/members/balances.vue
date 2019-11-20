@@ -14,6 +14,23 @@
         <el-button type="primary" icon="el-icon-search" @click="handleSearchBalances">
           搜索
         </el-button>
+        <el-button
+          v-if="hasBalanceEditPermission"
+          type="warning"
+          icon="el-icon-upload2"
+          @click="importDialogVisible = true"
+        >
+          批量初始化余额
+        </el-button>
+        <el-button
+          v-if="hasBalanceExportPermission"
+          :loading="balanceExporting"
+          type="success"
+          icon="el-icon-download"
+          @click="exportDialogVisible = true"
+        >
+          导出余额记录
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -59,10 +76,9 @@
           <span>{{ scope.row.updatedAt | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="120">
+      <el-table-column v-if="hasBalanceEditPermission" label="操作" align="center" width="120">
         <template slot-scope="scope">
           <el-button
-            :disabled="scope.row.userId === null"
             type="primary"
             size="mini"
             @click="handleRecharge(scope.$index)"
@@ -84,6 +100,41 @@
       @cancelled="cancelRecharge"
       @confirmed="confirmRecharge"
     />
+    <balances-import
+      :dialog-visible="importDialogVisible"
+      @onSelectionCancelled="importDialogVisible = false"
+      @onSelectionConfirmed="handleImportBalances"
+    />
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="exportDialogVisible"
+      title="导出余额记录"
+    >
+      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
+        <el-form-item label="开始日期" prop="startDate">
+          <el-date-picker
+            v-model="exportForm.startDate"
+            placeholder="选择开始日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期" prop="endDate">
+          <el-date-picker
+            v-model="exportForm.endDate"
+            placeholder="选择结束日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelExport">取消</el-button>
+        <el-button type="primary" @click="handleConfirmExport">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -93,13 +144,31 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import RechargeBalance from './recharge-balance'
-import { getAllMemberBalancesApi, rechargeMemberBalanceApi, getMemberProfileByOpenIdApi } from '@/api/members'
+import {
+  getAllMemberBalancesApi,
+  rechargeMemberBalanceApi,
+  getMemberProfileByOpenIdApi,
+  batchInitBalancesApi,
+  exportBalanceRecordsApi
+} from '@/api/members'
+import { MemberPermissions } from '@/utils/role-permissions'
+import BalancesImport from './balances-import'
+import { couldRecharge } from './constants'
 
-const couldRecharge = false
-
+const validateDates = (start, end) => {
+  const format = 'YYYY-MM-DD'
+  if (start && end) {
+    const startDate = moment(start, format)
+    const maxEndDate = moment(start, format).add(3, 'months')
+    const endDate = moment(end, format)
+    return endDate.isSameOrAfter(startDate) && endDate.isSameOrBefore(maxEndDate)
+  } else {
+    return false
+  }
+}
 export default {
   name: 'Balances',
-  components: { Pagination, RechargeBalance },
+  components: { Pagination, RechargeBalance, BalancesImport },
   filters: {
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -120,17 +189,53 @@ export default {
         pageSize: 20
       },
       rechargeDialogVisible: false,
+      importDialogVisible: false,
       rechargeId: -1,
-      rechargeTelephone: ''
+      rechargeTelephone: '',
+      balanceExporting: false,
+      exportDialogVisible: false,
+      exportForm: {
+        startDate: null,
+        endDate: null
+      },
+      exportRules: {
+        startDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.endDate === null) ||
+              validateDates(this.exportForm.startDate, this.exportForm.endDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的开始日期，区间最多3个月'))
+            }
+          }
+        }],
+        endDate: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if ((value && this.exportForm.startDate === null) ||
+              validateDates(this.exportForm.startDate, this.exportForm.endDate)) {
+              callback()
+            } else {
+              callback(new Error('请选择合适导出的结束日期， 区间最多3个月'))
+            }
+          }
+        }]
+      }
     }
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userName: 'userName',
+      userPermissions: 'userPermissions',
       listQuery: 'balancesQuery'
     }),
-    hasEditPermission() {
-      return couldRecharge && this.isAdminUser
+    hasBalanceViewPermission() {
+      return this.userPermissions.includes(MemberPermissions.balanceView)
+    },
+    hasBalanceEditPermission() {
+      return couldRecharge && this.userPermissions.includes(MemberPermissions.balanceUpdate)
+    },
+    hasBalanceExportPermission() {
+      return this.userPermissions.includes(MemberPermissions.balanceExport)
     },
     queryTelephone: {
       get() {
@@ -169,39 +274,43 @@ export default {
   },
   methods: {
     async getAllMemberBalances() {
-      try {
-        this.balancesLoading = true
-        const params = {
-          pageNo: this.queryPageNo,
-          pageSize: this.queryPageSize
-        }
-        if (!isEmpty(this.queryTelephone)) {
-          params.telephone = this.queryTelephone
-        }
-        const { code, data } = await getAllMemberBalancesApi(params)
-        if (code === 200) {
-          this.balanceTotal = data.total
-          this.balanceList = data.list
-          for (const balance of this.balanceList) {
-            if (balance.userId === null && balance.openId !== null) {
-              balance.userId = await this.getMemberId(balance.openId)
-            }
+      if (this.hasBalanceViewPermission) {
+        try {
+          this.balancesLoading = true
+          const params = {
+            pageNo: this.queryPageNo,
+            pageSize: this.queryPageSize
           }
-        } else {
-          this.balanceTotal = 0
-          this.balanceList = []
+          if (!isEmpty(this.queryTelephone)) {
+            params.telephone = this.queryTelephone
+          }
+          const { code, data } = await getAllMemberBalancesApi(params)
+          if (code === 200) {
+            this.balanceTotal = data.total
+            this.balanceList = data.list
+            for (const balance of this.balanceList) {
+              if (balance.userId === null && balance.openId !== null) {
+                balance.userId = await this.getMemberId(balance.openId)
+              }
+            }
+          } else {
+            this.balanceTotal = 0
+            this.balanceList = []
+          }
+        } catch (e) {
+          console.warn('Get all balances error:' + e)
+        } finally {
+          this.balancesLoading = false
         }
-      } catch (e) {
-        console.warn('Get all balances error:' + e)
-      } finally {
-        this.balancesLoading = false
+      } else {
+        this.$message.warning('没有查看余额的权限，请联系管理员！')
       }
     },
     async getMemberId(openId) {
       let memberId = null
       try {
         const { code, data } = await getMemberProfileByOpenIdApi({ openId, iAppId: process.env.VUE_APP_ID })
-        if (code === 200) {
+        if (code === 200 && data.user !== null) {
           memberId = data.user.id
         }
       } catch (e) {
@@ -226,7 +335,9 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          const { code, msg } = await rechargeMemberBalanceApi({ id: this.rechargeId, amount: amount * 100 })
+          const { code, msg } = await rechargeMemberBalanceApi({
+            id: this.rechargeId, amount: amount * 100, username: this.userName
+          })
           if (code === 200) {
             this.$message.success('充值成功！')
             this.getAllMemberBalances()
@@ -243,6 +354,68 @@ export default {
       this.rechargeDialogVisible = false
       this.rechargeId = -1
       this.rechargeTelephone = ''
+    },
+    async handleImportBalances(balances) {
+      this.importDialogVisible = false
+      if (balances.length > 0) {
+        try {
+          this.balancesLoading = true
+          for (let i = 0; i < balances.length; i += 100) {
+            const balanceList = balances.slice(i, i + 100)
+              .map(item => ({ username: this.userName, amount: item.amount * 100, telephone: item.telephone }))
+            await batchInitBalancesApi(balanceList)
+          }
+          this.getAllMemberBalances()
+        } catch (e) {
+          console.warn('Import balances error:' + e)
+        } finally {
+          this.balancesLoading = false
+        }
+      }
+    },
+    downloadBlobData(data, filename) {
+      try {
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download blob data error:' + e)
+      }
+    },
+    async handleExportBalances() {
+      try {
+        this.balanceExporting = true
+        const params = {
+          start: this.exportForm.startDate,
+          end: this.exportForm.endDate
+        }
+        const data = await exportBalanceRecordsApi(params)
+        const filename = `余额记录单-${params.start}-${params.end}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      } finally {
+        this.balanceExporting = false
+      }
+    },
+    handleCancelExport() {
+      this.$refs.exportForm.resetFields()
+      this.exportDialogVisible = false
+    },
+    handleConfirmExport() {
+      this.$refs.exportForm.validate(valid => {
+        if (valid) {
+          this.exportDialogVisible = false
+          this.handleExportBalances()
+        }
+      })
     }
   }
 }

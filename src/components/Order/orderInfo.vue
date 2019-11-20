@@ -11,8 +11,8 @@
             <span class="item-text">{{ status | statusFilter }}</span>
           </el-col>
           <el-col :span="12">
-            <span class="item-label">OpenID：</span>
-            <span class="item-text">{{ openId }}</span>
+            <span class="item-label">订单总额：</span>
+            <span class="item-text">{{ saleAmount }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -20,7 +20,7 @@
             <span class="item-label">主订单号：</span>
             <span class="item-text">{{ tradeNo }}</span>
           </el-col>
-          <el-col :span="12">
+          <el-col v-if="hasVendorPermission" :span="12">
             <span class="item-label">供应商名：</span>
             <span class="item-text">{{ merchantName }}</span>
           </el-col>
@@ -41,18 +41,24 @@
             <span class="item-text">{{ updatedAt | timeFilter }}</span>
           </el-col>
         </el-row>
+        <el-row class="item-row">
+          <el-col :span="12">
+            <span class="item-label">OpenID：</span>
+            <span class="item-text">{{ openId }}</span>
+          </el-col>
+        </el-row>
       </el-card>
     </el-col>
   </el-row>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
-import {
-  getVendorProfileApi
-} from '@/api/vendor'
+import { getVendorProfileApi } from '@/api/vendor'
+import { OrderPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'OrderInfo',
@@ -99,6 +105,10 @@ export default {
     aoyiId: {
       type: String,
       default: ''
+    },
+    saleAmount: {
+      type: Number,
+      default: 0
     }
   },
   data() {
@@ -107,6 +117,12 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      userPermissions: 'userPermissions'
+    }),
+    hasVendorPermission() {
+      return this.userPermissions.includes(OrderPermissions.vendor)
+    },
     hasSupplierOrder: {
       get() {
         return !isEmpty(this.aoyiId) && !isEmpty(this.merchantNo)

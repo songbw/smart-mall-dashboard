@@ -30,7 +30,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="!noCreatePermission" style="margin-bottom: 10px">
+    <div v-if="hasEditPermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="handleCreateFirstClass">
         新建一级类别
       </el-button>
@@ -52,7 +52,7 @@
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
-              {{ !hasEditPermission ? '查看' : '编辑' }}
+              {{ hasEditPermission ? '编辑' : '查看' }}
             </el-button>
             <el-button
               v-if="currentSelectedTopCategory.idate"
@@ -98,12 +98,12 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="显示状态" align="center" width="80">
+            <el-table-column label="显示状态" align="center" width="120">
               <template slot-scope="scope">
                 <el-tag>{{ scope.row.isShow ? '显示' : '隐藏' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="类别排序" align="center" width="80">
+            <el-table-column label="类别排序" align="center" width="120">
               <template slot-scope="scope">
                 <span>{{ scope.row.sortOrder }}</span>
               </template>
@@ -111,10 +111,10 @@
             <el-table-column label="操作" align="center" width="160">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
-                  {{ !hasEditPermission ? '查看' : '编辑' }}
+                  {{ hasEditPermission ? '编辑' : '查看' }}
                 </el-button>
                 <el-button
-                  v-if="!noCreatePermission && scope.row.idate"
+                  v-if="hasEditPermission && scope.row.idate"
                   size="mini"
                   type="danger"
                   @click="handleDelete(scope.row)"
@@ -192,6 +192,7 @@ import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
 import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
+import { CategoryPermissions } from '@/utils/role-permissions'
 
 const copyCategory = src => {
   return {
@@ -261,17 +262,17 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userPermissions: 'userPermissions',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
       categoryData: 'categories',
       secondCategoryData: 'secondClassCategories'
     }),
-    hasEditPermission() {
-      return this.isAdminUser
+    hasViewPermission() {
+      return this.userPermissions.includes(CategoryPermissions.view)
     },
-    noCreatePermission() {
-      return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    hasEditPermission() {
+      return this.userPermissions.includes(CategoryPermissions.update)
     },
     filterName: {
       get() {
@@ -282,7 +283,7 @@ export default {
       }
     },
     topCategoriesData() {
-      if (this.categoriesLoaded) {
+      if (this.categoriesLoaded && this.hasViewPermission) {
         const topList = this.categoryData.map(item => {
           const subs = item.subs.map(sub => {
             return copyCategory(sub)

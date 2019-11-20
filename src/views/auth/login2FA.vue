@@ -62,7 +62,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
 import {
   validVerificationCode
@@ -73,6 +72,7 @@ import {
   storage_merchant_id,
   vendor_status_approved
 } from '@/utils/constants'
+import { storageSetItem } from '@/utils/storage'
 
 export default {
   name: 'TwoFactorAuth',
@@ -154,9 +154,9 @@ export default {
       try {
         const { status, id } = await this.$store.dispatch('vendor/getProfile')
         if (status === vendor_status_approved) {
-          await localForage.setItem(storage_merchant_id, id)
+          await storageSetItem(storage_merchant_id, id)
         } else {
-          await localForage.setItem(storage_merchant_id, -1)
+          await storageSetItem(storage_merchant_id, -1)
         }
       } catch (e) {
         console.warn('Login vendor profile error:' + e)
@@ -169,7 +169,8 @@ export default {
             this.twoFactorForm.phone = this.userPhone
             const role = await this.$store.dispatch('user/twoFactorAuth', this.twoFactorForm)
             if (role_admin_name === role || role_watcher_name === role) {
-              await localForage.setItem(storage_merchant_id, 0)
+              this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
+              await storageSetItem(storage_merchant_id, 0)
             } else {
               await this.getVendorProfile()
             }
@@ -181,7 +182,7 @@ export default {
             if (res && res.status >= 400 && res.status < 500) {
               if (res && res.data) {
                 const data = res.data
-                if (data.error && Number.parseInt(data.error) === 400003) {
+                if (data.error && Number.parseInt(data.error) === 400004) {
                   msg = '手机验证码无效，请确认后重试！'
                 } else {
                   msg = '用户手机号码无效，请确认后重试！'

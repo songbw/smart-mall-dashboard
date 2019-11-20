@@ -38,7 +38,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="isAdminUser" class="ops-button-group">
+    <div v-if="hasEditPermission" class="ops-button-group">
       <el-button
         type="primary"
         icon="el-icon-edit"
@@ -64,7 +64,7 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="50">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'CouponDetail', params: { id: scope.row.id, readOnly: true }}"
@@ -121,7 +121,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="150">
         <template slot-scope="scope">
-          <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
+          <el-dropdown v-if="hasEditPermission" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>
@@ -170,7 +170,12 @@
               </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          <el-button v-else type="primary" icon="el-icon-view" @click="handleViewCoupon(scope.row.id)">
+          <el-button
+            v-else-if="hasViewPermission"
+            type="primary"
+            icon="el-icon-view"
+            @click="handleViewCoupon(scope.row.id)"
+          >
             查看
           </el-button>
         </template>
@@ -204,11 +209,8 @@ import {
   deleteCouponApi,
   consumeCouponApi
 } from '@/api/coupons'
-
-import {
-  CouponTypeOptions,
-  CouponCollectOptions
-} from './constants'
+import { CouponTypeOptions, CouponCollectOptions } from './constants'
+import { CouponPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'Coupon',
@@ -249,9 +251,15 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userPermissions: 'userPermissions',
       queryData: 'couponQuery'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(CouponPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(CouponPermissions.update)
+    },
     queryName: {
       get() {
         return this.queryData.name
@@ -322,11 +330,15 @@ export default {
   },
   methods: {
     getCouponData() {
-      const params = this.getFilterParams()
-      if (params !== null) {
-        this.getFilterData(params)
+      if (this.hasViewPermission) {
+        const params = this.getFilterParams()
+        if (params !== null) {
+          this.getFilterData(params)
+        } else {
+          this.queryAllCouponData()
+        }
       } else {
-        this.queryAllCouponData()
+        this.$message.warning('没有查看优惠券权限，请联系管理员！')
       }
     },
     async queryAllCouponData() {

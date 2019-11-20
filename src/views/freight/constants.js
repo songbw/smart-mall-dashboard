@@ -1,3 +1,4 @@
+export const hasVendorSpecific = false
 export const free_shipping_amount_mode = 0
 export const free_shipping_unit_mode = 1
 export const FreeShippingModeOptions = [{

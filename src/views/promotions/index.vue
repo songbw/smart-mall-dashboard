@@ -43,7 +43,7 @@
           :label="item.label"
           :name="item.name"
         >
-          <div v-if="isAdminUser" style="display: flex;justify-content: space-between">
+          <div v-if="hasEditPermission" style="display: flex;justify-content: space-between">
             <el-button-group>
               <el-button
                 type="primary"
@@ -106,7 +106,7 @@
         type="selection"
         width="55"
       />
-      <el-table-column label="编号" align="center" width="50">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewPromotion', params: { id: scope.row.id }}"
@@ -148,7 +148,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="140">
         <template slot-scope="scope">
-          <el-dropdown v-if="isAdminUser" placement="bottom" trigger="click" @command="handleOpsAction">
+          <el-dropdown v-if="hasEditPermission" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
               选择操作
             </el-button>
@@ -198,7 +198,12 @@
               </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          <el-button v-else type="primary" icon="el-icon-view" @click="handleViewPromotion(scope.$index)">
+          <el-button
+            v-else-if="hasViewPermission"
+            type="primary"
+            icon="el-icon-view"
+            @click="handleViewPromotion(scope.$index)"
+          >
             查看
           </el-button>
         </template>
@@ -224,7 +229,6 @@ import {
   updatePromotionApi,
   deletePromotionApi
 } from '@/api/promotions'
-
 import {
   promotion_status_init,
   promotion_status_published,
@@ -234,6 +238,7 @@ import {
   PromotionStatusDefinition,
   PromotionAccountTypeDefinition
 } from '@/utils/constants'
+import { PromotionPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'PromotionActivity',
@@ -270,11 +275,17 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userPermissions: 'userPermissions',
       promotionTypes: 'promotionTypes',
       promotionTypeId: 'promotionTypeId',
       promotionQuery: 'promotionQuery'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(PromotionPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(PromotionPermissions.update)
+    },
     queryName: {
       get() {
         return this.promotionQuery.name
@@ -341,24 +352,33 @@ export default {
     }
   },
   created() {
-    this.$store.commit('promotions/SET_CONFLICTED_MPUS', [])
-    this.getPromotionTypes()
-    this.getPromotionData()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      this.$store.commit('promotions/SET_CONFLICTED_MPUS', [])
+      await this.getPromotionTypes()
+      this.getPromotionData()
+    },
     async getPromotionTypes() {
-      try {
-        await this.$store.dispatch('promotions/getTypes', { pageNo: 1, pageSize: 100 })
-      } catch (e) {
-        console.warn('getPromotionTypes:' + e)
+      if (this.hasViewPermission) {
+        try {
+          await this.$store.dispatch('promotions/getTypes', { pageNo: 1, pageSize: 100 })
+        } catch (e) {
+          console.warn('getPromotionTypes:' + e)
+        }
       }
     },
     getPromotionData() {
-      const params = this.getFilterParams()
-      if (params !== null) {
-        this.getFilterData(params)
+      if (this.hasViewPermission) {
+        const params = this.getFilterParams()
+        if (params !== null) {
+          this.getFilterData(params)
+        } else {
+          this.queryAllPromotionData()
+        }
       } else {
-        this.queryAllPromotionData()
+        this.$message.warning('没有查看促销活动权限，请联系管理员！')
       }
     },
     async queryAllPromotionData() {

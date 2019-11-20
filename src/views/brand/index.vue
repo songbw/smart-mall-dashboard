@@ -15,7 +15,7 @@
         <el-button type="primary" icon="el-icon-search" @click="getBrandData">
           搜索
         </el-button>
-        <el-button v-if="!noEditPermission" type="info" icon="el-icon-edit" @click="handleCreate">
+        <el-button v-if="hasEditPermission" type="info" icon="el-icon-edit" @click="handleCreate">
           新建品牌
         </el-button>
       </el-form-item>
@@ -60,10 +60,10 @@
             size="mini"
             @click="handleEdit(scope.$index)"
           >
-            {{ noEditPermission ? '查看' : '编辑' }}
+            {{ hasEditPermission ? '编辑' : '查看' }}
           </el-button>
           <el-button
-            v-if="!noEditPermission"
+            v-if="hasEditPermission"
             type="danger"
             size="mini"
             :disabled="scope.row.addTime === null"
@@ -147,6 +147,7 @@ import {
 } from '@/api/brands'
 import { app_upload_url } from '@/utils/constants'
 import { validateURL } from '@/utils/validate'
+import { BrandPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'Brand',
@@ -198,10 +199,16 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(BrandPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(BrandPermissions.update)
+    },
     noEditPermission() {
-      return !this.isAdminUser || process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+      return this.hasEditPermission === false
     },
     queryName: {
       get() {
@@ -213,7 +220,7 @@ export default {
     }
   },
   created() {
-    this.getListData()
+    this.getBrandData()
   },
   methods: {
     async getListData() {
@@ -245,10 +252,14 @@ export default {
       }
     },
     getBrandData() {
-      if (isEmpty(this.listQuery.query)) {
-        this.getListData()
+      if (this.hasViewPermission) {
+        if (isEmpty(this.listQuery.query)) {
+          this.getListData()
+        } else {
+          this.handleFilter()
+        }
       } else {
-        this.handleFilter()
+        this.$message.warning('没有查看品牌权限，请联系管理员！')
       }
     },
     handleDelete(index) {

@@ -1,4 +1,3 @@
-import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
 import {
   loginApi,
@@ -15,14 +14,20 @@ import {
   storage_key_name,
   storage_key_phone,
   storage_key_role,
+  storage_key_permissions,
   storage_merchant_id
 } from '@/utils/constants'
+import {
+  storageSetItem,
+  storageRemoveItem
+} from '@/utils/storage'
 
 const state = {
   token: '',
   name: '',
   phone: '',
-  role: ''
+  role: '',
+  permissions: []
 }
 
 const mutations = {
@@ -37,6 +42,13 @@ const mutations = {
   },
   SET_ROLE: (state, role) => {
     state.role = role
+  },
+  SET_PERMISSIONS: (state, permissions) => {
+    if (isEmpty(permissions)) {
+      state.permissions = []
+    } else {
+      state.permissions = permissions.split(',').filter(item => isEmpty(item.trim()) === false)
+    }
   }
 }
 
@@ -52,10 +64,11 @@ const actions = {
     commit('SET_ROLE', '')
     const reset = isEmpty(phone) === false && data.loginCount === 0
     if (reset === false) {
-      await localForage.setItem(storage_key_token, data.token)
-      await localForage.setItem(storage_key_name, username)
-      await localForage.setItem(storage_key_phone, phone)
-      await localForage.removeItem(storage_key_role)
+      await storageSetItem(storage_key_token, data.token)
+      await storageSetItem(storage_key_name, username)
+      await storageSetItem(storage_key_phone, phone)
+      await storageRemoveItem(storage_key_role)
+      await storageRemoveItem(storage_key_permissions)
     }
     return { passwordReset: reset, twoFactorAuth: data.twoFactorAuth }
   },
@@ -63,8 +76,10 @@ const actions = {
     const data = await twoFactorAuthApi(params)
     commit('SET_TOKEN', data.token)
     commit('SET_ROLE', data.role)
-    await localForage.setItem(storage_key_token, data.token)
-    await localForage.setItem(storage_key_role, data.role)
+    commit('SET_PERMISSIONS', data.permissions)
+    await storageSetItem(storage_key_token, data.token)
+    await storageSetItem(storage_key_role, data.role)
+    await storageSetItem(storage_key_permissions, data.permissions)
     return data.role
   },
   async register({ commit }, params) {
@@ -96,7 +111,9 @@ const actions = {
   async getRole({ commit, state }) {
     const data = await getRoleApi()
     commit('SET_ROLE', data.role)
-    await localForage.setItem(storage_key_role, data.role)
+    commit('SET_PERMISSIONS', data.permissions)
+    await storageSetItem(storage_key_role, data.role)
+    await storageSetItem(storage_key_permissions, data.permissions)
     return data.role
   },
   async logout({ commit, dispatch }) {
@@ -118,11 +135,12 @@ const actions = {
   },
   async resetStorage() {
     try {
-      await localForage.removeItem(storage_key_token)
-      await localForage.removeItem(storage_key_name)
-      await localForage.removeItem(storage_key_phone)
-      await localForage.removeItem(storage_key_role)
-      await localForage.removeItem(storage_merchant_id)
+      await storageRemoveItem(storage_key_token)
+      await storageRemoveItem(storage_key_name)
+      await storageRemoveItem(storage_key_phone)
+      await storageRemoveItem(storage_key_role)
+      await storageRemoveItem(storage_key_permissions)
+      await storageRemoveItem(storage_merchant_id)
     } catch (e) {
       console.warn(`User reset storage error:${e}`)
     }

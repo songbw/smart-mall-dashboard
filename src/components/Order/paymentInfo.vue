@@ -23,7 +23,7 @@
         </el-row>
         <el-row class="item-row">
           <el-col :span="12">
-            <span class="item-label">订单金额：</span>
+            <span class="item-label">支付金额：</span>
             <span class="item-text">{{ paymentAmount | centFilter }}</span>
           </el-col>
           <el-col :span="12">

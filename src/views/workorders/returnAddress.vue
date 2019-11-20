@@ -12,7 +12,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -160,6 +160,7 @@ import {
   deleteReturnAddressApi
 } from '@/api/workOrders'
 import { validPhone, validZipCode } from '@/utils/validate'
+import { WorkOrderPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'ReturnAddress',
@@ -241,10 +242,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(WorkOrderPermissions.view)
+    },
     hasEditPermission() {
-      return this.isAdminUser
+      return this.userPermissions.includes(WorkOrderPermissions.update)
     },
     provinceOptions() {
       return this.provinceList.length > 0 ? this.provinceList : []
@@ -261,17 +265,21 @@ export default {
   },
   methods: {
     async getReturnAddressList() {
-      try {
-        const data = await getReturnAddressListApi()
-        if (Array.isArray(data)) {
-          this.returnAddressList = data.map(item => ({
-            id: item.id,
-            isDefault: item.isDefault,
-            ...JSON.parse(item.content)
-          }))
+      if (this.hasViewPermission) {
+        try {
+          const data = await getReturnAddressListApi()
+          if (Array.isArray(data)) {
+            this.returnAddressList = data.map(item => ({
+              id: item.id,
+              isDefault: item.isDefault,
+              ...JSON.parse(item.content)
+            }))
+          }
+        } catch (e) {
+          console.warn('Get return address list error:' + e)
         }
-      } catch (e) {
-        console.warn('Get return address list error:' + e)
+      } else {
+        this.$message.warning('没有查看退货地址的权限，请联系管理员！')
       }
     },
     async handleEdit(index) {

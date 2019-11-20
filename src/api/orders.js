@@ -71,6 +71,15 @@ export function deliveryUploadApi(params) {
 
 export function exportOrdersApi(params) {
   return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/admin',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+export function exportVendorOrdersApi(params) {
+  return Vue.axios('orders').request({
     url: '/orders/adminorder/export',
     method: 'get',
     responseType: 'blob',
@@ -100,10 +109,30 @@ export function uploadLogisticsApi(params) {
 
 export function exportReconciliationApi(params) {
   return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/admin/reconciliation',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+export function exportVendorReconciliationApi(params) {
+  return Vue.axios('orders').request({
     url: '/orders/adminorder/export/reconciliation',
     method: 'get',
     responseType: 'blob',
     params
+  })
+}
+
+export function exportPaymentBillApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/bill',
+    method: 'post',
+    responseType: 'blob',
+    data: {
+      ...params
+    }
   })
 }
 

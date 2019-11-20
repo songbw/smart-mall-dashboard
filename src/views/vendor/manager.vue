@@ -20,7 +20,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-    <div v-if="!noCreatePermission" style="margin-bottom: 20px">
+    <div v-if="hasEditPermission" style="margin-bottom: 20px">
       <el-button type="primary" icon="el-icon-plus" @click="handleCreateVendor">
         创建新商户
       </el-button>
@@ -35,7 +35,7 @@
       highlight-current-row
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="60">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.company.id }}</span>
         </template>
@@ -55,13 +55,18 @@
           <span>{{ scope.row.company.updateTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="320">
+      <el-table-column label="操作" align="center" :width="hasEditPermission ? '320' : '100'">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleViewVendor(scope.$index)">
+          <el-button
+            type="primary"
+            size="mini"
+            @click="handleViewVendor(scope.$index)"
+          >
             查看
           </el-button>
           <el-button
-            :disabled="noCreatePermission || scope.row.company.status !== statusReviewing"
+            v-if="hasEditPermission"
+            :disabled="scope.row.company.status !== statusReviewing"
             type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -69,7 +74,8 @@
             批准
           </el-button>
           <el-button
-            :disabled="noCreatePermission || scope.row.company.status !== statusReviewing"
+            v-if="hasEditPermission"
+            :disabled="scope.row.company.status !== statusReviewing"
             type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -77,7 +83,8 @@
             拒绝
           </el-button>
           <el-button
-            :disabled="noCreatePermission || scope.row.company.status === statusApproved"
+            v-if="hasEditPermission"
+            :disabled="scope.row.company.status === statusApproved"
             type="danger"
             size="mini"
             @click="handleDeleteVendor(scope.$index)"
@@ -148,6 +155,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
@@ -165,6 +173,7 @@ import {
   vendor_status_rejected
 } from '@/utils/constants'
 import { IndustryDefinitions } from './constants'
+import { VendorPermissions } from '@/utils/role-permissions'
 
 const VendorStatus = [
   {
@@ -255,8 +264,15 @@ export default {
     }
   },
   computed: {
-    noCreatePermission() {
-      return process.env.VUE_APP_HOST === 'GAT-ZY' || process.env.VUE_APP_HOST === 'GAT-SN'
+    ...mapGetters({
+      userPermissions: 'userPermissions',
+      queryData: 'couponQuery'
+    }),
+    hasViewPermission() {
+      return this.userPermissions.includes(VendorPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(VendorPermissions.update)
     },
     vendorIndustry: {
       get() {
@@ -277,25 +293,29 @@ export default {
   },
   methods: {
     async getVendorData() {
-      try {
-        this.dataLoading = true
-        const params = {
-          page: this.queryOffset,
-          limit: this.queryLimit
+      if (this.hasViewPermission) {
+        try {
+          this.dataLoading = true
+          const params = {
+            page: this.queryOffset,
+            limit: this.queryLimit
+          }
+          if (this.queryStatus > 0) {
+            params.status = this.queryStatus
+          }
+          if (!isEmpty(this.queryName)) {
+            params.name = this.queryName
+          }
+          const data = await getVendorListApi(params)
+          this.vendorData = data.rows
+          this.vendorTotal = data.total
+        } catch (e) {
+          console.warn(`Vendor Manager: ${e}`)
+        } finally {
+          this.dataLoading = false
         }
-        if (this.queryStatus > 0) {
-          params.status = this.queryStatus
-        }
-        if (!isEmpty(this.queryName)) {
-          params.name = this.queryName
-        }
-        const data = await getVendorListApi(params)
-        this.vendorData = data.rows
-        this.vendorTotal = data.total
-      } catch (e) {
-        console.warn(`Vendor Manager: ${e}`)
-      } finally {
-        this.dataLoading = false
+      } else {
+        this.$message.warning('没有查看商户的权限，请联系管理员！')
       }
     },
     handleViewVendor(index) {

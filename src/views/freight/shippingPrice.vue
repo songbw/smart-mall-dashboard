@@ -10,7 +10,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="模板编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewShippingPrice', params: { id: scope.row.id }}"
@@ -90,6 +90,7 @@ import {
   deleteShippingPriceApi
 } from '@/api/freight'
 import { ShippingPriceModeOptions } from './constants'
+import { FreightPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'ShippingPrice',
@@ -116,10 +117,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser'
+      userPermissions: 'userPermissions'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(FreightPermissions.view)
+    },
     hasEditPermission() {
-      return this.isAdminUser
+      return this.userPermissions.includes(FreightPermissions.update)
     }
   },
   created() {
@@ -127,23 +131,27 @@ export default {
   },
   methods: {
     async getShippingPriceList() {
-      try {
-        this.listLoading = true
-        const params = { pageNo: this.pageNo, pageSize: this.pageSize }
-        const { data } = await getShippingPriceListApi(params)
-        if (data && data.result) {
-          const res = data.result
-          if (Array.isArray(res.list)) {
-            this.shippingPriceList = res.list
+      if (this.hasViewPermission) {
+        try {
+          this.listLoading = true
+          const params = { pageNo: this.pageNo, pageSize: this.pageSize }
+          const { data } = await getShippingPriceListApi(params)
+          if (data && data.result) {
+            const res = data.result
+            if (Array.isArray(res.list)) {
+              this.shippingPriceList = res.list
+            }
+            if (res.pageInfo) {
+              this.shippingPriceTotal = res.pageInfo.totalCount
+            }
           }
-          if (res.pageInfo) {
-            this.shippingPriceTotal = res.pageInfo.totalCount
-          }
+        } catch (e) {
+          console.warn('Get free shipping list error:' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Get free shipping list error:' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看运费模板权限，请联系管理员！')
       }
     },
     gotoCreateShippingPrice() {

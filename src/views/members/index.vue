@@ -32,7 +32,7 @@
       fit
       style="width: 100%; margin-top: 20px"
     >
-      <el-table-column label="会员编号" align="center" width="100">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -90,6 +90,7 @@ import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import { getMemberListApi } from '@/api/members'
 import Pagination from '@/components/Pagination'
+import { MemberPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'Members',
@@ -110,8 +111,12 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userPermissions: 'userPermissions',
       listQuery: 'membersQuery'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(MemberPermissions.view)
+    },
     queryName: {
       get() {
         return this.listQuery.name
@@ -157,27 +162,31 @@ export default {
   },
   methods: {
     async getMemberList() {
-      try {
-        const params = {
-          pageNo: this.listQuery.pageNo,
-          pageSize: this.listQuery.pageSize
+      if (this.hasViewPermission) {
+        try {
+          const params = {
+            pageNo: this.listQuery.pageNo,
+            pageSize: this.listQuery.pageSize
+          }
+          if (!isEmpty(this.queryName)) {
+            params.name = this.queryName
+          }
+          if (!isEmpty(this.queryTelephone)) {
+            params.telephone = this.queryTelephone
+          }
+          this.listLoading = true
+          const { data } = await getMemberListApi(params)
+          if (data.userList) {
+            this.memberTotal = data.userList.total
+            this.memberList = data.userList.list
+          }
+        } catch (e) {
+          console.warn('Get members error:' + e)
+        } finally {
+          this.listLoading = false
         }
-        if (!isEmpty(this.queryName)) {
-          params.name = this.queryName
-        }
-        if (!isEmpty(this.queryTelephone)) {
-          params.telephone = this.queryTelephone
-        }
-        this.listLoading = true
-        const { data } = await getMemberListApi(params)
-        if (data.userList) {
-          this.memberTotal = data.userList.total
-          this.memberList = data.userList.list
-        }
-      } catch (e) {
-        console.warn('Get members error:' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看会员的权限，请联系管理员！')
       }
     },
     handleSearchMembers() {

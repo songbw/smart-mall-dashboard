@@ -2,14 +2,15 @@ import router from './router'
 import store from './store'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
-import localForage from 'localforage'
 import isEmpty from 'lodash/isEmpty'
 import uniq from 'lodash/uniq'
 import {
   storage_key_token,
   storage_key_name,
-  storage_key_role
+  storage_key_role,
+  storage_key_permissions
 } from '@/utils/constants'
+import { storageGetItem } from '@/utils/storage'
 
 const goThrough = false
 
@@ -41,12 +42,14 @@ router.beforeEach(async(to, from, next) => {
     if (!needAuth) {
       next()
     } else {
-      const username = await localForage.getItem(storage_key_name)
-      const token = await localForage.getItem(storage_key_token)
-      const role = await localForage.getItem(storage_key_role)
+      const username = await storageGetItem(storage_key_name)
+      const token = await storageGetItem(storage_key_token)
+      const role = await storageGetItem(storage_key_role)
+      const permissions = await storageGetItem(storage_key_permissions)
       if (isEmpty(username) ||
         isEmpty(token) ||
         isEmpty(role) ||
+        isEmpty(permissions) ||
         (roles.length > 0 && !roles.includes(role))
       ) {
         gotoLogin(next)

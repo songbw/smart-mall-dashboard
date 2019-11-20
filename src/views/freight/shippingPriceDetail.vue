@@ -77,7 +77,7 @@
               :controls="false"
               size="mini"
               :min="0"
-              :max="100"
+              :max="1000000"
               :precision="1"
               step-strictly
               style="width: 80px"
@@ -90,7 +90,7 @@
               :controls="false"
               size="mini"
               :min="1"
-              :max="100"
+              :max="1000000"
               step-strictly
               style="width: 80px"
             />
@@ -102,7 +102,7 @@
               :controls="false"
               size="mini"
               :min="1"
-              :max="100"
+              :max="1000000"
               step-strictly
               style="width: 80px"
             />
@@ -114,7 +114,7 @@
               :controls="false"
               size="mini"
               :min="0"
-              :max="10000"
+              :max="1000000"
               :precision="1"
               step-strictly
               style="width: 80px"
@@ -150,7 +150,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
 import {
@@ -228,10 +227,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser'
-    }),
     vendorOptions() {
       return [{ value: 0, label: '平台' }].concat(this.vendorList)
     },

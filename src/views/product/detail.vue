@@ -19,7 +19,7 @@
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
       <el-divider content-position="left">商品信息</el-divider>
-      <el-form-item v-if="isAdminUser || isWatcherUser" label="商品供应商" prop="merchantId">
+      <el-form-item v-if="hasVendorPermission" label="商品供应商" prop="merchantId">
         <el-select
           v-if="createProduct"
           :value="productForm.merchantId"
@@ -103,8 +103,8 @@
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
-      <el-form-item label="销售价格(元)" prop="price">
-        <span v-if="viewProduct || !isAdminUser"> {{ productForm.price }}</span>
+      <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
+        <span v-if="viewProduct"> {{ productForm.price }}</span>
         <el-input-number
           v-else
           v-model="productForm.price"
@@ -114,12 +114,12 @@
           :max="1000000"
         />
       </el-form-item>
-      <el-form-item v-if="isAdminUser" label="销售底价(元)">
+      <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售底价(元)">
         <span style="margin-right: 10px"> {{ floorPrice }}</span>
         <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
         <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
       </el-form-item>
-      <el-form-item v-if="!isWatcherUser" label="进货价格(元)">
+      <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
@@ -388,6 +388,7 @@ import {
   setMpuShippingPriceApi,
   deleteMpuShippingPriceApi
 } from '@/api/freight'
+import { ProductPermissions } from '@/utils/role-permissions'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -422,7 +423,7 @@ export default {
       if (value === null || value === '') {
         switch (rule.field) {
           case 'merchantId':
-            if (this.isAdminUser) {
+            if (this.hasVendorPermission()) {
               callback(new Error('请选择商品供应商'))
             } else {
               callback()
@@ -521,7 +522,7 @@ export default {
         }],
         price: [{
           required: true, validator: (rule, value, callback) => {
-            if (this.isAdminUser) {
+            if (this.hasSalePricePermission) {
               if (isNumber(value) && value > 0) {
                 callback()
               } else {
@@ -537,11 +538,25 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
-      isWatcherUser: 'isWatcherUser',
+      userPermissions: 'userPermissions',
       productVendors: 'productVendors',
       vendorId: 'vendorId'
     }),
+    hasCreatePermission() {
+      return this.userPermissions.includes(ProductPermissions.create)
+    },
+    hasUpdatePermission() {
+      return this.userPermissions.includes(ProductPermissions.update)
+    },
+    hasSalePricePermission() {
+      return this.userPermissions.includes(ProductPermissions.salePrice)
+    },
+    hasCostPricePermission() {
+      return this.userPermissions.includes(ProductPermissions.costPrice)
+    },
+    hasVendorPermission() {
+      return this.userPermissions.includes(ProductPermissions.vendor)
+    },
     loadingMessage: {
       get() {
         return this.uploading ? '正在上传图片...' + this.uploadPercent + '%' : '正在加载中...'
@@ -643,7 +658,7 @@ export default {
       } else {
         params.id = this.$route.params.id
       }
-      if (!this.isAdminUser && !this.isWatcherUser) {
+      if (!this.hasVendorPermission) {
         params.merchantId = this.vendorId
       }
       this.loading = true
@@ -818,9 +833,17 @@ export default {
             formData.image = ''
           }
           if (this.createProduct) {
-            this.handleCreateProduct(formData)
+            if (this.hasCreatePermission) {
+              this.handleCreateProduct(formData)
+            } else {
+              this.$message.warning('没有创建商品权限，请联系管理员！')
+            }
           } else {
-            this.handleUpdateProduct(formData)
+            if (this.hasUpdatePermission) {
+              this.handleUpdateProduct(formData)
+            } else {
+              this.$message.warning('没有修改商品权限，请联系管理员！')
+            }
           }
         } else {
           this.$message.warning('商品信息不完整，请仔细检查！')
@@ -853,7 +876,7 @@ export default {
             }
           }
         })
-        if (!this.isAdminUser) {
+        if (!this.hasVendorPermission) {
           params.merchantId = this.vendorId
         }
         if (this.autoSku) {

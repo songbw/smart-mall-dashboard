@@ -79,7 +79,7 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="工单编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -109,7 +109,7 @@
           <span>{{ scope.row.refundTime | timeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="售后类型" align="center" width="80">
+      <el-table-column label="售后类型" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.typeName }}</span>
         </template>
@@ -152,10 +152,9 @@ import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
-import {
-  getWorkOrderListApi
-} from '@/api/workOrders'
+import { getWorkOrderListApi } from '@/api/workOrders'
 import { WorkOrderStatus, WorkOrderTypes } from './constants'
+import { WorkOrderPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'WorkOrders',
@@ -190,8 +189,12 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userPermissions: 'userPermissions',
       workOrdersQuery: 'workOrdersQuery'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(WorkOrderPermissions.view)
+    },
     queryMobile: {
       get() {
         return this.workOrdersQuery.receiverPhone
@@ -298,22 +301,26 @@ export default {
       return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getWorkOrderList() {
-      try {
-        this.listLoading = true
-        const params = this.getSearchParams()
-        const data = await getWorkOrderListApi(params)
-        if (data) {
-          this.workOrderTotal = data.total
-          this.workOrderData = data.rows
-          this.workOrderData.forEach(order => {
-            const find = this.typeOptions.find(option => option.value === order.typeId)
-            this.$set(order, 'typeName', find ? find.label : '')
-          })
+      if (this.hasViewPermission) {
+        try {
+          this.listLoading = true
+          const params = this.getSearchParams()
+          const data = await getWorkOrderListApi(params)
+          if (data) {
+            this.workOrderTotal = data.total
+            this.workOrderData = data.rows
+            this.workOrderData.forEach(order => {
+              const find = this.typeOptions.find(option => option.value === order.typeId)
+              this.$set(order, 'typeName', find ? find.label : '')
+            })
+          }
+        } catch (e) {
+          console.warn('Work orders List error: ' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Work orders List error: ' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看工单的权限，请联系管理员！')
       }
     },
     handleViewWorkOrder(id) {

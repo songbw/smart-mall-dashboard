@@ -6,7 +6,7 @@
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
             <el-button
-              v-if="!isWatcherUser"
+              v-if="hasEditPermission"
               :disabled="flowOptions.length === 0"
               type="primary"
               @click="handleShowFlowDialog"
@@ -176,7 +176,11 @@
             />
           </div>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 6" label="换货物流" prop="logisticsInfo">
+        <el-form-item
+          v-if="workOrderData.status >= 3 && flowForm.status === 6"
+          label="换货物流"
+          prop="logisticsInfo"
+        >
           <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowExpressDialog">
             填写物流
           </el-button>
@@ -232,9 +236,7 @@ import GoodsInfo from '@/components/Order/goodsInfo'
 import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
-import {
-  getOrderListApi
-} from '@/api/orders'
+import { getOrderListApi } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
@@ -248,6 +250,7 @@ import {
   PayTypeOptions
 } from '@/utils/constants'
 import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
+import { WorkOrderPermissions } from '@/utils/role-permissions'
 
 const RefundFlowStatusOptions = [{
   value: 2, label: '收到审核'
@@ -260,7 +263,7 @@ const RefundFlowStatusOptions = [{
 }, {
   value: 7, label: '同意退款'
 }, {
-  value: 6, label: '退款完成'
+  value: 6, label: '完成处理'
 }]
 const ChangeFlowStatusOptions = [{
   value: 2, label: '收到审核'
@@ -271,7 +274,7 @@ const ChangeFlowStatusOptions = [{
 }, {
   value: 5, label: '客户退货'
 }, {
-  value: 6, label: '换货处理'
+  value: 6, label: '完成处理'
 }]
 const RefundResultStatusOptions = [{
   value: 1, label: '成功'
@@ -404,7 +407,7 @@ export default {
         logisticsInfo: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (this.flowForm.status !== 6) {
+            if (this.flowForm.status !== 6 || this.workOrderData.status < 3) {
               callback()
             } else {
               if (value.code === null) {
@@ -421,17 +424,20 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isWatcherUser: 'isWatcherUser'
+      userPermissions: 'userPermissions'
     }),
+    hasEditPermission() {
+      return this.userPermissions.includes(WorkOrderPermissions.update)
+    },
     flowStatusOptions() {
       return this.workOrderData.typeId === type_change_good ? ChangeFlowStatusOptions : RefundFlowStatusOptions
     },
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
-        options = [3]
+        options = [3, 6]
       } else if (this.workOrderData.status === 2) {
-        options = [3]
+        options = [3, 6]
       } else if (this.workOrderData.status === 3) {
         options = this.workOrderData.typeId !== type_change_good ? [7] : [6]
       } else if (this.workOrderData.status === 5) {

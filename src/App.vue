@@ -12,11 +12,17 @@ import {
   storage_key_name,
   storage_key_phone,
   storage_key_role,
+  storage_key_permissions,
   storage_merchant_id,
   role_admin_name,
   role_watcher_name,
   vendor_status_approved
 } from '@/utils/constants'
+
+import {
+  storageGetItem,
+  storageSetItem
+} from '@/utils/storage'
 
 export default {
   name: 'App',
@@ -27,24 +33,29 @@ export default {
     async initApp() {
       try {
         await localForage.ready()
-        const token = await localForage.getItem(storage_key_token)
+        const token = await storageGetItem(storage_key_token)
         if (!isEmpty(token)) {
           this.$store.commit('user/SET_TOKEN', token)
         }
-        const name = await localForage.getItem(storage_key_name)
+        const name = await storageGetItem(storage_key_name)
         if (!isEmpty(name)) {
           this.$store.commit('user/SET_NAME', name)
         }
-        const phone = await localForage.getItem(storage_key_phone)
+        const phone = await storageGetItem(storage_key_phone)
         if (!isEmpty(phone)) {
           this.$store.commit('user/SET_PHONE', phone)
         }
-        const role = await localForage.getItem(storage_key_role)
+        const role = await storageGetItem(storage_key_role)
         if (!isEmpty(role)) {
           this.$store.commit('user/SET_ROLE', role)
         }
+        const permissions = await storageGetItem(storage_key_permissions)
+        if (!isEmpty(permissions)) {
+          this.$store.commit('user/SET_PERMISSIONS', permissions)
+        }
         if (role_admin_name === role || role_watcher_name === role) {
-          await localForage.setItem(storage_merchant_id, 0)
+          this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
+          await storageSetItem(storage_merchant_id, 0)
         } else if (!isEmpty(token)) {
           await this.getVendorProfile()
         }
@@ -58,9 +69,9 @@ export default {
       try {
         const { status, id } = await this.$store.dispatch('vendor/getProfile')
         if (status === vendor_status_approved) {
-          await localForage.setItem(storage_merchant_id, id)
+          await storageSetItem(storage_merchant_id, id)
         } else {
-          await localForage.setItem(storage_merchant_id, -1)
+          await storageSetItem(storage_merchant_id, -1)
         }
       } catch (e) {
         console.warn('App init vendor profile error:' + e)

@@ -130,6 +130,7 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import range from 'lodash/range'
 import { PromotionAccountTypeDefinition } from '@/utils/constants'
+import { PromotionPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'CustomPromotion',
@@ -263,10 +264,14 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userPermissions: 'userPermissions',
       promotionTypes: 'promotionTypes',
       promotionTypeId: 'promotionTypeId',
       defaultSchedules: 'defaultSchedules'
     }),
+    hasEditPermission() {
+      return this.userPermissions.includes(PromotionPermissions.update)
+    },
     saveButtonLabel() {
       if (this.promotionData && this.promotionData.id >= 0) {
         return '更新并修改商品'
@@ -374,17 +379,21 @@ export default {
       })
     },
     async savePromotion() {
-      try {
-        const valid = await this.$refs['promotionForm'].validate()
-        if (valid) {
-          if (this.promotionData.id >= 0) {
-            this.handleUpdatePromotion()
-          } else {
-            this.handleCreatePromotion()
+      if (this.hasEditPermission) {
+        try {
+          const valid = await this.$refs['promotionForm'].validate()
+          if (valid) {
+            if (this.promotionData.id >= 0) {
+              this.handleUpdatePromotion()
+            } else {
+              this.handleCreatePromotion()
+            }
           }
+        } catch (e) {
+          console.warn('Save promotion :' + e)
         }
-      } catch (e) {
-        console.warn('Save promotion :' + e)
+      } else {
+        this.$message.warning('没有创建或修改促销活动的权限，请联系管理员！')
       }
     },
     setDateValue() {

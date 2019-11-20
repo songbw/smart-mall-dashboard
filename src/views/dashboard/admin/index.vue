@@ -107,6 +107,7 @@ import {
   getPromotionDataApi,
   getSummaryDataApi
 } from '@/api/statistics'
+import { role_admin_name } from '@/utils/constants'
 
 const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value).toFixed(2)
 
@@ -191,8 +192,10 @@ export default {
     }
   },
   created() {
-    this.getSummaryData()
-    this.getChartData()
+    if (this.$store.getters.userRole === role_admin_name) {
+      this.getSummaryData()
+      this.getChartData()
+    }
   },
   methods: {
     async getSummaryData() {

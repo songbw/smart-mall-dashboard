@@ -147,3 +147,21 @@ export function updateVendorRoleApi(params) {
     }
   })
 }
+
+export function getRolePermissionsApi() {
+  return Vue.axios('vendor').request({
+    url: `/vendors/users/permissions/list`,
+    method: 'get'
+  })
+}
+
+export function updateRolePermissionApi(params) {
+  const { id, ...rest } = params
+  return Vue.axios('vendor').request({
+    url: `vendors/users/permissions/${id}`,
+    method: 'put',
+    data: {
+      ...rest
+    }
+  })
+}

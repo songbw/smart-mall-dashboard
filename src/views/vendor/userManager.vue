@@ -14,7 +14,7 @@
       </el-form-item>
     </el-form>
     <div style="margin-bottom: 20px">
-      <el-button type="primary" icon="el-icon-plus" @click="handleCreateUser">
+      <el-button v-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
         创建新用户
       </el-button>
     </div>
@@ -26,7 +26,7 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="60">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -58,7 +58,7 @@
           <span>{{ scope.row.createTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="400">
+      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="400">
         <template slot-scope="scope">
           <el-button
             type="warning"
@@ -106,11 +106,10 @@
       :show-close="false"
       :visible.sync="vendorEditDialogVisible"
       title="修改用户公司"
-      width="30%"
     >
-      <el-form ref="vendorForm" v-loading="vendorLoading" :model="vendorForm" :rules="vendorRules" label-width="80px">
+      <el-form ref="vendorForm" v-loading="vendorLoading" :model="vendorForm" :rules="vendorRules" label-width="6rem">
         <el-form-item label="登录名">
-          <el-input :value="vendorForm.loginName" readonly />
+          <span>{{ vendorForm.loginName }}</span>
         </el-form-item>
         <el-form-item label="企业列表" prop="companyId">
           <el-select :value="vendorForm.companyId" placeholder="请选择企业名称" @change="onVendorSelected">
@@ -134,13 +133,12 @@
       :show-close="false"
       :visible.sync="userDialogVisible"
       title="创建商户管理员"
-      width="30%"
     >
       <el-form
         ref="userForm"
         :model="userForm"
         :rules="userRules"
-        label-width="80px"
+        label-width="6rem"
       >
         <el-form-item label="登录名" prop="loginName">
           <el-input
@@ -183,11 +181,10 @@
       :show-close="false"
       :visible.sync="phoneEditDialogVisible"
       title="修改用户电话"
-      width="30%"
     >
-      <el-form ref="phoneForm" :model="phoneForm" :rules="phoneRules" label-width="80px">
+      <el-form ref="phoneForm" :model="phoneForm" :rules="phoneRules" label-width="6rem">
         <el-form-item label="登录名">
-          <el-input :value="phoneForm.loginName" readonly />
+          <span>{{ phoneForm.loginName }}</span>
         </el-form-item>
         <el-form-item label="手机号码" prop="phone">
           <el-input
@@ -208,11 +205,10 @@
       :show-close="false"
       :visible.sync="roleEditDialogVisible"
       title="修改用户角色"
-      width="30%"
     >
-      <el-form ref="roleForm" v-loading="roleLoading" :model="roleForm" :rules="roleRules" label-width="80px">
+      <el-form ref="roleForm" v-loading="roleLoading" :model="roleForm" :rules="roleRules" label-width="6rem">
         <el-form-item label="登录名">
-          <el-input :value="roleForm.loginName" readonly />
+          <span>{{ roleForm.loginName }}</span>
         </el-form-item>
         <el-form-item label="角色列表" prop="role">
           <el-select v-model="roleForm.role" placeholder="请选择角色">
@@ -234,6 +230,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
@@ -248,13 +245,9 @@ import {
   deleteVendorUserApi,
   getVendorRolesApi
 } from '@/api/vendor'
-import {
-  vendor_status_approved
-} from '@/utils/constants'
-import {
-  validUserName,
-  validPhone
-} from '@/utils/validate'
+import { vendor_status_approved } from '@/utils/constants'
+import { validUserName, validPhone } from '@/utils/validate'
+import { VendorPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'UserManager',
@@ -387,12 +380,31 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapGetters({
+      userPermissions: 'userPermissions',
+      queryData: 'couponQuery'
+    }),
+    hasViewPermission() {
+      return this.userPermissions.includes(VendorPermissions.userView)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(VendorPermissions.userUpdate)
+    }
+  },
   created() {
     this.getUsersData()
     this.getVendorList()
   },
   methods: {
-    async getUsersData() {
+    getUsersData() {
+      if (this.hasViewPermission) {
+        this.handleGetUsersData()
+      } else {
+        this.$message.warning('没有查看商户管理员的权限，请联系管理员！')
+      }
+    },
+    async handleGetUsersData() {
       try {
         if (this.roleOptions.length === 0) {
           await this.getVendorRoleList()

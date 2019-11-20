@@ -36,7 +36,7 @@
         <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
-        <el-button v-if="!isWatcherUser" icon="el-icon-coin" type="info" @click="handleBatchDelivery">
+        <el-button v-if="hasEditPermission" icon="el-icon-coin" type="info" @click="handleBatchDelivery">
           批量发货
         </el-button>
       </el-form-item>
@@ -55,7 +55,7 @@
             :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ shouldShowAoyiId ? scope.row.aoyiId : scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+            {{ scope.row | orderIdFilter }}
           </router-link>
         </template>
       </el-table-column>
@@ -102,7 +102,7 @@
       </el-table-column>
       <el-table-column align="center" label="订单状态" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.subStatus | OrderStatus }}</span>
+          <span>{{ scope.row.subStatus | orderStatusFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -113,7 +113,7 @@
       >
         <template slot-scope="scope">
           <el-button
-            :disabled="isWatcherUser || orderQuery.subStatus === statusDelivered"
+            :disabled="!hasEditPermission || orderQuery.subStatus === statusDelivered"
             size="mini"
             type="primary"
             @click="handleDeliverSubOrder(scope.row)"
@@ -160,12 +160,22 @@ import {
   SubOrderStatusDefinitions
 } from '@/utils/constants'
 import ImportDialog from './ImportDialog'
+import { OrderPermissions } from '@/utils/role-permissions'
+
+const shouldShowAoyiId = process.env.VUE_APP_HOST === 'GAT-SN' // aoyiId is Suning Order Id
 
 export default {
   name: 'Orders',
   components: { Pagination, OrderProduct, ImportDialog, ExpressSelection },
   filters: {
-    OrderStatus: status => {
+    orderIdFilter: order => {
+      if (shouldShowAoyiId) {
+        return order.aoyiId
+      } else {
+        return order.tradeNo ? order.tradeNo.substring(order.tradeNo.length - 8) : ''
+      }
+    },
+    orderStatusFilter: status => {
       const find = SubOrderStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status
     },
@@ -177,7 +187,6 @@ export default {
   },
   data() {
     return {
-      shouldShowAoyiId: process.env.VUE_APP_HOST === 'GAT-SN', // aoyiId is Suning Order Id
       statusDelivered: suborder_status_delivered,
       listLoading: false,
       queryParams: null,
@@ -222,9 +231,15 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isWatcherUser: 'isWatcherUser',
+      userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved'
     }),
+    hasViewPermission() {
+      return this.userPermissions.includes(OrderPermissions.view)
+    },
+    hasEditPermission() {
+      return this.userPermissions.includes(OrderPermissions.update)
+    },
     statusOptions() {
       return SubOrderStatusDefinitions.filter(option =>
         option.value === suborder_status_waiting_deliver || option.value === suborder_status_delivered)
@@ -251,18 +266,22 @@ export default {
       return { ...params, pageIndex: this.orderQuery.pageIndex, pageSize: this.orderQuery.pageSize }
     },
     async getOrderList() {
-      try {
-        if (this.vendorApproved) {
-          this.listLoading = true
-          const params = this.getSearchParams()
-          const { data } = await getOrderListApi(params)
-          this.orderTotal = data.result.total
-          this.orderData = data.result.list
+      if (this.hasViewPermission) {
+        try {
+          if (this.vendorApproved) {
+            this.listLoading = true
+            const params = this.getSearchParams()
+            const { data } = await getOrderListApi(params)
+            this.orderTotal = data.result.total
+            this.orderData = data.result.list
+          }
+        } catch (e) {
+          console.warn('Orders List error: ' + e)
+        } finally {
+          this.listLoading = false
         }
-      } catch (e) {
-        console.warn('Orders List error: ' + e)
-      } finally {
-        this.listLoading = false
+      } else {
+        this.$message.warning('没有查看订单权限，请联系管理员！')
       }
     },
     handleDeliverSubOrder(row) {

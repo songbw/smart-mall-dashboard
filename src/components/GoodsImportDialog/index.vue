@@ -102,6 +102,7 @@ import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
 import { product_state_on_sale } from '@/utils/constants'
+import { ProductPermissions } from '@/utils/role-permissions'
 
 const CreationHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
@@ -204,12 +205,15 @@ export default {
   },
   computed: {
     ...mapGetters({
-      isAdminUser: 'isAdminUser',
+      userPermissions: 'userPermissions',
       vendorId: 'vendorId',
       productVendors: 'productVendors'
     }),
+    hasVendorPermission() {
+      return this.userPermissions.includes(ProductPermissions.vendor)
+    },
     needVendor() {
-      return !this.updatePrice && (this.productCreation || this.productUpdate) && this.isAdminUser
+      return !this.updatePrice && (this.productCreation || this.productUpdate) && this.hasVendorPermission
     }
   },
   methods: {
@@ -362,7 +366,7 @@ export default {
         if (isString(value)) {
           return value
         } else {
-          return value ? value.toString() : null
+          return value != null ? value.toString() : null
         }
       } else {
         if (isNumber(value)) {
@@ -383,7 +387,7 @@ export default {
           }
         })
         if (!isEmpty(product) && !isEmpty(product.name)) {
-          if (this.isAdminUser) {
+          if (this.hasVendorPermission) {
             if (this.formData.merchantId) {
               product.merchantId = this.formData.merchantId
             }
@@ -428,7 +432,7 @@ export default {
         })
         if (!isEmpty(product) && !isEmpty(product.skuid)) {
           let merchantId = this.vendorId
-          if (this.isAdminUser) {
+          if (this.hasVendorPermission) {
             if (this.formData.merchantId) {
               merchantId = this.formData.merchantId
             }
