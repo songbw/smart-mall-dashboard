@@ -528,6 +528,7 @@ export default {
     },
     onQueryStatusChanged(value) {
       this.querySubStatus = value
+      this.getOrderList()
     },
     onQueryVendorChanged(value) {
       this.queryVendor = value

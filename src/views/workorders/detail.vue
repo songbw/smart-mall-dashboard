@@ -206,18 +206,28 @@ import {
 } from '@/utils/constants'
 import { WorkOrderTypes } from './constants'
 
-const FlowStatusOptions = [
-  {
-    value: 2, label: '收到审核'
-  }, {
-    value: 3, label: '通过审核'
-  }, {
-    value: 4, label: '审核失败'
-  }, {
-    value: 5, label: '退货处理'
-  }, {
-    value: 6, label: '同意退款'
-  }]
+const FlowOperateOptions = [{
+  value: 2, label: '收到审核'
+}, {
+  value: 3, label: '通过审核'
+}, {
+  value: 4, label: '处理完成'
+}, {
+  value: 5, label: '退货处理'
+}, {
+  value: 6, label: '同意退款'
+}]
+
+const FlowStatusOptions = [{
+  value: 2, label: '收到审核'
+}, {
+  value: 3, label: '通过审核'
+}, {
+  value: 5, label: '退货处理'
+}, {
+  value: 6, label: '处理完成'
+}]
+
 export default {
   name: 'WorkOrderDetail',
   components: {
@@ -337,11 +347,11 @@ export default {
       } else if (this.workOrderData.status === 2) {
         options = [3]
       } else if (this.workOrderData.status === 3) {
-        options = [6]
+        options = [6, 4]
       } else if (this.workOrderData.status === 5) {
-        options = [6]
+        options = [6, 4]
       }
-      return FlowStatusOptions.filter(option => options.includes(option.value))
+      return FlowOperateOptions.filter(option => options.includes(option.value))
     },
     maxRefund() {
       const yuan = Number.parseFloat(this.orderData.paymentAmount)
@@ -462,14 +472,19 @@ export default {
             const operator = this.$store.state.user.name
             const { status, refund, remark } = this.flowForm
             const comments = { remark }
-            if (this.flowForm.status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
+            if (status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
               comments.returnAddress = this.returnAddress
             }
-            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+            if (status === 6) { // 6为发起退款，是否包含运费
               comments.refund = refund
             }
-            const params = { workOrderId: this.workOrderData.id, operator, status, comments: JSON.stringify(comments) }
-            if (this.flowForm.status === 6) { // 6为发起退款，是否包含运费
+            const params = {
+              workOrderId: this.workOrderData.id,
+              operator,
+              status: status !== 4 ? status : 6, // 4 直接关闭工单， 和客户协商处理
+              comments: JSON.stringify(comments)
+            }
+            if (status === 6) { // 6为发起退款，是否包含运费
               params.refund = refund
             }
             await createWorkOrderFlowApi(params)
