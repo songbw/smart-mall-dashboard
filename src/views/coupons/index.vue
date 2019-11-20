@@ -64,7 +64,7 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="center" width="50">
+      <el-table-column label="编号" align="center" width="60">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'CouponDetail', params: { id: scope.row.id, readOnly: true }}"

@@ -189,4 +189,6 @@ export const WorkOrderStatusDefinition = [{
 }, {
   value: 6,
   label: '处理完成'
+}, {
+  value: 7, label: '同意退款'
 }]

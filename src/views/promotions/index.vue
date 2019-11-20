@@ -94,7 +94,7 @@
         type="selection"
         width="55"
       />
-      <el-table-column label="编号" align="center" width="50">
+      <el-table-column label="编号" align="center" width="60">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ViewPromotion', params: { id: scope.row.id }}"

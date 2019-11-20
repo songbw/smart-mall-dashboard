@@ -12,7 +12,7 @@
       highlight-current-row
       style="width: 60%;"
     >
-      <el-table-column label="标签编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="60">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>

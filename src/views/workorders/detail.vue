@@ -7,7 +7,7 @@
             <span class="card-header-text">售后信息</span>
             <el-button
               v-if="!isWatcherUser"
-              :disabled="workOrderData.status === 6"
+              :disabled="flowOptions.length === 0"
               type="primary"
               @click="handleShowFlowDialog"
             >
@@ -27,6 +27,12 @@
             <el-form-item label="售后描述:">
               <span>{{ workOrderData.description }}</span>
             </el-form-item>
+            <el-form-item label="申请人姓名:">
+              <span>{{ workOrderData.receiverName }}</span>
+            </el-form-item>
+            <el-form-item label="申请人电话:">
+              <span>{{ workOrderData.receiverPhone }}</span>
+            </el-form-item>
             <el-form-item label="申请数量:">
               <span>{{ workOrderData.returnedNum }}</span>
             </el-form-item>
@@ -41,6 +47,9 @@
             </el-form-item>
             <el-form-item v-if="workOrderData.realRefundAmount" label="累计退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
+            </el-form-item>
+            <el-form-item v-if="workOrderData.guanaitongTradeNo" label="退款单号:">
+              <span>{{ workOrderData.guanaitongTradeNo }}</span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -150,7 +159,7 @@
             />
           </div>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 6" label="退款金额" prop="refund">
+        <el-form-item v-if="flowForm.status === 7" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
               主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
@@ -211,11 +220,11 @@ const FlowOperateOptions = [{
 }, {
   value: 3, label: '通过审核'
 }, {
-  value: 4, label: '处理完成'
-}, {
   value: 5, label: '退货处理'
 }, {
-  value: 6, label: '同意退款'
+  value: 6, label: '处理完成'
+}, {
+  value: 7, label: '同意退款'
 }]
 
 const FlowStatusOptions = [{
@@ -226,6 +235,8 @@ const FlowStatusOptions = [{
   value: 5, label: '退货处理'
 }, {
   value: 6, label: '处理完成'
+}, {
+  value: 7, label: '同意退款'
 }]
 
 export default {
@@ -310,7 +321,7 @@ export default {
         refund: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (this.flowForm.status !== 6) {
+            if (this.flowForm.status !== 7) {
               callback()
             } else {
               if (value <= 0) {
@@ -347,9 +358,9 @@ export default {
       } else if (this.workOrderData.status === 2) {
         options = [3]
       } else if (this.workOrderData.status === 3) {
-        options = [6, 4]
+        options = [6, 7]
       } else if (this.workOrderData.status === 5) {
-        options = [6, 4]
+        options = [6, 7]
       }
       return FlowOperateOptions.filter(option => options.includes(option.value))
     },
@@ -475,16 +486,16 @@ export default {
             if (status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
               comments.returnAddress = this.returnAddress
             }
-            if (status === 6) { // 6为发起退款，是否包含运费
+            if (status === 7) { // 7为发起退款，是否包含运费
               comments.refund = refund
             }
             const params = {
               workOrderId: this.workOrderData.id,
               operator,
-              status: status !== 4 ? status : 6, // 4 直接关闭工单， 和客户协商处理
+              status, // 6 直接关闭工单， 和客户协商处理
               comments: JSON.stringify(comments)
             }
-            if (status === 6) { // 6为发起退款，是否包含运费
+            if (status === 7) { // 7为发起退款，是否包含运费
               params.refund = refund
             }
             await createWorkOrderFlowApi(params)

@@ -61,7 +61,7 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="工单编号" align="center" width="80">
+      <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -86,7 +86,7 @@
           <span>{{ scope.row.createTime | timeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="售后类型" align="center" width="80">
+      <el-table-column label="售后类型" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.typeName }}</span>
         </template>

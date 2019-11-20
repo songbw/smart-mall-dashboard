@@ -98,12 +98,12 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="显示状态" align="center" width="80">
+            <el-table-column label="显示状态" align="center" width="100">
               <template slot-scope="scope">
                 <el-tag>{{ scope.row.isShow ? '显示' : '隐藏' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="类别排序" align="center" width="80">
+            <el-table-column label="类别排序" align="center" width="100">
               <template slot-scope="scope">
                 <span>{{ scope.row.sortOrder }}</span>
               </template>

@@ -52,27 +52,27 @@
               <el-image :src="scope.row.image" fit="contain" lazy />
             </template>
           </el-table-column>
-          <el-table-column label="数量" align="center" width="50">
+          <el-table-column label="数量" align="center" width="80">
             <template slot-scope="scope">
               <span>{{ scope.row.num }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="销售价格(元)" align="center" width="110">
+          <el-table-column label="销售价格(元)" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.unitPrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="支付价格(元)" align="center" width="110">
+          <el-table-column label="支付价格(元)" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.salePrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="活动减价(元)" align="center" width="110">
+          <el-table-column label="活动减价(元)" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.promotionDiscount }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="优惠券减价(元)" align="center" width="120">
+          <el-table-column label="优惠券减价(元)" align="center" width="140">
             <template slot-scope="scope">
               <span>{{ scope.row.skuCouponDiscount | centFilter }}</span>
             </template>

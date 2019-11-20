@@ -95,7 +95,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订单状态" width="80">
+      <el-table-column align="center" label="订单状态" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.subStatus | OrderStatus }}</span>
         </template>
