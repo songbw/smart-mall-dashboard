@@ -24,9 +24,17 @@
     <el-form label-width="180px" label-position="right">
       <el-form-item label="列表样式">
         <el-radio-group v-model="countPerLine">
+          <el-radio label="1">1行1个</el-radio>
           <el-radio label="2">1行2个</el-radio>
           <el-radio label="3">1行3个</el-radio>
         </el-radio-group>
+      </el-form-item>
+      <el-form-item label="显示属性">
+        <el-checkbox-group v-model="visibleProps">
+          <el-checkbox v-for="option in visibleOptions" :key="option.value" :label="option.value">
+            {{ option.label }}
+          </el-checkbox>
+        </el-checkbox-group>
       </el-form-item>
       <el-form-item label="楼层标题底色">
         <el-color-picker v-model="floorTitleColor" />
@@ -67,13 +75,18 @@
 <script>
 import { mapGetters } from 'vuex'
 import GoodsFloor from './goodsFloor'
-import { goodsType, goodsSettings } from './templateType'
+import {
+  goodsType,
+  goodsSettings,
+  goodPropOptions
+} from './templateType'
 
 export default {
   name: 'CustomGoods',
   components: { GoodsFloor },
   data() {
     return {
+      visibleOptions: goodPropOptions,
       maxFloorLength: 20
     }
   },
@@ -166,6 +179,15 @@ export default {
       },
       set(newValue) {
         const settings = Object.assign({}, this.goodsInfo.settings, { marginBottom: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
+    visibleProps: {
+      get() {
+        return this.goodsInfo.settings.visibleProps || []
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.goodsInfo.settings, { visibleProps: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     }

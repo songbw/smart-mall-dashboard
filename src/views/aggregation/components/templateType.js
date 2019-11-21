@@ -7,6 +7,54 @@ export const couponType = '6'
 export const hotZoneType = '7'
 export const comboType = '8'
 
+export const good_prop_image = 'image'
+export const good_prop_tile = 'title'
+export const good_prop_price = 'price'
+export const good_prop_promotion = 'promotion'
+export const good_prop_coupon = 'coupon'
+export const good_prop_subtitle = 'subtitle'
+export const good_prop_tag = 'tag'
+export const good_prop_add_cart = 'cart'
+export const good_prop_buy_now = 'buy'
+export const goodPropOptions = [
+  {
+    value: good_prop_image,
+    label: '商品封面图'
+  },
+  {
+    value: good_prop_tile,
+    label: '商品标题'
+  },
+  {
+    value: good_prop_price,
+    label: '销售价格'
+  },
+  {
+    value: good_prop_promotion,
+    label: '促销信息'
+  },
+  {
+    value: good_prop_coupon,
+    label: '优惠券'
+  },
+  {
+    value: good_prop_subtitle,
+    label: '商品副标题'
+  },
+  {
+    value: good_prop_tag,
+    label: '商品标签'
+  },
+  {
+    value: good_prop_add_cart,
+    label: '购物车'
+  },
+  {
+    value: good_prop_buy_now,
+    label: '立即购买'
+  }
+]
+
 export const gridSettings = {
   show: false,
   text: {
@@ -26,17 +74,9 @@ export const promotionSettings = {
     textValue: '',
     hasTextLink: false,
     textLinkValue: '',
-    hasPromotionActivity: true,
     promotionDailySchedule: false,
-    promotionActivityId: -1,
-    promotionActivityName: '',
-    promotionActivityStartDate: '',
-    promotionActivityEndDate: '',
     hasImage: false,
-    imageUrl: '',
-    targetType: '',
-    targetUrl: '',
-    targetName: ''
+    imageUrl: ''
   },
   marginBottom: '0'
 }
@@ -49,7 +89,14 @@ export const goodsSettings = {
   hasTabBar: false,
   tabBarBackgroundColor: '#333333',
   tabBarTextColor: '#FF9933',
-  marginBottom: 0
+  marginBottom: 0,
+  visibleProps: [
+    good_prop_image,
+    good_prop_tile,
+    good_prop_price,
+    good_prop_promotion,
+    good_prop_add_cart
+  ]
 }
 
 export const couponSettings = {

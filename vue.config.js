@@ -7,7 +7,7 @@ function resolve(dir) {
 }
 
 const moment = require('moment')
-process.env.VUE_APP_VERSION = require('./package.json').version + '.' + moment().format('MMDD')
+process.env.VUE_APP_VERSION = require('./package.json').version + '.' + moment().format('MMDD-HHmm')
 
 const nameGatSn = process.env.VUE_APP_HOST === 'GAT-SN' ? defaultSettings.titleGatSn : ''
 const nameGatZy = process.env.VUE_APP_HOST === 'GAT-ZY' ? defaultSettings.titleGatZy : ''

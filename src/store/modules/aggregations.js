@@ -107,6 +107,11 @@ const mutations = {
       template.data.list.splice(index, 1)
     }
   },
+  CLEAR_ITEMS_IN_CONTENT: (state) => {
+    const template = state.aggregation.content[state.contentIndex]
+    const len = template.data.list.length
+    template.data.list.splice(0, len)
+  },
   SET_CONTENT_SETTINGS: (state, params) => {
     const template = state.aggregation.content[state.contentIndex]
     template.data.settings = { ...params }
