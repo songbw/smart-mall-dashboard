@@ -57,17 +57,17 @@
               <span>{{ scope.row.num }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="销售价格(元)" align="center" width="110">
+          <el-table-column label="减活动价格(元)" align="center" width="140">
             <template slot-scope="scope">
               <span>{{ scope.row.unitPrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="支付价格(元)" align="center" width="110">
+          <el-table-column label="支付价格(元)" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.salePrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="活动减价(元)" align="center" width="110">
+          <el-table-column label="活动减价(元)" align="center" width="120">
             <template slot-scope="scope">
               <div>{{ scope.row.promotionDiscount }}</div>
               <router-link
