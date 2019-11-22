@@ -78,3 +78,8 @@ export const RolePermissions = {
   create: 'role:create',
   view: 'role:view'
 }
+
+export const AppPlatformPermissions = {
+  update: 'appplatform:update',
+  view: 'appplatform:view'
+}

@@ -5,11 +5,9 @@
     </div>
     <el-table
       v-loading="listLoading"
-      :data="couponTags"
+      :data="tagList"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 60%;"
     >
       <el-table-column label="编号" align="center" width="80">
@@ -77,7 +75,7 @@ export default {
       queryOffset: 1,
       queryLimit: 20,
       total: 0,
-      couponTags: []
+      tagList: []
     }
   },
   computed: {
@@ -96,10 +94,10 @@ export default {
       this.listLoading = true
       try {
         const { data } = await getCouponTagsApi({ offset: this.queryOffset, limit: this.queryLimit })
-        this.couponTags = data.result.list
+        this.tagList = data.result.list
         this.total = data.result.total
       } catch (e) {
-        console.warn('Get coupon tags error :' + e)
+        console.warn('Get tags error :' + e)
       } finally {
         this.listLoading = false
       }
@@ -141,7 +139,7 @@ export default {
         })
         const { code } = await deleteCouponTagApi({ id: row.id })
         if (code === 200) {
-          if (this.couponTags.length === 1 && this.queryOffset > 1) {
+          if (this.tagList.length === 1 && this.queryOffset > 1) {
             this.queryOffset = this.queryOffset - 1
           }
           this.getCouponTags()

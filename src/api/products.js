@@ -86,3 +86,27 @@ export function getMerchantCodeListApi() {
     method: 'get'
   })
 }
+
+export function getAppPlatformListApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/platform/all',
+    method: 'post',
+    data: params
+  })
+}
+
+export function createAppPlatformApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/platform',
+    method: 'post',
+    data: params
+  })
+}
+
+export function updateAppPlatformApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/platform',
+    method: 'put',
+    data: params
+  })
+}

@@ -187,44 +187,23 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/coupons',
+    path: '/operations',
     component: Layout,
-    redirect: '/coupons/index',
-    name: 'Coupons',
-    meta: { title: '权益', icon: 'golds', roles: [role_admin_name] },
+    redirect: '/operations/platforms',
+    name: 'Operations',
+    meta: { title: '运营', icon: 'golds', roles: [role_admin_name] },
     children: [
       {
-        path: 'index',
-        name: 'CouponsIndex',
-        component: () => import('@/views/coupons/index'),
-        meta: { title: '优惠券管理', icon: 'coupons', group: 'coupons' }
+        path: 'platforms',
+        name: 'PlatformManagement',
+        component: () => import('@/views/platforms/index'),
+        meta: { title: '平台管理', icon: 'platforms' }
       },
       {
         path: 'tags',
         name: 'CouponTags',
-        component: () => import('@/views/coupons/tags'),
+        component: () => import('@/views/tags/index'),
         meta: { title: '标签管理', icon: 'tags' }
-      },
-      {
-        path: 'detail/:id',
-        name: 'CouponDetail',
-        component: () => import('@/views/coupons/custom'),
-        meta: { title: '优惠券详情', group: 'coupons' },
-        hidden: true
-      },
-      {
-        path: 'creation',
-        name: 'CreateCoupon',
-        component: () => import('@/views/coupons/custom'),
-        meta: { title: '创建优惠券', group: 'coupons' },
-        hidden: true
-      },
-      {
-        path: 'usages/:id',
-        name: 'CouponUsages',
-        component: () => import('@/views/coupons/usages'),
-        meta: { title: '领取详情', group: 'coupons' },
-        hidden: true
       }
     ]
   },
@@ -280,6 +259,33 @@ export const constantRoutes = [
         name: 'ViewPromotion',
         component: () => import('@/views/promotions/creation'),
         meta: { title: '查看促销活动', icon: 'promotions', group: 'promotions' },
+        hidden: true
+      },
+      {
+        path: 'coupons',
+        name: 'Coupons',
+        component: () => import('@/views/coupons/index'),
+        meta: { title: '优惠券管理', icon: 'coupons', group: 'coupons' }
+      },
+      {
+        path: 'couponDetail/:id',
+        name: 'CouponDetail',
+        component: () => import('@/views/coupons/custom'),
+        meta: { title: '优惠券详情', group: 'coupons' },
+        hidden: true
+      },
+      {
+        path: 'couponCreation',
+        name: 'CreateCoupon',
+        component: () => import('@/views/coupons/custom'),
+        meta: { title: '创建优惠券', group: 'coupons' },
+        hidden: true
+      },
+      {
+        path: 'couponUsages/:id',
+        name: 'CouponUsages',
+        component: () => import('@/views/coupons/usages'),
+        meta: { title: '领取详情', group: 'coupons' },
         hidden: true
       }
     ]
