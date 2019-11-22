@@ -1050,7 +1050,7 @@ export default {
     exportToFile(dataList) {
       this.productExporting = true
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['skuID']
+        const tHeader = ['商品SKU']
         const filterVal = ['skuid']
         const data = this.formatJson(filterVal, dataList)
         excel.export_json_to_excel({
