@@ -5,14 +5,23 @@
         <el-card shadow="never">
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
-            <el-button
-              v-if="hasEditPermission"
-              :disabled="flowOptions.length === 0"
-              type="primary"
-              @click="handleShowFlowDialog"
-            >
-              处理
-            </el-button>
+            <div>
+              <el-button
+                v-if="couldReopenWorkorder"
+                type="danger"
+                @click="handleRepoenWorkOrder"
+              >
+                重置工单
+              </el-button>
+              <el-button
+                v-if="hasEditPermission"
+                :disabled="flowOptions.length === 0"
+                type="primary"
+                @click="handleShowFlowDialog"
+              >
+                处理
+              </el-button>
+            </div>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="售后状态:">
@@ -248,6 +257,7 @@ import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
   createWorkOrderFlowApi,
+  reopenWorkOrderFlowApi,
   getDefaultReturnAddressApi,
   getReturnAddressListApi
 } from '@/api/workOrders'
@@ -264,12 +274,14 @@ const agree_refund = 2
 const reject_refund = 3
 const reject_change = 4
 const change_good = 5
+const reopen_workorder = 6
 const FlowOperations = [
   { value: approve_request, label: '通过申请' },
   { value: agree_refund, label: '同意退款' },
   { value: reject_refund, label: '拒绝退款' },
   { value: reject_change, label: '拒绝换货' },
-  { value: change_good, label: '换货处理' }
+  { value: change_good, label: '换货处理' },
+  { value: reopen_workorder, label: '重置工单' }
 ]
 
 const RefundResultStatusOptions = [{
@@ -434,8 +446,19 @@ export default {
     hasEditPermission() {
       return this.userPermissions.includes(WorkOrderPermissions.update)
     },
+    hasResetPermission() {
+      return this.userPermissions.includes(WorkOrderPermissions.reset)
+    },
     flowStatusOptions() {
       return WorkOrderStatus
+    },
+    couldReopenWorkorder() {
+      let noRefund = isEmpty(this.workOrderData.refundTime)
+      if (!noRefund) {
+        const momentDate = moment(this.workOrderData.refundTime)
+        noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
+      }
+      return this.hasResetPermission && this.workOrderData.status === 6 && noRefund
     },
     flowOptions() {
       let options = []
@@ -468,11 +491,11 @@ export default {
         this.workOrderData = await getWorkOrderByIdApi({ id })
         const find = this.typeOptions.find(option => option.value === this.workOrderData.typeId)
         this.$set(this.workOrderData, 'typeName', find ? find.label : '')
+        await this.getWorkFlows(id)
+        await this.getOrderData(this.workOrderData.orderId)
         if (isEmpty(this.workOrderData.comments) === false) {
           this.refundList = JSON.parse(this.workOrderData.comments)
         }
-        await this.getWorkFlows(id)
-        await this.getOrderData(this.workOrderData.orderId)
       } catch (e) {
         console.warn('Work order get error:' + e)
       } finally {
@@ -626,6 +649,25 @@ export default {
             this.$message.error('处理工单失败，请稍后重试！')
           }
         }
+      })
+    },
+    handleRepoenWorkOrder() {
+      this.$confirm('是否重新打开此售后工单，将会恢复为待审核状态？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          const operator = this.$store.state.user.name
+          const comments = { remark: '', operation: reopen_workorder }
+          const params = { workOrderId: this.workOrderData.id, operator, comments: JSON.stringify(comments) }
+          await reopenWorkOrderFlowApi(params)
+          this.$message.success('重置工单成功！')
+          this.getWorkOrderData()
+        } catch (e) {
+          console.warn(`Update product state error: ${e}`)
+        }
+      }).catch(() => {
       })
     },
     gotoReturnAddress() {
