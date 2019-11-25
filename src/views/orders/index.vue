@@ -131,6 +131,7 @@
             :name="scope.row.name"
             :price="scope.row.salePrice"
             :sku-id="scope.row.skuId"
+            :merchant-name="scope.row.merchantName"
           />
         </template>
       </el-table-column>
@@ -514,6 +515,16 @@ export default {
         this.vendorLoading = false
       }
     },
+    getVendorName(vendorId) {
+      if (this.vendorOptions.length > 0 && vendorId != null) {
+        const vendor = this.vendorOptions.find(option => option.value === vendorId)
+        if (vendor) {
+          return vendor.label
+        } else {
+          return ''
+        }
+      }
+    },
     getSearchParams() {
       const params = {}
       const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile',
@@ -544,9 +555,12 @@ export default {
             }
             this.listLoading = true
             const params = this.getSearchParams()
-            const { data } = await getOrderListApi(params)
-            this.orderTotal = data.result.total
-            this.orderData = data.result.list
+            const { code, data } = await getOrderListApi(params)
+            if (code === 200) {
+              this.orderTotal = data.result.total
+              this.orderData = data.result.list.map(item => (
+                { ...item, merchantName: this.getVendorName(item.merchantId) }))
+            }
           }
         } catch (e) {
           console.warn('Orders List error: ' + e)
