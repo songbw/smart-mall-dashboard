@@ -73,6 +73,7 @@
             :name="scope.row.name"
             :price="scope.row.salePrice"
             :sku-id="scope.row.skuId"
+            :merchant-name="scope.row.merchantName"
           />
         </template>
       </el-table-column>
@@ -154,10 +155,12 @@ import {
   getOrderListApi,
   uploadLogisticsApi
 } from '@/api/orders'
+import { getVendorListApi } from '@/api/vendor'
 import {
   suborder_status_waiting_deliver,
   suborder_status_delivered,
-  SubOrderStatusDefinitions
+  SubOrderStatusDefinitions,
+  vendor_status_approved
 } from '@/utils/constants'
 import ImportDialog from './ImportDialog'
 import { OrderPermissions } from '@/utils/role-permissions'
@@ -188,6 +191,8 @@ export default {
   data() {
     return {
       statusDelivered: suborder_status_delivered,
+      vendorLoading: false,
+      vendorList: [],
       listLoading: false,
       queryParams: null,
       orderQuery: {
@@ -243,12 +248,50 @@ export default {
     statusOptions() {
       return SubOrderStatusDefinitions.filter(option =>
         option.value === suborder_status_waiting_deliver || option.value === suborder_status_delivered)
+    },
+    vendorOptions() {
+      return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendorList)
     }
   },
   created() {
-    this.getOrderList()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      await this.getVendorList()
+      await this.getOrderList()
+    },
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 1000,
+          status: vendor_status_approved
+        }
+        this.vendorLoading = true
+        const data = await getVendorListApi(params)
+        this.vendorList = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Orders get vendor list error:' + e)
+      } finally {
+        this.vendorLoading = false
+      }
+    },
+    getVendorName(vendorId) {
+      if (this.vendorOptions.length > 0 && vendorId != null) {
+        const vendor = this.vendorOptions.find(option => option.value === vendorId)
+        if (vendor) {
+          return vendor.label
+        } else {
+          return ''
+        }
+      }
+    },
     getSearchParams() {
       const params = {
         subStatus: this.orderQuery.subStatus
@@ -271,9 +314,12 @@ export default {
           if (this.vendorApproved) {
             this.listLoading = true
             const params = this.getSearchParams()
-            const { data } = await getOrderListApi(params)
-            this.orderTotal = data.result.total
-            this.orderData = data.result.list
+            const { code, data } = await getOrderListApi(params)
+            if (code === 200) {
+              this.orderTotal = data.result.total
+              this.orderData = data.result.list.map(item => (
+                { ...item, merchantName: this.getVendorName(item.merchantId) }))
+            }
           }
         } catch (e) {
           console.warn('Orders List error: ' + e)

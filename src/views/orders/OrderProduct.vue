@@ -13,9 +13,14 @@
         <div style="text-align:start; overflow:hidden; white-space: nowrap; text-overflow: ellipsis">
           {{ name }}
         </div>
-        <div style="display: flex;justify-content: space-between">
-          <span>{{ `￥ ${price}` }}</span>
-          <span>{{ `数量： ${count}` }}</span>
+        <div style="text-align: start">
+          <span>价格：{{ `￥ ${price}` }}</span>
+        </div>
+        <div style="text-align: start">
+          <span>数量：{{ count }}</span>
+        </div>
+        <div style="text-align: start">
+          <span>供应商：{{ merchantName }}</span>
         </div>
       </div>
     </el-col>
@@ -49,6 +54,10 @@ export default {
     count: {
       type: Number,
       default: 0
+    },
+    merchantName: {
+      type: String,
+      default: ''
     }
   }
 }
