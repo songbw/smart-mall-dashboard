@@ -141,7 +141,7 @@ export default {
       this.skuData.forEach(sku => {
         if (!isEmpty(sku.logisticsId) && !sku.fetchedLogistics) {
           sku.fetchedLogistics = true
-          getLogisticsInfoApi({ orderId: sku.subOrderId }).then(res => {
+          getLogisticsInfoApi({ merchantNo: sku.merchantNo, subOrderId: sku.subOrderId }).then(res => {
             const query = res.data.result
             if (query && query.length > 0) {
               sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []

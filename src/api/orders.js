@@ -52,7 +52,7 @@ export function getAddressApi(params) {
 
 export function getLogisticsInfoApi(params) {
   return Vue.axios('orders').request({
-    url: '/orders/order/logistics',
+    url: '/orders/order/sub/logistics',
     method: 'get',
     params
   })
