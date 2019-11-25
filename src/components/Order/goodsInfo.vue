@@ -141,10 +141,11 @@ export default {
       this.skuData.forEach(sku => {
         if (!isEmpty(sku.logisticsId) && !sku.fetchedLogistics) {
           sku.fetchedLogistics = true
-          getLogisticsInfoApi({ merchantNo: sku.merchantNo, subOrderId: sku.subOrderId }).then(res => {
-            const query = res.data.result
-            if (query && query.length > 0) {
-              sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
+          getLogisticsInfoApi({ subOrderId: sku.subOrderId }).then(res => {
+            const { code, data } = res
+            if (code === 200) {
+              const query = data.result.data
+              sku.logisticsTimeline = Array.isArray(query) ? query : []
             }
           }).catch(e => {
             console.warn('Order goods get logistics error:' + e)
