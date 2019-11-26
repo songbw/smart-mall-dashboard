@@ -12,7 +12,7 @@
           </el-col>
           <el-col :span="12">
             <span class="item-label">订单总额：</span>
-            <span class="item-text">{{ saleAmount }}</span>
+            <span class="item-text">￥ {{ saleAmount }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
