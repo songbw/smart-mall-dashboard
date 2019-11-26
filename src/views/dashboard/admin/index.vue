@@ -109,7 +109,11 @@ import {
 } from '@/api/statistics'
 import { role_admin_name } from '@/utils/constants'
 
-const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value).toFixed(2)
+const floatToFixed = (value, precision) =>
+  parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(2))
+const convertToNumber = value => isNumber(value) ? floatToFixed(value, 2)
+  : floatToFixed(Number.parseFloat(value), 2)
+const convertToInt = value => Number.isInteger(value) ? value : Math.round(convertToNumber(value))
 
 export default {
   name: 'AdminDashboard',
@@ -194,20 +198,23 @@ export default {
   },
   created() {
     if (this.$store.getters.userRole === role_admin_name) {
-      this.getSummaryData()
-      this.getChartData()
+      this.prepareData()
     }
   },
   methods: {
+    async prepareData() {
+      await this.getSummaryData()
+      await this.getChartData()
+    },
     async getSummaryData() {
       try {
         this.summaryLoading = true
         const { data } = await getSummaryDataApi()
         this.summary.orderPaymentAmount = convertToNumber(data.orderAmount)
-        this.summary.orderTotalNum = convertToNumber(data.orderCount)
-        this.summary.customerTotalNum = convertToNumber(data.userCount)
-        this.summary.orderCustomerTotalNum = convertToNumber(data.orderUserCount)
-        this.summary.returnOrderTotalNum = convertToNumber(data.refundOrderCount)
+        this.summary.orderTotalNum = convertToInt(data.orderCount)
+        this.summary.customerTotalNum = convertToInt(data.userCount)
+        this.summary.orderCustomerTotalNum = convertToInt(data.orderUserCount)
+        this.summary.returnOrderTotalNum = convertToInt(data.refundOrderCount)
         this.summary.perCustomerTransaction = convertToNumber(data.perCustomerPrice)
         this.summary.orderAveragePrice = convertToNumber(data.avgOrderPrice)
       } catch (e) {
@@ -216,12 +223,12 @@ export default {
         this.summaryLoading = false
       }
     },
-    getChartData() {
+    async getChartData() {
       const params = this.getParameters()
-      this.getCategoryData(params)
-      this.getMerchantData(params)
-      this.getPromotionData(params)
-      this.getPeriodData(params)
+      await this.getCategoryData(params)
+      await this.getMerchantData(params)
+      await this.getPromotionData(params)
+      await this.getPeriodData(params)
     },
     getParameters() {
       const format = 'YYYY-MM-DD'
@@ -309,8 +316,8 @@ export default {
                 night: convertToNumber(item.night),
                 lateAtNight: convertToNumber(item.lateAtNight)
               }
-              dayData.allDay = dayData.earlyMorning + dayData.morning + dayData.noon +
-                dayData.afternoon + dayData.night + dayData.lateAtNight
+              dayData.allDay = floatToFixed(dayData.earlyMorning + dayData.morning + dayData.noon +
+                dayData.afternoon + dayData.night + dayData.lateAtNight, 2)
               return dayData
             })
           this.chartPeriodData.rows = sortBy(rows, ['date'])
