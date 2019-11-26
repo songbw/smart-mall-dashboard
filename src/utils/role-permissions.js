@@ -56,7 +56,8 @@ export const OrderPermissions = {
 
 export const WorkOrderPermissions = {
   update: 'workorder:update',
-  view: 'workorder:view'
+  view: 'workorder:view',
+  reset: 'workorder:reset'
 }
 
 export const MemberPermissions = {

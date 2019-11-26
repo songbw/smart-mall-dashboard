@@ -57,6 +57,14 @@ export function deleteVendorApi(params) {
   })
 }
 
+export function getVendorProfileByIdApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/vendors/companyById`,
+    method: 'get',
+    params
+  })
+}
+
 export function getVendorUserListApi(params) {
   return Vue.axios('vendor').request({
     url: '/vendors/users/list',

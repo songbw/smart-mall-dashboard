@@ -87,7 +87,7 @@
       :close-on-press-escape="false"
       :show-close="false"
     >
-      <el-form ref="ruleForm" :model="dialogValue" :rules="dialogRules" label-position="left" label-width="80px">
+      <el-form ref="ruleForm" :model="dialogValue" :rules="dialogRules" label-width="6rem">
         <el-form-item label="名称">
           <el-input v-model="dialogValue.name" />
         </el-form-item>

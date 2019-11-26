@@ -12,7 +12,7 @@
           </el-col>
           <el-col :span="12">
             <span class="item-label">订单总额：</span>
-            <span class="item-text">{{ saleAmount }}</span>
+            <span class="item-text">￥ {{ saleAmount }}</span>
           </el-col>
         </el-row>
         <el-row class="item-row">
@@ -57,7 +57,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { OrderStatusDefinitions } from '@/utils/constants'
-import { getVendorProfileApi } from '@/api/vendor'
+import { getVendorProfileByIdApi } from '@/api/vendor'
 import { OrderPermissions } from '@/utils/role-permissions'
 
 export default {
@@ -143,9 +143,9 @@ export default {
     async getMerchantName() {
       try {
         if (this.merchantId >= 0) {
-          const { data } = await getVendorProfileApi({ id: this.merchantId })
-          if (data && data.company) {
-            this.merchantName = data.company.name
+          const { code, data } = await getVendorProfileByIdApi({ id: this.merchantId })
+          if (code === 200) {
+            this.merchantName = data.name
           }
         }
       } catch (e) {

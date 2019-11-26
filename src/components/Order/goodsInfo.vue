@@ -57,17 +57,17 @@
               <span>{{ scope.row.num }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="销售价格(元)" align="center" width="110">
+          <el-table-column label="减活动价格(元)" align="center" width="140">
             <template slot-scope="scope">
               <span>{{ scope.row.unitPrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="支付价格(元)" align="center" width="110">
+          <el-table-column label="支付价格(元)" align="center" width="120">
             <template slot-scope="scope">
               <span>{{ scope.row.salePrice }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="活动减价(元)" align="center" width="110">
+          <el-table-column label="活动减价(元)" align="center" width="120">
             <template slot-scope="scope">
               <div>{{ scope.row.promotionDiscount }}</div>
               <router-link
@@ -141,10 +141,11 @@ export default {
       this.skuData.forEach(sku => {
         if (!isEmpty(sku.logisticsId) && !sku.fetchedLogistics) {
           sku.fetchedLogistics = true
-          getLogisticsInfoApi({ orderId: sku.subOrderId }).then(res => {
-            const query = res.data.result
-            if (query && query.length > 0) {
-              sku.logisticsTimeline = Array.isArray(query[0].data) ? query[0].data : []
+          getLogisticsInfoApi({ subOrderId: sku.subOrderId }).then(res => {
+            const { code, data } = res
+            if (code === 200) {
+              const query = data.result.data
+              sku.logisticsTimeline = Array.isArray(query) ? query : []
             }
           }).catch(e => {
             console.warn('Order goods get logistics error:' + e)

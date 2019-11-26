@@ -250,7 +250,7 @@ export default {
     },
     handleExportGoods() {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['skuID']
+        const tHeader = ['商品SKU']
         const filterVal = ['skuid']
         const list = this.skuInfoList
         const data = this.formatJson(filterVal, list)
