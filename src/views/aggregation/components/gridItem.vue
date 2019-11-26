@@ -35,7 +35,7 @@
       </el-col>
     </el-row>
     <el-dialog :title="dialogFormTitle" :visible.sync="dialogFormVisible">
-      <el-form ref="ruleForm" :model="dialogValue" label-position="left" label-width="80px">
+      <el-form ref="ruleForm" :model="dialogValue" label-width="6rem">
         <el-form-item label="缩略图">
           <image-upload
             :image-url="dialogValue.imageUrl"
