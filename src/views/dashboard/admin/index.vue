@@ -141,6 +141,7 @@ export default {
       chartPriceSettings: {
         dataType: 'KMB',
         labelMap: {
+          allDay: '全天',
           earlyMorning: '凌晨',
           morning: '上午',
           noon: '中午',
@@ -162,7 +163,7 @@ export default {
         rows: []
       },
       chartPeriodData: {
-        columns: ['date', 'earlyMorning', 'morning', 'noon', 'afternoon', 'night', 'lateAtNight'],
+        columns: ['date', 'allDay', 'earlyMorning', 'morning', 'noon', 'afternoon', 'night', 'lateAtNight'],
         rows: []
       }
     }
@@ -299,7 +300,7 @@ export default {
             .map(item => {
               const format = 'MM/DD'
               const date = moment(item.statisticsDate).format(format)
-              return {
+              const dayData = {
                 date,
                 earlyMorning: convertToNumber(item.earlyMorning),
                 morning: convertToNumber(item.morning),
@@ -308,6 +309,9 @@ export default {
                 night: convertToNumber(item.night),
                 lateAtNight: convertToNumber(item.lateAtNight)
               }
+              dayData.allDay = dayData.earlyMorning + dayData.morning + dayData.noon +
+                dayData.afternoon + dayData.night + dayData.lateAtNight
+              return dayData
             })
           this.chartPeriodData.rows = sortBy(rows, ['date'])
         }
