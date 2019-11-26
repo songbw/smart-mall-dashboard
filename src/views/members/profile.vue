@@ -14,7 +14,7 @@
         <el-form-item label="会员电话">
           <span>{{ profile.telephone }}</span>
         </el-form-item>
-        <el-form-item label="会员别称">
+        <el-form-item label="会员昵称">
           <span>{{ profile.nickname }}</span>
         </el-form-item>
         <el-form-item label="创建时间">

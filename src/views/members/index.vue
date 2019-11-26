@@ -47,6 +47,11 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="会员昵称" align="center" width="140">
+        <template slot-scope="scope">
+          <span>{{ scope.row.nickname }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="会员电话" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.telephone }}</span>
