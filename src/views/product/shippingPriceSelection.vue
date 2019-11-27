@@ -17,12 +17,12 @@
       highlight-current-row
       @current-change="handleSelectionChange"
     >
-      <el-table-column label="已选" align="center" width="55">
+      <el-table-column label="已选" align="center" width="60">
         <template slot-scope="scope">
           <el-checkbox :value="selectedItem != null && selectedItem.id === scope.row.id" />
         </template>
       </el-table-column>
-      <el-table-column label="模板编号" align="center" width="80">
+      <el-table-column label="模板编号" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -168,7 +168,7 @@ export default {
       this.shippingPriceList = []
     },
     handleDialogCancel() {
-      this.$emit('onCancelled')
+      this.$emit('onCancelled', { suc: false })
     },
     handleDialogConfirm() {
       this.handleSetMpuListTemplate()
