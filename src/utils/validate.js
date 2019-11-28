@@ -1,4 +1,5 @@
 import PasswordValidator from 'password-validator'
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 
 export function isExternal(path) {
   return /^(https?:|mailto:|tel:)/.test(path)
@@ -23,8 +24,7 @@ export function validPassword(password) {
 }
 
 export function validPhone(str) {
-  const reg = /^[1][3,4,5,7,8][0-9]{9}$/
-  return reg.test(str)
+  return parsePhoneNumberFromString(str, 'CN').isValid()
 }
 
 export function validVerificationCode(str) {
