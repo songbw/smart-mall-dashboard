@@ -18,6 +18,7 @@
     "element-ui": "^2.13.0",
     "file-saver": "^2.0.2",
     "js-base64": "^2.5.1",
+    "libphonenumber-js": "^1.7.29",
     "localforage": "^1.7.3",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
