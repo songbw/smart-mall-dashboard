@@ -1,4 +1,5 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import isEmpty from 'lodash/isEmpty'
 
 export function isExternal(path) {
   return /^(https?:|mailto:|tel:)/.test(path)
@@ -10,7 +11,7 @@ export function validUserName(str) {
 }
 
 export function validPhone(str) {
-  return parsePhoneNumberFromString(str, 'CN').isValid()
+  return isEmpty(str) ? false : parsePhoneNumberFromString(str, 'CN').isValid()
 }
 
 export function validVerificationCode(str) {
