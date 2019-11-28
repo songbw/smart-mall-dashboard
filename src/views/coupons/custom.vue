@@ -307,7 +307,7 @@
           v-else
           v-model="formData.rules.couponRules.cashCoupon.amount"
           :max="100000000"
-          :min="0"
+          :min="1"
           step-strictly
         />
       </el-form-item>
@@ -488,8 +488,8 @@
               <span>折扣为
                 <span class="data-text">{{ formData.rules.couponRules.discountCoupon.discountRatio }}</span>
               </span>
+              <span style="margin-left: 10px; font-size: 12px">说明：满额数为0元表示不限制总额数</span>
             </span>
-            <span style="margin-left: 10px; font-size: 12px">说明：满额数为0元表示不限制总额数</span>
           </li>
         </ul>
       </el-form-item>
@@ -1197,11 +1197,26 @@ export default {
             this.$scrollTo('#coupon-tags')
             return
           }
-          if (this.formData.rules.couponRules.type === 0 &&
-            this.formData.rules.couponRules.fullReduceCoupon.fullPrice <
-            this.formData.rules.couponRules.fullReduceCoupon.reducePrice) {
-            this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
-            return
+          if (this.formData.rules.couponRules.type === 0) {
+            const fullPrice = Number.parseInt(this.formData.rules.couponRules.fullReduceCoupon.fullPrice)
+            const reducePrice = Number.parseInt(this.formData.rules.couponRules.fullReduceCoupon.reducePrice)
+            if (isNaN(fullPrice) || isNaN(reducePrice) || fullPrice < reducePrice) {
+              this.$message.warning('此优惠券为满减券，满减金额必须大于优惠金额！')
+              return
+            }
+          } else if (this.formData.rules.couponRules.type === 1) {
+            const amount = Number.parseInt(this.formData.rules.couponRules.cashCoupon.amount)
+            if (isNaN(amount) || amount < 1) {
+              this.$message.warning('此优惠券为代金券，优惠券面值必须大于0元！')
+              return
+            }
+          } else if (this.formData.rules.couponRules.type === 2) {
+            const fullPrice = Number.parseInt(this.formData.rules.couponRules.discountCoupon.fullPrice)
+            const discountRatio = Number.parseFloat(this.formData.rules.couponRules.discountCoupon.discountRatio)
+            if (isNaN(fullPrice) || isNaN(discountRatio) || fullPrice < 0 || discountRatio >= 1 || discountRatio <= 0) {
+              this.$message.warning('此优惠券为折扣券，满减金额必须不低于0元，可用折扣介于0与1之间！')
+              return
+            }
           }
           this.createOrUpdateCoupon()
         } else {
