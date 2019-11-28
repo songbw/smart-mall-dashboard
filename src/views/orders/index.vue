@@ -161,16 +161,12 @@
       <el-table-column align="center" label="订单状态" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.subStatus | OrderStatus }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="售后状态" width="120">
-        <template slot-scope="scope">
           <router-link
             v-if="scope.row.workOrderId"
             :to="{ name: 'ViewWorkOrder', params: { id: scope.row.workOrderId }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ scope.row.workOrderStatus | workOrderStatus }}
+            ({{ scope.row.workOrderStatus | workOrderStatus }})
           </router-link>
         </template>
       </el-table-column>
