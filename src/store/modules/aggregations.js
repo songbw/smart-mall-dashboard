@@ -13,7 +13,7 @@ const template = {
   id: -1,
   status: 0,
   name: '',
-  homePage: false,
+  homePage: -1,
   effectiveDate: '',
   backgroundColor: '#FFFFFF',
   groupId: 0,
@@ -25,7 +25,7 @@ const state = {
   search: {
     name: '',
     status: -1,
-    homePage: false,
+    homePage: -1,
     offset: 1,
     limit: 20,
     order: 'desc'

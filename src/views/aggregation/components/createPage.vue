@@ -119,7 +119,8 @@ export default {
       userPermissions: 'userPermissions',
       pageInfo: 'currentAggregation',
       aggregationGroups: 'aggregationGroups',
-      groupId: 'aggregationGroupId'
+      groupId: 'aggregationGroupId',
+      appId: 'platformAppId'
     }),
     hasHomePermission() {
       return this.userPermissions.includes(AggregationPermissions.home)
@@ -260,11 +261,13 @@ export default {
     createPage() {
       this.creatingPage = true
       const now = moment().format('YYYY-MM-DD')
-      const params = {}
-      params.effectiveDate = now
-      Object.keys(this.pageForm).forEach(key => {
+      const params = {
+        appId: this.appId,
+        effectiveDate: now
+      }
+      for (const key of Object.keys(this.pageForm)) {
         params[key] = this.pageInfo[key]
-      })
+      }
       if (isEmpty(params.header)) {
         const header = {
           showSearchBar: false,

@@ -14,6 +14,7 @@ import {
   storage_key_role,
   storage_key_permissions,
   storage_merchant_id,
+  storage_platform_id,
   role_admin_name,
   role_watcher_name,
   vendor_status_approved
@@ -52,6 +53,10 @@ export default {
         const permissions = await storageGetItem(storage_key_permissions)
         if (!isEmpty(permissions)) {
           this.$store.commit('user/SET_PERMISSIONS', permissions)
+        }
+        const appId = await storageGetItem(storage_platform_id)
+        if (!isEmpty(appId)) {
+          this.$store.commit('app/SET_PLATFORM_ID', appId)
         }
         if (role_admin_name === role || role_watcher_name === role) {
           this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })

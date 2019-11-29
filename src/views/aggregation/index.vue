@@ -1,9 +1,14 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true" :model="listQuery">
+    <el-form :inline="true">
+      <el-form-item label="运营平台名">
+        <el-input readonly :value="currentAppName" />
+      </el-form-item>
       <el-form-item label="聚合页名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable />
       </el-form-item>
+    </el-form>
+    <el-form inline>
       <el-form-item label="聚合页状态">
         <el-select v-model="queryStatus">
           <el-option
@@ -14,8 +19,15 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否主页">
-        <el-switch v-model="queryHomePage" />
+      <el-form-item label="主页设置">
+        <el-select v-model="queryHomePage">
+          <el-option
+            v-for="item in homeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
@@ -225,6 +237,16 @@ export default {
         value: -1,
         label: '全部'
       }].concat(AggregationStatusOptions),
+      homeOptions: [{
+        value: -1,
+        label: '全部'
+      }, {
+        value: 0,
+        label: '排除主页'
+      }, {
+        value: 1,
+        label: '包含主页'
+      }],
       orderOptions: [{
         value: 'asc',
         label: '升序'
@@ -249,7 +271,9 @@ export default {
       vendorApproved: 'vendorApproved',
       listQuery: 'aggregationsQuery',
       aggregationGroups: 'aggregationGroups',
-      groupId: 'aggregationGroupId'
+      groupId: 'aggregationGroupId',
+      appList: 'platformAppList',
+      appId: 'platformAppId'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(AggregationPermissions.view)
@@ -323,17 +347,32 @@ export default {
       set(value) {
         this.$store.commit('aggregations/SET_GROUP_ID', Number.parseInt(value))
       }
+    },
+    currentAppName() {
+      const find = this.appList.find(item => item.appId === this.appId)
+      return find ? find.name : ''
+    }
+  },
+  watch: {
+    appId: function(value, old) {
+      console.debug('App ID changed from ' + old + ' to ' + value)
+      this.prepareAggregationData()
     }
   },
   created() {
-    this.getAggregationGroups()
-    this.getListData()
+    this.prepareAggregationData()
   },
   methods: {
+    async prepareAggregationData() {
+      await this.getAggregationGroups()
+      await this.getListData()
+    },
     async getAggregationGroups() {
       try {
         if (this.vendorApproved && this.hasViewPermission) {
-          await this.$store.dispatch('aggregations/getGroups', { offset: 1, limit: 100 })
+          await this.$store.dispatch('aggregations/getGroups', {
+            offset: 1, limit: 100, appId: this.appId
+          })
         }
       } catch (e) {
         console.warn('getAggregationGroups:' + e)
@@ -359,11 +398,17 @@ export default {
         const params = {
           offset: this.listQuery.offset,
           limit: this.listQuery.limit,
-          order: this.listQuery.order
+          order: this.listQuery.order,
+          appId: this.appId
         }
-        const { data } = await getAggregationsApi(params)
-        this.aggregationList = data.result.list
-        this.aggregationTotal = data.result.total
+        const { code, data } = await getAggregationsApi(params)
+        if (code === 200) {
+          this.aggregationList = data.result.list
+          this.aggregationTotal = data.result.total
+        } else {
+          this.aggregationList = []
+          this.aggregationTotal = 0
+        }
       } catch (e) {
         console.warn('getAggregationPages error: ' + e)
       } finally {
@@ -374,7 +419,8 @@ export default {
       const params = {
         offset: this.listQuery.offset,
         limit: this.listQuery.limit,
-        order: this.listQuery.order
+        order: this.listQuery.order,
+        appId: this.appId
       }
       let filter = false
       if (this.listQuery.name && this.listQuery.name.trim()) {
@@ -385,8 +431,8 @@ export default {
         params.status = this.listQuery.status
         filter = true
       }
-      if (this.listQuery.homePage) {
-        params.homePage = true
+      if (this.listQuery.homePage > -1) {
+        params.homePage = this.listQuery.homePage > 0
         filter = true
       }
       if (this.groupId !== -1) {
@@ -405,9 +451,14 @@ export default {
     async queryFilterData(params) {
       this.listLoading = true
       try {
-        const { data } = await searchAggregationsApi(params)
-        this.aggregationList = data.result.list
-        this.aggregationTotal = data.result.total
+        const { code, data } = await searchAggregationsApi(params)
+        if (code === 200) {
+          this.aggregationList = data.result.list
+          this.aggregationTotal = data.result.total
+        } else {
+          this.aggregationList = []
+          this.aggregationTotal = 0
+        }
       } catch (e) {
         console.warn('queryFilterData: error :' + e)
       } finally {
@@ -511,7 +562,9 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        await this.$store.dispatch('aggregations/createGroup', { name: action.value })
+        await this.$store.dispatch('aggregations/createGroup', {
+          name: action.value, appId: this.appId
+        })
       } catch (e) {
         console.warn('Crete aggregation group: ' + e)
       }

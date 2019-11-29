@@ -5,6 +5,7 @@ export const storage_key_phone = 'user_phone'
 export const storage_key_role = 'user_role'
 export const storage_key_permissions = 'user_permissions'
 export const storage_merchant_id = 'merchant_id'
+export const storage_platform_id = 'app_id'
 
 export const role_vendor_name = 'vendor'
 export const role_admin_name = 'admin'

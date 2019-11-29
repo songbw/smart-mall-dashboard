@@ -1,14 +1,27 @@
 import isEmpty from 'lodash/isEmpty'
-import {
-  getCosUrlApi
-} from '@/api/app'
+import { getCosUrlApi } from '@/api/app'
+import { storage_platform_id } from '@/utils/constants'
+import { storageSetItem } from '@/utils/storage'
+import { getAppPlatformListApi } from '@/api/products'
 
 const state = {
   sidebar: {
     opened: true
   },
   ready: false,
-  cosUrl: `http://iwallet-1258175138.file.myqcloud.com`
+  platformId: 'test',
+  needSettings: true,
+  cosUrl: `http://iwallet-1258175138.file.myqcloud.com`,
+  platformList: [{
+    appId: '11',
+    name: '无锡市民卡'
+  }, {
+    appId: '09',
+    name: '关爱通自营'
+  }, {
+    appId: 'test',
+    name: '开发环境'
+  }]
 }
 
 const mutations = {
@@ -23,6 +36,15 @@ const mutations = {
   },
   SET_COS_URL: (state, url) => {
     state.cosUrl = url
+  },
+  SET_PLATFORM_LIST: (state, list) => {
+    state.platformList = list
+  },
+  SET_PLATFORM_ID: (state, platformId) => {
+    state.platformId = platformId
+  },
+  SET_NEED_SETTINGS: (state, need) => {
+    state.needSettings = need
   }
 }
 
@@ -44,6 +66,17 @@ const actions = {
     } catch (e) {
       console.warn('Store app cos url error:' + e)
     }
+  },
+  async getPlatformList({ commit }) {
+    const { code, data } = await getAppPlatformListApi({ pageNo: 1, pageSize: 100 })
+    if (code === 200) {
+      const appList = data.list.map(item => ({ appId: item.appId, name: item.name }))
+      commit('SET_PLATFORM_LIST', appList)
+    }
+  },
+  async setPlatformId({ commit }, appId) {
+    await storageSetItem(storage_platform_id, appId)
+    commit('SET_PLATFORM_ID', appId)
   }
 }
 

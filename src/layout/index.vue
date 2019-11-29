@@ -11,7 +11,12 @@
           show-icon
         />
       </div>
-      <app-main v-if="appReady" />
+      <div v-if="appReady">
+        <app-main />
+        <right-panel v-if="needAppSettings">
+          <settings />
+        </right-panel>
+      </div>
       <page-loading v-else />
     </div>
   </div>
@@ -19,12 +24,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import RightPanel from '@/components/RightPanel'
 import PageLoading from '@/components/PageLoading'
-import { NavBar, Sidebar, AppMain } from './components'
+import { NavBar, Sidebar, AppMain, Settings } from './components'
 
 export default {
   name: 'Layout',
   components: {
+    Settings,
+    RightPanel,
     NavBar,
     Sidebar,
     AppMain,
@@ -34,7 +42,8 @@ export default {
     ...mapGetters([
       'appReady',
       'vendorLoading',
-      'vendorApproved'
+      'vendorApproved',
+      'needAppSettings'
     ]),
     sidebar() {
       return this.$store.state.app.sidebar

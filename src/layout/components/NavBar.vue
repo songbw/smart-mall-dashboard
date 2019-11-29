@@ -5,23 +5,25 @@
     <breadcrumb class="breadcrumb-container" />
 
     <div class="right-menu">
-      <el-dropdown class="avatar-container" trigger="click">
+      <el-dropdown
+        class="avatar-container right-menu-item hover-effect"
+        trigger="click"
+        @command="handleAvatarCommand"
+      >
         <div class="avatar-wrapper">
           <span style="font-weight: bolder">{{ userName }}</span>
           <svg-icon icon-class="avatar" class="user-avatar" />
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
-          <router-link to="/">
-            <el-dropdown-item>
-              首页
-            </el-dropdown-item>
-          </router-link>
-          <el-dropdown-item divided>
-            <span style="display:block;" @click="changePassword">修改密码</span>
+          <el-dropdown-item command="home">
+            首页
           </el-dropdown-item>
-          <el-dropdown-item>
-            <span style="display:block;" @click="logout">退出登录</span>
+          <el-dropdown-item divided command="password">
+            修改密码
+          </el-dropdown-item>
+          <el-dropdown-item command="logout">
+            退出登录
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -49,8 +51,24 @@ export default {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },
+    goHome() {
+      this.$router.push('/')
+    },
     changePassword() {
       this.$router.push('/password/change')
+    },
+    handleAvatarCommand(cmd) {
+      switch (cmd) {
+        case 'home':
+          this.goHome()
+          break
+        case 'password':
+          this.changePassword()
+          break
+        case 'logout':
+          this.logout()
+          break
+      }
     },
     async logout() {
       try {

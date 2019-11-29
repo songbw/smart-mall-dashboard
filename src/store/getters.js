@@ -7,7 +7,9 @@ import {
 const getters = {
   appReady: state => state.app.ready,
   sidebar: state => state.app.sidebar,
-  operationCode: state => state.app.operationCode,
+  needAppSettings: state => state.app.needSettings,
+  platformAppId: state => state.app.platformId,
+  platformAppList: state => state.app.platformList,
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,
   userName: state => state.user.name,

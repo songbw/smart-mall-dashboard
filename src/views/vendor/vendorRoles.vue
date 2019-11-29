@@ -79,6 +79,7 @@
       :show-close="false"
       :visible.sync="dialogPermissionVisible"
       title="修改权限"
+      width="850px"
     >
       <el-form ref="roleForm" :model="permissionForm" :rules="permissionRules" label-width="120px">
         <el-form-item label="角色描述">
