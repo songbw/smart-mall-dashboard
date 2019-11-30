@@ -5,25 +5,12 @@
     </el-col>
     <el-col :span="6">
       <div v-if="couldEdit" style="padding: 14px;">
-        <el-upload
-          ref="introductionUpload"
-          :action="uploadUrl"
-          :data="uploadData"
-          :auto-upload="true"
-          :limit="1"
-          :show-file-list="false"
-          :before-upload="handleBeforeUpload"
-          :on-success="handleUploadSuccess"
-          :on-error="handleUploadError"
-          :on-progress="handleUploadProgress"
-          accept="image/png, image/jpeg, image/jpg"
-          list-type="picture"
-          name="file"
-        >
-          <el-button slot="trigger" size="small" type="primary">
-            {{ `修改详情图 ${index + 1}` }}
-          </el-button>
-        </el-upload>
+        <image-upload
+          tip=""
+          :path-name="bucket"
+          :button-name="`修改详情图 ${index + 1}`"
+          @success="handleUploadSuccess"
+        />
         <el-button-group>
           <el-button
             size="mini"
@@ -52,10 +39,11 @@
 </template>
 
 <script>
-import { app_upload_url } from '@/utils/constants'
+import ImageUpload from '@/components/ImageUpload'
 
 export default {
   name: 'CustomIntroduction',
+  components: { ImageUpload },
   props: {
     couldEdit: {
       type: Boolean,
@@ -78,14 +66,6 @@ export default {
       default: 0
     }
   },
-  data() {
-    return {
-      uploadUrl: app_upload_url,
-      uploadData: {
-        pathName: this.bucket
-      }
-    }
-  },
   methods: {
     handleSortIntroduction(index, up) {
       this.$emit('sortIntroduction', { index: index, up: up })
@@ -100,29 +80,9 @@ export default {
       }).catch(() => {
       })
     },
-    handleUploadSuccess(res) {
-      this.$refs.introductionUpload.clearFiles()
-      this.$emit('uploadSuccess', { index: this.index, url: res.data.url })
-    },
-    handleBeforeUpload(file) {
-      const maxSize = 1024 * 1024
-      if (file.size > maxSize) {
-        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
-        return false
-      }
-      const imageTypes = ['image/png', 'image/jpeg', 'image/jpg']
-      if (imageTypes.includes(file.type) === false) {
-        this.$message.warning('请选择正确的文件类型！')
-        return false
-      }
-      return true
-    },
-    handleUploadError(err) {
-      this.$refs.introductionUpload.clearFiles()
-      this.$emit('uploadError', err)
-    },
-    handleUploadProgress(event) {
-      this.$emit('uploadProgress', event)
+    handleUploadSuccess(imageUrl) {
+      const url = imageUrl.substring(this.$store.getters.cosUrl.length)
+      this.$emit('uploadSuccess', { index: this.index, url })
     }
   }
 }
