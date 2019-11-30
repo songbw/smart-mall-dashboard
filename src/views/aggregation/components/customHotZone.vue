@@ -1,7 +1,7 @@
 <template>
   <div class="components-container">
     <el-form label-width="8rem">
-      <el-form-item label="两边是否预留空白">
+      <el-form-item label="两边预留空白">
         <el-switch v-model="hotZoneHasMargin" />
       </el-form-item>
     </el-form>
@@ -18,30 +18,11 @@
       请先上传热区图片，然后通过鼠标选择需要设置的区域，再选择对应区域的链接地址。
     </div>
     <el-divider />
-    <el-upload
-      ref="upload"
-      :action="uploadUrl"
-      :data="uploadData"
-      :auto-upload="false"
-      :limit="1"
-      :before-upload="handleBeforeUploadImage"
-      :on-success="handleUploadImageSuccess"
-      :on-error="handleUploadImageError"
-      :on-progress="handleUploadImageProgress"
-      :on-change="handleUploadImageChanged"
-      accept="image/png, image/jpeg, image/jpg"
-      list-type="picture"
-      name="file"
-    >
-      <el-button slot="trigger" size="small" type="primary">选择图片</el-button>
-      <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传图片</el-button>
-      <div slot="tip" class="el-upload__tip">建议上传宽度为1095px,高度687px，不超过500k，格式为jpg/png的图片</div>
-    </el-upload>
-    <el-progress
-      :text-inside="true"
-      :stroke-width="18"
-      :percentage="imageUploadPercent"
-      status="success"
+    <image-upload
+      path-name="aggregations"
+      image-width="150px"
+      tip="建议上传宽度为1095px,高度687px，不超过500k，格式为jpg/png的图片"
+      @success="handleUploadImageSuccess"
     />
     <el-divider />
     <div v-for="(zone, index) in hotZoneList" :key="'zone-' + index" style="margin-bottom: 20px">
@@ -62,24 +43,22 @@
 <script>
 import { mapGetters } from 'vuex'
 import hotzone from 'vue-hotzone'
+import ImageUpload from '@/components/ImageUpload'
 import { hotZoneType, hotZoneSettings } from './templateType'
 import ImageTargetLink from './imageTargetLink'
-import { app_upload_url } from '@/utils/constants'
 
 const generate = require('nanoid/generate')
 
 export default {
   name: 'CustomHotZone',
-  components: { hotzone, ImageTargetLink },
+  components: { hotzone, ImageTargetLink, ImageUpload },
   data() {
     return {
-      uploadUrl: app_upload_url,
       uploadData: {
         pathName: 'aggregations'
       },
       uploadingImage: false,
       uploadImageFileList: null,
-      imageUploadPercent: 0,
       componentMounted: false
     }
   },
@@ -159,41 +138,10 @@ export default {
     onZoneRemoved(index) {
       this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
     },
-    submitUpload() {
-      this.$refs.upload.submit()
-    },
-    handleBeforeUploadImage(file) {
-      const maxSize = 1024 * 1024
-      if (file.size > maxSize) {
-        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
-        return false
-      }
-      const imageTypes = ['image/png', 'image/jpeg', 'image/jpg']
-      if (imageTypes.includes(file.type) === false) {
-        this.$message.warning('请选择正确的文件类型！')
-        return false
-      }
-      this.imageUploadPercent = 0
-      this.uploadingImage = true
-      return true
-    },
-    handleUploadImageSuccess(res) {
-      const imageUrl = this.$store.getters.cosUrl + res.data.url
+    handleUploadImageSuccess(imageUrl) {
       const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
       const imageKey = generate(noLookalikes, 21)
-      this.$refs.upload.clearFiles()
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', { imageUrl, imageKey })
-    },
-    handleUploadImageError(res) {
-      this.$refs.upload.clearFiles()
-      this.$message.error('上传图片文件失败，请联系管理员')
-      this.uploadingImage = false
-    },
-    handleUploadImageProgress(event) {
-      this.imageUploadPercent = event.percent
-    },
-    handleUploadImageChanged(file, fileList) {
-      this.uploadImageFileList = fileList
     },
     handleImageTargetChanges(target) {
       const index = target.index
