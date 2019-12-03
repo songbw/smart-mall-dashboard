@@ -11,7 +11,7 @@ const state = {
   ready: false,
   platformId: 'test',
   needSettings: true,
-  cosUrl: `http://iwallet-1258175138.file.myqcloud.com`,
+  cosUrl: `https://iwallet-1258175138.file.myqcloud.com`,
   platformList: [{
     appId: '11',
     name: '无锡市民卡'
