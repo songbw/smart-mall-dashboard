@@ -31,18 +31,6 @@ export default {
           : 'vendorDashboard'
       }
     }
-  },
-  created() {
-    this.getCosUrl()
-  },
-  methods: {
-    async getCosUrl() {
-      try {
-        await this.$store.dispatch('app/getCosUrl')
-      } catch (e) {
-        console.warn('Dashboard get cos url error:' + e)
-      }
-    }
   }
 }
 </script>
