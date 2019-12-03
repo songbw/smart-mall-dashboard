@@ -11,6 +11,7 @@
       <el-main>
         <create-page
           v-if="activeStep === 0"
+          :page-id="pageId"
           class="creation-container"
           @cancelCreation="handlePrevStep"
           @createPage="handleCreatePage"

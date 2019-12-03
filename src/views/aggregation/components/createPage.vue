@@ -89,9 +89,16 @@ import { aggregation_on_sale_status } from '../constants'
 export default {
   name: 'CreationForm',
   components: { ImageUpload },
+  props: {
+    pageId: {
+      type: Number,
+      default: -1
+    }
+  },
   data() {
     return {
       creatingPage: false,
+      pageFormId: -1,
       pageForm: {
         name: null,
         homePage: null,
@@ -130,46 +137,42 @@ export default {
     },
     pageName: {
       get() {
-        return this.pageInfo.name
+        return this.pageForm.name
       },
       set(newValue) {
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { name: newValue })
         this.pageForm.name = newValue
       }
     },
     homePage: {
       get() {
-        return this.pageInfo.homePage
+        return this.pageForm.homePage
       },
       set(newValue) {
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { homePage: newValue })
         this.pageForm.homePage = newValue
       }
     },
     pageDate: {
       get() {
-        return this.pageInfo.effectiveDate
+        return this.pageForm.effectiveDate
       },
       set(newValue) {
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { effectiveDate: newValue })
         this.pageForm.effectiveDate = newValue
       }
     },
     pageColor: {
       get() {
-        return this.pageInfo.backgroundColor
+        return this.pageForm.backgroundColor
       },
       set(newValue) {
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { backgroundColor: newValue })
         this.pageForm.backgroundColor = newValue
       }
     },
     headerColor: {
       get() {
-        if (isEmpty(this.pageInfo.header)) {
+        if (isEmpty(this.pageForm.header)) {
           return null
         } else {
-          const header = JSON.parse(this.pageInfo.header)
+          const header = JSON.parse(this.pageForm.header)
           if ('backgroundColor' in header) {
             return header.backgroundColor
           } else {
@@ -183,17 +186,15 @@ export default {
           backgroundColor: newValue,
           novicePackUrl: this.novicePackUrl
         }
-        const headerStr = JSON.stringify(header)
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
-        this.pageForm.header = headerStr
+        this.pageForm.header = JSON.stringify(header)
       }
     },
     showSearchBar: {
       get() {
-        if (isEmpty(this.pageInfo.header)) {
+        if (isEmpty(this.pageForm.header)) {
           return false
         } else {
-          const header = JSON.parse(this.pageInfo.header)
+          const header = JSON.parse(this.pageForm.header)
           if ('showSearchBar' in header) {
             return header.showSearchBar
           } else {
@@ -207,17 +208,15 @@ export default {
           backgroundColor: this.headerColor,
           novicePackUrl: this.novicePackUrl
         }
-        const headerStr = JSON.stringify(header)
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
-        this.pageForm.header = headerStr
+        this.pageForm.header = JSON.stringify(header)
       }
     },
     novicePackUrl: {
       get() {
-        if (isEmpty(this.pageInfo.header)) {
+        if (isEmpty(this.pageForm.header)) {
           return null
         } else {
-          const header = JSON.parse(this.pageInfo.header)
+          const header = JSON.parse(this.pageForm.header)
           if ('novicePackUrl' in header) {
             return header.novicePackUrl
           } else {
@@ -231,14 +230,12 @@ export default {
           backgroundColor: this.headerColor,
           novicePackUrl: newValue
         }
-        const headerStr = JSON.stringify(header)
-        this.$store.commit('aggregations/SET_CURRENT_DATA', { header: headerStr })
-        this.pageForm.header = headerStr
+        this.pageForm.header = JSON.stringify(header)
       }
     },
     groupName: {
       get() {
-        const id = this.pageInfo.groupId
+        const id = this.pageForm.groupId
         if (id === null || id <= 0) {
           return '未分组'
         } else {
@@ -257,16 +254,32 @@ export default {
       }
     }
   },
+  watch: {
+    pageId: function(val, old) {
+      if (val >= 0 && val !== old) {
+        this.setFormData()
+      }
+    }
+  },
+  created() {
+    this.setFormData()
+  },
   methods: {
+    setFormData() {
+      if (this.pageId >= 0 && this.pageFormId < 0) {
+        this.pageFormId = this.pageId
+        for (const key of Object.keys(this.pageForm)) {
+          this.pageForm[key] = this.pageInfo[key]
+        }
+      }
+    },
     createPage() {
       this.creatingPage = true
       const now = moment().format('YYYY-MM-DD')
       const params = {
         appId: this.appId,
-        effectiveDate: now
-      }
-      for (const key of Object.keys(this.pageForm)) {
-        params[key] = this.pageInfo[key]
+        effectiveDate: now,
+        ...this.pageForm
       }
       if (isEmpty(params.header)) {
         const header = {
@@ -279,6 +292,7 @@ export default {
         params.groupId = 0
       }
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
+        this.pageForm.id = id
         this.$emit('createPage', id)
       }).catch(err => {
         this.$message(err)
@@ -290,7 +304,7 @@ export default {
       let changed = false
       const params = {}
       Object.keys(this.pageForm).forEach(key => {
-        if (this.pageForm[key] !== null) {
+        if (this.pageForm[key] !== this.pageInfo[key]) {
           params[key] = this.pageForm[key]
           changed = true
         }
@@ -392,7 +406,6 @@ export default {
     handleConfirmChange() {
       this.groupDialogVisible = false
       this.pageForm.groupId = Number.parseInt(this.groupSelectId)
-      this.$store.commit('aggregations/SET_CURRENT_DATA', { groupId: this.pageForm.groupId })
       this.groupSelectId = null
     },
     handleUploadImageSuccess(url) {

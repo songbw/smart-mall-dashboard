@@ -245,7 +245,7 @@ export default {
         label: '排除主页'
       }, {
         value: 1,
-        label: '包含主页'
+        label: '只含主页'
       }],
       orderOptions: [{
         value: 'asc',
@@ -355,7 +355,6 @@ export default {
   },
   watch: {
     appId: function(value, old) {
-      console.debug('App ID changed from ' + old + ' to ' + value)
       this.prepareAggregationData()
     }
   },
