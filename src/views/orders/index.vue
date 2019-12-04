@@ -161,6 +161,13 @@
       <el-table-column align="center" label="订单状态" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.subStatus | OrderStatus }}</span>
+          <router-link
+            v-if="scope.row.workOrderId"
+            :to="{ name: 'ViewWorkOrder', params: { id: scope.row.workOrderId }}"
+            class="el-link el-link--primary is-underline"
+          >
+            ({{ scope.row.workOrderStatus | workOrderStatus }})
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column
@@ -269,7 +276,13 @@ import {
   exportVendorReconciliationApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
-import { SubOrderStatusDefinitions, vendor_status_approved } from '@/utils/constants'
+import { getWorkOrderListApi } from '@/api/workOrders'
+import {
+  SubOrderStatusDefinitions,
+  vendor_status_approved,
+  suborder_status_requested_service,
+  WorkOrderStatusDefinition
+} from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
 const validateDates = (start, end) => {
@@ -295,6 +308,10 @@ export default {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year') ? momentDate.format(format) : ''
+    },
+    workOrderStatus: status => {
+      const find = WorkOrderStatusDefinition.find(option => option.value === status)
+      return find ? find.label : status
     }
   },
   data() {
@@ -546,6 +563,18 @@ export default {
       }
       return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
+    async getWorkOrder(subOrderId) {
+      try {
+        const params = { orderId: subOrderId, pageIndex: 1, pageSize: 1 }
+        const data = await getWorkOrderListApi(params)
+        if (data && data.total === 1) {
+          return data.rows[0]
+        }
+      } catch (e) {
+        console.warn('Work orders List error: ' + e)
+      }
+      return null
+    },
     async getOrderList() {
       if (this.hasViewPermission) {
         try {
@@ -558,8 +587,21 @@ export default {
             const { code, data } = await getOrderListApi(params)
             if (code === 200) {
               this.orderTotal = data.result.total
-              this.orderData = data.result.list.map(item => (
-                { ...item, merchantName: this.getVendorName(item.merchantId) }))
+              this.orderData = []
+              for (const order of data.result.list) {
+                const { subStatus, subOrderId, ...rest } = order
+                const merchantName = this.getVendorName(order.merchantId)
+                let workOrderId = null
+                let workOrderStatus = null
+                if (subStatus === suborder_status_requested_service) {
+                  const workOrder = await this.getWorkOrder(subOrderId)
+                  workOrderId = workOrder ? workOrder.id : null
+                  workOrderStatus = workOrder ? workOrder.status : null
+                }
+                this.orderData.push({
+                  subStatus, subOrderId, workOrderId, workOrderStatus, merchantName, ...rest
+                })
+              }
             }
           }
         } catch (e) {

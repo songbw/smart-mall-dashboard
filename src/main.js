@@ -8,6 +8,7 @@ import './plugins/axios'
 import './plugins/qriously'
 import './plugins/v-charts'
 import './plugins/scroll-to'
+import './plugins/cos'
 
 import App from './App'
 import store from './store'

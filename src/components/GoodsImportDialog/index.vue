@@ -148,6 +148,11 @@ const SkuHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' }
 ]
 
+const fileExt = filename => {
+  const parts = filename.split('.')
+  return (parts.length > 1) ? parts.pop() : ''
+}
+
 export default {
   name: 'GoodsImportDialog',
   filters: {
@@ -231,13 +236,9 @@ export default {
         this.$message.warning('请选择小于2M的文件')
         return
       }
-      const mimeTyps = [
-        'application/vnd.ms-excel',
-        'application/vnd.sealed.xls',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.template'
-      ]
-      if (mimeTyps.includes(rawFile.type) === false) {
+      const ext = fileExt(rawFile.name)
+      const validExt = ['xls', 'xlsx']
+      if (validExt.includes(ext) === false) {
         this.$message.warning('请选择正确的文件格式')
         return
       }

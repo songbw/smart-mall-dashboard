@@ -9,7 +9,7 @@
               <el-button
                 v-if="couldReopenWorkorder"
                 type="danger"
-                @click="handleRepoenWorkOrder"
+                @click="handleReopenWorkOrder"
               >
                 重置工单
               </el-button>
@@ -226,6 +226,56 @@
         <el-button type="primary" @click="handleCreateFlow">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="dialogReopenVisible"
+      title="重置工单"
+    >
+      <el-form
+        ref="reopenForm"
+        v-loading="reopenLoading"
+        :model="reopenForm"
+        :rules="reopenRules"
+        label-width="120px"
+      >
+        <el-form-item label="重置类型" prop="typeId">
+          <el-select
+            v-model="reopenForm.typeId"
+            placeholder="请选择重置类型"
+          >
+            <el-option
+              v-for="item in typeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="reopenForm.typeId !== null && reopenForm.typeId !== changeGoodType"
+          label="退款金额"
+          prop="refund"
+        >
+          <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
+            <i class="el-icon-warning-outline">
+              主订单实际支付金额：￥{{ orderData.paymentAmount | centFilter }}，
+              运费：￥{{ orderData.servFee }}，
+              申请退款金额：￥{{ workOrderData.refundAmount }}
+            </i>
+          </div>
+          <el-input-number v-model="reopenForm.refund" :precision="2" :step="1" :min="0" :max="maxRefund" />
+        </el-form-item>
+        <el-form-item label="备注信息" prop="remark">
+          <el-input v-model="reopenForm.remark" autocomplete="off" maxlength="50" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelReopen">取消</el-button>
+        <el-button type="primary" @click="handleConfirmReopen">确定</el-button>
+      </div>
+    </el-dialog>
     <address-selection
       :dialog-visible="dialogAddressVisible"
       :list-loading="returnAddressLoading"
@@ -432,6 +482,52 @@ export default {
               } else {
                 callback()
               }
+            }
+          },
+          trigger: 'blur'
+        }]
+      },
+      dialogReopenVisible: false,
+      reopenLoading: false,
+      reopenForm: {
+        typeId: null,
+        refund: 0,
+        remark: ''
+      },
+      reopenRules: {
+        typeId: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择重置类型'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }],
+        refund: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.reopenForm.typeId !== change_good) {
+              callback()
+            } else {
+              if (value <= 0) {
+                callback(new Error('请输入合适的退款金额'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }],
+        remark: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (isEmpty(value)) {
+              callback(new Error('请输入备注信息'))
+            } else {
+              callback()
             }
           },
           trigger: 'blur'
@@ -651,23 +747,39 @@ export default {
         }
       })
     },
-    handleRepoenWorkOrder() {
-      this.$confirm('是否重新打开此售后工单，将会恢复为待审核状态？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async() => {
-        try {
-          const operator = this.$store.state.user.name
-          const comments = { remark: '', operation: reopen_workorder }
-          const params = { workOrderId: this.workOrderData.id, operator, comments: JSON.stringify(comments) }
-          await reopenWorkOrderFlowApi(params)
-          this.$message.success('重置工单成功！')
-          this.getWorkOrderData()
-        } catch (e) {
-          console.warn(`Update product state error: ${e}`)
+    handleReopenWorkOrder() {
+      this.reopenForm.typeId = null
+      this.reopenForm.refund = 0
+      this.reopenForm.remark = ''
+      this.dialogReopenVisible = true
+    },
+    handleCancelReopen() {
+      this.$refs.reopenForm.clearValidate()
+      this.dialogReopenVisible = false
+    },
+    handleConfirmReopen() {
+      this.$refs.reopenForm.validate(async(valid) => {
+        if (valid) {
+          try {
+            this.reopenLoading = true
+            const operator = this.$store.state.user.name
+            const comments = { remark: this.reopenForm.remark, operation: reopen_workorder }
+            const workOrderId = this.workOrderData.id
+            const typeId = this.reopenForm.typeId
+            const params = { workOrderId, operator, typeId, comments: JSON.stringify(comments) }
+            if (typeId !== change_good) {
+              params.refund = this.reopenForm.refund
+            }
+            await reopenWorkOrderFlowApi(params)
+            this.$message.success('重置工单成功！')
+            this.getWorkOrderData()
+          } catch (e) {
+            console.warn(`Update product state error: ${e}`)
+          } finally {
+            this.reopenLoading = false
+            this.dialogReopenVisible = false
+          }
         }
-      }).catch(() => {
       })
     },
     gotoReturnAddress() {

@@ -6,3 +6,10 @@ export function getCosUrlApi() {
     method: 'get'
   })
 }
+
+export function getCosStsApi() {
+  return Vue.axios('app').request({
+    url: '/bases/cos/sts',
+    method: 'get'
+  })
+}

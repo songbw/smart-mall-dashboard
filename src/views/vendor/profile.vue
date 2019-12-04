@@ -47,29 +47,6 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item v-if="needLicenseUrl" label="营业执照">
-            <img v-if="vendorLicenseUrl" :src="vendorLicenseUrl" width="50%" alt="">
-            <el-upload
-              ref="uploadLicense"
-              :action="uploadUrl"
-              :data="uploadData"
-              :auto-upload="false"
-              :limit="1"
-              :on-success="handleUploadImageSuccess"
-              :on-error="handleUploadImageError"
-              :on-change="handleUploadImageChange"
-              :on-remove="handleUploadImageRemove"
-              accept="image/png, image/jpeg, image/jpg"
-              list-type="picture"
-              name="file"
-              class="item-input"
-            >
-              <el-button slot="trigger" :disabled="couldEdit === false" size="small" type="primary">
-                选择营业执照
-              </el-button>
-              <div slot="tip" class="el-upload__tip">商户所提交的营业执照请确保清晰，并且真实有效</div>
-            </el-upload>
-          </el-form-item>
           <el-form-item v-if="vendorStatus === statusRejected" label="审核意见">
             <span>{{ vendorComment }}</span>
           </el-form-item>
@@ -95,7 +72,6 @@ import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import { IndustryDefinitions, VendorStatus } from './constants'
 import {
-  app_upload_url,
   vendor_status_init,
   vendor_status_rejected
 } from '@/utils/constants'
@@ -124,39 +100,20 @@ export default {
         callback(new Error('请选择商户类型'))
       }
     }
-    const validateLicense = (rule, value, callback) => {
-      if (this.vendorLicenseUrl && this.vendorLicenseUrl.length > 1) {
-        callback()
-      } else {
-        if (this.uploadFileList.length > 0) {
-          callback()
-        } else {
-          callback(new Error('请选择营业执照图片'))
-        }
-      }
-    }
     return {
       statusRejected: vendor_status_rejected,
-      uploadUrl: app_upload_url,
-      needLicenseUrl: false,
-      uploadData: {
-        pathName: 'vendor/licenses'
-      },
       industryOptions: IndustryDefinitions,
       profile: {
         name: null,
         address: null,
-        industry: null,
-        licenseUrl: null
+        industry: null
       },
       loading: false,
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
-        industry: [{ required: true, trigger: 'change', validator: validateIndustry }],
-        licenseUrl: [{ required: true, trigger: 'change', validator: validateLicense }]
-      },
-      uploadFileList: []
+        industry: [{ required: true, trigger: 'change', validator: validateIndustry }]
+      }
     }
   },
   computed: {
@@ -235,9 +192,6 @@ export default {
       set(values) {
         this.profile.industry = values.join(';')
       }
-    },
-    vendorLicenseUrl() {
-      return this.profile.licenseUrl != null ? this.profile.licenseUrl : this.vendorProfile.licenseUrl
     }
   },
   created() {
@@ -324,28 +278,9 @@ export default {
     handleSaveVendor() {
       this.$refs.vendorForm.validate(async(valid) => {
         if (valid) {
-          if (this.uploadFileList.length === 0) {
-            await this.createOrSaveProfile()
-          } else {
-            this.$refs.uploadLicense.submit()
-          }
+          await this.createOrSaveProfile()
         }
       })
-    },
-    async handleUploadImageSuccess(response) {
-      this.profile.licenseUrl = this.cosUrl + response.data.url
-      this.$refs.uploadLicense.clearFiles()
-      await this.createOrSaveProfile()
-    },
-    handleUploadImageError() {
-      this.$refs.uploadLicense.clearFiles()
-      this.$message.error('上传营业执照失败，请稍后重试')
-    },
-    handleUploadImageChange(file, fileList) {
-      this.uploadFileList = fileList
-    },
-    handleUploadImageRemove(file, fileList) {
-      this.uploadFileList = fileList
     },
     async handleSubmitVendor() {
       this.$confirm('提交后将不能修改信息, 是否继续?', '提示', {

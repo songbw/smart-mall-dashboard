@@ -1,7 +1,8 @@
 <template>
-  <div v-loading="loading" class="app-container">
+  <div class="app-container">
     <el-form
       ref="productForm"
+      v-loading="loading"
       :model="productForm"
       :rules="formRules"
       :element-loading-text="loadingMessage"
@@ -208,71 +209,51 @@
       <el-divider content-position="left">商品图片</el-divider>
       <el-form-item label="商品封面图">
         <template>
-          <el-image v-if="productCover" :src="productCover" fit="contain" style="width: 200px">
-            <div slot="error" class="image-slot">
-              <i class="el-icon-picture-outline" />
-            </div>
-          </el-image>
-          <el-upload
-            v-if="!viewProduct"
-            ref="coverUpload"
-            :action="uploadUrl"
-            :data="uploadCoverData"
-            :auto-upload="true"
-            :limit="1"
-            :show-file-list="true"
-            :before-upload="handleBeforeUpload"
-            :on-success="handleUploadCoverSuccess"
-            :on-error="handleUploadError"
-            :on-progress="handleUploadProgress"
-            accept="image/png, image/jpeg, image/jpg"
-            list-type="picture"
-            name="file"
+          <image-upload
+            :image-url="productCover"
+            :path-name="uploadCoverData.pathName"
+            button-size="normal"
+            image-width="200px"
+            tip="如果未上传，将以第一张主图作为封面图。"
+            button-name="修改封面图"
+            @success="handleUploadCoverSuccess"
+          />
+          <el-button
+            v-if="hasCustomCover"
+            type="danger"
+            icon="el-icon-delete"
+            style="margin-top: 10px"
+            @click="handleRemoveCoverImage"
           >
-            <el-button slot="trigger" type="primary" icon="el-icon-picture">
-              修改封面图
-            </el-button>
-            <el-button
-              v-if="hasCustomCover"
-              type="danger"
-              icon="el-icon-delete"
-              style="margin-left: 20px"
-              @click="handleRemoveCoverImage"
-            >
-              删除封面图
-            </el-button>
-            <div slot="tip" class="el-upload__tip">
-              如果未上传，将以第一张主图作为封面图。
-            </div>
-          </el-upload>
+            删除封面图
+          </el-button>
         </template>
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
-          <el-upload
-            v-if="!viewProduct"
-            ref="thumbnailUpload"
-            :action="uploadUrl"
-            :data="uploadThumbnailData"
-            :auto-upload="true"
-            :disabled="thumbnails.length >= 5"
-            :limit="5 - thumbnails.length < 0 ? 0 : 5 - thumbnails.length"
-            :show-file-list="true"
-            :before-upload="handleBeforeUpload"
-            :on-success="handleUploadThumbnailSuccess"
-            :on-error="handleUploadError"
-            :on-progress="handleUploadProgress"
-            accept="image/png, image/jpeg, image/jpg"
-            style="margin: 10px"
-            list-type="picture"
-            name="file"
-            multiple
-          >
-            <el-button slot="trigger" :disabled="thumbnails.length >= 5" type="primary" icon="el-icon-picture">
+          <div>
+            <input
+              ref="thumbnailUpload"
+              class="image-upload-input"
+              type="file"
+              accept=".png, .jpeg, .jpg"
+              :multiple="true"
+              @change="handleThumbnailFileChange"
+            >
+            <el-button
+              :disabled="thumbnails.length >= maxThumbnailLength"
+              type="primary"
+              icon="el-icon-picture"
+              @click="handleThumbnailSelect"
+            >
               添加主图
             </el-button>
-            <div slot="tip" class="el-upload__tip">请选择商品的主图，最多支持5个</div>
-          </el-upload>
+            <div>
+              <i class="el-icon-warning-outline" style="font-size: 12px;">
+                请选择商品的主图，最多支持{{ maxThumbnailLength }}个
+              </i>
+            </div>
+          </div>
           <el-row v-if="thumbnailUrls.length > 0">
             <el-col
               v-for="(imgUrl, index) in thumbnailUrls"
@@ -288,9 +269,6 @@
                 :bucket="thumbnailUploadPath"
                 @sortThumbnail="handleSortThumbnail"
                 @deleteThumbnail="handleDeleteThumbnail"
-                @beforeUpload="handleBeforeUpload"
-                @uploadError="handleUploadError"
-                @uploadProgress="handleUploadProgress"
                 @uploadSuccess="handleUploadThumbnailIndexSuccess"
               />
             </el-col>
@@ -300,34 +278,32 @@
       <el-form-item label="商品描述图">
         <template>
           <div v-if="!viewProduct">
-            <el-radio-group v-model="newIntroductionType" style="margin-left: 20px">
+            <el-radio-group v-model="newIntroductionType" style="display: block;margin: 10px 0">
               <el-radio :label="1">正常详情图</el-radio>
               <el-radio :label="2">头部详情图</el-radio>
               <el-radio :label="3">尾部详情图</el-radio>
             </el-radio-group>
-            <el-upload
+            <input
               ref="introductionUpload"
-              :action="uploadUrl"
-              :data="uploadIntroductionData"
-              :auto-upload="true"
-              :limit="30 - introductions.length < 0 ? 0 : 30 - introductions.length"
-              :disabled="introductions.length >= 30"
-              :show-file-list="true"
-              :before-upload="handleBeforeUpload"
-              :on-success="handleUploadIntroductionSuccess"
-              :on-error="handleUploadError"
-              :on-progress="handleUploadProgress"
-              style="margin: 10px"
-              accept="image/png, image/jpeg, image/jpg"
-              list-type="picture"
-              name="file"
-              multiple
+              class="image-upload-input"
+              type="file"
+              accept=".png, .jpeg, .jpg"
+              :multiple="true"
+              @change="handleIntroductionFileChange"
             >
-              <el-button slot="trigger" :disabled="introductions.length >= 30" type="primary" icon="el-icon-picture">
-                添加描述图
-              </el-button>
-              <div slot="tip" class="el-upload__tip">请选择商品的详情图，最多支持30个</div>
-            </el-upload>
+            <el-button
+              :disabled="introductions.length >= maxIntroductionLength"
+              type="primary"
+              icon="el-icon-picture"
+              @click="handleIntroductionSelect"
+            >
+              添加详情图
+            </el-button>
+            <div>
+              <i class="el-icon-warning-outline" style="font-size: 12px;">
+                请选择商品的详情图，最多支持{{ maxIntroductionLength }}个
+              </i>
+            </div>
           </div>
           <div v-for="(img, index) in introductionUrls" :key="introductions[index]" style="padding: 14px">
             <custom-introduction
@@ -338,9 +314,6 @@
               :bucket="introductionUploadPath"
               @sortIntroduction="handleSortIntroduction"
               @deleteIntroduction="handleDeleteIntroduction"
-              @beforeUpload="handleBeforeUpload"
-              @uploadError="handleUploadError"
-              @uploadProgress="handleUploadProgress"
               @uploadSuccess="handleUploadIntroductionIndexSuccess"
             />
           </div>
@@ -375,6 +348,7 @@ import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
 import CategorySelection from '@/components/CategorySelection'
+import ImageUpload from '@/components/ImageUpload'
 import ShippingPriceSelection from './shippingPriceSelection'
 import {
   app_upload_url,
@@ -389,6 +363,7 @@ import {
   deleteMpuShippingPriceApi
 } from '@/api/freight'
 import { ProductPermissions } from '@/utils/role-permissions'
+import { cosUploadFiles } from '@/utils/cos'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -396,7 +371,7 @@ const OP_CREATE = 3
 
 export default {
   name: 'ProductDetail',
-  components: { CustomIntroduction, CustomThumbnail, CategorySelection, ShippingPriceSelection },
+  components: { CustomIntroduction, CustomThumbnail, CategorySelection, ShippingPriceSelection, ImageUpload },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -443,6 +418,8 @@ export default {
     return {
       uploadUrl: app_upload_url,
       vendorAoyi: 2,
+      maxThumbnailLength: 5,
+      maxIntroductionLength: 30,
       uploading: false,
       uploadPercent: 0,
       uploadCoverData: {
@@ -473,6 +450,9 @@ export default {
       shippingPriceData: null,
       mpuShippingPriceId: null,
       hasCoverImage: false,
+      toUploadFiles: [],
+      uploadedFiles: [],
+      failedFiles: [],
       thumbnails: [],
       thumbnailUrls: [],
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
@@ -958,11 +938,8 @@ export default {
       }).catch(() => {
       })
     },
-    handleUploadCoverSuccess(res) {
-      this.$refs.coverUpload.clearFiles()
-      this.loading = false
-      this.uploading = false
-      this.productForm.image = this.$store.getters.cosUrl + res.data.url
+    handleUploadCoverSuccess(imageUrl) {
+      this.productForm.image = imageUrl
     },
     sortByFileName(fileList) {
       return sortBy(fileList, [file => {
@@ -975,20 +952,69 @@ export default {
         }
       }])
     },
-    handleUploadThumbnailSuccess(res, file, fileList) {
-      const sucList = fileList.filter(item => item.status === 'success')
-      if (sucList.length === fileList.length) {
-        const sortList = this.sortByFileName(sucList)
-        for (const item of sortList) {
-          const url = item.response.data.url
+    handleThumbnailSelect() {
+      this.$refs['thumbnailUpload'].click()
+    },
+    handleThumbnailFileChange(e) {
+      const count = this.maxThumbnailLength - this.thumbnails.length
+      const files = []
+      for (let i = 0; i < e.target.files.length; i++) {
+        files.push(e.target.files.item(i))
+      }
+      const mimeTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      const validFiles = files.filter(
+        rawFile => rawFile && rawFile.size < 1024 * 1024 && mimeTypes.includes(rawFile.type)
+      )
+      if (validFiles.length === 0) {
+        this.$message.warning('上传的图片大小不超过1M，图片格式支持PNG或JPEG，请重新上传！')
+        return
+      }
+      if (validFiles.length > count) {
+        this.$message.warning(`最多还可再添加${count}个主图！`)
+        return
+      }
+      this.uploading = true
+      this.loading = true
+      this.$refs['thumbnailUpload'].value = null // fix can't select the same excel
+      const sortedList = this.sortByFileName(validFiles)
+      this.toUploadFiles = sortedList.map((rawFile, index) => {
+        const type = rawFile.type === 'image/png' ? '.png' : '.jpg'
+        const now = moment().valueOf()
+        const filename = `${now}${index}${type}`
+        return {
+          uploadName: this.thumbnailUploadPath + '/' + filename,
+          uploadFile: rawFile
+        }
+      })
+      this.uploadedFiles = []
+      this.failedFiles = []
+      cosUploadFiles(this.toUploadFiles,
+        info => this.handleUploadProgress(info),
+        (err, data, options) => this.handleUploadThumbnailSuccess(err, data, options)
+      )
+    },
+    handleUploadThumbnailSuccess(err, data, options) {
+      if (err) {
+        this.failedFiles.push(err)
+      } else {
+        const index = parseInt(options.Index)
+        if (!isNaN(index)) {
+          this.uploadedFiles[index] = '/' + options.Key
+        } else {
+          this.failedFiles.push(options)
+        }
+      }
+      if (this.uploadedFiles.length + this.failedFiles.length === this.toUploadFiles.length) {
+        for (const url of this.uploadedFiles) {
           if (!this.thumbnails.includes(url)) {
             this.thumbnails.push(url)
             this.thumbnailUrls.push(this.$store.getters.cosUrl + url)
           }
         }
+        this.uploadedFiles = []
+        this.failedFiles = []
         this.loading = false
         this.uploading = false
-        this.$refs.thumbnailUpload.clearFiles()
       }
     },
     handleUploadThumbnailIndexSuccess(params) {
@@ -1001,28 +1027,79 @@ export default {
       this.thumbnailUrls.splice(index, 1)
       this.thumbnailUrls.splice(index, 0, this.$store.getters.cosUrl + url)
     },
-    handleUploadIntroductionSuccess(res, file, fileList) {
-      if (fileList.length > 1) {
-        const sucList = fileList.filter(item => item.status === 'success')
-        if (sucList.length === fileList.length) {
-          const sortList = this.sortByFileName(sucList)
-          for (const item of sortList) {
-            const url = item.response.data.url
+    handleIntroductionSelect() {
+      this.$refs['introductionUpload'].click()
+    },
+    handleIntroductionFileChange(e) {
+      const count = this.maxIntroductionLength - this.introductions.length
+      const files = []
+      for (let i = 0; i < e.target.files.length; i++) {
+        files.push(e.target.files.item(i))
+      }
+      const mimeTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      const validFiles = files.filter(
+        rawFile => rawFile && rawFile.size < 1024 * 1024 && mimeTypes.includes(rawFile.type)
+      )
+      if (validFiles.length === 0) {
+        this.$message.warning('上传的图片大小不超过1M，图片格式支持PNG或JPEG，请重新上传！')
+        return
+      }
+      if (validFiles.length > count) {
+        this.$message.warning(`最多还可再添加${count}个详情图！`)
+        return
+      }
+      this.uploading = true
+      this.loading = true
+      this.$refs['introductionUpload'].value = null // fix can't select the same excel
+      const sortedList = this.sortByFileName(validFiles)
+      this.toUploadFiles = sortedList.map((rawFile, index) => {
+        const type = rawFile.type === 'image/png' ? '.png' : '.jpg'
+        const now = moment().valueOf()
+        const filename = `${now}${index}${type}`
+        return {
+          uploadName: this.introductionUploadPath + '/' + filename,
+          uploadFile: rawFile
+        }
+      })
+      this.uploadedFiles = []
+      this.failedFiles = []
+      cosUploadFiles(this.toUploadFiles,
+        info => this.handleUploadProgress(info),
+        (err, data, options) => this.handleUploadIntroductionSuccess(err, data, options)
+      )
+    },
+    handleUploadIntroductionSuccess(err, data, options) {
+      if (this.toUploadFiles.length > 1) {
+        if (err) {
+          this.failedFiles.push(err)
+        } else {
+          const index = parseInt(options.Index)
+          if (!isNaN(index)) {
+            this.uploadedFiles[index] = '/' + options.Key
+          } else {
+            this.failedFiles.push(options)
+          }
+        }
+        if (this.uploadedFiles.length + this.failedFiles.length === this.toUploadFiles.length) {
+          for (const url of this.uploadedFiles) {
             if (!this.introductions.includes(url)) {
               this.introductions.push(url)
               this.introductionUrls.push(this.$store.getters.cosUrl + url)
             }
           }
+          this.uploadedFiles = []
+          this.failedFiles = []
           this.loading = false
           this.uploading = false
-          this.$refs.introductionUpload.clearFiles()
         }
       } else {
-        this.$refs.introductionUpload.clearFiles()
+        if (err) {
+          return
+        }
         this.loading = false
         this.uploading = false
         let index = 0
-
+        const url = '/' + options.Key
         switch (this.newIntroductionType) {
           case 1: // normal
             if (this.introductionUrls.length > 2) {
@@ -1034,16 +1111,16 @@ export default {
                 index = 0
               }
             }
-            this.introductions.splice(index, 0, res.data.url)
-            this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + res.data.url)
+            this.introductions.splice(index, 0, url)
+            this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + url)
             break
           case 2: // Head
-            this.introductions.splice(0, 0, res.data.url)
-            this.introductionUrls.splice(0, 0, this.$store.getters.cosUrl + res.data.url)
+            this.introductions.splice(0, 0, url)
+            this.introductionUrls.splice(0, 0, this.$store.getters.cosUrl + url)
             break
           case 3: // Tail
-            this.introductions.push(res.data.url)
-            this.introductionUrls.push(this.$store.getters.cosUrl + res.data.url)
+            this.introductions.push(url)
+            this.introductionUrls.push(this.$store.getters.cosUrl + url)
             break
         }
       }
@@ -1058,32 +1135,8 @@ export default {
       this.introductionUrls.splice(index, 1)
       this.introductionUrls.splice(index, 0, this.$store.getters.cosUrl + url)
     },
-    handleBeforeUpload(file) {
-      const maxSize = 1024 * 1024
-      if (file.size > maxSize) {
-        this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
-        return false
-      }
-      const imageTypes = ['image/png', 'image/jpeg', 'image/jpg']
-      if (imageTypes.includes(file.type) === false) {
-        this.$message.warning('请选择正确的文件类型！')
-        return false
-      }
-      this.uploadPercent = 0
-      this.loading = true
-      this.uploading = true
-      return true
-    },
-    handleUploadError(err) {
-      console.log('handleUploadError:' + err)
-      this.$refs.coverUpload.clearFiles()
-      this.$refs.thumbnailUpload.clearFiles()
-      this.$refs.introductionUpload.clearFiles()
-      this.loading = false
-      this.uploading = false
-    },
-    handleUploadProgress(event) {
-      this.uploadPercent = event.percent
+    handleUploadProgress(info) {
+      this.uploadPercent = info.percent
     },
     async getMerchantFreeShipping(merchantId) {
       try {
@@ -1161,5 +1214,8 @@ export default {
 </script>
 
 <style scoped>
-
+  .image-upload-input {
+    display: none;
+    z-index: -9999;
+  }
 </style>
