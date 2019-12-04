@@ -15,7 +15,7 @@ import store from './store'
 import router from './router'
 
 import '@/icons' // icon
-import '@/permission' // permission control
+import '@/router-guard' // permission control
 
 Vue.config.productionTip = false
 

@@ -29,8 +29,13 @@ router.beforeEach(async(to, from, next) => {
     next()
     return
   }
+  const needSettings = to.matched.reduce(
+    (need, record) => need || ('needSettings' in record.meta ? record.meta.needSettings : false),
+    false)
+
   const needAuth = to.matched.reduce(
-    (auth, record) => auth || ('requiresAuth' in record.meta ? record.meta.requiresAuth : true), false)
+    (auth, record) => auth || ('requiresAuth' in record.meta ? record.meta.requiresAuth : true),
+    false)
 
   const authRoles = to.matched.reduce(
     (roles, record) => roles.concat('roles' in record.meta ? record.meta.roles : []), [])
@@ -38,6 +43,9 @@ router.beforeEach(async(to, from, next) => {
   const roles = uniq(authRoles)
 
   NProgress.start()
+
+  store.commit('app/SET_NEED_SETTINGS', needSettings)
+
   try {
     if (!needAuth) {
       next()

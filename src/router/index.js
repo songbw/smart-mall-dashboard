@@ -212,7 +212,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/marketing/aggregations',
     name: 'Marketing',
-    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name] },
+    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name], needSettings: true },
     children: [
       {
         path: 'aggregations',
