@@ -13,7 +13,7 @@ import orders from './modules/orders'
 import workOrders from './modules/workOrders'
 import members from './modules/members'
 
-Vue.use(Vuex)
+if (!window.Vuex) Vue.use(Vuex)
 
 const debug = process.env.NODE_ENV !== 'production'
 

@@ -1,4 +1,3 @@
-import { Base64 } from 'js-base64'
 import SimpleCrypto from 'simple-crypto-js'
 import localForage from 'localforage'
 
@@ -8,8 +7,7 @@ const storageMap = new Map()
 
 const storageSetItem = async function(key, value) {
   if (value !== null) {
-    const bKey = Base64.encode(key)
-    await localForage.setItem(bKey, simpleCrypto.encrypt(value))
+    await localForage.setItem(key, simpleCrypto.encrypt(value))
     storageMap.set(key, value)
   }
 }
@@ -18,15 +16,13 @@ const storageGetItem = async function(key) {
   if (storageMap.has(key)) {
     return storageMap.get(key)
   } else {
-    const bKey = Base64.encode(key)
-    const eValue = await localForage.getItem(bKey)
+    const eValue = await localForage.getItem(key)
     return eValue ? simpleCrypto.decrypt(eValue) : null
   }
 }
 
 const storageRemoveItem = async function(key) {
-  const bKey = Base64.encode(key)
-  await localForage.removeItem(bKey)
+  await localForage.removeItem(key)
   storageMap.delete(key)
 }
 
