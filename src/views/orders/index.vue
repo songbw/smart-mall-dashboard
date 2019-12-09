@@ -98,6 +98,11 @@
           导出支付交易订单
         </el-button>
       </el-tooltip>
+      <el-tooltip v-if="hasExportPermission" content="导出当前供应商订单发货概况">
+        <el-button icon="el-icon-download" type="info" @click="handleExportDeliverOrders">
+          导出发货概况
+        </el-button>
+      </el-tooltip>
     </div>
     <el-table
       ref="ordersTable"
@@ -273,7 +278,8 @@ import {
   exportReconciliationApi,
   exportPaymentBillApi,
   exportVendorOrdersApi,
-  exportVendorReconciliationApi
+  exportVendorReconciliationApi,
+  exportVendorDeliverOrdersApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderListApi } from '@/api/workOrders'
@@ -759,6 +765,16 @@ export default {
       } catch (e) {
         console.warn('Order export error:' + e)
         this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
+    async handleExportDeliverOrders() {
+      try {
+        const data = await exportVendorDeliverOrdersApi()
+        const now = moment().format('YYYY-MM-DD')
+        const filename = `供应商发货概况-${now}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Export deliver order error:' + e)
       }
     },
     handleCancelExport() {
