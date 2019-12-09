@@ -7,6 +7,7 @@ const storageMap = new Map()
 
 const storageSetItem = async function(key, value) {
   if (value !== null) {
+    await localForage.removeItem(key)
     await localForage.setItem(key, simpleCrypto.encrypt(value))
     storageMap.set(key, value)
   }

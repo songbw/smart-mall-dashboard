@@ -22,8 +22,7 @@ import {
 
 import {
   storageGetItem,
-  storageSetItem,
-  storageRemoveItem
+  storageSetItem
 } from '@/utils/storage'
 
 export default {
@@ -59,7 +58,6 @@ export default {
         if (!isEmpty(appId)) {
           this.$store.commit('app/SET_PLATFORM_ID', appId)
         }
-        await storageRemoveItem(storage_merchant_id)
         if (role_admin_name === role || role_watcher_name === role) {
           this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
           await storageSetItem(storage_merchant_id, 0)
