@@ -136,6 +136,14 @@ export function exportPaymentBillApi(params) {
   })
 }
 
+export function exportVendorDeliverOrdersApi() {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/daily/order',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
 export function getPayInfoListApi(params) {
   return Vue.axios('orders').request({
     url: '/aggpays/wspay/query/pay',
