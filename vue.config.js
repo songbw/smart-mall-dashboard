@@ -89,12 +89,6 @@ module.exports = {
             path: 'lib/index.min.js'
           },
           {
-            name: 'xlsx',
-            var: 'XLSX',
-            version: '0.15.3',
-            path: 'dist/xlsx.min.js'
-          },
-          {
             name: 'libphonenumber-js',
             var: 'libphonenumber',
             version: '1.7.29',
