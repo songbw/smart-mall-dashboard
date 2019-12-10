@@ -133,7 +133,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" :width="hasEditPermission? '350': '100'">
+        <el-table-column label="操作" align="left" :width="hasEditPermission? '350': '100'">
           <template slot-scope="scope">
             <el-button
               v-if="hasViewPermission"
@@ -152,7 +152,14 @@
             </el-button>
             <el-button
               v-if="hasEditPermission"
-              :disabled="scope.row.status === onSaleStatus"
+              type="info"
+              size="mini"
+              @click="handleClone(scope.$index)"
+            >
+              复制
+            </el-button>
+            <el-button
+              v-if="hasEditPermission && scope.row.status !== onSaleStatus"
               type="warning"
               size="mini"
               @click="handlePublish(scope.$index)"
@@ -160,8 +167,7 @@
               发布
             </el-button>
             <el-button
-              v-if="hasEditPermission"
-              :disabled="scope.row.status !== onSaleStatus"
+              v-if="hasEditPermission && scope.row.status === onSaleStatus"
               type="warning"
               size="mini"
               @click="handleDisable(scope.$index)"
@@ -169,8 +175,7 @@
               下架
             </el-button>
             <el-button
-              v-if="hasEditPermission"
-              :disabled="scope.row.status === onSaleStatus"
+              v-if="hasEditPermission && scope.row.status !== onSaleStatus"
               type="danger"
               size="mini"
               @click="handleDelete(scope.$index)"
@@ -192,6 +197,11 @@
       :qr-code="qrCodeValue"
       @closed="onPreviewClosed"
     />
+    <clone-dialog
+      :dialog-visible="cloneDialogVisible"
+      @cancelled="cloneDialogVisible = false"
+      @confirmed="handleClonePage"
+    />
   </div>
 </template>
 
@@ -201,6 +211,7 @@ import moment from 'moment'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import PreviewDialog from './components/previewDialog'
+import CloneDialog from './components/cloneDialog'
 import {
   getAggregationsApi,
   searchAggregationsApi,
@@ -217,7 +228,7 @@ import {
 
 export default {
   name: 'AggregationPages',
-  components: { Pagination, PreviewDialog },
+  components: { Pagination, PreviewDialog, CloneDialog },
   filters: {
     statusFilter(status) {
       const item = AggregationStatusOptions.find(option => option.value === status)
@@ -262,7 +273,9 @@ export default {
       displayPageId: 0,
       qrCodeDialogVisible: false,
       listLoading: false,
-      queryGroupId: '-1'
+      queryGroupId: '-1',
+      cloneDialogVisible: false,
+      cloneId: null
     }
   },
   computed: {
@@ -488,6 +501,24 @@ export default {
         name: 'EditAggregation',
         params: { id: this.aggregationList[index].id.toString() }
       })
+    },
+    handleClone(index) {
+      this.cloneId = this.aggregationList[index].id
+      this.cloneDialogVisible = true
+    },
+    async handleClonePage(params) {
+      this.cloneDialogVisible = false
+      try {
+        this.listLoading = true
+        const id = await this.$store.dispatch('aggregations/clonePage', { id: this.cloneId, ...params })
+        if (id >= 0) {
+          this.$message.success('复制聚合页成功，请切换到对应的聚合页平台查看')
+        }
+      } catch (e) {
+        console.warn('Clone aggregation page error:' + e)
+      } finally {
+        this.listLoading = false
+      }
     },
     handleDisable(index) {
       const aggregation = this.aggregationList[index]

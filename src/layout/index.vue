@@ -54,6 +54,18 @@ export default {
         openSidebar: this.sidebar.opened
       }
     }
+  },
+  created() {
+    this.getAppPlatformList()
+  },
+  methods: {
+    async getAppPlatformList() {
+      try {
+        await this.$store.dispatch('app/getPlatformList')
+      } catch (e) {
+        console.warn('Get platform list error:' + e)
+      }
+    }
   }
 }
 </script>

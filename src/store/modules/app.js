@@ -13,22 +13,6 @@ const state = {
   needSettings: true,
   cosUrl: `https://iwallet-1258175138.file.myqcloud.com`,
   platformList: [
-    {
-      appId: '01',
-      name: '凤巢自营公众号'
-    },
-    {
-      appId: '11',
-      name: '无锡市民卡'
-    },
-    {
-      appId: '12',
-      name: '最珠海'
-    },
-    {
-      appId: 'test',
-      name: '开发环境'
-    }
   ]
 }
 

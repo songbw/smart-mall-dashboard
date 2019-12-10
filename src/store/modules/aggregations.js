@@ -8,6 +8,7 @@ import {
   updateAggregationGroupApi,
   deleteAggregationGroupApi
 } from '@/api/aggregations'
+import moment from 'moment'
 
 const templateKeys = [
   'id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId', 'appId'
@@ -232,6 +233,32 @@ const actions = {
     await deleteAggregationGroupApi(params)
     const list = state.groups.filter(group => group.id !== params.id)
     commit('SET_GROUP_LIST', list)
+  },
+  async clonePage({ commit }, params) {
+    const id = params.id
+    const { code, data } = await getAggregationByIdApi({ id })
+    if (code === 200 && data.result) {
+      const now = moment().format('YYYY-MM-DD')
+      const clonePage = {
+        appId: params.appId,
+        name: params.name,
+        homePage: data.result.homePage,
+        backgroundColor: data.result.backgroundColor,
+        header: data.result.header,
+        effectiveDate: now,
+        groupId: null
+      }
+      const cloneRes = await createAggregationApi(clonePage)
+      if (cloneRes.code === 200) {
+        const cloneId = cloneRes.data.aggregationId
+        await updateAggregationContentApi({
+          id: cloneId,
+          content: data.result.content
+        })
+        return cloneId
+      }
+    }
+    return -1
   }
 }
 

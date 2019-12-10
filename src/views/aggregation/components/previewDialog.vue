@@ -1,5 +1,14 @@
 <template>
-  <el-dialog :visible="dialogVisible" :show-close="false" title="页面预览" width="380px" center append-to-body>
+  <el-dialog
+    :visible="dialogVisible"
+    :show-close="false"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    title="页面预览"
+    width="380px"
+    center
+    append-to-body
+  >
     <div class="content-center">
       <h3>请通过手机“扫一扫”功能，在手机上进行预览</h3>
     </div>

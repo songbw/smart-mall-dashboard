@@ -10,7 +10,7 @@
       status-icon
     >
       <el-form-item label="页面名称" prop="name">
-        <el-input v-model="pageName" />
+        <el-input v-model="pageName" maxlength="50" />
       </el-form-item>
       <el-form-item v-if="hasHomePermission" label="主页设置" prop="homePage">
         <el-switch v-model="homePage" />
