@@ -369,6 +369,11 @@ const OP_VIEW = 1
 const OP_EDIT = 2
 const OP_CREATE = 3
 
+const floatToFixed = (value, precision) =>
+  parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
+
+const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value)
+
 export default {
   name: 'ProductDetail',
   components: { CustomIntroduction, CustomThumbnail, CategorySelection, ShippingPriceSelection, ImageUpload },
@@ -556,9 +561,9 @@ export default {
       return this.opType === OP_EDIT
     },
     floorPrice() {
-      if (this.productForm.sprice) {
-        const sprice = Number.parseFloat(this.productForm.sprice)
-        return (sprice * this.floorPriceRate).toFixed(2).toString()
+      const sprice = convertToNumber(this.productForm.sprice)
+      if (!Number.isNaN(sprice)) {
+        return floatToFixed(sprice * this.floorPriceRate, 2).toString()
       } else {
         return '无进货价格'
       }
@@ -648,11 +653,20 @@ export default {
           this.productInfo = data.list[0]
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
-              if (key !== 'price' && key !== 'sprice' && key !== 'weight') {
-                this.productForm[key] = this.productInfo[key]
-              } else {
-                const value = Number.parseFloat(this.productInfo[key])
-                this.productForm[key] = Number.isNaN(value) ? null : value
+              switch (key) {
+                case 'price':
+                case 'sprice': {
+                  const value = convertToNumber(this.productInfo[key])
+                  this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 2)
+                  break
+                }
+                case 'weight': {
+                  const value = convertToNumber(this.productInfo[key])
+                  this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 3)
+                  break
+                }
+                default:
+                  this.productForm[key] = this.productInfo[key]
               }
             }
           })
@@ -797,12 +811,6 @@ export default {
       this.introductionUrls.splice(index, 1)
     },
     handleSubmit() {
-      if (this.productForm.sprice > 0 &&
-        this.productForm.price > 0 &&
-        this.productForm.sprice > this.productForm.price) {
-        this.$message.warning('商品的销售价必须大于进货价，请仔细检查！')
-        return
-      }
       this.$refs.productForm.validate((valid) => {
         if (valid) {
           const formData = { ...this.productForm }
@@ -842,20 +850,41 @@ export default {
       }
       return id
     },
+    getValidFormItem(formData) {
+      const params = {}
+      for (const key of Object.keys(formData)) {
+        if (formData[key] !== null) {
+          const value = formData[key]
+          switch (key) {
+            case 'price':
+            case 'sprice': {
+              if (value > 0) {
+                params[key] = floatToFixed(value, 2).toString()
+              }
+              break
+            }
+            case 'weight': {
+              if (value > 0) {
+                params[key] = floatToFixed(value, 3).toString()
+              }
+              break
+            }
+            case 'inventory': {
+              if (value > 0) {
+                params[key] = value
+              }
+              break
+            }
+            default:
+              params[key] = value
+          }
+        }
+      }
+      return params
+    },
     async handleCreateProduct(formData) {
       try {
-        const params = {}
-        Object.keys(formData).forEach(key => {
-          if (formData[key] !== null) {
-            if (key !== 'price' && key !== 'sprice') {
-              params[key] = formData[key]
-            } else {
-              if (formData[key] > 0) {
-                params[key] = formData[key].toString()
-              }
-            }
-          }
-        })
+        const params = this.getValidFormItem(formData)
         if (!this.hasVendorPermission) {
           params.merchantId = this.vendorId
         }
@@ -882,18 +911,7 @@ export default {
       const params = {
         id: formData.id
       }
-      const filterForm = {}
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null) {
-          if (key !== 'price' && key !== 'sprice' && key !== 'weight') {
-            filterForm[key] = formData[key]
-          } else {
-            if (formData[key] > 0) {
-              filterForm[key] = formData[key].toString()
-            }
-          }
-        }
-      })
+      const filterForm = this.getValidFormItem(formData)
       Object.keys(filterForm).forEach(key => {
         if (this.productInfo[key] !== filterForm[key]) {
           params[key] = filterForm[key]

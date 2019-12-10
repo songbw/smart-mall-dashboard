@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import Router from 'vue-router'
+import VueRouter from 'vue-router'
 import Layout from '@/layout'
 import {
   role_vendor_name,
@@ -7,7 +7,7 @@ import {
   role_watcher_name
 } from '@/utils/constants'
 
-Vue.use(Router)
+if (!window.VueRouter) Vue.use(VueRouter)
 
 /**
  * constantRoutes
@@ -451,7 +451,7 @@ export const constantRoutes = [
   { path: '*', redirect: '/404', hidden: true }
 ]
 
-const createRouter = () => new Router({
+const createRouter = () => new VueRouter({
   mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
