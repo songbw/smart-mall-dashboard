@@ -720,10 +720,10 @@ export default {
       } else {
         params.merchantId = this.vendorId
       }
-      if (Number.isInteger(this.thirdCategoryValue)) {
-        params.categoryID = this.thirdCategoryValue
+      const categoryId = this.thirdCategoryValue || this.secondCategoryValue || this.firstCategoryValue
+      if (categoryId !== null) {
+        params.categoryID = categoryId
       }
-
       if (this.listState !== product_state_all) {
         params.state = this.listState
       }
@@ -764,15 +764,6 @@ export default {
     },
     handleFilter() {
       if (this.hasViewPermission) {
-        if (this.firstCategoryValue != null) {
-          if (this.secondCategoryValue === null) {
-            this.$message.warning('请选择商品二级类别！')
-            return
-          } else if (this.thirdCategoryValue === null) {
-            this.$message.warning('请选择商品三级类别！')
-            return
-          }
-        }
         this.listOffset = 1
         this.getListData()
       } else {
