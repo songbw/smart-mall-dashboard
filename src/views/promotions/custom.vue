@@ -11,7 +11,7 @@
       <el-form-item label="活动名称" prop="name">
         <el-input v-model="formData.name" maxlength="30" placeholder="请输入活动名称" style="width: 300px" />
       </el-form-item>
-      <el-form-item label="活动类型" prop="type">
+      <el-form-item label="活动组名" prop="type">
         <el-select v-model="formData.promotionTypeId">
           <el-option
             v-for="item in tabOptions"
@@ -267,7 +267,8 @@ export default {
       userPermissions: 'userPermissions',
       promotionTypes: 'promotionTypes',
       promotionTypeId: 'promotionTypeId',
-      defaultSchedules: 'defaultSchedules'
+      defaultSchedules: 'defaultSchedules',
+      appId: 'platformAppId'
     }),
     hasEditPermission() {
       return this.userPermissions.includes(PromotionPermissions.update)
@@ -300,7 +301,9 @@ export default {
     async handleCreatePromotion() {
       this.promotionLoading = true
       try {
-        const { id, msg } = await this.$store.dispatch('promotions/create', this.formData)
+        const { id, msg } = await this.$store.dispatch('promotions/create', {
+          appId: this.appId, ...this.formData
+        })
         if (id >= 0) {
           await this.handleSetDiscountType(id)
           if (this.formData.dailySchedule) {
@@ -511,7 +514,7 @@ export default {
     async getDefaultSchedules() {
       try {
         this.scheduleOptions = range(24).map(i => i < 10 ? '0' + i + ':00' : i + ':00')
-        await this.$store.dispatch('promotions/getDefaultSchedules')
+        await this.$store.dispatch('promotions/getDefaultSchedules', { appId: this.appId })
       } catch (e) {
         console.warn('getDefaultSchedules:' + e)
       }
@@ -523,7 +526,7 @@ export default {
     async handleUpdateSchedule() {
       if (this.checkSchedules.length > 0) {
         try {
-          const params = { initialSchedules: this.checkSchedules }
+          const params = { appId: this.appId, initialSchedules: this.checkSchedules }
           this.scheduleUpdating = true
           await this.$store.dispatch('promotions/updateDefaultSchedules', params)
           this.scheduleUpdating = false

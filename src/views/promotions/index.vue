@@ -1,6 +1,9 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true">
+    <el-form :inline="true" label-position="left">
+      <el-form-item label="运营平台">
+        <el-input readonly :value="currentAppName" />
+      </el-form-item>
       <el-form-item label="活动名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
@@ -26,8 +29,15 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="全天分时段活动">
-        <el-switch v-model="queryDailySchedule" />
+      <el-form-item label="全天分时段">
+        <el-select v-model="queryDailySchedule">
+          <el-option
+            v-for="item in scheduleOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
@@ -69,7 +79,7 @@
                 icon="el-icon-folder"
                 @click="handleCreateType"
               >
-                创建活动类
+                创建活动组
               </el-button>
               <el-button
                 :disabled="item.name === '-1'"
@@ -77,7 +87,7 @@
                 icon="el-icon-edit"
                 @click="handleUpdateType"
               >
-                修改活动类
+                修改活动组
               </el-button>
               <el-button
                 :disabled="item.name === '-1'"
@@ -85,7 +95,7 @@
                 icon="el-icon-delete"
                 @click="handleDeleteType"
               >
-                删除活动类
+                删除活动组
               </el-button>
             </el-button-group>
           </div>
@@ -266,6 +276,16 @@ export default {
         value: -1,
         label: '全部'
       }].concat(PromotionAccountTypeDefinition),
+      scheduleOptions: [{
+        value: -1,
+        label: '全部'
+      }, {
+        value: 0,
+        label: '排除分时段'
+      }, {
+        value: 1,
+        label: '只含分时段'
+      }],
       dataLoading: false,
       promotionSelection: [],
       promotionData: [],
@@ -278,7 +298,9 @@ export default {
       userPermissions: 'userPermissions',
       promotionTypes: 'promotionTypes',
       promotionTypeId: 'promotionTypeId',
-      promotionQuery: 'promotionQuery'
+      promotionQuery: 'promotionQuery',
+      appList: 'platformAppList',
+      appId: 'platformAppId'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(PromotionPermissions.view)
@@ -349,6 +371,17 @@ export default {
       set(value) {
         this.$store.commit('promotions/SET_CURRENT_TYPE', Number.parseInt(value))
       }
+    },
+    currentAppName() {
+      const find = this.appList.find(item => item.appId === this.appId)
+      return find ? find.name : ''
+    }
+  },
+  watch: {
+    appId: function(value, old) {
+      this.currentType = '-1'
+      this.queryOffset = 1
+      this.prepareData()
     }
   },
   created() {
@@ -363,7 +396,11 @@ export default {
     async getPromotionTypes() {
       if (this.hasViewPermission) {
         try {
-          await this.$store.dispatch('promotions/getTypes', { pageNo: 1, pageSize: 100 })
+          await this.$store.dispatch('promotions/getTypes', {
+            appId: this.appId,
+            pageNo: 1,
+            pageSize: 100
+          })
         } catch (e) {
           console.warn('getPromotionTypes:' + e)
         }
@@ -384,9 +421,18 @@ export default {
     async queryAllPromotionData() {
       this.dataLoading = true
       try {
-        const { data } = await getPromotionsApi({ offset: this.queryOffset, limit: this.queryLimit })
-        this.promotionData = data.result.list
-        this.promotionTotal = data.result.total
+        const { code, data } = await getPromotionsApi({
+          appId: this.appId,
+          offset: this.queryOffset,
+          limit: this.queryLimit
+        })
+        if (code === 200) {
+          this.promotionData = data.result.list
+          this.promotionTotal = data.result.total
+        } else {
+          this.promotionTotal = 0
+          this.promotionData = []
+        }
       } catch (e) {
         console.warn('Get all promotions error: ' + e)
         this.promotionTotal = 0
@@ -406,8 +452,8 @@ export default {
         params.status = this.queryStatus
         needFilter = true
       }
-      if (this.queryDailySchedule) {
-        params.dailySchedule = true
+      if (this.queryDailySchedule > -1) {
+        params.dailySchedule = this.queryDailySchedule > 0
         needFilter = true
       }
       if (this.queryAccountType > -1) {
@@ -424,6 +470,7 @@ export default {
       if (needFilter) {
         params.offset = this.queryOffset
         params.limit = this.queryLimit
+        params.appId = this.appId
         return params
       } else {
         return null
@@ -671,7 +718,10 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        await this.$store.dispatch('promotions/createType', { typeName: action.value })
+        await this.$store.dispatch('promotions/createType', {
+          appId: this.appId,
+          typeName: action.value
+        })
         this.handleChangeType(this.typeTabs[this.typeTabs.length - 1].name)
       } catch (e) {
         console.warn('Crete prmotion type: ' + e)

@@ -1,6 +1,9 @@
 <template>
   <div class="app-container">
     <el-form :inline="true" :model="queryData">
+      <el-form-item label="运营平台">
+        <el-input readonly :value="currentAppName" />
+      </el-form-item>
       <el-form-item label="优惠券名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
@@ -248,13 +251,19 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      queryData: 'couponQuery'
+      queryData: 'couponQuery',
+      appList: 'platformAppList',
+      appId: 'platformAppId'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(CouponPermissions.view)
     },
     hasEditPermission() {
       return this.userPermissions.includes(CouponPermissions.update)
+    },
+    currentAppName() {
+      const find = this.appList.find(item => item.appId === this.appId)
+      return find ? find.name : ''
     },
     queryName: {
       get() {
@@ -321,6 +330,12 @@ export default {
       }
     }
   },
+  watch: {
+    appId: function(value, old) {
+      this.queryOffset = 1
+      this.getCouponData()
+    }
+  },
   created() {
     this.getCouponData()
   },
@@ -340,7 +355,11 @@ export default {
     async queryAllCouponData() {
       this.dataLoading = true
       try {
-        const { data } = await getCouponsApi({ offset: this.queryOffset, limit: this.queryLimit })
+        const { data } = await getCouponsApi({
+          appId: this.appId,
+          offset: this.queryOffset,
+          limit: this.queryLimit
+        })
         this.couponTotal = data.result.total
         this.couponData = data.result.list
       } catch (err) {
@@ -375,6 +394,7 @@ export default {
       if (needFilter) {
         params.offset = this.queryOffset
         params.limit = this.queryLimit
+        params.appId = this.appId
         return params
       } else {
         return null

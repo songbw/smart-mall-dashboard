@@ -136,10 +136,11 @@ export function deletePromotionScheduleApi(params) {
   })
 }
 
-export function getPromotionDefaultSchedulesApi() {
+export function getPromotionDefaultSchedulesApi(params) {
   return Vue.axios('promotions').request({
     url: '/equities/adminPromotion/schedule/initial',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
 

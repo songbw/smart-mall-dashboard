@@ -36,7 +36,7 @@ const state = {
   query: {
     name: '',
     status: 0,
-    dailySchedule: false,
+    dailySchedule: -1,
     accountType: -1,
     offset: 1,
     limit: 20
@@ -230,8 +230,8 @@ const actions = {
     await deletePromotionScheduleApi(params)
     commit('DELETE_SCHEDULE', params.id)
   },
-  async getDefaultSchedules({ commit }) {
-    const { data } = await getPromotionDefaultSchedulesApi()
+  async getDefaultSchedules({ commit }, params) {
+    const { data } = await getPromotionDefaultSchedulesApi(params)
     if (data && data.result) {
       const schedules = data.result.initialSchedules
       if (Array.isArray(schedules)) {

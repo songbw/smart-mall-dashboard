@@ -20,11 +20,10 @@
       </el-form-item>
       <el-form-item label="优惠券名称" prop="name">
         <el-input
-          :value="formData.name"
+          v-model="formData.name"
           :readonly="viewOnly"
           maxlength="30"
           style="width: 350px"
-          @input="value => formData.name = value.trim()"
         />
       </el-form-item>
       <el-form-item label="优惠券编码" prop="code">
@@ -810,7 +809,8 @@ export default {
       userPermissions: 'userPermissions',
       categoriesOption: 'categories',
       categoriesLoaded: 'categoriesLoaded',
-      categoriesLoading: 'categoriesLoading'
+      categoriesLoading: 'categoriesLoading',
+      appId: 'platformAppId'
     }),
     hasEditPermission() {
       return this.userPermissions.includes(CouponPermissions.update)
@@ -1112,7 +1112,7 @@ export default {
       }
     },
     async handleCreateCoupon() {
-      const params = {}
+      const params = { appId: this.appId }
       merge(params, this.formData)
       if (this.autoCode) {
         params.rules.code = ''
