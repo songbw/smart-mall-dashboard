@@ -289,11 +289,12 @@ export default {
       this.dataLoading = false
     },
     handleDialogFilterSearch() {
+      const categoryId = this.presetThirdCategory || this.thirdCategoryValue ||
+        this.presetSecondCategory || this.secondCategoryValue ||
+        this.presetFirstCategory || this.firstCategoryValue
       if (this.dialogFilterForm.skus.length > 0) {
         this.handleFilterSkuList()
-      } else if (this.dialogFilterForm.query !== '' ||
-        this.presetThirdCategory != null ||
-        this.thirdCategoryValue !== null) {
+      } else if (this.dialogFilterForm.query !== '' || categoryId !== null) {
         const params = {
           offset: this.offset,
           limit: this.limit,
@@ -302,10 +303,8 @@ export default {
         if (this.dialogFilterForm.query !== '') {
           params.query = this.dialogFilterForm.query
         }
-        if (this.presetThirdCategory != null) {
-          params.categoryID = this.presetThirdCategory
-        } else if (this.thirdCategoryValue !== null) {
-          params.categoryID = this.thirdCategoryValue
+        if (categoryId != null) {
+          params.categoryID = categoryId
         }
         if (this.merchantId > 0) {
           params.merchantId = this.merchantId
