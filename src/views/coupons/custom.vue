@@ -210,6 +210,7 @@
       </el-form-item>
       <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
+          :app-id="couponAppId"
           :merchant-id="formData.supplierMerchantId"
           :first-class-category="formData.category"
           :read-only="viewOnly"
@@ -812,6 +813,9 @@ export default {
       categoriesLoading: 'categoriesLoading',
       appId: 'platformAppId'
     }),
+    couponAppId() {
+      return this.couponData !== null ? this.couponData.appId : this.appId
+    },
     hasEditPermission() {
       return this.userPermissions.includes(CouponPermissions.update)
     },
@@ -823,7 +827,7 @@ export default {
           }))
         } else {
           return [{
-            categoryId: -1,
+            categoryId: '-1',
             categoryName: '正在加载类别...'
           }]
         }
@@ -868,21 +872,25 @@ export default {
     }
   },
   created() {
-    if (isEqual(this.$route.name, 'CreateCoupon')) {
-      this.createCoupon = true
-      this.viewOnly = false
-    } else {
-      this.couponId = this.$route.params.id
-      if ('readOnly' in this.$route.params) {
-        this.viewOnly = this.$route.params.readOnly
-      }
-      this.getCouponData()
-    }
-    this.getVendorList()
-    this.getCouponTags()
-    this.getAllCategories()
+    this.prepareCouponData()
   },
   methods: {
+    async prepareCouponData() {
+      await this.getVendorList()
+      await this.getCouponTags()
+      await this.getAllCategories()
+
+      if (isEqual(this.$route.name, 'CreateCoupon')) {
+        this.createCoupon = true
+        this.viewOnly = false
+      } else {
+        this.couponId = this.$route.params.id
+        if ('readOnly' in this.$route.params) {
+          this.viewOnly = this.$route.params.readOnly
+        }
+        await this.getCouponData()
+      }
+    },
     async getVendorList() {
       try {
         const params = {
@@ -1008,14 +1016,16 @@ export default {
       try {
         this.dataLoading = true
         this.couponDataLoaded = false
-        const { data } = await getCouponByIdApi({ id: this.couponId })
-        this.couponData = data.result
-        const category = Number.parseInt(this.couponData.category)
-        if (!Number.isNaN(category)) {
-          this.couponData.category = category
+        const { code, data } = await getCouponByIdApi({ id: this.couponId })
+        if (code === 200) {
+          this.couponData = data.result
+          const category = Number.parseInt(this.couponData.category)
+          if (!Number.isNaN(category)) {
+            this.couponData.category = category
+          }
+          this.backupCouponData()
+          this.couponDataLoaded = true
         }
-        this.backupCouponData()
-        this.couponDataLoaded = true
       } catch (e) {
         console.warn('Get coupon error:' + e)
       } finally {
@@ -1295,19 +1305,21 @@ export default {
     },
     onCategoryChanged(value) {
       const id = Number.parseInt(value)
-      this.selectCategoryId = value
-      if (Number.isNaN(id) || id === 0) {
-        if (id === 0) {
-          // 全场类
-          this.formData.rules.scenario.type = 2
+      if (id >= 0) {
+        this.selectCategoryId = value
+        if (Number.isNaN(id) || id === 0) {
+          if (id === 0) {
+            // 全场类
+            this.formData.rules.scenario.type = 2
+          }
+          this.formData.category = null
+        } else {
+          if (this.formData.rules.scenario.type === 2) {
+            this.formData.rules.scenario.type = 1
+          }
+          this.formData.category = id
+          this.formData.rules.scenario.categories = []
         }
-        this.formData.category = null
-      } else {
-        if (this.formData.rules.scenario.type === 2) {
-          this.formData.rules.scenario.type = 1
-        }
-        this.formData.category = id
-        this.formData.rules.scenario.categories = []
       }
     },
     onScenarioTypeChanged(value) {

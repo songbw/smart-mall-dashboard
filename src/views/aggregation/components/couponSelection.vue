@@ -106,6 +106,10 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {
@@ -138,8 +142,9 @@ export default {
     getFilterParam() {
       let filter = false
       const params = {
+        appId: this.appId,
         offset: this.query.offset,
-        limit: this.query.limit
+        limit: this.query.limit,
       }
       if (this.query.name) {
         params.name = this.query.name
@@ -154,6 +159,7 @@ export default {
     async getPublishedData() {
       try {
         const params = {
+          appId: this.appId,
           pageNo: this.query.offset,
           pageSize: this.query.limit
         }

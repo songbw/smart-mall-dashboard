@@ -80,6 +80,7 @@
     </el-form>
     <promotion-selection
       :dialog-visible="dialogPromotionVisible"
+      :app-id="pageAppId"
       @onSelectionCancelled="dialogPromotionVisible = false"
       @onSelectionConfirmed="onPromotionSelectionConfirmed"
     />
@@ -104,9 +105,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     promotionData: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
         return this.pageTemplateList[this.currentTemplateIndex].data

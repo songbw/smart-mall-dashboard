@@ -108,6 +108,7 @@
             :target-type="dialogValue.targetType"
             :target-url="dialogValue.targetUrl"
             :target-name="dialogValue.targetName"
+            :app-id="pageAppId"
             @targetChanges="handleImageTargetChanges"
           />
         </el-form-item>
@@ -153,9 +154,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     serviceInfo: {
       get() {
         if (this.pageTemplateList[this.currentTemplateIndex].type === serviceType) {

@@ -35,6 +35,7 @@
                 :target-type="titleLinkType"
                 :target-url="titleLinkUrl"
                 :target-name="titleLinkUrlName"
+                :app-id="pageAppId"
                 @targetChanges="handleImageTargetChanges"
               />
             </el-form-item>
@@ -58,6 +59,7 @@
           :key="index"
           :grid-info="grid"
           :grid-index="index"
+          :app-id="pageAppId"
           @gridCountChanged="changeGridListCount"
           @gridImageChanged="changeGridListImage"
           @onRemove="removeGridList"
@@ -86,9 +88,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     gridInfo: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === gridType) {
         return this.pageTemplateList[this.currentTemplateIndex].data

@@ -13,6 +13,7 @@
         选择聚合页
       </el-button>
       <aggregation-selection-dialog
+        :app-id="appId"
         :dialog-visible="dialogAggregationVisible"
         @onSelectionCancelled="onAggregationSelectionCancelled"
         @onSelectionConfirmed="onAggregationSelectionConfirmed"
@@ -23,6 +24,7 @@
         选择促销活动页
       </el-button>
       <promotion-selection
+        :app-id="appId"
         :dialog-visible="dialogPromotionVisible"
         @onSelectionCancelled="onPromotionSelectionCancelled"
         @onSelectionConfirmed="onPromotionSelectionConfirmed"
@@ -86,6 +88,10 @@ export default {
     couldChange: {
       type: Boolean,
       default: true
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {

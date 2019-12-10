@@ -34,6 +34,7 @@
         :target-type="zone.targetType"
         :target-url="zone.targetUrl"
         :target-name="zone.targetName"
+        :app-id="pageAppId"
         @targetChanges="handleImageTargetChanges"
       />
     </div>
@@ -64,9 +65,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     hotZoneInfo: {
       get() {
         if (this.pageTemplateList[this.currentTemplateIndex].type === hotZoneType) {

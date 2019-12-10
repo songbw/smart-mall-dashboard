@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-image v-if="imageUrl" :src="imageUrl" :style="imageClass" fit="contain" />
-    <div>
+    <div v-if="!viewOnly">
       <input
         :ref="refName"
         class="image-upload-input"

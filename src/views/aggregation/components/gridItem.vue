@@ -57,6 +57,7 @@
             :target-type="dialogValue.targetType"
             :target-url="dialogValue.targetUrl"
             :target-name="dialogValue.targetName"
+            :app-id="appId"
             @targetChanges="handleImageTargetChanges"
           />
         </el-form-item>
@@ -94,6 +95,10 @@ export default {
     gridIndex: {
       type: Number,
       default: -1
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {

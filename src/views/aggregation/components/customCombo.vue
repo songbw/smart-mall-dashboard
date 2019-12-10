@@ -74,6 +74,7 @@
             :target-type="titleTargetType"
             :target-url="titleTargetUrl"
             :target-name="titleTargetName"
+            :app-id="pageAppId"
             @targetChanges="handleImageTargetChanges"
           />
         </el-form-item>
@@ -205,6 +206,7 @@
       </el-table-column>
     </el-table>
     <promotion-selection
+      :app-id="pageAppId"
       :dialog-visible="dialogPromotionVisible"
       @onSelectionCancelled="onPromotionSelectionCancelled"
       @onSelectionConfirmed="onPromotionSelectionConfirmed"
@@ -277,9 +279,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     comboInfo: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === comboType) {
         return this.pageTemplateList[this.currentTemplateIndex].data

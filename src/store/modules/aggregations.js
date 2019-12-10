@@ -9,6 +9,10 @@ import {
   deleteAggregationGroupApi
 } from '@/api/aggregations'
 
+const templateKeys = [
+  'id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId', 'appId'
+]
+
 const template = {
   id: -1,
   status: 0,
@@ -18,6 +22,7 @@ const template = {
   backgroundColor: '#FFFFFF',
   groupId: 0,
   header: null,
+  appId: null,
   content: []
 }
 
@@ -46,8 +51,7 @@ const mutations = {
     state.aggregation.groupId = state.groupId > 0 ? state.groupId : 0
   },
   SET_CURRENT_DATA: (state, params) => {
-    const keys = ['id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId']
-    keys.forEach(key => {
+    templateKeys.forEach(key => {
       if (key in params) {
         state.aggregation[key] = params[key]
       }
@@ -173,11 +177,20 @@ const mutations = {
 
 const actions = {
   async getPageById({ commit }, params) {
-    const { data } = await getAggregationByIdApi(params)
-    const page = { ...data.result }
-    page.content = JSON.parse(data.result.content)
-    commit('SET_CURRENT_DATA', page)
-    return page.id
+    const { code, data } = await getAggregationByIdApi(params)
+    if (code === 200 && data.result) {
+      const page = {}
+      templateKeys.forEach(key => {
+        if (key in data.result) {
+          page[key] = data.result[key]
+        }
+      })
+      page.content = JSON.parse(data.result.content)
+      commit('SET_CURRENT_DATA', page)
+      return page.id
+    } else {
+      return -1
+    }
   },
   async createPage({ commit }, params) {
     const { data } = await createAggregationApi(params)

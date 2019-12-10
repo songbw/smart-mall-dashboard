@@ -120,6 +120,10 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {
@@ -149,7 +153,7 @@ export default {
   },
   methods: {
     getFilterParams() {
-      const params = { dailySchedule: false }
+      const params = { appId: this.appId, dailySchedule: false }
       if (this.query.name && this.query.name.trim()) {
         params.name = this.query.name.trim()
       }

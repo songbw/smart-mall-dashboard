@@ -13,6 +13,7 @@
         选择聚合页
       </el-button>
       <aggregation-selection-dialog
+        :app-id="appId"
         :dialog-visible="dialogAggregationVisible"
         @onSelectionCancelled="onAggregationSelectionCancelled"
         @onSelectionConfirmed="onAggregationSelectionConfirmed"
@@ -62,6 +63,10 @@ export default {
     merchantId: {
       type: Number,
       default: 0
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {

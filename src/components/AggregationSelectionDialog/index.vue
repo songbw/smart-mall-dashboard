@@ -114,6 +114,10 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {
@@ -163,7 +167,11 @@ export default {
       })
     },
     getAggregationList() {
-      getAggregationsApi({ offset: this.listQuery.offset, limit: this.listQuery.limit }).then(res => {
+      getAggregationsApi({
+        appId: this.appId,
+        offset: this.listQuery.offset,
+        limit: this.listQuery.limit
+      }).then(res => {
         const data = res.data.result
         this.aggregationList = data.list
         this.total = data.total
@@ -179,6 +187,7 @@ export default {
     },
     getListData() {
       const params = {
+        appId: this.appId,
         offset: this.listQuery.offset,
         limit: this.listQuery.limit
       }

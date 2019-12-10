@@ -24,6 +24,7 @@
                 :target-type="titleTargetType"
                 :target-url="titleTargetUrl"
                 :target-name="titleTargetName"
+                :app-id="pageAppId"
                 @targetChanges="handleImageTargetChanges"
               />
             </el-form-item>
@@ -135,6 +136,7 @@
       </el-table-column>
     </el-table>
     <coupon-selection
+      :app-id="pageAppId"
       :dialog-visible="dialogSelectionVisible"
       @onSelectionCancelled="onSelectionCancelled"
       @onSelectionConfirmed="onSelectionConfirmed"
@@ -178,9 +180,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     couponData: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === couponType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
