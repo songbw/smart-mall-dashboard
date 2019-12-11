@@ -217,6 +217,9 @@ export default {
     hasVendorPermission() {
       return this.userPermissions.includes(ProductPermissions.vendor)
     },
+    hasSalePricePermission() {
+      return this.userPermissions.includes(ProductPermissions.salePrice)
+    },
     needVendor() {
       return !this.updatePrice && (this.productCreation || this.productUpdate) && this.hasVendorPermission
     }
@@ -263,13 +266,14 @@ export default {
     },
     getTemplateHeaders() {
       if (this.productCreation) {
-        return CreationHeaders
+        return this.hasSalePricePermission ? CreationHeaders : CreationHeaders.filter(item => item.field !== 'price')
       } else if (this.productUpdate) {
-        return UpdateHeaders
+        return this.hasSalePricePermission ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
       } else if (this.productPromotion) {
         return PromotionHeaders
       } else if (this.updatePrice) {
-        return UpdatePriceHeaders
+        return this.hasSalePricePermission
+          ? UpdatePriceHeaders : UpdatePriceHeaders.filter(item => item.field !== 'price')
       } else {
         return SkuHeaders
       }
@@ -380,9 +384,11 @@ export default {
     },
     parseCreateSkuData(results) {
       let count = 0
+      const importHeaders = this.hasSalePricePermission
+        ? CreationHeaders : CreationHeaders.filter(item => item.field !== 'price')
       results.forEach(item => {
         const product = {}
-        CreationHeaders.forEach(header => {
+        importHeaders.forEach(header => {
           if (header.label in item) {
             product[header.field] = this.parseValue(header.type, item[header.label])
           }
@@ -407,9 +413,11 @@ export default {
     },
     parseUpdatePriceSkuData(results) {
       let count = 0
+      const importHeaders = this.hasSalePricePermission
+        ? UpdatePriceHeaders : UpdatePriceHeaders.filter(item => item.field !== 'price')
       for (const item of results) {
         const product = {}
-        UpdatePriceHeaders.forEach(header => {
+        importHeaders.forEach(header => {
           if (header.label in item) {
             product[header.field] = this.parseValue(header.type, item[header.label])
           }
@@ -424,9 +432,11 @@ export default {
     },
     async parseUpdateSkuData(results) {
       let count = 0
+      const importHeaders = this.hasSalePricePermission
+        ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
       for (const item of results) {
         const product = {}
-        UpdateHeaders.forEach(header => {
+        importHeaders.forEach(header => {
           if (header.label in item) {
             product[header.field] = this.parseValue(header.type, item[header.label])
           }
