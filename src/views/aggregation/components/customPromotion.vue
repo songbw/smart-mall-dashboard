@@ -12,7 +12,7 @@
       />
     </div>
     <div class="header-ops-container">
-      <span>最多可以添加{{ maxFloorLength }}个</span>
+      <span style="margin-right: 10px">最多可以添加{{ maxFloorLength }}个</span>
       <el-button
         :disabled="promotionList.length >= maxFloorLength || titlePromotionDailySchedule > 0"
         type="primary"
@@ -41,7 +41,7 @@
             无需添加促销活动，将根据当天日期自动选择进行中的分时段促销活动。
           </i>
           <i v-else class="el-icon-warning-outline">
-            可添加多个促销活动，将根据活动时间优先显示进行中的活动，以开始时间为序。
+            可添加多个促销活动，优先显示进行中的活动，以结束时间为序；未开始的活动，以开始时间为序。
           </i>
         </div>
       </el-form-item>
@@ -296,7 +296,7 @@ export default {
   }
 
   .header-ops-container {
-    margin: 10px;
+    padding-right: 20px;
     width: 100%;
     display: flex;
     justify-content: flex-end;
