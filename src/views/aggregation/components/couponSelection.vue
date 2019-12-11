@@ -144,7 +144,7 @@ export default {
       const params = {
         appId: this.appId,
         offset: this.query.offset,
-        limit: this.query.limit,
+        limit: this.query.limit
       }
       if (this.query.name) {
         params.name = this.query.name

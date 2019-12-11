@@ -3,7 +3,7 @@
     <template v-if="onlyOneChild && (!onlyOneChild.children || onlyOneChild.noShowingChildren) ">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
-          <svg-icon :icon-class="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" />
+          <svg-icon :icon-class="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" />
           <span slot="title">{{ onlyOneChild.meta.title }}</span>
         </el-menu-item>
       </app-link>
