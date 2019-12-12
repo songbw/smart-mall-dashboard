@@ -32,6 +32,7 @@
 <script>
 import moment from 'moment'
 import { cosUploadFile } from '@/utils/cos'
+import { max_upload_image_size } from '@/utils/constants'
 
 const generate = require('nanoid/generate')
 
@@ -98,7 +99,7 @@ export default {
       const files = e.target.files
       const rawFile = files[0] // only use files[0]
       if (!rawFile) return
-      if (rawFile.size >= 1024 * 1024) {
+      if (rawFile.size >= max_upload_image_size) {
         this.$message.warning('上传的图片大小超过1M，请裁剪或者优化图片，重新上传！')
         return
       }

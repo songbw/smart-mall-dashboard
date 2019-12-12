@@ -1,4 +1,5 @@
 export const app_upload_url = `${process.env.VUE_APP_BASE_URL}/bases/upload/relative`
+export const max_upload_image_size = 2 * 1024 * 1024
 export const storage_key_token = 'user_token'
 export const storage_key_name = 'user_name'
 export const storage_key_phone = 'user_phone'

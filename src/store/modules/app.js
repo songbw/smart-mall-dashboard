@@ -11,9 +11,8 @@ const state = {
   ready: false,
   platformId: 'test',
   needSettings: true,
-  cosUrl: `https://iwallet-1258175138.file.myqcloud.com`,
-  platformList: [
-  ]
+  cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
+  platformList: []
 }
 
 const mutations = {
