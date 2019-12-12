@@ -35,7 +35,7 @@
           >
             <el-table-column label="Type" width="100">
               <template slot-scope="scope">
-                <span>{{ scope.row.name }}</span>
+                <span>{{ templateName(scope.row.type) }}</span>
                 <img :src="templateImageUrl(scope.row.type)" class="aside-image">
               </template>
             </el-table-column>
@@ -105,6 +105,9 @@
               <custom-combo
                 v-if="currentTemplateIndex === index && pageTemplate.type === comboType"
               />
+              <custom-promotion-list
+                v-if="currentTemplateIndex === index && pageTemplate.type === promotionListType"
+              />
             </div>
           </el-main>
         </el-container>
@@ -130,6 +133,7 @@ import CustomGoods from './customGoods'
 import CustomHotZone from './customHotZone'
 import CustomCoupon from './customCoupon'
 import CustomCombo from './customCombo'
+import CustomPromotionList from './customPromotionList'
 import {
   bannerType,
   serviceType,
@@ -144,7 +148,9 @@ import {
   couponType,
   couponSettings,
   comboType,
-  comboSettings
+  comboSettings,
+  promotionListType,
+  promotionListSettings
 } from './templateType'
 
 const bannerImage = require('@/assets/images/banner.png')
@@ -166,7 +172,8 @@ export default {
     CustomGoods,
     CustomHotZone,
     CustomCoupon,
-    CustomCombo
+    CustomCombo,
+    CustomPromotionList
   },
   data() {
     return {
@@ -179,6 +186,7 @@ export default {
       hotZoneType: hotZoneType,
       couponType: couponType,
       comboType: comboType,
+      promotionListType: promotionListType,
       options: [
         {
           type: bannerType,
@@ -199,9 +207,9 @@ export default {
           image: gridImage
         },
         {
-          type: promotionType,
-          name: '促销活动',
-          tipTitle: '促销活动服务模块功能说明',
+          type: promotionListType,
+          name: '促销列表',
+          tipTitle: '促销活动列表服务模块功能说明',
           image: promotionImage
         },
         {
@@ -227,6 +235,12 @@ export default {
           name: '左右组合',
           tipTitle: '左右组合活动模块功能说明',
           image: comboImage
+        },
+        {
+          type: promotionType,
+          name: '单个促销',
+          tipTitle: '促销活动服务模块功能说明',
+          image: promotionImage
         }
       ],
       currentTemplateTipTitle: ''
@@ -239,6 +253,10 @@ export default {
     })
   },
   methods: {
+    templateName(type) {
+      const option = this.options.find(option => option.type === type)
+      return option.name
+    },
     templateImageUrl(type) {
       const option = this.options.find(option => option.type === type)
       return option.image
@@ -277,13 +295,6 @@ export default {
     },
     handleAddTemplateType(type) {
       if (type) {
-        if (type === goodsType) {
-          const hasGoodsType = this.pageTemplateList.find(item => item.type === goodsType)
-          if (hasGoodsType) {
-            this.$message.warning('目前每个页面只支持一个商品模板！')
-            return
-          }
-        }
         const option = this.options.find(o => o.type === type)
         const item = { type: option.type, name: option.name }
         this.initTemplateTypeData(type, item)
@@ -358,6 +369,9 @@ export default {
           break
         case comboType:
           template.data.settings = { ...comboSettings }
+          break
+        case promotionListType:
+          template.data.settings = { ...promotionListSettings }
           break
       }
     },

@@ -1,106 +1,279 @@
 <template>
-  <div class="show-border">
-    <div>
-      <promotion-floor
-        v-for="(_, index) in promotionList"
-        :key="'promotion-' + index"
-        :index="index"
-        @deletePromotion="onDeletePromotion"
-        @sortContent="onContentSort"
-        @changeContent="onContentChanged"
-        @deleteSelection="onDeleteSelection"
+  <div style="width: 100%">
+    <el-container class="show-border">
+      <el-form v-if="showTitle" label-position="right" label-width="160px">
+        <el-form-item label="文字位置">
+          <el-radio-group v-model="titleTextAlign">
+            <el-radio label="left">居左</el-radio>
+            <el-radio label="center">居中</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="标题">
+          <el-input v-model="titleTextValue" />
+        </el-form-item>
+        <el-form-item label="促销活动">
+          <el-button
+            v-if="titleHasPromotionActivity"
+            :disabled="titlePromotionDailySchedule"
+            type="primary"
+            size="small"
+            @click="dialogPromotionVisible = true"
+          >
+            选择促销活动
+          </el-button>
+          <div v-if="titleHasPromotionActivity">
+            <el-switch
+              v-model="titlePromotionDailySchedule"
+              active-text="全天分时段"
+              inactive-text="普通活动"
+            />
+          </div>
+          <div v-if="titleHasPromotionActivity">
+            <span>活动名称：</span>
+            <span v-if="titlePromotionDailySchedule">全天分时段</span>
+            <el-link
+              v-else
+              :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
+              target="_blank"
+              type="primary"
+            >
+              {{ titlePromotionActivityName }}
+            </el-link>
+          </div>
+          <div v-if="titleHasPromotionActivity">
+            <div v-if="titlePromotionDailySchedule">
+              活动时间：当天24小时
+            </div>
+            <div v-else>
+              活动时间： {{ titlePromotionActivityStartDate | dateFilter }}
+              - {{ titlePromotionActivityEndDate | dateFilter }}
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
+          <el-switch v-model="titleHasTextLink" />
+        </el-form-item>
+        <el-form-item
+          v-if="titleTextAlign === 'left' && titleHasTextLink"
+          label="文件链接标题"
+        >
+          <el-input v-model="titleTextLinkValue" />
+        </el-form-item>
+        <el-form-item label="开启活动图片">
+          <el-switch v-model="titleHasImage" />
+        </el-form-item>
+        <el-form-item
+          v-if="titleHasImage"
+          label="活动图片"
+        >
+          <image-upload
+            :image-url="titleImageUrl"
+            path-name="aggregations"
+            image-width="200px"
+            tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
+            @success="handleUploadImageSuccess"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="titleHasLink"
+          label="文字和图片链接地址"
+        >
+          <image-target-link
+            :could-change="titleHasPromotionActivity === false"
+            :target-index="currentTemplateIndex"
+            :target-type="titleTargetType"
+            :target-url="titleTargetUrl"
+            :target-name="titleTargetName"
+            @targetChanges="handleImageTargetChanges"
+          />
+        </el-form-item>
+        <el-form-item label="下边距">
+          <el-select :value="marginBottom" @change="onMarginBottomChanged">
+            <el-option label="0px" value="0" />
+            <el-option label="10px" value="10" />
+            <el-option label="20px" value="20" />
+            <el-option label="30px" value="30" />
+            <el-option label="40px" value="40" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </el-container>
+    <div class="header-container">
+      <div class="header-ops-container">
+        <el-button v-if="titleHasPromotionActivity === false" size="mini" @click="dialogImportVisible = true">
+          导入商品
+        </el-button>
+        <el-button
+          :disabled="titlePromotionDailySchedule || titlePromotionActivityId < 0"
+          type="primary"
+          size="mini"
+          @click="dialogSelectionVisible = true"
+        >
+          添加商品
+        </el-button>
+        <span style="font-size: 14px;margin-left: 10px">
+          <i class="el-icon-warning-outline" />
+          已添加{{ skuData.length }}个商品，最多{{ maxSkuNum }}个
+        </span>
+      </div>
+      <div class="header-ops-container">
+        <span>{{ `已选择${selectedItems.length}件商品` }}</span>
+        <el-button type="text" style="margin-left: 10px" @click="handleDeleteSelection">
+          删除
+        </el-button>
+      </div>
+    </div>
+    <el-table
+      ref="skuTable"
+      :data="skuData"
+      style="width: 100%"
+      max-height="450"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column
+        type="selection"
+        width="55"
       />
-    </div>
-    <div class="header-ops-container">
-      <span style="margin-right: 10px">最多可以添加{{ maxFloorLength }}个</span>
-      <el-button
-        :disabled="promotionList.length >= maxFloorLength || titlePromotionDailySchedule > 0"
-        type="primary"
-        @click="dialogPromotionVisible = true"
-      >
-        添加活动
-      </el-button>
-    </div>
-    <el-form v-if="showTitle" label-position="right" label-width="160px">
-      <el-form-item label="文字位置">
-        <el-radio-group v-model="titleTextAlign">
-          <el-radio label="left">居左</el-radio>
-          <el-radio label="center">居中</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="活动标题">
-        <el-input v-model="titleTextValue" />
-      </el-form-item>
-      <el-form-item label="活动类型">
-        <el-radio-group v-model="titlePromotionDailySchedule" @change="handleChangeType">
-          <el-radio :label="0">普通活动</el-radio>
-          <el-radio :label="1">全天分时段</el-radio>
-        </el-radio-group>
-        <div>
-          <i v-if="titlePromotionDailySchedule > 0" class="el-icon-warning-outline">
-            无需添加促销活动，将根据当天日期自动选择进行中的分时段促销活动。
-          </i>
-          <i v-else class="el-icon-warning-outline">
-            可添加多个促销活动，优先显示进行中的活动，以结束时间为序；未开始的活动，以开始时间为序。
-          </i>
-        </div>
-      </el-form-item>
-      <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
-        <el-switch v-model="titleHasTextLink" />
-        <span style="margin-left: 10px"><i class="el-icon-warning-outline">位于活动标题最右侧</i></span>
-      </el-form-item>
-      <el-form-item
-        v-if="titleTextAlign === 'left' && titleHasTextLink"
-        label="文件链接标题"
-      >
-        <el-input v-model.trim="titleTextLinkValue" maxlength="10" />
-      </el-form-item>
-      <el-form-item label="开启活动图片">
-        <el-switch v-model="titleHasImage" />
-        <span style="margin-left: 10px"><i class="el-icon-warning-outline">位于活动标题下方</i></span>
-      </el-form-item>
-      <el-form-item v-if="titleHasImage" label="活动图片">
-        <image-upload
-          :image-url="titleImageUrl"
-          path-name="aggregations"
-          image-width="200px"
-          tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
-          @success="handleUploadImageSuccess"
-        />
-      </el-form-item>
-      <el-form-item label="下边距">
-        <el-select v-model="marginBottom">
-          <el-option label="0px" value="0" />
-          <el-option label="10px" value="10" />
-          <el-option label="20px" value="20" />
-          <el-option label="30px" value="30" />
-          <el-option label="40px" value="40" />
-        </el-select>
-      </el-form-item>
-    </el-form>
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+            {{ scope.row.skuid }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品名" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.intro || scope.row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品价格(元)" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" width="200">
+        <template slot-scope="scope">
+          <el-tooltip :open-delay="1000" content="上移" placement="top">
+            <el-button
+              :disabled="scope.$index === 0"
+              icon="el-icon-caret-top"
+              type="primary"
+              size="mini"
+              circle
+              @click="handleSortRow(true, scope.$index)"
+            />
+          </el-tooltip>
+          <el-tooltip :open-delay="1000" content="下移" placement="top">
+            <el-button
+              :disabled="scope.$index === skuData.length - 1"
+              icon="el-icon-caret-bottom"
+              type="primary"
+              size="mini"
+              circle
+              @click="handleSortRow(false, scope.$index)"
+            />
+          </el-tooltip>
+          <el-tooltip :open-delay="1000" content="置顶" placement="top">
+            <el-button
+              :disabled="scope.$index === 0"
+              icon="el-icon-top"
+              type="primary"
+              size="mini"
+              circle
+              @click="handleSortTop(scope.$index)"
+            />
+          </el-tooltip>
+          <el-tooltip :open-delay="1000" content="编辑" placement="top">
+            <el-button
+              icon="el-icon-edit"
+              type="info"
+              size="mini"
+              circle
+              @click="handleEditRow(scope.$index)"
+            />
+          </el-tooltip>
+          <el-tooltip :open-delay="1000" content="删除" placement="top">
+            <el-button
+              icon="el-icon-delete"
+              type="danger"
+              size="mini"
+              circle
+              @click="handleDeleteRow(scope.$index)"
+            />
+          </el-tooltip>
+        </template>
+      </el-table-column>
+    </el-table>
+    <goods-selection-dialog
+      :dialog-visible="dialogSelectionVisible"
+      :promotion-id="titlePromotionActivityId"
+      @onSelectionCancelled="onGoodsSelectionCancelled"
+      @onSelectionConfirmed="onGoodsSelectionConfirmed"
+    />
+    <goods-import-dialog
+      :dialog-visible="dialogImportVisible"
+      @onSelectionCancelled="onGoodsImportCancelled"
+      @onSelectionConfirmed="onGoodsImportConfirmed"
+    />
     <promotion-selection
       :dialog-visible="dialogPromotionVisible"
       :app-id="pageAppId"
-      @onSelectionCancelled="dialogPromotionVisible = false"
+      @onSelectionCancelled="onPromotionSelectionCancelled"
       @onSelectionConfirmed="onPromotionSelectionConfirmed"
     />
+    <el-dialog
+      :visible.sync="editDialogVisible"
+      title="修改商品促销名称"
+      center
+    >
+      <el-form label-width="80px">
+        <el-form-item label="商品名">
+          <el-input :value="editGoodName" readonly />
+        </el-form-item>
+        <el-form-item label="促销名">
+          <el-input v-model="editIntro" maxlength="50" clearable />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSetIntro">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from 'moment'
 import { promotionType, promotionSettings } from './templateType'
+import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
+import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import PromotionSelection from './promotionSelection'
-import PromotionFloor from './promotionFloor'
+import ImageTargetLink from './imageTargetLink'
 
 export default {
   name: 'CustomPromotion',
-  components: { ImageUpload, PromotionFloor, PromotionSelection },
+  components: { GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, PromotionSelection, ImageUpload },
+  filters: {
+    dateFilter: date => {
+      const format = 'YYYY-MM-DD HH:mm:ss'
+      const momentDate = moment(date)
+      return momentDate.isValid() ? momentDate.format(format) : ''
+    }
+  },
   data() {
     return {
-      maxFloorLength: 7,
-      dialogPromotionVisible: false
+      maxSkuNum: 20,
+      dialogImportVisible: false,
+      dialogPromotionVisible: false,
+      dialogSelectionVisible: false,
+      selectedItems: [],
+      originalImageProp: null,
+      editDialogVisible: false,
+      editGoodIndex: -1,
+      editGoodName: '',
+      editIntro: ''
     }
   },
   computed: {
@@ -112,6 +285,11 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
+    skuData: {
+      get() {
+        return this.promotionData.list
+      }
+    },
     promotionData: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
@@ -122,8 +300,12 @@ export default {
         }
       }
     },
-    promotionList: function() {
-      return this.promotionData.list
+    titleForm: {
+      get() {
+        return {
+          title: this.promotionData.settings.title
+        }
+      }
     },
     showTitle: {
       get() {
@@ -170,13 +352,99 @@ export default {
         this.changeTitle(title)
       }
     },
-    titlePromotionDailySchedule: {
+    titleHasPromotionActivity: {
       get() {
-        return this.promotionData.settings.title.promotionDailySchedule ? 1 : 0
+        return this.promotionData.settings.title.hasPromotionActivity
       },
       set(newValue) {
-        const newTitle = { promotionDailySchedule: newValue === 1 }
+        const newTitle = { hasPromotionActivity: newValue }
+        if (this.originalImageProp === null) {
+          const hasPromotionActivity =
+            this.promotionData.settings.title.hasPromotionActivity
+              ? this.promotionData.settings.title.hasPromotionActivity : false
+          this.originalImageProp = {
+            hasPromotionActivity: hasPromotionActivity,
+            imageTargetType: this.promotionData.settings.title.targetType,
+            imageTargetName: this.promotionData.settings.title.targetName,
+            imageTargetUrl: this.promotionData.settings.title.targetUrl
+          }
+        }
+        if (newValue) {
+          newTitle.targetType = 'promotion'
+          const promotionId = this.promotionData.settings.title.promotionActivityId
+          if (promotionId >= 0) {
+            newTitle.targetName = this.titlePromotionActivityName
+            newTitle.targetUrl = 'route://promotion/' + promotionId
+          }
+        } else if (newValue === false && this.titleTargetType === 'promotion') {
+          if (this.originalImageProp && this.originalImageProp.hasPromotionActivity === false) {
+            newTitle.targetType = this.originalImageProp.imageTargetType
+            newTitle.targetUrl = this.originalImageProp.imageTargetUrl
+            newTitle.targetName = this.originalImageProp.imageTargetName
+          } else {
+            newTitle.targetType = 'aggregation'
+            newTitle.targetUrl = ''
+            newTitle.targetName = ''
+          }
+        }
         const title = Object.assign({}, this.promotionData.settings.title, newTitle)
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionDailySchedule: {
+      get() {
+        return this.titleHasPromotionActivity ? this.promotionData.settings.title.promotionDailySchedule : false
+      },
+      set(newValue) {
+        const newTitle = { promotionDailySchedule: newValue }
+        if (newValue) {
+          newTitle.promotionActivityId = -1
+          newTitle.promotionActivityName = ''
+          newTitle.promotionActivityStartDate = ''
+          newTitle.promotionActivityEndDate = ''
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
+        }
+        const title = Object.assign({}, this.promotionData.settings.title, newTitle)
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionActivityId: {
+      get() {
+        if (this.titleHasPromotionActivity) {
+          return this.promotionData.settings.title.promotionActivityId
+        } else {
+          return -1
+        }
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityId: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionActivityName: {
+      get() {
+        return this.promotionData.settings.title.promotionActivityName
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityName: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionActivityStartDate: {
+      get() {
+        return this.promotionData.settings.title.promotionActivityStartDate
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityStartDate: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titlePromotionActivityEndDate: {
+      get() {
+        return this.promotionData.settings.title.promotionActivityEndDate
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityEndDate: newValue })
         this.changeTitle(title)
       }
     },
@@ -198,6 +466,38 @@ export default {
         this.changeTitle(title)
       }
     },
+    titleHasLink: {
+      get() {
+        return this.titleHasPromotionActivity ? false : this.titleHasImage || this.titleHasTextLink
+      }
+    },
+    titleTargetType: {
+      get() {
+        return this.promotionData.settings.title.targetType
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { targetType: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titleTargetUrl: {
+      get() {
+        return this.promotionData.settings.title.targetUrl
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { targetUrl: newValue })
+        this.changeTitle(title)
+      }
+    },
+    titleTargetName: {
+      get() {
+        return this.promotionData.settings.title.targetName
+      },
+      set(newValue) {
+        const title = Object.assign({}, this.promotionData.settings.title, { targetName: newValue })
+        this.changeTitle(title)
+      }
+    },
     marginBottom: {
       get() {
         return this.promotionData.settings.marginBottom
@@ -209,6 +509,13 @@ export default {
     }
   },
   methods: {
+    toTimeString(num) {
+      if (num < 10) {
+        return '0' + num.toString()
+      } else {
+        return num.toString()
+      }
+    },
     changeTitle(title) {
       const settings = Object.assign({}, this.promotionData.settings, { title: title })
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
@@ -216,75 +523,132 @@ export default {
     handleUploadImageSuccess(url) {
       this.titleImageUrl = url
     },
-    handleChangeType(value) {
-      if (value === 1 && this.promotionList.length > 0) {
-        this.$confirm('切换到全天分时段活动，将会清空已添加的活动，是否继续？', '警告', {
+    handleSelectionChange(val) {
+      if (val.length > 0) {
+        this.selectedItems = val.map(item => {
+          if ('mpu' in item) {
+            return this.skuData.findIndex(sku => sku.mpu === item.mpu)
+          } else {
+            return this.skuData.findIndex(sku => sku.skuid === item.skuid)
+          }
+        })
+      } else {
+        this.selectedItems = []
+      }
+    },
+    async handleDeleteSelection() {
+      if (this.selectedItems.length > 0) {
+        try {
+          await this.$confirm('是否要删除所选商品？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          const skus = this.skuData.filter((good, index) => !this.selectedItems.includes(index))
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
+          this.$refs.skuTable.clearSelection()
+        } catch (e) {
+          console.warn('Aggregation delete promotion selection error: ' + e)
+        }
+      }
+    },
+    async handleDeleteRow(index) {
+      try {
+        await this.$confirm('是否要删除此商品？', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        }).then(() => {
-          this.$store.commit('aggregations/CLEAR_ITEMS_IN_CONTENT')
-        }).catch(() => {
-          this.titlePromotionDailySchedule = 0
+        })
+        this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+      } catch (e) {
+        console.warn('Aggregation delete promotion good error: ' + e)
+      }
+    },
+    handleSortRow(up, index) {
+      if ((up && index > 0) || (!up && index < (this.skuData.length - 1))) {
+        this.$store.commit('aggregations/SORT_ITEM_IN_CONTENT', { up: up, index: index })
+      }
+    },
+    handleSortTop(index) {
+      if (index > 0) {
+        this.$store.commit('aggregations/SORT_ITEM_IN_CONTENT', { up: true, index: index, distance: index })
+      }
+    },
+    handleEditRow(index) {
+      this.editGoodIndex = index
+      this.editGoodName = this.skuData[index].name
+      this.editIntro = this.skuData[index].intro
+      this.editDialogVisible = true
+    },
+    handleSetIntro() {
+      this.editDialogVisible = false
+      if (this.editGoodIndex >= 0 &&
+        this.editIntro !== this.skuData[this.editGoodIndex].intro) {
+        this.$store.commit('aggregations/SET_PROMOTION_LIST_CONTENT', {
+          index: this.editGoodIndex,
+          intro: this.editIntro
         })
       }
+      this.editGoodIndex = -1
+      this.editGoodName = ''
+      this.editIntro = ''
+    },
+    addPromotionSkus(skus) {
+      const filteredSkus = skus.filter(sku => this.skuData.findIndex(item => item.mpu === sku.mpu) < 0)
+      if (filteredSkus.length > 0) {
+        if (this.skuData.length + filteredSkus.length <= this.maxSkuNum) {
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', this.skuData.concat(filteredSkus))
+        } else {
+          this.$message.warning(`活动商品最多添加${this.maxSkuNum}个，请仔细选择商品！`)
+        }
+      }
+    },
+    onGoodsSelectionConfirmed(skus) {
+      this.dialogSelectionVisible = false
+      this.addPromotionSkus(skus)
+    },
+    onGoodsSelectionCancelled() {
+      this.dialogSelectionVisible = false
+    },
+    handleImageTargetChanges(target) {
+      if (this.titleHasPromotionActivity) {
+        return
+      }
+      if ('type' in target) {
+        this.titleTargetType = target.type
+      }
+      if ('name' in target) {
+        this.titleTargetName = target.name
+      }
+      if ('url' in target) {
+        this.titleTargetUrl = target.url
+      }
+    },
+    onGoodsImportConfirmed(skus) {
+      this.dialogImportVisible = false
+      this.addPromotionSkus(skus)
+    },
+    onGoodsImportCancelled() {
+      this.dialogImportVisible = false
     },
     onPromotionSelectionConfirmed(promotion) {
       this.dialogPromotionVisible = false
-      const index = this.promotionList.findIndex(item => item.promotionId === promotion.id)
-      if (index < 0) {
-        const params = {
-          promotionId: promotion.id,
-          promotionName: promotion.name,
-          startDate: promotion.startDate,
-          endDate: promotion.endDate,
-          skus: []
-        }
-        this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index: -1, value: params })
-      } else {
-        this.$message.warning('此促销活动已添加！')
+      if (this.titlePromotionActivityId !== promotion.id) {
+        this.titlePromotionActivityId = promotion.id
+        this.titlePromotionActivityName = promotion.name
+        this.titlePromotionActivityStartDate = promotion.startDate
+        this.titlePromotionActivityEndDate = promotion.endDate
+        this.titleTargetType = 'promotion'
+        this.titleTargetUrl = 'route://promotion/' + promotion.id
+        this.titleTargetName = promotion.name
+        this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
       }
     },
-    onDeletePromotion(index) {
-      this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
+    onPromotionSelectionCancelled() {
+      this.dialogPromotionVisible = false
     },
-    onContentChanged(index, skus) {
-      const promotion = this.promotionList[index]
-      const params = {
-        promotionId: promotion.promotionId,
-        promotionName: promotion.promotionName,
-        startDate: promotion.startDate,
-        endDate: promotion.endDate,
-        skus: skus
-      }
-      this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index, value: params })
-    },
-    onContentSort(index, params) {
-      const skuIndex = params.index
-      const promotion = this.promotionList[index]
-      const selected = promotion.skus[skuIndex]
-      const up = params.up
-      const value = {
-        promotionId: promotion.promotionId,
-        promotionName: promotion.promotionName,
-        startDate: promotion.startDate,
-        endDate: promotion.endDate
-      }
-      value.skus = promotion.skus.filter(sku => sku.mpu !== selected.mpu)
-      const newSkuIndex = up ? (skuIndex - params.distance) : (skuIndex + params.distance)
-      value.skus.splice(newSkuIndex, 0, selected)
-      this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index, value })
-    },
-    onDeleteSelection(index, selection) {
-      const promotion = this.promotionList[index]
-      const value = {
-        promotionId: promotion.promotionId,
-        promotionName: promotion.promotionName,
-        startDate: promotion.startDate,
-        endDate: promotion.endDate
-      }
-      value.skus = promotion.skus.filter(sku => !selection.includes(sku.mpu))
-      this.$store.commit('aggregations/SET_LIST_IN_CONTENT', { index, value })
+    onMarginBottomChanged(value) {
+      this.marginBottom = value
     }
   }
 }
@@ -295,11 +659,14 @@ export default {
     border: 1px solid #eee;
   }
 
-  .header-ops-container {
-    padding-right: 20px;
-    width: 100%;
+  .header-container {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    margin: 10px 20px;
+  }
+
+  .header-ops-container {
+    display: flex;
     align-items: center;
   }
 </style>

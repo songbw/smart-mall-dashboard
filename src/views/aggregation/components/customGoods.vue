@@ -50,6 +50,9 @@
       </el-form-item>
       <el-form-item label="开启导航">
         <el-switch v-model="hasTabBar" />
+        <span style="margin-left: 10px">
+          <i class="el-icon-warning-outline">每页只能有个一个商品组件可以开启导航功能</i>
+        </span>
       </el-form-item>
       <el-form-item v-if="hasTabBar" label="导航底色">
         <el-color-picker v-model="tabBarBackgroundColor" />
@@ -151,8 +154,14 @@ export default {
         return this.goodsInfo.settings.hasTabBar
       },
       set(newValue) {
-        const settings = Object.assign({}, this.goodsInfo.settings, { hasTabBar: newValue })
-        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+        const goodList = this.pageTemplateList.filter(item => item.type === goodsType)
+        const hasSet = goodList.filter(item => item.data.settings.hasTabBar).length > 0
+        if (hasSet && newValue) {
+          this.$message.warning('已有商品模板开启导航功能，请先关闭对应的模板')
+        } else {
+          const settings = Object.assign({}, this.goodsInfo.settings, { hasTabBar: newValue })
+          this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+        }
       }
     },
     tabBarBackgroundColor: {

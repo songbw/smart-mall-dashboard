@@ -10,8 +10,6 @@ import {
 } from '@/api/aggregations'
 import moment from 'moment'
 
-import { aggregationTypes } from '@/utils/constants'
-
 const templateKeys = [
   'id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId', 'appId'
 ]
@@ -59,8 +57,8 @@ const mutations = {
         state.aggregation[key] = params[key]
       }
     })
-    if ('content' in params && params.content !== null) {
-      state.aggregation.content = params.content.filter(item => aggregationTypes.includes(item.type))
+    if ('content' in params && Array.isArray(params.content)) {
+      state.aggregation.content = params.content
       if (params.content.length > 0) {
         state.aggregationTemplateIndex = 0
       }

@@ -1,22 +1,12 @@
-import {
-  aggregationBannerType,
-  aggregationServiceType,
-  aggregationGridType,
-  aggregationGoodsType,
-  aggregationCouponType,
-  aggregationHotZoneType,
-  aggregationComboType,
-  aggregationPromotionType
-} from '@/utils/constants'
-
-export const bannerType = aggregationBannerType
-export const serviceType = aggregationServiceType
-export const gridType = aggregationGridType
-export const goodsType = aggregationGoodsType
-export const couponType = aggregationCouponType
-export const hotZoneType = aggregationHotZoneType
-export const comboType = aggregationComboType
-export const promotionType = aggregationPromotionType
+export const bannerType = '0'
+export const serviceType = '1'
+export const gridType = '2'
+export const promotionType = '3'
+export const goodsType = '4'
+export const couponType = '6'
+export const hotZoneType = '7'
+export const comboType = '8'
+export const promotionListType = '9'
 
 export const good_prop_image = 'image'
 export const good_prop_tile = 'title'
@@ -85,9 +75,17 @@ export const promotionSettings = {
     textValue: '',
     hasTextLink: false,
     textLinkValue: '',
+    hasPromotionActivity: true,
     promotionDailySchedule: false,
+    promotionActivityId: -1,
+    promotionActivityName: '',
+    promotionActivityStartDate: '',
+    promotionActivityEndDate: '',
     hasImage: false,
-    imageUrl: ''
+    imageUrl: '',
+    targetType: '',
+    targetUrl: '',
+    targetName: ''
   },
   marginBottom: '0'
 }
@@ -158,4 +156,18 @@ export const comboSettings = {
   },
   countPerLine: 2,
   marginBottom: 0
+}
+
+export const promotionListSettings = {
+  title: {
+    show: true,
+    textAlign: 'left',
+    textValue: '',
+    hasTextLink: false,
+    textLinkValue: '',
+    promotionDailySchedule: false,
+    hasImage: false,
+    imageUrl: ''
+  },
+  marginBottom: '0'
 }
