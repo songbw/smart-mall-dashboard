@@ -364,6 +364,7 @@ import {
 } from '@/api/freight'
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
+import { max_upload_image_size } from '@/utils/constants'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -981,7 +982,7 @@ export default {
       }
       const mimeTypes = ['image/png', 'image/jpeg', 'image/jpg']
       const validFiles = files.filter(
-        rawFile => rawFile && rawFile.size < 1024 * 1024 && mimeTypes.includes(rawFile.type)
+        rawFile => rawFile && rawFile.size < max_upload_image_size && mimeTypes.includes(rawFile.type)
       )
       if (validFiles.length === 0) {
         this.$message.warning('上传的图片大小不超过1M，图片格式支持PNG或JPEG，请重新上传！')
@@ -1056,7 +1057,7 @@ export default {
       }
       const mimeTypes = ['image/png', 'image/jpeg', 'image/jpg']
       const validFiles = files.filter(
-        rawFile => rawFile && rawFile.size < 1024 * 1024 && mimeTypes.includes(rawFile.type)
+        rawFile => rawFile && rawFile.size < max_upload_image_size && mimeTypes.includes(rawFile.type)
       )
       if (validFiles.length === 0) {
         this.$message.warning('上传的图片大小不超过1M，图片格式支持PNG或JPEG，请重新上传！')
@@ -1093,16 +1094,17 @@ export default {
         } else {
           const index = parseInt(options.Index)
           if (!isNaN(index)) {
-            this.uploadedFiles[index] = '/' + options.Key
+            this.uploadedFiles.push({ index, url: '/' + options.Key })
           } else {
             this.failedFiles.push(options)
           }
         }
         if (this.uploadedFiles.length + this.failedFiles.length === this.toUploadFiles.length) {
-          for (const url of this.uploadedFiles) {
-            if (!this.introductions.includes(url)) {
-              this.introductions.push(url)
-              this.introductionUrls.push(this.$store.getters.cosUrl + url)
+          const sortedList = sortBy(this.uploadedFiles, ['index'])
+          for (const item of sortedList) {
+            if (!this.introductions.includes(item.url)) {
+              this.introductions.push(item.url)
+              this.introductionUrls.push(this.$store.getters.cosUrl + item.url)
             }
           }
           this.uploadedFiles = []
@@ -1111,11 +1113,12 @@ export default {
           this.uploading = false
         }
       } else {
-        if (err) {
-          return
-        }
         this.loading = false
         this.uploading = false
+        if (err) {
+          this.$message.error('上传图片文件失败，请联系管理员！')
+          return
+        }
         let index = 0
         const url = '/' + options.Key
         switch (this.newIntroductionType) {

@@ -8,7 +8,7 @@ const state = {
     opened: true
   },
   ready: false,
-  cosUrl: `https://iwallet-1258175138.file.myqcloud.com`
+  cosUrl: `https://iwallet-1258175138.image.myqcloud.com`
 }
 
 const mutations = {
