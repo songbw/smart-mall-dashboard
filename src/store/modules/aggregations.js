@@ -1,3 +1,4 @@
+import moment from 'moment'
 import {
   createAggregationApi,
   getAggregationByIdApi,
@@ -8,7 +9,191 @@ import {
   updateAggregationGroupApi,
   deleteAggregationGroupApi
 } from '@/api/aggregations'
-import moment from 'moment'
+import {
+  aggregationBannerType,
+  aggregationServiceType,
+  aggregationGridType,
+  aggregationPromotionType,
+  aggregationGoodsType,
+  aggregationCouponType,
+  aggregationHotZoneType,
+  aggregationComboType,
+  aggregationPromotionListType
+} from '@/utils/constants'
+
+// corresponding to appId types
+const urlTypes = ['aggregation', 'promotion']
+
+const reviseList = (list, type) => {
+  switch (type) {
+    case aggregationBannerType:
+    case aggregationServiceType:
+      return list.map(item => {
+        if (urlTypes.includes(item.targetType)) {
+          return {
+            name: item.name,
+            imageUrl: item.imageUrl,
+            targetType: 'blank',
+            targetUrl: 'about:blank',
+            targetName: '无链接'
+          }
+        } else {
+          return { ...item }
+        }
+      })
+    case aggregationGridType:
+      return list.map(item => {
+        const grids = item.grids.map(grid => {
+          if (urlTypes.includes(grid.targetType)) {
+            return {
+              imageUrl: grid.imageUrl,
+              targetType: 'blank',
+              targetUrl: 'about:blank',
+              targetName: '无链接'
+            }
+          } else {
+            return { ...grid }
+          }
+        })
+        return { grids, count: item.count, targetType: item.targetType }
+      })
+    case aggregationGoodsType:
+      return list
+    case aggregationHotZoneType:
+      return list.map(item => {
+        if (urlTypes.includes(item.targetType)) {
+          return {
+            area: item.area,
+            targetType: 'blank',
+            targetUrl: 'about:blank',
+            targetName: '无链接'
+          }
+        } else {
+          return { ...item }
+        }
+      })
+    case aggregationCouponType:
+    case aggregationComboType:
+    case aggregationPromotionType:
+    case aggregationPromotionListType:
+      return []
+    default:
+      return list
+  }
+}
+const reviseSettings = (settings, type) => {
+  switch (type) {
+    case aggregationBannerType:
+    case aggregationServiceType:
+    case aggregationGoodsType:
+    case aggregationHotZoneType:
+    case aggregationPromotionListType:
+      return settings
+    case aggregationGridType:
+      if (urlTypes.includes(settings.title.text.linkType)) {
+        const { title, marginBottom } = settings
+        const { text, ...rest } = title
+        return {
+          title: {
+            text: {
+              align: text.align,
+              value: text.value,
+              hasLink: text.hasLink,
+              linkType: 'blank',
+              linkTitle: '无链接',
+              linkUrl: 'about:blank'
+            },
+            ...rest
+          },
+          marginBottom
+        }
+      } else {
+        return settings
+      }
+    case aggregationPromotionType:
+      return {
+        title: {
+          show: settings.title.show,
+          textAlign: settings.title.textAlign,
+          textValue: settings.title.textValue,
+          hasTextLink: settings.title.hasTextLink,
+          textLinkValue: settings.title.textLinkValue,
+          hasPromotionActivity: true,
+          promotionDailySchedule: settings.title.promotionDailySchedule,
+          promotionActivityId: -1,
+          promotionActivityName: '',
+          promotionActivityStartDate: '',
+          promotionActivityEndDate: '',
+          hasImage: false,
+          imageUrl: settings.title.imageUrl,
+          targetType: 'blank',
+          targetUrl: 'about:blank',
+          targetName: '无链接'
+        },
+        marginBottom: settings.marginBottom
+      }
+    case aggregationCouponType:
+      return {
+        title: {
+          show: settings.title.show,
+          imageUrl: settings.title.imageUrl,
+          targetType: 'blank',
+          targetUrl: 'about:blank',
+          targetName: '无链接'
+        },
+        marginBottom: settings.marginBottom
+      }
+    case aggregationComboType:
+      return {
+        left: {
+          textValue: settings.left.textValue,
+          hasPromotionActivity: settings.left.hasPromotionActivity,
+          promotionDailySchedule: settings.left.promotionDailySchedule,
+          promotionActivityId: -1,
+          promotionActivityName: '',
+          promotionActivityStartDate: '',
+          promotionActivityEndDate: '',
+          hasImage: settings.left.hasImage,
+          imageUrl: settings.left.imageUrl,
+          targetType: 'blank',
+          targetUrl: 'about:blank',
+          targetName: '无链接'
+        },
+        right: {
+          textValue: settings.right.textValue,
+          hasPromotionActivity: settings.right.hasPromotionActivity,
+          promotionDailySchedule: settings.right.promotionDailySchedule,
+          promotionActivityId: -1,
+          promotionActivityName: '',
+          promotionActivityStartDate: '',
+          promotionActivityEndDate: '',
+          hasImage: settings.right.hasImage,
+          imageUrl: settings.right.imageUrl,
+          targetType: 'blank',
+          targetUrl: 'about:blank',
+          targetName: '无链接'
+        },
+        countPerLine: settings.countPerLine,
+        marginBottom: settings.marginBottom
+      }
+    default:
+      return settings
+  }
+}
+
+const reviseTemplate = (srcAppId, dstAppId, template) => {
+  if (srcAppId === dstAppId) {
+    return template
+  } else {
+    const { data, ...rest } = template
+    const list = reviseList(data.list, template.type)
+    const settings = reviseSettings(data.settings, template.type)
+    return {
+      data: { list, settings },
+      ...rest
+    }
+  }
+}
 
 const templateKeys = [
   'id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId', 'appId'
@@ -251,9 +436,10 @@ const actions = {
       const cloneRes = await createAggregationApi(clonePage)
       if (cloneRes.code === 200) {
         const cloneId = cloneRes.data.aggregationId
+        const content = JSON.parse(data.result.content)
         await updateAggregationContentApi({
           id: cloneId,
-          content: data.result.content
+          content: JSON.stringify(content.map(item => reviseTemplate(data.result.appId, params.appId, item)))
         })
         return cloneId
       }

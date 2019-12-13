@@ -349,8 +349,7 @@ export default {
           template.data.settings.marginBottom = '0'
           break
         case gridType:
-          template.data.settings.title = { ...gridSettings }
-          template.data.settings.marginBottom = '0'
+          template.data.settings = { ...gridSettings }
           break
         case goodsType:
           template.data.settings = { ...goodsSettings }

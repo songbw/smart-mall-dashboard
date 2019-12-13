@@ -10,7 +10,8 @@ const queryTemplate = {
   completeDateStart: null,
   completeDateEnd: null,
   subStatus: -1,
-  merchantId: -1
+  merchantId: -1,
+  appId: 'all'
 }
 const state = {
   search: {

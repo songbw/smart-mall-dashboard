@@ -1,19 +1,27 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="queryAppId" type="card" @tab-click="onAppIdChanged">
+      <el-tab-pane
+        v-for="item in appIdOptions"
+        :key="item.appId"
+        :label="item.name"
+        :name="item.appId"
+      />
+    </el-tabs>
     <el-form :inline="true">
       <el-form-item label="主订单号">
-        <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" />
+        <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" maxlength="50" />
       </el-form-item>
       <el-form-item label="子订单号">
-        <el-input v-model="querySubOrderId" :clearable="true" placeholder="输入子订单编号" />
+        <el-input v-model="querySubOrderId" :clearable="true" placeholder="输入子订单编号" maxlength="50" />
       </el-form-item>
       <el-form-item label="苏宁单号">
-        <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" />
+        <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" maxlength="50" />
       </el-form-item>
     </el-form>
     <el-form :inline="true">
-      <el-form-item label="电话号码">
-        <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" />
+      <el-form-item label="收货人电话">
+        <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" maxlength="20" />
       </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="querySubStatus" @change="onQueryStatusChanged">
@@ -388,6 +396,7 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
+      platformAppList: 'platformAppList',
       orderQuery: 'orderQuery',
       vendorId: 'vendorId'
     }),
@@ -408,6 +417,17 @@ export default {
     },
     vendorOptions() {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
+    },
+    appIdOptions() {
+      return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+    },
+    queryAppId: {
+      get() {
+        return this.orderQuery.appId
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { appId: value })
+      }
     },
     queryAoyiId: {
       get() {
@@ -507,7 +527,7 @@ export default {
     }
   },
   created() {
-    this.getOrderList()
+    this.prepareData()
   },
   beforeRouteLeave(to, from, next) {
     const toGroup = to.meta.group || ''
@@ -517,6 +537,22 @@ export default {
     next()
   },
   methods: {
+    async prepareData() {
+      this.listLoading = true
+      await this.getAppPlatformList()
+      await this.getVendorList()
+      await this.getOrderList()
+      this.listLoading = false
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+      } catch (e) {
+        console.warn('Order get app list error:' + e)
+      }
+    },
     async getVendorList() {
       try {
         const params = {
@@ -563,6 +599,9 @@ export default {
       if (this.queryVendor >= 0) {
         params.merchantId = this.queryVendor
       }
+      if (this.queryAppId !== 'all') {
+        params.appId = this.queryAppId
+      }
       if (!isEqual(this.queryParams, params)) {
         this.queryParams = { ...params }
         this.queryOffset = 1
@@ -585,9 +624,6 @@ export default {
       if (this.hasViewPermission) {
         try {
           if (this.vendorApproved) {
-            if (this.vendors.length === 0) {
-              await this.getVendorList()
-            }
             this.listLoading = true
             const params = this.getSearchParams()
             const { code, data } = await getOrderListApi(params)
@@ -794,6 +830,12 @@ export default {
           }
         }
       })
+    },
+    onAppIdChanged(platform) {
+      if (this.queryAppId !== platform.appId) {
+        this.queryOffset = 1
+        this.getOrderList()
+      }
     }
   }
 }

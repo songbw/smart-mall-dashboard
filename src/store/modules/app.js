@@ -4,6 +4,8 @@ import { storage_platform_id } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
 import { getAppPlatformListApi } from '@/api/products'
 
+const invalidAppIdList = ['09', '10']
+
 const state = {
   sidebar: {
     opened: true
@@ -29,7 +31,7 @@ const mutations = {
     state.cosUrl = url
   },
   SET_PLATFORM_LIST: (state, list) => {
-    state.platformList = list
+    state.platformList = list.filter(item => !invalidAppIdList.includes(item.appId))
   },
   SET_PLATFORM_ID: (state, platformId) => {
     state.platformId = platformId

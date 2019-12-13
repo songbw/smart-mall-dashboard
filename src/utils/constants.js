@@ -225,3 +225,13 @@ export const WorkOrderStatusDefinition = [{
   value: 7,
   label: '退款中'
 }]
+
+export const aggregationBannerType = '0'
+export const aggregationServiceType = '1'
+export const aggregationGridType = '2'
+export const aggregationPromotionType = '3'
+export const aggregationGoodsType = '4'
+export const aggregationCouponType = '6'
+export const aggregationHotZoneType = '7'
+export const aggregationComboType = '8'
+export const aggregationPromotionListType = '9'

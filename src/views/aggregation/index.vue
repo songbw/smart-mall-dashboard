@@ -639,6 +639,7 @@ export default {
     },
     onGroupChanged(group) {
       if (this.queryGroupId !== group.name) {
+        this.queryOffset = 1
         this.getListData()
       }
     },

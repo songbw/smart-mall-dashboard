@@ -1,7 +1,15 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="orderQuery.appId" type="card" @tab-click="onAppIdChanged">
+      <el-tab-pane
+        v-for="item in appIdOptions"
+        :key="item.appId"
+        :label="item.name"
+        :name="item.appId"
+      />
+    </el-tabs>
     <el-form :inline="true">
-      <el-form-item label="电话号码">
+      <el-form-item label="收货人电话">
         <el-input v-model="orderQuery.mobile" :clearable="true" placeholder="输入收货人电话号码" />
       </el-form-item>
       <el-form-item label="订单状态">
@@ -196,6 +204,7 @@ export default {
       listLoading: false,
       queryParams: null,
       orderQuery: {
+        appId: 'all',
         mobile: '',
         subStatus: 1,
         payDateStart: null,
@@ -237,7 +246,8 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      vendorApproved: 'vendorApproved'
+      vendorApproved: 'vendorApproved',
+      platformAppList: 'platformAppList'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(OrderPermissions.view)
@@ -251,6 +261,9 @@ export default {
     },
     vendorOptions() {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendorList)
+    },
+    appIdOptions() {
+      return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
     }
   },
   created() {
@@ -258,8 +271,20 @@ export default {
   },
   methods: {
     async prepareData() {
+      this.listLoading = true
+      await this.getAppPlatformList()
       await this.getVendorList()
       await this.getOrderList()
+      this.listLoading = false
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+      } catch (e) {
+        console.warn('Deliver get app list error:' + e)
+      }
     },
     async getVendorList() {
       try {
@@ -302,6 +327,9 @@ export default {
           params[key] = this.orderQuery[key]
         }
       })
+      if (this.orderQuery.appId !== 'all') {
+        params.appid = this.orderQuery.appId
+      }
       if (!isEqual(this.queryParams, params)) {
         this.queryParams = { ...params }
         this.orderQuery.pageIndex = 1
@@ -368,6 +396,11 @@ export default {
     onImportFinished() {
       this.importDialogVisible = false
       this.getOrderList()
+    },
+    onAppIdChanged(platform) {
+      if (this.orderQuery.appId !== platform.appId) {
+        this.getOrderList()
+      }
     }
   }
 }
