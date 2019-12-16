@@ -31,8 +31,8 @@
         path-name="aggregations"
         button-size="mini"
         image-width="200px"
-        tip="如果未上传，将以第一张主图作为封面图。"
-        button-name="修改封面图"
+        tip="如果上传，将不显示楼层标题！"
+        button-name="选择楼层标题图"
         @success="handleUploadImageSuccess"
       />
       <el-button
@@ -43,7 +43,7 @@
         size="mini"
         @click="handleRemoveImage"
       >
-        删除封面图
+        删除楼层标题图
       </el-button>
     </div>
     <div class="header-container">
@@ -70,6 +70,12 @@
           <el-button size="mini" @click="handleExportGoods">
             导出商品
           </el-button>
+          <el-form :inline="true">
+            <el-form-item label="楼层标题字体颜色">
+              <el-color-picker v-model="skuBackgroundColor" />
+              <span>{{ skuBackgroundColor }}</span>
+            </el-form-item>
+          </el-form>
         </div>
         <div class="header-ops-container">
           <span>{{ `已选择${selectedItems.length}件商品` }}</span>
@@ -262,6 +268,14 @@ export default {
     titleImageUrl: {
       get() {
         return this.floorInfo.titleImageUrl
+      }
+    },
+    skuBackgroundColor: {
+      get() {
+        return this.floorInfo.skuBackgroundColor
+      },
+      set(value) {
+        this.$emit('skuColorChanged', this.index, value)
       }
     },
     skuData: {

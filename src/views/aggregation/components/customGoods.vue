@@ -10,6 +10,7 @@
         @deleteFloor="onDeleteGoodsFloor"
         @titleChanged="onGoodsFloorTitleChanged"
         @titleImageChanged="onGoodsFloorTitleImageChanged"
+        @skuColorChanged="onGoodsFloorSkuColorChanged"
         @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
         @changeContent="onGoodsFloorContentChanged"
@@ -221,6 +222,7 @@ export default {
       const floor = {
         title: '楼层 ' + index,
         titleImageUrl: null,
+        skuBackgroundColor: '#F8F8F8',
         skus: []
       }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: -1, value: floor })
@@ -239,6 +241,10 @@ export default {
     },
     onGoodsFloorTitleImageChanged(floorIndex, url) {
       const floor = { titleImageUrl: url }
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onGoodsFloorSkuColorChanged(floorIndex, color) {
+      const floor = { skuBackgroundColor: color }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentAdded(floorIndex, skus) {

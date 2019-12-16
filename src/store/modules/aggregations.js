@@ -318,6 +318,9 @@ const mutations = {
       if ('titleImageUrl' in params.value) {
         template.data.list[index].titleImageUrl = params.value.titleImageUrl
       }
+      if ('skuBackgroundColor' in params.value) {
+        template.data.list[index].skuBackgroundColor = params.value.skuBackgroundColor
+      }
       if ('skus' in params.value) {
         template.data.list[index].skus = params.value.skus
       }

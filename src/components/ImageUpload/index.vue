@@ -18,6 +18,9 @@
       >
         {{ buttonName }}
       </el-button>
+      <span v-if="tip && tip.length > 0" style="margin-left: 10px;font-size: 12px">
+        <i class="el-icon-warning-outline">{{ tip }}</i>
+      </span>
     </div>
     <el-progress
       v-if="uploadingImage"
