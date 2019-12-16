@@ -49,7 +49,7 @@ module.exports = {
           {
             name: 'vue',
             var: 'Vue',
-            version: '2.6.10',
+            version: '2.6.11',
             path: 'dist/vue.min.js'
           },
           {
