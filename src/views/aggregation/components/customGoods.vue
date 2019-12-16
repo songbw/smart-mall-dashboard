@@ -9,6 +9,7 @@
         @sortFloor="onSortGoodsFloor"
         @deleteFloor="onDeleteGoodsFloor"
         @titleChanged="onGoodsFloorTitleChanged"
+        @titleImageChanged="onGoodsFloorTitleImageChanged"
         @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
         @changeContent="onGoodsFloorContentChanged"
@@ -21,7 +22,7 @@
         添加楼层
       </el-button>
     </div>
-    <el-form label-width="180px" label-position="right">
+    <el-form label-width="12rem" label-position="right">
       <el-form-item label="列表样式">
         <el-radio-group v-model="countPerLine">
           <el-radio label="1">1行1个</el-radio>
@@ -35,6 +36,10 @@
             {{ option.label }}
           </el-checkbox>
         </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="楼层标题字体颜色">
+        <el-color-picker v-model="floorTitleTextColor" />
+        <span>{{ floorTitleTextColor }}</span>
       </el-form-item>
       <el-form-item label="楼层标题底色">
         <el-color-picker v-model="floorTitleColor" />
@@ -122,6 +127,15 @@ export default {
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     },
+    floorTitleTextColor: {
+      get() {
+        return this.goodsInfo.settings.floorTitleTextColor
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.goodsInfo.settings, { floorTitleTextColor: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
     floorTitleColor: {
       get() {
         return this.goodsInfo.settings.floorTitleColor
@@ -206,6 +220,7 @@ export default {
       const index = this.goodsInfo.list.length + 1
       const floor = {
         title: '楼层 ' + index,
+        titleImageUrl: null,
         skus: []
       }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: -1, value: floor })
@@ -220,6 +235,10 @@ export default {
     },
     onGoodsFloorTitleChanged(floorIndex, title) {
       const floor = { title: title }
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onGoodsFloorTitleImageChanged(floorIndex, url) {
+      const floor = { titleImageUrl: url }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentAdded(floorIndex, skus) {

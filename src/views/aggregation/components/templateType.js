@@ -107,7 +107,8 @@ export const promotionSettings = {
 
 export const goodsSettings = {
   countPerLine: 2,
-  floorTitleColor: '#000000',
+  floorTitleTextColor: '#000000',
+  floorTitleColor: '#FFFFFF',
   priceBackgroundColor: '#ECE8DE',
   priceTextColor: '#6E0F00',
   hasTabBar: false,

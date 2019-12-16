@@ -25,6 +25,27 @@
         </el-tooltip>
       </div>
     </div>
+    <div v-if="!hasTabBar" style="margin: 10px 20px;">
+      <image-upload
+        :image-url="titleImageUrl"
+        path-name="aggregations"
+        button-size="mini"
+        image-width="200px"
+        tip="如果未上传，将以第一张主图作为封面图。"
+        button-name="修改封面图"
+        @success="handleUploadImageSuccess"
+      />
+      <el-button
+        :disabled="titleImageUrl === null"
+        type="danger"
+        icon="el-icon-delete"
+        style="margin-top: 10px"
+        size="mini"
+        @click="handleRemoveImage"
+      >
+        删除封面图
+      </el-button>
+    </div>
     <div class="header-container">
       <div class="header-ops-container">
         <el-button
@@ -171,11 +192,12 @@
 import { mapGetters } from 'vuex'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
+import ImageUpload from '@/components/ImageUpload'
 import { goodsType } from './templateType'
 
 export default {
   name: 'GoodsFloor',
-  components: { GoodsSelectionDialog, GoodsImportDialog },
+  components: { GoodsSelectionDialog, GoodsImportDialog, ImageUpload },
   props: {
     title: {
       type: String,
@@ -237,9 +259,19 @@ export default {
         return this.goodsList[this.index]
       }
     },
+    titleImageUrl: {
+      get() {
+        return this.floorInfo.titleImageUrl
+      }
+    },
     skuData: {
       get() {
         return this.floorInfo.skus
+      }
+    },
+    hasTabBar: {
+      get() {
+        return this.goodsInfo.settings.hasTabBar
       }
     },
     collapseLabel: {
@@ -273,6 +305,12 @@ export default {
       if (this.floorTitle.length > 0 && this.floorTitle !== this.floorInfo.title) {
         this.$emit('titleChanged', this.index, this.floorTitle)
       }
+    },
+    handleUploadImageSuccess(url) {
+      this.$emit('titleImageChanged', this.index, url)
+    },
+    handleRemoveImage() {
+      this.$emit('titleImageChanged', this.index, null)
     },
     handleSelectionChange(val) {
       if (val.length > 0) {

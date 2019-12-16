@@ -315,6 +315,9 @@ const mutations = {
       if ('title' in params.value) {
         template.data.list[index].title = params.value.title
       }
+      if ('titleImageUrl' in params.value) {
+        template.data.list[index].titleImageUrl = params.value.titleImageUrl
+      }
       if ('skus' in params.value) {
         template.data.list[index].skus = params.value.skus
       }
