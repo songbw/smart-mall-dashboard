@@ -328,7 +328,7 @@ export default {
         }
       })
       if (this.orderQuery.appId !== 'all') {
-        params.appid = this.orderQuery.appId
+        params.appId = this.orderQuery.appId
       }
       if (!isEqual(this.queryParams, params)) {
         this.queryParams = { ...params }
