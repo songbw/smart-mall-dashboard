@@ -243,7 +243,21 @@ const mutations = {
       }
     })
     if ('content' in params && Array.isArray(params.content)) {
-      state.aggregation.content = params.content
+      state.aggregation.content = params.content.map(item => {
+        if (item.type === aggregationGoodsType) {
+          const { data, ...rest } = item
+          const { list, settings } = data
+          const newList = list.map(floor => ({
+            title: floor.title,
+            titleImageUrl: 'titleImageUrl' in floor ? floor.titleImageUrl : null,
+            skuBackgroundColor: 'skuBackgroundColor' in floor ? floor.skuBackgroundColor : null,
+            skus: floor.skus
+          }))
+          return { data: { list: newList, settings }, ...rest }
+        } else {
+          return item
+        }
+      })
       if (params.content.length > 0) {
         state.aggregationTemplateIndex = 0
       }

@@ -91,16 +91,24 @@ export default {
     },
     async handlePromotionCreated() {
       if (this.conflictedMpus.length > 0) {
-        const params = {
-          mpuIdList: this.conflictedMpus.join(',')
-        }
         try {
           this.dataLoading = true
-          const response = await getProductsByIdList(params)
-          const data = response.data.result
-          if (Array.isArray(data) && data.length > 0) {
-            this.skuList = data
-          }
+          const total = this.conflictedMpus.length
+          const num = 50
+          let begin = 0
+          let end = begin + num
+          do {
+            const params = {
+              mpuIdList: this.conflictedMpus.slice(begin, end).join(',')
+            }
+            begin = end
+            end = begin + num
+            const response = await getProductsByIdList(params)
+            const data = response.data.result
+            if (Array.isArray(data) && data.length > 0) {
+              this.skuList = this.skuList.concat(data)
+            }
+          } while (begin < total)
         } catch (e) {
           console.warn('Promotion conflicted mpu error:' + e)
         } finally {

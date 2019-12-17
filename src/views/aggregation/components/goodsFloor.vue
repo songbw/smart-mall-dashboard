@@ -47,16 +47,20 @@
       </el-button>
     </div>
     <div class="header-container">
-      <div class="header-ops-container">
-        <el-button
-          :icon="showDetail ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
-          type="primary"
-          size="small"
-          @click="showDetail = !showDetail"
-        >
-          {{ collapseLabel }}
-        </el-button>
-      </div>
+      <el-form :inline="true">
+        <el-form-item label="商品背景颜色">
+          <el-color-picker v-model="skuBackgroundColor" />
+          <span>{{ skuBackgroundColor }}</span>
+        </el-form-item>
+      </el-form>
+      <el-button
+        :icon="showDetail ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
+        type="primary"
+        size="small"
+        @click="showDetail = !showDetail"
+      >
+        {{ collapseLabel }}
+      </el-button>
     </div>
     <div v-if="showDetail">
       <div class="header-container">
@@ -70,12 +74,6 @@
           <el-button size="mini" @click="handleExportGoods">
             导出商品
           </el-button>
-          <el-form :inline="true">
-            <el-form-item label="楼层标题字体颜色">
-              <el-color-picker v-model="skuBackgroundColor" />
-              <span>{{ skuBackgroundColor }}</span>
-            </el-form-item>
-          </el-form>
         </div>
         <div class="header-ops-container">
           <span>{{ `已选择${selectedItems.length}件商品` }}</span>
@@ -443,6 +441,7 @@ export default {
     display: flex;
     justify-content: space-between;
     margin: 10px 20px;
+    align-items: center;
   }
 
   .header-ops-container {
