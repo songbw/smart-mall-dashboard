@@ -253,6 +253,8 @@ const mutations = {
             skuBackgroundColor: 'skuBackgroundColor' in floor ? floor.skuBackgroundColor : null,
             skus: floor.skus
           }))
+          settings.showFloorTitle = 'showFloorTitle' in settings ? settings.showFloorTitle : true
+          settings.marginTop = 'marginTop' in settings ? settings.marginTop : 0
           return { data: { list: newList, settings }, ...rest }
         } else {
           return item

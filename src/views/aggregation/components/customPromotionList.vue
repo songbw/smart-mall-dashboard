@@ -89,7 +89,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { promotionListType, promotionSettings } from './templateType'
+import { promotionListType, promotionListSettings } from './templateType'
 import ImageUpload from '@/components/ImageUpload'
 import PromotionSelection from './promotionSelection'
 import PromotionFloor from './promotionFloor'
@@ -118,7 +118,7 @@ export default {
       } else {
         return {
           list: [],
-          settings: { ...promotionSettings }
+          settings: { ...promotionListSettings }
         }
       }
     },

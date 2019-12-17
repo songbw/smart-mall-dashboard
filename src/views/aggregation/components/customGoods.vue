@@ -38,11 +38,14 @@
           </el-checkbox>
         </el-checkbox-group>
       </el-form-item>
-      <el-form-item label="楼层标题字体颜色">
+      <el-form-item label="显示楼层标题">
+        <el-switch v-model="showFloorTitle" />
+      </el-form-item>
+      <el-form-item v-if="showFloorTitle" label="楼层标题字体颜色">
         <el-color-picker v-model="floorTitleTextColor" />
         <span>{{ floorTitleTextColor }}</span>
       </el-form-item>
-      <el-form-item label="楼层标题底色">
+      <el-form-item v-if="showFloorTitle" label="楼层标题底色">
         <el-color-picker v-model="floorTitleColor" />
         <span>{{ floorTitleColor }}</span>
       </el-form-item>
@@ -68,14 +71,11 @@
         <el-color-picker v-model="tabBarTextColor" />
         <span>{{ tabBarTextColor }}</span>
       </el-form-item>
-      <el-form-item label="下边距">
-        <el-select v-model="marginBottom">
-          <el-option label="0px" value="0" />
-          <el-option label="10px" value="10" />
-          <el-option label="20px" value="20" />
-          <el-option label="30px" value="30" />
-          <el-option label="40px" value="40" />
-        </el-select>
+      <el-form-item label="上边距(px)">
+        <el-input-number v-model="marginTop" :max="100" :min="-100" step-strictly @blur="onMarginTopBlur" />
+      </el-form-item>
+      <el-form-item label="下边距(px)">
+        <el-input-number v-model="marginBottom" :max="100" :min="-100" step-strictly @blur="onMarginBottomBlur" />
       </el-form-item>
     </el-form>
   </div>
@@ -83,6 +83,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isNumber from 'lodash/isNumber'
 import GoodsFloor from './goodsFloor'
 import {
   goodsType,
@@ -125,6 +126,15 @@ export default {
       },
       set(newValue) {
         const settings = Object.assign({}, this.goodsInfo.settings, { countPerLine: Number.parseInt(newValue) })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
+    showFloorTitle: {
+      get() {
+        return this.goodsInfo.settings.showFloorTitle
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.goodsInfo.settings, { showFloorTitle: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     },
@@ -194,6 +204,15 @@ export default {
       },
       set(newValue) {
         const settings = Object.assign({}, this.goodsInfo.settings, { tabBarTextColor: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
+    marginTop: {
+      get() {
+        return this.goodsInfo.settings.marginTop
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.goodsInfo.settings, { marginTop: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     },
@@ -281,6 +300,16 @@ export default {
       const floor = {}
       floor.skus = this.goodsList[floorIndex].skus.filter(sku => !selection.includes(sku.mpu))
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onMarginTopBlur() {
+      if (isNumber(this.marginTop) === false) {
+        this.marginTop = 0
+      }
+    },
+    onMarginBottomBlur() {
+      if (isNumber(this.marginBottom) === false) {
+        this.marginBottom = 0
+      }
     }
   }
 }

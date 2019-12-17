@@ -25,7 +25,7 @@
         </el-tooltip>
       </div>
     </div>
-    <div v-if="!hasTabBar" style="margin: 10px 20px;">
+    <div v-if="!hasTabBar && showFloorTitle" style="margin: 10px 20px;">
       <image-upload
         :image-url="titleImageUrl"
         path-name="aggregations"
@@ -279,6 +279,11 @@ export default {
     skuData: {
       get() {
         return this.floorInfo.skus
+      }
+    },
+    showFloorTitle: {
+      get() {
+        return this.goodsInfo.settings.showFloorTitle
       }
     },
     hasTabBar: {
