@@ -2,6 +2,7 @@ const state = {
   search: {
     pageIndex: 1,
     pageSize: 20,
+    appId: 'all',
     typeId: null,
     orderId: '',
     status: null,

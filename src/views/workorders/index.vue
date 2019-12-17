@@ -1,5 +1,13 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="queryAppId" type="card" @tab-click="onAppIdChanged">
+      <el-tab-pane
+        v-for="item in appIdOptions"
+        :key="item.appId"
+        :label="item.name"
+        :name="item.appId"
+      />
+    </el-tabs>
     <el-form :inline="true" label-width="120px" label-position="left">
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" placeholder="输入收货人电话号码" clearable />
@@ -190,10 +198,22 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
+      platformAppList: 'platformAppList',
       workOrdersQuery: 'workOrdersQuery'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(WorkOrderPermissions.view)
+    },
+    appIdOptions() {
+      return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+    },
+    queryAppId: {
+      get() {
+        return this.workOrdersQuery.appId
+      },
+      set(value) {
+        this.$store.commit('workOrders/SET_SEARCH_DATA', { appId: value })
+      }
     },
     queryMobile: {
       get() {
@@ -277,9 +297,24 @@ export default {
     }
   },
   created() {
-    this.getWorkOrderList()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      this.listLoading = true
+      await this.getAppPlatformList()
+      await this.getWorkOrderList()
+      this.listLoading = false
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+      } catch (e) {
+        console.warn('Order get app list error:' + e)
+      }
+    },
     getSearchParams() {
       const params = {}
       const keys = ['receiverPhone', 'orderId', 'timeStart', 'timeEnd', 'refundTimeStart', 'refundTimeEnd']
@@ -293,6 +328,9 @@ export default {
       }
       if (this.queryTypeId > 0) {
         params.typeId = this.queryTypeId
+      }
+      if (this.queryAppId !== 'all') {
+        params.iAppId = this.queryAppId
       }
       if (!isEqual(this.queryParams, params)) {
         this.queryParams = { ...params }
@@ -334,6 +372,12 @@ export default {
         name: 'ViewSubOrder',
         params: { subId: subOrderId }
       })
+    },
+    onAppIdChanged(platform) {
+      if (this.queryAppId !== platform.appId) {
+        this.queryOffset = 1
+        this.getWorkOrderList()
+      }
     }
   }
 }

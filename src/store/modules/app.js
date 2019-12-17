@@ -11,7 +11,7 @@ const state = {
     opened: true
   },
   ready: false,
-  platformId: 'test',
+  platformId: '11', // For WuXi Mall
   needSettings: true,
   cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
   platformList: []
