@@ -200,7 +200,7 @@ export default {
   },
   data() {
     return {
-      maxSkuNum: 20,
+      maxSkuNum: 16,
       showDetail: false,
       dialogSelectionVisible: false,
       selectedItems: [],

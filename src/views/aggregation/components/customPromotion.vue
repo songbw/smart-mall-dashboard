@@ -264,7 +264,7 @@ export default {
   },
   data() {
     return {
-      maxSkuNum: 20,
+      maxSkuNum: 16,
       dialogImportVisible: false,
       dialogPromotionVisible: false,
       dialogSelectionVisible: false,

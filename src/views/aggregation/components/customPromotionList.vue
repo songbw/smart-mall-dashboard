@@ -89,7 +89,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { promotionType, promotionSettings } from './templateType'
+import { promotionListType, promotionSettings } from './templateType'
 import ImageUpload from '@/components/ImageUpload'
 import PromotionSelection from './promotionSelection'
 import PromotionFloor from './promotionFloor'
@@ -113,7 +113,7 @@ export default {
       return this.pageInfo.appId
     },
     promotionData: function() {
-      if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
+      if (this.pageTemplateList[this.currentTemplateIndex].type === promotionListType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
         return {
