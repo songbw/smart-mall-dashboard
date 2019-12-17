@@ -4,7 +4,7 @@ import { storage_platform_id } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
 import { getAppPlatformListApi } from '@/api/products'
 
-const invalidAppIdList = ['09', '10']
+const invalidAppIdList = ['09', '10', 'test']
 
 const state = {
   sidebar: {
