@@ -49,6 +49,7 @@
               placeholder="选择开始日期和时间"
               type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
+              @change="onReleaseDateChanged"
             />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
@@ -60,6 +61,7 @@
               placeholder="选择结束日期和时间"
               type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
+              @change="onReleaseDateChanged"
             />
           </el-form-item>
           <span style="font-size: 12px;margin-left: 10px">用户可查看和领取的日期区间</span>
@@ -79,6 +81,7 @@
               placeholder="选择开始日期和时间"
               type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
+              @change="onEffectiveDateChanged"
             />
           </el-form-item>
           <span style="margin: 0 10px">至</span>
@@ -90,6 +93,7 @@
               placeholder="选择结束日期和时间"
               type="datetime"
               value-format="yyyy-MM-dd HH:mm:ss"
+              @change="onEffectiveDateChanged"
             />
           </el-form-item>
           <span style="font-size: 12px;margin-left: 10px">用户可使用的日期区间</span>
@@ -564,7 +568,7 @@ export default {
       vendorOptions: [],
       dataLoading: false,
       createCoupon: false,
-      viewOnly: true,
+      viewOnly: false,
       couponDataLoaded: false,
       couponId: -1,
       inSubmitting: false,
@@ -633,7 +637,7 @@ export default {
       },
       formRules: {
         supplierMerchantId: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value === null) {
               callback(new Error('请选择的优惠券供应商'))
             } else {
@@ -642,7 +646,7 @@ export default {
           }
         }],
         name: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (isEmpty(value)) {
               callback(new Error('请输入有效的优惠券名称'))
             } else {
@@ -651,7 +655,7 @@ export default {
           }
         }],
         code: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (this.autoCode) {
               callback()
             } else {
@@ -664,7 +668,7 @@ export default {
           }
         }],
         releaseStartDate: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value && this.formData.releaseEndDate &&
               moment(value).isAfter(this.formData.releaseEndDate)) {
               callback(new Error('开始时间必须早于结束时间'))
@@ -683,7 +687,7 @@ export default {
           }
         }],
         releaseEndDate: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             const now = moment()
             const startDate = moment(this.formData.releaseStartDate).add(1, 'hours')
             if (value && this.formData.releaseStartDate &&
@@ -701,7 +705,7 @@ export default {
           }
         }],
         effectiveStartDate: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value && this.formData.effectiveEndDate &&
               moment(value).isAfter(this.formData.effectiveEndDate)) {
               callback(new Error('开始时间必须早于结束时间'))
@@ -723,7 +727,7 @@ export default {
           }
         }],
         effectiveEndDate: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             const now = moment()
             const startDate = moment(this.formData.effectiveStartDate).add(1, 'hours')
             if (value && this.formData.effectiveStartDate &&
@@ -744,7 +748,7 @@ export default {
           }
         }],
         releaseTotal: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (value > 0) {
               callback()
             } else {
@@ -753,7 +757,7 @@ export default {
           }
         }],
         category: [{
-          required: true, trigger: 'change', validator: (rule, value, callback) => {
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (this.selectCategoryId !== '') {
               callback()
             } else {
@@ -1183,6 +1187,7 @@ export default {
         return
       }
       try {
+        this.$refs['couponForm'].clearValidate()
         const valid = await this.$refs['couponForm'].validate()
         if (valid) {
           if (this.formData.excludeDates.length > 0) {
@@ -1302,6 +1307,7 @@ export default {
       this.formData.supplierMerchantId = isEmpty(value) ? null : Number.parseInt(value)
       this.formData.supplierMerchantName =
         isEmpty(value) ? null : this.vendorOptions.find(vendor => vendor.value === value).label
+      this.$refs['couponForm'].validateField(['supplierMerchantId'])
     },
     onCategoryChanged(value) {
       const id = Number.parseInt(value)
@@ -1334,6 +1340,26 @@ export default {
           this.formData.category = this.originalCategory
         }
       }
+    },
+    onReleaseDateChanged(value) {
+      const fields = []
+      if (this.formData.releaseStartDate != null) {
+        fields.push('releaseStartDate')
+      }
+      if (this.formData.releaseEndDate != null) {
+        fields.push('releaseEndDate')
+      }
+      this.$refs['couponForm'].validateField(fields)
+    },
+    onEffectiveDateChanged(value) {
+      const fields = []
+      if (this.formData.effectiveStartDate != null) {
+        fields.push('effectiveStartDate')
+      }
+      if (this.formData.effectiveEndDate != null) {
+        fields.push('effectiveEndDate')
+      }
+      this.$refs['couponForm'].validateField(fields)
     }
   }
 }

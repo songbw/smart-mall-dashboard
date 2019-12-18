@@ -167,6 +167,12 @@
               >
                 删除优惠券
               </el-dropdown-item>
+              <el-dropdown-item
+                :command="`clone:${scope.$index}`"
+                icon="el-icon-document-copy"
+              >
+                复制优惠券
+              </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           <el-button
@@ -185,6 +191,11 @@
       :page.sync="queryOffset"
       :limit.sync="queryLimit"
       @pagination="getCouponData"
+    />
+    <clone-dialog
+      :dialog-visible="cloneDialogVisible"
+      @cancelled="cloneDialogVisible = false"
+      @confirmed="handleCloneCoupon"
     />
   </div>
 </template>
@@ -206,14 +217,17 @@ import {
   searchCouponsApi,
   updateCouponApi,
   deleteCouponApi,
-  consumeCouponApi
+  consumeCouponApi,
+  getCouponByIdApi,
+  createCouponApi
 } from '@/api/coupons'
 import { CouponTypeOptions, CouponCollectOptions } from './constants'
 import { CouponPermissions } from '@/utils/role-permissions'
+import CloneDialog from './cloneDialog'
 
 export default {
   name: 'Coupon',
-  components: { Pagination },
+  components: { Pagination, CloneDialog },
   filters: {
     couponStatusFilter: (status) => {
       const item = CouponStatusDefinition.find(coupon => coupon.value === status)
@@ -243,6 +257,8 @@ export default {
         label: '全部'
       }].concat(CouponStatusDefinition),
       dataLoading: false,
+      cloneDialogVisible: false,
+      cloneCouponId: -1,
       couponData: [],
       couponTotal: 0,
       queryParams: null
@@ -504,6 +520,39 @@ export default {
         console.warn('Delete coupon:' + e)
       }
     },
+    handleShowCloneDialog(id) {
+      this.cloneCouponId = id
+      this.cloneDialogVisible = true
+    },
+    async handleCloneCoupon(params) {
+      this.cloneDialogVisible = false
+      if (this.cloneCouponId >= 0) {
+        try {
+          this.dataLoading = true
+          const srcRes = await getCouponByIdApi({ id: this.cloneCouponId })
+          if (srcRes.code === 200) {
+            const coupon = srcRes.data.result
+            coupon.appId = params.appId
+            coupon.name = params.name
+            coupon.status = coupon_status_init
+            coupon.rules.code = ''
+            const { code, msg } = await createCouponApi(coupon)
+            if (code === 200) {
+              this.$message.warning('复制优惠券成功，请切换到对应运营平台查看！')
+              if (this.appId === params.appId) {
+                this.getCouponData()
+              }
+            } else {
+              this.$message.warning(msg)
+            }
+          }
+        } catch (e) {
+          console.warn('Handle clone coupon error:' + e)
+        } finally {
+          this.dataLoading = false
+        }
+      }
+    },
     handleOpsAction(action) {
       const cmd = action.split(':')[0]
       const index = Number.parseInt(action.split(':')[1])
@@ -526,6 +575,11 @@ export default {
           break
         case 'delete':
           this.handleDeleteCoupon(id)
+          break
+        case 'clone':
+          this.handleShowCloneDialog(id)
+          break
+        default:
           break
       }
     },

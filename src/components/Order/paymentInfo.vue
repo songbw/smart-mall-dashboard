@@ -157,13 +157,12 @@ export default {
   },
   data() {
     return {
-      useWsPay: process.env.VUE_APP_HOST === 'WX-MALL',
       payInfoList: []
     }
   },
   watch: {
     paymentNo: function(val, oldVal) {
-      if (this.useWsPay && val !== oldVal && isEmpty(val) === false) {
+      if (val !== oldVal && isEmpty(val) === false) {
         this.getPayInfoList()
       }
     }
