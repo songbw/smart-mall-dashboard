@@ -105,6 +105,24 @@ module.exports = {
             var: 'COS',
             version: '0.5.22',
             path: 'dist/cos-js-sdk-v5.min.js'
+          },
+          {
+            name: 'moment',
+            var: 'moment',
+            version: '2.24.0',
+            path: 'moment.min.js'
+          },
+          {
+            name: 'localforage',
+            var: 'localforage',
+            version: '1.7.3',
+            path: 'dist/localforage.min.js'
+          },
+          {
+            name: 'nprogress',
+            var: 'NProgress',
+            version: '0.2.0',
+            path: 'nprogress.min.js'
           }
         ],
         prodUrl: 'https://cdn.jsdelivr.net/npm/:name@:version/:path'

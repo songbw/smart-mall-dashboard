@@ -1,7 +1,6 @@
 import router from './router'
 import store from './store'
 import NProgress from 'nprogress'
-import 'nprogress/nprogress.css'
 import isEmpty from 'lodash/isEmpty'
 import uniq from 'lodash/uniq'
 import {
