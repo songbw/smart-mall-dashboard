@@ -84,7 +84,7 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasPromotion" label="减价(元)" align="center" width="100">
+      <el-table-column v-if="hasPromotion" label="促销价(元)" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.discount }}</span>
         </template>
@@ -127,7 +127,7 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasPromotion" label="减价(元)" align="center" width="100">
+      <el-table-column v-if="hasPromotion" label="促销价(元)" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.discount }}</span>
         </template>
@@ -383,8 +383,12 @@ export default {
       this.$emit('onSelectionCancelled')
     },
     handleDialogConfirm() {
-      this.$emit('onSelectionConfirmed', Array.from(this.dialogSelectedItems))
-      this.clearDialogData()
+      if (this.dialogSelectedItems.length > 0) {
+        this.$emit('onSelectionConfirmed', Array.from(this.dialogSelectedItems))
+        this.clearDialogData()
+      } else {
+        this.$message.warning('请选择所需的商品！')
+      }
     },
     clearDialogData() {
       this.total = 0

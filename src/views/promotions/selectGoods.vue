@@ -91,29 +91,6 @@
             添加商品
           </el-button>
         </div>
-        <div v-if="setDiscount" class="header-ops-container">
-          <span style="width: 100px;text-align: end">优惠减价：</span>
-          <el-input-number
-            v-model="promotionValue"
-            :min="1"
-            :max="maxPromotionValue"
-            step-strictly
-          />
-          <el-button
-            :disabled="selectedItems.length === 0"
-            type="primary"
-            style="margin: 0 5px"
-            @click="handleSetDiscount"
-          >
-            设置已选商品
-          </el-button>
-          <el-button
-            type="primary"
-            @click="handleSetAllDiscount"
-          >
-            设置全部商品
-          </el-button>
-        </div>
         <div class="header-ops-container">
           <span style="width: 150px;text-align: end">
             {{ `已选择${selectedItems.length}件商品` }}
@@ -155,51 +132,11 @@
             <span>{{ scope.row.price }}</span>
           </template>
         </el-table-column>
-        <el-table-column v-if="setDiscount" :label="discountTypeLabel" align="center" width="250">
+        <el-table-column label="促销价格(元)" align="center" width="250">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
               <el-input-number
-                v-model="scope.row.discount"
-                :controls="false"
-                size="mini"
-                :min="1"
-                :max="scope.row.price + 1"
-                step-strictly
-              />
-              <el-button
-                icon="el-icon-close"
-                size="mini"
-                type="primary"
-                circle
-                @click="handleCancelEditDiscount(scope.row)"
-              />
-              <el-button
-                icon="el-icon-check"
-                size="mini"
-                type="primary"
-                circle
-                @click="handleConfirmEditDiscount(scope.row)"
-              />
-            </template>
-            <template v-else>
-              <span>{{ scope.row.discount }}</span>
-              <el-button
-                v-if="viewOnly === false"
-                icon="el-icon-edit"
-                size="mini"
-                type="primary"
-                circle
-                style="margin-left: 10px"
-                @click="scope.row.editDiscount = true"
-              />
-            </template>
-          </template>
-        </el-table-column>
-        <el-table-column v-else label="促销价格(元)" align="center" width="250">
-          <template slot-scope="scope">
-            <template v-if="scope.row.editDiscount">
-              <el-input-number
-                :value="scope.row.discount > 0 ? scope.row.price - scope.row.discount : null"
+                :value="scope.row.discount"
                 :controls="false"
                 :precision="2"
                 :step="0.01"
@@ -226,7 +163,7 @@
               />
             </template>
             <template v-else>
-              <span>{{ scope.row.discount > 0 ? (scope.row.price - scope.row.discount).toFixed(2) : null }}</span>
+              <span>{{ scope.row.discount > 0 ?scope.row.discount.toFixed(2) : null }}</span>
               <el-button
                 v-if="viewOnly === false"
                 icon="el-icon-edit"
@@ -391,7 +328,6 @@ export default {
   },
   data() {
     return {
-      setDiscount: false,
       typeOptions: [{
         value: 0,
         label: '减价'
@@ -406,7 +342,6 @@ export default {
         endTime: null
       },
       currentScheduleId: null,
-      promotionValue: '',
       dialogSelectionVisible: false,
       dialogImportVisible: false,
       offset: 1,
@@ -589,78 +524,6 @@ export default {
     productSelectable() {
       return this.viewOnly === false
     },
-    getDiscountValue() {
-      const discount = Number.parseFloat(this.promotionValue)
-      if (this.skuTotal === 0) {
-        this.$message({ message: '请先导入或者添加促销商品！', type: 'warning' })
-        return -1
-      }
-      if (Number.isNaN(discount) || discount <= 0) {
-        this.$message({ message: '请输入有效的优惠信息！', type: 'error' })
-        return -1
-      }
-      if (this.discountType === 1 && discount >= 1) {
-        this.$message({ message: '请输入0~1之间的数字，0.8表示8折。', type: 'error' })
-        return -1
-      }
-      return discount
-    },
-    handleSetDiscount() {
-      const discount = this.getDiscountValue()
-      if (discount < 0) {
-        return
-      }
-      let message = ''
-      if (this.discountType === 0) {
-        message = `将对所有选择的商品优惠${discount}元，请确认是否继续？`
-      } else {
-        message = `将对所有选择的商品实施折扣${discount}，请确认是否继续？`
-      }
-      this.$confirm(message, '优惠设置', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.handleSetSelectedDiscount(this.selectedItems, discount)
-      }).catch(() => {
-      })
-    },
-    handleSetSelectedDiscount(items, discount) {
-      items.forEach(mpu => {
-        const added = this.addedItems.find(item => item.mpu === mpu)
-        if (added) {
-          added.discount = discount
-        } else {
-          const updated = this.updateItems.find(item => item.mpu === mpu)
-          if (updated) {
-            updated.discount = discount
-          } else {
-            this.updateItems.push({ mpu: mpu, discount: discount })
-          }
-        }
-      })
-      this.$store.commit('promotions/SET_SKUS_DISCOUNT', { mpus: items, discount: discount })
-    },
-    handleSetAllDiscount() {
-      const discount = this.getDiscountValue()
-      if (discount > 0 && this.skuTotal > 0) {
-        let message = ''
-        if (this.discountType === 0) {
-          message = `将对所有商品优惠${discount}元，请确认是否继续？`
-        } else {
-          message = `将对所有商品实施折扣${discount}，请确认是否继续？`
-        }
-        this.$confirm(message, '优惠设置', {
-          confirmButtonText: '确认',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          const allItems = this.promotionData.promotionSkus.map(sku => sku.mpu)
-          this.handleSetSelectedDiscount(allItems, discount)
-        }).catch(() => {
-        })
-      }
-    },
     handleSelectionChange(selection) {
       this.selectedItems = selection.map(item => item.mpu)
     },
@@ -770,7 +633,7 @@ export default {
     handleSetSecKillPrice(value, row) {
       const price = Math.round(row.price * 100)
       const pprice = Math.round(value * 100)
-      row.discount = price >= pprice ? (price - pprice) / 100 : 0
+      row.discount = price >= pprice ? pprice / 100 : price / 100
     },
     handleCancelEditDiscount(row) {
       row.discount = row.originalDiscount
@@ -778,7 +641,7 @@ export default {
     },
     async handleConfirmEditDiscount(row) {
       try {
-        if (row.discount > 0 && row.discount / row.price > 0.5) {
+        if (row.discount > 0 && (row.price - row.discount) / row.price > 0.5) {
           await this.$confirm('此商品促销价格低于原价的5折，是否继续设置？', '秒杀价格', {
             confirmButtonText: '确认',
             cancelButtonText: '取消',

@@ -157,9 +157,8 @@ export default {
   name: 'GoodsImportDialog',
   filters: {
     promotionPrice: sku => {
-      const price = Math.round(Number.parseFloat(sku.price) * 100)
       const discount = sku.discount > 0 ? Math.round(sku.discount * 100) : 0
-      return discount > 0 ? (price - discount) / 100 : null
+      return discount > 0 ? discount / 100 : null
     }
   },
   props: {
@@ -507,7 +506,7 @@ export default {
                 if (!Number.isNaN(pprice) && !Number.isNaN(price) && pprice > 0 && price > 0) {
                   const ipprice = Math.round(pprice * 100)
                   const iprice = Math.round(price * 100)
-                  item.discount = iprice > ipprice ? (iprice - ipprice) / 100 : 0
+                  item.discount = iprice > ipprice ? ipprice / 100 : 0
                 }
               }
               parsedSkus.push(item)

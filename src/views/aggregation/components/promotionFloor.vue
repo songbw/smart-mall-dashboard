@@ -186,10 +186,8 @@ export default {
       return momentDate.isValid() ? momentDate.format(format) : ''
     },
     promotionPrice: sku => {
-      const price = Number.parseFloat(sku.price)
       const discount = Number.parseFloat(sku.discount)
-      const value = price - discount
-      return Number.isInteger(value) ? value : value.toFixed(2)
+      return Number.isNaN(discount) ? '' : discount.toFixed(2)
     }
   },
   props: {
