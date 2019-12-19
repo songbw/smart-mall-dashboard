@@ -12,11 +12,19 @@
       <el-form-item label="主订单号">
         <el-input v-model="queryTradeNo" :clearable="true" placeholder="输入主订单后8位" maxlength="100" />
       </el-form-item>
-      <el-form-item label="子订单号">
-        <el-input v-model="querySubOrderId" :clearable="true" placeholder="输入子订单编号" maxlength="100" />
-      </el-form-item>
       <el-form-item label="奥义单号">
         <el-input v-model="queryAoyiId" :clearable="true" placeholder="输入苏宁订单号" maxlength="50" />
+      </el-form-item>
+    </el-form>
+    <el-form label-width="5rem" label-position="left">
+      <el-form-item label="子订单号">
+        <el-input
+          v-model="querySubOrderId"
+          :clearable="true"
+          placeholder="输入子订单编号"
+          maxlength="100"
+          style="width: 600px"
+        />
       </el-form-item>
     </el-form>
     <el-form :inline="true">

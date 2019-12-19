@@ -35,7 +35,13 @@
     </el-form>
     <el-form label-width="120px" label-position="left">
       <el-form-item label="子订单编号">
-        <el-input v-model="queryOrderId" :clearable="true" placeholder="输入子订单编号" style="width: 500px" />
+        <el-input
+          v-model="queryOrderId"
+          :clearable="true"
+          placeholder="输入子订单编号"
+          style="width: 500px"
+          maxlength="100"
+        />
       </el-form-item>
     </el-form>
     <el-form :inline="true" label-width="120px" label-position="left">
