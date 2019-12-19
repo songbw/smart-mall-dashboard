@@ -40,10 +40,10 @@
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
     </div>
-    <div v-else-if="displayType === 'external'">
+    <div v-else-if="displayType === 'external'" style="margin-top: 10px">
       <el-form v-model="externalData" :rules="externalRules">
         <el-form-item prop="url">
-          <el-input v-model="displayUrl" placeholder="请输入外部链接地址" clearable />
+          <el-input v-model="displayUrl" placeholder="请输入外部链接地址" maxlength="100" clearable />
         </el-form-item>
       </el-form>
     </div>

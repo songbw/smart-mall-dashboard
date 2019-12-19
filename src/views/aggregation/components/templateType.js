@@ -7,7 +7,8 @@ import {
   aggregationCouponType,
   aggregationHotZoneType,
   aggregationComboType,
-  aggregationPromotionListType
+  aggregationPromotionListType,
+  aggregationHorizontalGoodType
 } from '@/utils/constants'
 
 export const bannerType = aggregationBannerType
@@ -19,6 +20,7 @@ export const couponType = aggregationCouponType
 export const hotZoneType = aggregationHotZoneType
 export const comboType = aggregationComboType
 export const promotionListType = aggregationPromotionListType
+export const horizontalGoodType = aggregationHorizontalGoodType
 
 export const good_prop_image = 'image'
 export const good_prop_tile = 'title'
@@ -186,6 +188,22 @@ export const promotionListSettings = {
     promotionDailySchedule: false,
     hasImage: false,
     imageUrl: ''
+  },
+  marginBottom: '0'
+}
+
+export const horizontalGoodSettings = {
+  title: {
+    show: true,
+    textAlign: 'left',
+    textValue: '',
+    hasTextLink: false,
+    textLinkValue: '',
+    hasImage: false,
+    imageUrl: '',
+    targetType: 'blank',
+    targetUrl: 'about:blank',
+    targetName: '无链接'
   },
   marginBottom: '0'
 }

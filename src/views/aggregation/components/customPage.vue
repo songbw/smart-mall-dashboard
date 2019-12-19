@@ -108,6 +108,9 @@
               <custom-promotion-list
                 v-if="currentTemplateIndex === index && pageTemplate.type === promotionListType"
               />
+              <custom-horizontal-good
+                v-if="currentTemplateIndex === index && pageTemplate.type === horizontalGoodType"
+              />
             </div>
           </el-main>
         </el-container>
@@ -134,6 +137,7 @@ import CustomHotZone from './customHotZone'
 import CustomCoupon from './customCoupon'
 import CustomCombo from './customCombo'
 import CustomPromotionList from './customPromotionList'
+import CustomHorizontalGood from './customHorizontalGood'
 import {
   bannerType,
   serviceType,
@@ -150,7 +154,9 @@ import {
   comboType,
   comboSettings,
   promotionListType,
-  promotionListSettings
+  promotionListSettings,
+  horizontalGoodType,
+  horizontalGoodSettings
 } from './templateType'
 
 const bannerImage = require('@/assets/images/banner.png')
@@ -173,7 +179,8 @@ export default {
     CustomHotZone,
     CustomCoupon,
     CustomCombo,
-    CustomPromotionList
+    CustomPromotionList,
+    CustomHorizontalGood
   },
   data() {
     return {
@@ -187,6 +194,7 @@ export default {
       couponType: couponType,
       comboType: comboType,
       promotionListType: promotionListType,
+      horizontalGoodType: horizontalGoodType,
       options: [
         {
           type: bannerType,
@@ -214,8 +222,14 @@ export default {
         },
         {
           type: goodsType,
-          name: '商品',
-          tipTitle: '商品服务模块功能说明',
+          name: '商品楼层',
+          tipTitle: '商品楼层服务模块功能说明',
+          image: goodsImage
+        },
+        {
+          type: horizontalGoodType,
+          name: '横向商品',
+          tipTitle: '横向商品服务模块功能说明',
           image: goodsImage
         },
         {
@@ -371,6 +385,9 @@ export default {
           break
         case promotionListType:
           template.data.settings = { ...promotionListSettings }
+          break
+        case horizontalGoodType:
+          template.data.settings = { ...horizontalGoodSettings }
           break
       }
     },

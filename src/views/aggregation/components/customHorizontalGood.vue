@@ -11,51 +11,12 @@
         <el-form-item label="标题">
           <el-input v-model="titleTextValue" />
         </el-form-item>
-        <el-form-item label="促销活动">
-          <el-button
-            v-if="titleHasPromotionActivity"
-            :disabled="titlePromotionDailySchedule"
-            type="primary"
-            size="small"
-            @click="dialogPromotionVisible = true"
-          >
-            选择促销活动
-          </el-button>
-          <div v-if="titleHasPromotionActivity">
-            <el-switch
-              v-model="titlePromotionDailySchedule"
-              active-text="全天分时段"
-              inactive-text="普通活动"
-            />
-          </div>
-          <div v-if="titleHasPromotionActivity">
-            <span>活动名称：</span>
-            <span v-if="titlePromotionDailySchedule">全天分时段</span>
-            <el-link
-              v-else
-              :href="`/marketing/viewPromotion/${titlePromotionActivityId}`"
-              target="_blank"
-              type="primary"
-            >
-              {{ titlePromotionActivityName }}
-            </el-link>
-          </div>
-          <div v-if="titleHasPromotionActivity">
-            <div v-if="titlePromotionDailySchedule">
-              活动时间：当天24小时
-            </div>
-            <div v-else>
-              活动时间： {{ titlePromotionActivityStartDate | dateFilter }}
-              - {{ titlePromotionActivityEndDate | dateFilter }}
-            </div>
-          </div>
-        </el-form-item>
-        <el-form-item v-if="titleTextAlign === 'left'" label="开启文字链接">
+        <el-form-item v-if="titleTextAlign === 'left'" label="右侧文字链接">
           <el-switch v-model="titleHasTextLink" />
         </el-form-item>
         <el-form-item
           v-if="titleTextAlign === 'left' && titleHasTextLink"
-          label="文件链接标题"
+          label="右侧文字标题"
         >
           <el-input v-model="titleTextLinkValue" />
         </el-form-item>
@@ -70,16 +31,15 @@
             :image-url="titleImageUrl"
             path-name="aggregations"
             image-width="200px"
-            tip="请选择对应的类别图标文件，文件格式为JPEG或PNG"
+            tip="请选择对应的活动图片，文件格式为JPEG或PNG"
             @success="handleUploadImageSuccess"
           />
         </el-form-item>
         <el-form-item
           v-if="titleHasLink"
-          label="文字和图片链接地址"
+          label="链接地址"
         >
           <image-target-link
-            :could-change="titleHasPromotionActivity === false"
             :target-index="currentTemplateIndex"
             :target-type="titleTargetType"
             :target-url="titleTargetUrl"
@@ -101,11 +61,10 @@
     </el-container>
     <div class="header-container">
       <div class="header-ops-container">
-        <el-button v-if="titleHasPromotionActivity === false" size="mini" @click="dialogImportVisible = true">
+        <el-button size="mini" @click="dialogImportVisible = true">
           导入商品
         </el-button>
         <el-button
-          :disabled="titlePromotionDailySchedule || titlePromotionActivityId < 0"
           type="primary"
           size="mini"
           @click="dialogSelectionVisible = true"
@@ -207,7 +166,6 @@
     </el-table>
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
-      :promotion-id="titlePromotionActivityId"
       @onSelectionCancelled="onGoodsSelectionCancelled"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
@@ -215,12 +173,6 @@
       :dialog-visible="dialogImportVisible"
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
-    />
-    <promotion-selection
-      :dialog-visible="dialogPromotionVisible"
-      :app-id="pageAppId"
-      @onSelectionCancelled="onPromotionSelectionCancelled"
-      @onSelectionConfirmed="onPromotionSelectionConfirmed"
     />
     <el-dialog
       :visible.sync="editDialogVisible"
@@ -246,16 +198,15 @@
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
-import { promotionType, promotionSettings } from './templateType'
+import { horizontalGoodType, horizontalGoodSettings } from './templateType'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
-import PromotionSelection from './promotionSelection'
 import ImageTargetLink from './imageTargetLink'
 
 export default {
-  name: 'CustomPromotion',
-  components: { GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, PromotionSelection, ImageUpload },
+  name: 'CustomHorizontalGood',
+  components: { GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, ImageUpload },
   filters: {
     dateFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -267,7 +218,6 @@ export default {
     return {
       maxSkuNum: 16,
       dialogImportVisible: false,
-      dialogPromotionVisible: false,
       dialogSelectionVisible: false,
       selectedItems: [],
       originalImageProp: null,
@@ -288,223 +238,131 @@ export default {
     },
     skuData: {
       get() {
-        return this.promotionData.list
+        return this.horizontalGoodData.list
       }
     },
-    promotionData: function() {
-      if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
+    horizontalGoodData: function() {
+      if (this.pageTemplateList[this.currentTemplateIndex].type === horizontalGoodType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
         return {
           list: [],
-          settings: { ...promotionSettings }
+          settings: { ...horizontalGoodSettings }
         }
       }
     },
     titleForm: {
       get() {
         return {
-          title: this.promotionData.settings.title
+          title: this.horizontalGoodData.settings.title
         }
       }
     },
     showTitle: {
       get() {
-        return this.promotionData.settings.title.show
+        return this.horizontalGoodData.settings.title.show
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { show: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { show: newValue })
         this.changeTitle(title)
       }
     },
     titleTextAlign: {
       get() {
-        return this.promotionData.settings.title.textAlign
+        return this.horizontalGoodData.settings.title.textAlign
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { textAlign: newValue })
+        const netTitle = { textAlign: newValue }
+        if (newValue === 'center') {
+          netTitle.hasTextLink = false
+        }
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, netTitle)
         this.changeTitle(title)
       }
     },
     titleTextValue: {
       get() {
-        return this.promotionData.settings.title.textValue
+        return this.horizontalGoodData.settings.title.textValue
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { textValue: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { textValue: newValue })
         this.changeTitle(title)
       }
     },
     titleHasTextLink: {
       get() {
-        return this.promotionData.settings.title.hasTextLink
+        return this.horizontalGoodData.settings.title.hasTextLink
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { hasTextLink: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { hasTextLink: newValue })
         this.changeTitle(title)
       }
     },
     titleTextLinkValue: {
       get() {
-        return this.promotionData.settings.title.textLinkValue
+        return this.horizontalGoodData.settings.title.textLinkValue
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { textLinkValue: newValue })
-        this.changeTitle(title)
-      }
-    },
-    titleHasPromotionActivity: {
-      get() {
-        return this.promotionData.settings.title.hasPromotionActivity
-      },
-      set(newValue) {
-        const newTitle = { hasPromotionActivity: newValue }
-        if (this.originalImageProp === null) {
-          const hasPromotionActivity =
-            this.promotionData.settings.title.hasPromotionActivity
-              ? this.promotionData.settings.title.hasPromotionActivity : false
-          this.originalImageProp = {
-            hasPromotionActivity: hasPromotionActivity,
-            imageTargetType: this.promotionData.settings.title.targetType,
-            imageTargetName: this.promotionData.settings.title.targetName,
-            imageTargetUrl: this.promotionData.settings.title.targetUrl
-          }
-        }
-        if (newValue) {
-          newTitle.targetType = 'promotion'
-          const promotionId = this.promotionData.settings.title.promotionActivityId
-          if (promotionId >= 0) {
-            newTitle.targetName = this.titlePromotionActivityName
-            newTitle.targetUrl = 'route://promotion/' + promotionId
-          }
-        } else if (newValue === false && this.titleTargetType === 'promotion') {
-          if (this.originalImageProp && this.originalImageProp.hasPromotionActivity === false) {
-            newTitle.targetType = this.originalImageProp.imageTargetType
-            newTitle.targetUrl = this.originalImageProp.imageTargetUrl
-            newTitle.targetName = this.originalImageProp.imageTargetName
-          } else {
-            newTitle.targetType = 'aggregation'
-            newTitle.targetUrl = ''
-            newTitle.targetName = ''
-          }
-        }
-        const title = Object.assign({}, this.promotionData.settings.title, newTitle)
-        this.changeTitle(title)
-      }
-    },
-    titlePromotionDailySchedule: {
-      get() {
-        return this.titleHasPromotionActivity ? this.promotionData.settings.title.promotionDailySchedule : false
-      },
-      set(newValue) {
-        const newTitle = { promotionDailySchedule: newValue }
-        if (newValue) {
-          newTitle.promotionActivityId = -1
-          newTitle.promotionActivityName = ''
-          newTitle.promotionActivityStartDate = ''
-          newTitle.promotionActivityEndDate = ''
-          this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
-        }
-        const title = Object.assign({}, this.promotionData.settings.title, newTitle)
-        this.changeTitle(title)
-      }
-    },
-    titlePromotionActivityId: {
-      get() {
-        if (this.titleHasPromotionActivity) {
-          return this.promotionData.settings.title.promotionActivityId
-        } else {
-          return -1
-        }
-      },
-      set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityId: newValue })
-        this.changeTitle(title)
-      }
-    },
-    titlePromotionActivityName: {
-      get() {
-        return this.promotionData.settings.title.promotionActivityName
-      },
-      set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityName: newValue })
-        this.changeTitle(title)
-      }
-    },
-    titlePromotionActivityStartDate: {
-      get() {
-        return this.promotionData.settings.title.promotionActivityStartDate
-      },
-      set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityStartDate: newValue })
-        this.changeTitle(title)
-      }
-    },
-    titlePromotionActivityEndDate: {
-      get() {
-        return this.promotionData.settings.title.promotionActivityEndDate
-      },
-      set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { promotionActivityEndDate: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { textLinkValue: newValue })
         this.changeTitle(title)
       }
     },
     titleHasImage: {
       get() {
-        return this.promotionData.settings.title.hasImage
+        return this.horizontalGoodData.settings.title.hasImage
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { hasImage: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { hasImage: newValue })
         this.changeTitle(title)
       }
     },
     titleImageUrl: {
       get() {
-        return this.promotionData.settings.title.imageUrl
+        return this.horizontalGoodData.settings.title.imageUrl
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { imageUrl: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { imageUrl: newValue })
         this.changeTitle(title)
       }
     },
     titleHasLink: {
       get() {
-        return this.titleHasPromotionActivity ? false : this.titleHasImage || this.titleHasTextLink
+        return this.titleHasImage || this.titleHasTextLink
       }
     },
     titleTargetType: {
       get() {
-        return this.promotionData.settings.title.targetType
+        return this.horizontalGoodData.settings.title.targetType
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { targetType: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { targetType: newValue })
         this.changeTitle(title)
       }
     },
     titleTargetUrl: {
       get() {
-        return this.promotionData.settings.title.targetUrl
+        return this.horizontalGoodData.settings.title.targetUrl
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { targetUrl: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { targetUrl: newValue })
         this.changeTitle(title)
       }
     },
     titleTargetName: {
       get() {
-        return this.promotionData.settings.title.targetName
+        return this.horizontalGoodData.settings.title.targetName
       },
       set(newValue) {
-        const title = Object.assign({}, this.promotionData.settings.title, { targetName: newValue })
+        const title = Object.assign({}, this.horizontalGoodData.settings.title, { targetName: newValue })
         this.changeTitle(title)
       }
     },
     marginBottom: {
       get() {
-        return this.promotionData.settings.marginBottom
+        return this.horizontalGoodData.settings.marginBottom
       },
       set(newValue) {
-        const settings = Object.assign({}, this.promotionData.settings, { marginBottom: newValue })
+        const settings = Object.assign({}, this.horizontalGoodData.settings, { marginBottom: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     }
@@ -518,7 +376,7 @@ export default {
       }
     },
     changeTitle(title) {
-      const settings = Object.assign({}, this.promotionData.settings, { title: title })
+      const settings = Object.assign({}, this.horizontalGoodData.settings, { title: title })
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
     },
     handleUploadImageSuccess(url) {
@@ -549,7 +407,7 @@ export default {
           this.$store.commit('aggregations/SET_PROMOTION_LIST', skus)
           this.$refs.skuTable.clearSelection()
         } catch (e) {
-          console.warn('Aggregation delete promotion selection error: ' + e)
+          console.warn('Aggregation delete horizontal good selection error: ' + e)
         }
       }
     },
@@ -562,7 +420,7 @@ export default {
         })
         this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
       } catch (e) {
-        console.warn('Aggregation delete promotion good error: ' + e)
+        console.warn('Aggregation delete horizontal good error: ' + e)
       }
     },
     handleSortRow(up, index) {
@@ -594,7 +452,7 @@ export default {
       this.editGoodName = ''
       this.editIntro = ''
     },
-    addPromotionSkus(skus) {
+    addGoodSkus(skus) {
       const filteredSkus = skus.filter(sku => this.skuData.findIndex(item => item.mpu === sku.mpu) < 0)
       if (filteredSkus.length > 0) {
         if (this.skuData.length + filteredSkus.length <= this.maxSkuNum) {
@@ -606,15 +464,12 @@ export default {
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
-      this.addPromotionSkus(skus)
+      this.addGoodSkus(skus)
     },
     onGoodsSelectionCancelled() {
       this.dialogSelectionVisible = false
     },
     handleImageTargetChanges(target) {
-      if (this.titleHasPromotionActivity) {
-        return
-      }
       if ('type' in target) {
         this.titleTargetType = target.type
       }
@@ -627,26 +482,10 @@ export default {
     },
     onGoodsImportConfirmed(skus) {
       this.dialogImportVisible = false
-      this.addPromotionSkus(skus)
+      this.addGoodSkus(skus)
     },
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
-    },
-    onPromotionSelectionConfirmed(promotion) {
-      this.dialogPromotionVisible = false
-      if (this.titlePromotionActivityId !== promotion.id) {
-        this.titlePromotionActivityId = promotion.id
-        this.titlePromotionActivityName = promotion.name
-        this.titlePromotionActivityStartDate = promotion.startDate
-        this.titlePromotionActivityEndDate = promotion.endDate
-        this.titleTargetType = 'promotion'
-        this.titleTargetUrl = 'route://promotion/' + promotion.id
-        this.titleTargetName = promotion.name
-        this.$store.commit('aggregations/SET_PROMOTION_LIST', [])
-      }
-    },
-    onPromotionSelectionCancelled() {
-      this.dialogPromotionVisible = false
     },
     onMarginBottomChanged(value) {
       this.marginBottom = value
