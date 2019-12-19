@@ -535,6 +535,7 @@ export default {
             coupon.appId = params.appId
             coupon.name = params.name
             coupon.status = coupon_status_init
+            coupon.releaseNum = 0
             coupon.rules.code = ''
             const { code, msg } = await createCouponApi(coupon)
             if (code === 200) {
