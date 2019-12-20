@@ -206,6 +206,12 @@
               >
                 删除活动
               </el-dropdown-item>
+              <el-dropdown-item
+                :command="`clone:${scope.$index}`"
+                icon="el-icon-document-copy"
+              >
+                复制活动
+              </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           <el-button
@@ -225,6 +231,13 @@
       :limit.sync="queryLimit"
       @pagination="getPromotionData"
     />
+    <clone-dialog
+      :dialog-visible="cloneDialogVisible"
+      title="复制促销活动"
+      name-title="活动名称"
+      @cancelled="cloneDialogVisible = false"
+      @confirmed="handleClonePromotion"
+    />
   </div>
 </template>
 
@@ -233,6 +246,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
+import CloneDialog from '@/components/CloneDialog'
 import {
   getPromotionsApi,
   searchPromotionsApi,
@@ -252,7 +266,7 @@ import { PromotionPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'PromotionActivity',
-  components: { Pagination },
+  components: { Pagination, CloneDialog },
   filters: {
     promotionStatus: (status) => {
       const find = PromotionStatusDefinition.find(item => item.value === status)
@@ -290,7 +304,9 @@ export default {
       promotionSelection: [],
       promotionData: [],
       promotionTotal: 0,
-      queryTypeId: '-1'
+      queryTypeId: '-1',
+      cloneDialogVisible: false,
+      clonePromotionId: -1
     }
   },
   computed: {
@@ -651,6 +667,29 @@ export default {
       }).catch(() => {
       })
     },
+    async handleClonePromotion(params) {
+      try {
+        this.cloneDialogVisible = false
+        this.dataLoading = true
+        const id = await this.$store.dispatch('promotions/clonePromotion', { id: this.clonePromotionId, ...params })
+        if (id >= 0) {
+          this.$message.warning('复制活动成功，请切换到对应运营平台查看！')
+          if (this.appId === params.appId) {
+            this.getPromotionData()
+          }
+        } else {
+          this.$message.warning('复制活动失败！')
+        }
+      } catch (e) {
+        console.warn('Clone promotion error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+    },
+    handleShowCloneDialog(index) {
+      this.clonePromotionId = this.promotionData[index].id
+      this.cloneDialogVisible = true
+    },
     handleOpsAction(action) {
       const cmd = action.split(':')[0]
       const index = Number.parseInt(action.split(':')[1])
@@ -672,6 +711,9 @@ export default {
           break
         case 'publish':
           this.handlePublishPromotion(index)
+          break
+        case 'clone':
+          this.handleShowCloneDialog(index)
           break
         default:
           break

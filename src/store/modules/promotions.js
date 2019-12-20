@@ -1,4 +1,5 @@
 import sortBy from 'lodash/sortBy'
+import moment from 'moment'
 import {
   getPromotionByIdApi,
   createPromotionApi,
@@ -244,6 +245,65 @@ const actions = {
     if (code === 200) {
       commit('SET_DEFAULT_SCHEDULES', params.initialSchedules)
     }
+  },
+  async clonePromotion({ commit }, params) {
+    const format = 'YYYY-MM-DD HH:mm:ss'
+    let newId = -1
+    const srcRes = await getPromotionByIdApi({ id: params.id })
+    if (srcRes.code === 200) {
+      const srcPromotion = srcRes.data.result
+      const newPromotion = {
+        name: params.name,
+        dailySchedule: srcPromotion.dailySchedule,
+        startDate: srcPromotion.startDate,
+        endDate: srcPromotion.endDate,
+        accountType: srcPromotion.accountType,
+        appId: params.appId
+      }
+      const newRes = await createPromotionApi(newPromotion)
+      if (newRes.code === 200) {
+        newId = newRes.data.promotionId
+        let schedules = []
+        if (srcPromotion.dailySchedule && Array.isArray(srcPromotion.promotionSchedules)) {
+          schedules = srcPromotion.promotionSchedules.map(item => ({
+            promotionId: newId,
+            schedule: item.schedule,
+            startTime: moment(item.startTime).format(format),
+            endTime: moment(item.endTime).format(format)
+          }))
+          for (const schedule of schedules) {
+            const scheduleRes = await createPromotionScheduleApi(schedule)
+            if (scheduleRes.code === 200) {
+              schedule.scheduleId = scheduleRes.data.scheduleId
+            }
+          }
+        }
+        const findNewScheduleId = scheduleId => {
+          const scheduleItem = srcPromotion.promotionSchedules.find(item => item.id === scheduleId)
+          const schedule = scheduleItem ? scheduleItem.schedule : null
+          const newItem = schedule ? schedules.find(item => item.schedule === schedule) : null
+          return newItem ? newItem.scheduleId : null
+        }
+        if (Array.isArray(srcPromotion.promotionSkus) && srcPromotion.promotionSkus.length > 0) {
+          const content = {
+            id: newId,
+            promotionSkus: srcPromotion.promotionSkus.map(item => ({
+              skuid: item.skuid,
+              mpu: item.mpu,
+              discount: item.discount,
+              scheduleId: srcPromotion.dailySchedule ? findNewScheduleId(item.scheduleId) : -1,
+              name: item.name,
+              brand: item.brand,
+              price: item.price,
+              promotionImage: item.promotionImage,
+              perLimited: item.perLimited
+            }))
+          }
+          await addPromotionContentApi(content)
+        }
+      }
+    }
+    return newId
   }
 }
 

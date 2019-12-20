@@ -194,6 +194,8 @@
     />
     <clone-dialog
       :dialog-visible="cloneDialogVisible"
+      title="复制优惠券"
+      name-title="优惠券名称"
       @cancelled="cloneDialogVisible = false"
       @confirmed="handleCloneCoupon"
     />
@@ -205,6 +207,7 @@ import { mapGetters } from 'vuex'
 import isEqual from 'lodash/isEqual'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
+import CloneDialog from '@/components/CloneDialog'
 import {
   coupon_status_init,
   coupon_status_published,
@@ -223,7 +226,6 @@ import {
 } from '@/api/coupons'
 import { CouponTypeOptions, CouponCollectOptions } from './constants'
 import { CouponPermissions } from '@/utils/role-permissions'
-import CloneDialog from './cloneDialog'
 
 export default {
   name: 'Coupon',

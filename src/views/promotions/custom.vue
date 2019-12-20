@@ -11,8 +11,8 @@
       <el-form-item label="活动名称" prop="name">
         <el-input v-model="formData.name" maxlength="30" placeholder="请输入活动名称" style="width: 300px" />
       </el-form-item>
-      <el-form-item label="活动组名" prop="type">
-        <el-select v-model="formData.promotionTypeId">
+      <el-form-item label="活动组名">
+        <el-select v-model="formPromotionType">
           <el-option
             v-for="item in tabOptions"
             :key="item.value"
@@ -283,6 +283,14 @@ export default {
     tabOptions: {
       get() {
         return this.promotionTypes.map(type => ({ value: type.id, label: type.typeName }))
+      }
+    },
+    formPromotionType: {
+      get() {
+        return this.formData.promotionTypeId !== 0 ? this.formData.promotionTypeId : null
+      },
+      set(value) {
+        this.formData.promotionTypeId = value
       }
     }
   },

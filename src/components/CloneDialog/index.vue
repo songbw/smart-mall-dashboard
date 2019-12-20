@@ -4,10 +4,10 @@
     :show-close="false"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
-    title="复制优惠券"
+    :title="title"
   >
     <el-form ref="cloneForm" :model="cloneForm" :rules="cloneRules" label-width="6rem">
-      <el-form-item label="优惠券名称" prop="name">
+      <el-form-item :label="nameTitle" prop="name">
         <el-input v-model="cloneForm.name" maxlength="50" />
       </el-form-item>
       <el-form-item label="运营平台" prop="appId">
@@ -43,6 +43,14 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    title: {
+      type: String,
+      default: '复制'
+    },
+    nameTitle: {
+      type: String,
+      default: '名称'
     }
   },
   data() {

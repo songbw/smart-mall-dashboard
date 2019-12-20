@@ -199,6 +199,8 @@
     />
     <clone-dialog
       :dialog-visible="cloneDialogVisible"
+      title="复制聚合页"
+      name-title="聚合页名称"
       @cancelled="cloneDialogVisible = false"
       @confirmed="handleClonePage"
     />
@@ -210,8 +212,8 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
+import CloneDialog from '@/components/CloneDialog'
 import PreviewDialog from './components/previewDialog'
-import CloneDialog from './components/cloneDialog'
 import {
   getAggregationsApi,
   searchAggregationsApi,
