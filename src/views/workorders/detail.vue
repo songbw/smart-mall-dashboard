@@ -335,6 +335,8 @@ const FlowOperations = [
 ]
 
 const RefundResultStatusOptions = [{
+  value: 0, label: '处理中'
+}, {
   value: 1, label: '成功'
 }, {
   value: 2, label: '失败'
