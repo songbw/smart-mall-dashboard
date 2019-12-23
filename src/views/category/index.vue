@@ -55,7 +55,6 @@
               {{ hasEditPermission ? '编辑' : '查看' }}
             </el-button>
             <el-button
-              v-if="currentSelectedTopCategory.idate"
               type="info"
               size="mini"
               icon="el-icon-plus"
@@ -550,6 +549,7 @@ export default {
           this.dialogFormTitle = '新建三级类别'
           this.dialogValue.categoryClass = '3'
         }
+        this.dialogParentName = this.topCategoryHeaderTitle
         this.dialogValue.parentId = this.currentSelectedTopCategory.categoryId
         this.dialogValue.idate = moment().format('YYYY-MM-DD HH:mm:ss')
         this.dialogFormVisible = true
