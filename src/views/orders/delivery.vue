@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-tabs v-model="orderQuery.appId" type="card" @tab-click="onAppIdChanged">
+    <el-tabs v-model="queryAppId" type="card" @tab-click="onAppIdChanged">
       <el-tab-pane
         v-for="item in appIdOptions"
         :key="item.appId"
@@ -10,10 +10,10 @@
     </el-tabs>
     <el-form :inline="true">
       <el-form-item label="收货人电话">
-        <el-input v-model="orderQuery.mobile" :clearable="true" placeholder="输入收货人电话号码" />
+        <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" maxlength="20" />
       </el-form-item>
       <el-form-item label="订单状态">
-        <el-select :value="orderQuery.subStatus" @change="onQueryStatusChanged">
+        <el-select :value="querySubStatus" @change="onQueryStatusChanged">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -26,7 +26,7 @@
     <el-form :inline="true">
       <el-form-item label="支付开始日期">
         <el-date-picker
-          v-model="orderQuery.payDateStart"
+          v-model="queryPayStartDate"
           placeholder="选择开始日期"
           type="date"
           value-format="yyyy-MM-dd"
@@ -34,7 +34,7 @@
       </el-form-item>
       <el-form-item label="支付结束日期">
         <el-date-picker
-          v-model="orderQuery.payDateEnd"
+          v-model="queryPayEndDate"
           placeholder="选择结束日期"
           type="date"
           value-format="yyyy-MM-dd"
@@ -118,23 +118,33 @@
         align="center"
         class-name="small-padding fixed-width"
         label="操作"
-        width="80"
+        width="120"
       >
         <template slot-scope="scope">
           <el-button
-            :disabled="!hasEditPermission || orderQuery.subStatus === statusDelivered"
+            v-if="querySubStatus !== statusDelivered"
+            :disabled="!hasEditPermission"
             size="mini"
             type="primary"
             @click="handleDeliverSubOrder(scope.row)"
           >
             发货
           </el-button>
+          <el-button
+            v-else
+            :disabled="!hasEditPermission"
+            size="mini"
+            type="primary"
+            @click="handleDeliverSubOrder(scope.row)"
+          >
+            修改物流
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
     <pagination
-      :limit.sync="orderQuery.pageSize"
-      :page.sync="orderQuery.pageIndex"
+      :limit.sync="queryLimit"
+      :page.sync="queryOffset"
       :total="orderTotal"
       @pagination="getOrderList"
     />
@@ -145,6 +155,8 @@
     />
     <express-selection
       :dialog-visible="deliveryDialogVisible"
+      :order-id="deliveryData.orderId"
+      :sub-order-id="deliveryData.subOrderId"
       @cancelled="handleCancelDeliver"
       @confirmed="handleSetDeliver"
     />
@@ -159,10 +171,7 @@ import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
 import ExpressSelection from '@/components/ExpressSelection'
 import OrderProduct from './OrderProduct'
-import {
-  getOrderListApi,
-  uploadLogisticsApi
-} from '@/api/orders'
+import { getOrderListApi } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import {
   suborder_status_waiting_deliver,
@@ -172,6 +181,7 @@ import {
 } from '@/utils/constants'
 import ImportDialog from './ImportDialog'
 import { OrderPermissions } from '@/utils/role-permissions'
+import trim from 'lodash/trim'
 
 const shouldShowAoyiId = process.env.VUE_APP_HOST === 'GAT-SN' // aoyiId is Suning Order Id
 
@@ -203,15 +213,6 @@ export default {
       vendorList: [],
       listLoading: false,
       queryParams: null,
-      orderQuery: {
-        appId: 'all',
-        mobile: '',
-        subStatus: 1,
-        payDateStart: null,
-        payDateEnd: null,
-        pageIndex: 1,
-        pageSize: 20
-      },
       orderData: [],
       orderTotal: 0,
       merchantName: '',
@@ -220,26 +221,6 @@ export default {
       deliveryData: {
         orderId: null,
         subOrderId: null
-      },
-      deliveryRules: {
-        comCode: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value === null) {
-              callback(new Error('请选择物流公司'))
-            } else {
-              callback()
-            }
-          }
-        }],
-        logisticsId: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value === null) {
-              callback(new Error('请输入物流单号'))
-            } else {
-              callback()
-            }
-          }
-        }]
       }
     }
   },
@@ -247,7 +228,8 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
-      platformAppList: 'platformAppList'
+      platformAppList: 'platformAppList',
+      orderQuery: 'orderDeliveryQuery'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(OrderPermissions.view)
@@ -264,6 +246,62 @@ export default {
     },
     appIdOptions() {
       return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+    },
+    queryAppId: {
+      get() {
+        return this.orderQuery.appId
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { appId: value })
+      }
+    },
+    queryMobile: {
+      get() {
+        return this.orderQuery.mobile
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { mobile: trim(value) })
+      }
+    },
+    querySubStatus: {
+      get() {
+        return this.orderQuery.subStatus
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { subStatus: value })
+      }
+    },
+    queryPayStartDate: {
+      get() {
+        return this.orderQuery.payDateStart
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { payDateStart: value })
+      }
+    },
+    queryPayEndDate: {
+      get() {
+        return this.orderQuery.payDateEnd
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { payDateEnd: value })
+      }
+    },
+    queryOffset: {
+      get() {
+        return this.orderQuery.pageIndex
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { pageIndex: value })
+      }
+    },
+    queryLimit: {
+      get() {
+        return this.orderQuery.pageSize
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { pageSize: value })
+      }
     }
   },
   created() {
@@ -319,7 +357,7 @@ export default {
     },
     getSearchParams() {
       const params = {
-        subStatus: this.orderQuery.subStatus
+        subStatus: this.querySubStatus
       }
       const keys = ['mobile', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
@@ -327,14 +365,14 @@ export default {
           params[key] = this.orderQuery[key]
         }
       })
-      if (this.orderQuery.appId !== 'all') {
-        params.appId = this.orderQuery.appId
+      if (this.queryAppId !== 'all') {
+        params.appId = this.queryAppId
       }
       if (!isEqual(this.queryParams, params)) {
         this.queryParams = { ...params }
-        this.orderQuery.pageIndex = 1
+        this.queryOffset = 1
       }
-      return { ...params, pageIndex: this.orderQuery.pageIndex, pageSize: this.orderQuery.pageSize }
+      return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getOrderList() {
       if (this.hasViewPermission) {
@@ -364,31 +402,15 @@ export default {
       this.deliveryDialogVisible = true
     },
     onQueryStatusChanged(value) {
-      this.orderQuery.subStatus = value
+      this.querySubStatus = value
       this.getOrderList()
     },
     handleCancelDeliver() {
       this.deliveryDialogVisible = false
     },
-    async handleSetDeliver(express) {
+    handleSetDeliver() {
       this.deliveryDialogVisible = false
-      this.listLoading = true
-      const params = {
-        total: 1,
-        logisticsList: [{ ...this.deliveryData, ...express }]
-      }
-      try {
-        const { code } = await uploadLogisticsApi(params)
-        if (code === 200) {
-          this.$message.success('上传物流信息成功！')
-          this.getOrderList()
-        }
-      } catch (e) {
-        console.warn('Delivery upload logistics error:' + e)
-        this.$message.error('上传物流信息失败，请联系管理员！')
-      } finally {
-        this.listLoading = false
-      }
+      this.getOrderList()
     },
     handleBatchDelivery() {
       this.importDialogVisible = true
@@ -398,7 +420,7 @@ export default {
       this.getOrderList()
     },
     onAppIdChanged(platform) {
-      if (this.orderQuery.appId !== platform.appId) {
+      if (this.queryAppId !== platform.appId) {
         this.getOrderList()
       }
     }

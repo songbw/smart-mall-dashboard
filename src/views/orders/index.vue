@@ -93,6 +93,9 @@
         <el-button icon="el-icon-search" type="primary" @click="handleSearchOrders">
           搜索
         </el-button>
+        <el-button icon="el-icon-refresh" type="warning" @click="handleSearchReset">
+          重置
+        </el-button>
       </el-form-item>
     </el-form>
     <div
@@ -712,6 +715,10 @@ export default {
       }
     },
     handleSearchOrders() {
+      this.getOrderList()
+    },
+    handleSearchReset() {
+      this.$store.commit('orders/RESET_SEARCH_DATA')
       this.getOrderList()
     },
     handleShowExportDialog() {

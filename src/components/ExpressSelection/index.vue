@@ -1,16 +1,16 @@
 <template>
   <el-dialog
-    title="物流信息"
+    v-loading="loading"
     :visible="dialogVisible"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="false"
     :append-to-body="true"
+    title="物流信息"
     @opened="getExpressList"
   >
     <el-form
       ref="deliveryForm"
-      v-loading="expressLoading"
       :model="deliveryData"
       :rules="deliveryRules"
       label-width="100px"
@@ -38,7 +38,7 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
-import { getExpressCompanyApi } from '@/api/orders'
+import { getExpressCompanyApi, uploadLogisticsApi } from '@/api/orders'
 
 export default {
   name: 'ExpressSelection',
@@ -46,11 +46,19 @@ export default {
     dialogVisible: {
       type: Boolean,
       default: false
+    },
+    orderId: {
+      type: Number,
+      default: 0
+    },
+    subOrderId: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
-      expressLoading: false,
+      loading: false,
       expressOptions: [],
       deliveryData: {
         logisticsId: '',
@@ -84,7 +92,7 @@ export default {
       try {
         if (this.expressOptions.length === 0) {
           const params = { pageNo: 1, pageSize: 100 }
-          this.expressLoading = true
+          this.loading = true
           const { code, data } = await getExpressCompanyApi(params)
           if (code === 200) {
             this.expressOptions = data.result.list.map(item => {
@@ -99,7 +107,7 @@ export default {
         console.warn('Delivery get express error: ' + e)
         this.$message.warning('获取物流公司列表失败，请联系管理员！')
       } finally {
-        this.expressLoading = false
+        this.loading = false
       }
     },
     onExpressSelected(value) {
@@ -113,10 +121,31 @@ export default {
     handleConfirmDeliver() {
       this.$refs.deliveryForm.validate(async(valid) => {
         if (valid) {
-          this.$emit('confirmed', { ...this.deliveryData })
-          this.$refs.deliveryForm.resetFields()
+          await this.handleSetDeliver()
         }
       })
+    },
+    async handleSetDeliver() {
+      this.loading = true
+      const params = {
+        total: 1,
+        logisticsList: [{ ...this.deliveryData, orderId: this.orderId, subOrderId: this.subOrderId }]
+      }
+      try {
+        const { code, msg } = await uploadLogisticsApi(params)
+        if (code === 200) {
+          this.$message.success('上传物流信息成功！')
+          this.$emit('confirmed')
+          this.$refs.deliveryForm.resetFields()
+        } else {
+          this.$message.warning(msg)
+        }
+      } catch (e) {
+        console.warn('Delivery upload logistics error:' + e)
+        this.$message.error('上传物流信息失败，请联系管理员！')
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

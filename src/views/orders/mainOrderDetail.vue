@@ -38,6 +38,7 @@
     />
     <goods-info
       :sku-list="skuList"
+      @logisticsChanged="getOrderData"
     />
     <el-button type="primary" @click="goBack">返回</el-button>
   </div>

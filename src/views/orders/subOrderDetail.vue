@@ -2,6 +2,7 @@
   <div v-loading="dataLoading" class="app-container">
     <goods-info
       :sku-list="[orderData]"
+      @logisticsChanged="getOrderData"
     />
     <order-info
       :status="orderData.mainStatus"
