@@ -453,32 +453,33 @@ export default {
       const dateNow = moment()
       const coupon = this.couponData.find(item => item.id === id)
       if (dateNow.isAfter(coupon.releaseEndDate)) {
-        this.$confirm('优惠券上线结束时间需要晚于当前时间，请修改后重新发布！', '警告', {
-          confirmButtonText: '修改',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
+        try {
+          await this.$confirm('优惠券上线结束时间需要晚于当前时间，请修改后重新发布！', '警告', {
+            confirmButtonText: '修改',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
           this.handleEditCoupon(id)
-        }).catch(() => {
-        })
-        return
-      }
-
-      try {
-        await this.$confirm('发布此优惠券将不能进行修改，请确认是否要继续？', '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-        const { code, msg } = await updateCouponApi({ id, status: coupon_status_published })
-        if (code === 200) {
-          this.getCouponData()
-          this.handlePostStartCoupon(coupon)
-        } else {
-          this.$message.warning(msg)
+        } catch (e) {
+          console.warn('Start coupon editing ' + e)
         }
-      } catch (e) {
-        console.warn('Update coupon ' + e)
+      } else {
+        try {
+          await this.$confirm('发布此优惠券将不能进行修改，请确认是否要继续？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          const { code, msg } = await updateCouponApi({ id, status: coupon_status_published })
+          if (code === 200) {
+            this.getCouponData()
+            this.handlePostStartCoupon(coupon)
+          } else {
+            this.$message.warning(msg)
+          }
+        } catch (e) {
+          console.warn('Start coupon ' + e)
+        }
       }
     },
     handleViewCoupon(id) {
