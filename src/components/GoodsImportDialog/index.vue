@@ -108,8 +108,6 @@ const CreationHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string' },
   { field: 'name', label: '商品名称', type: 'string' },
   { field: 'brand', label: '商品品牌', type: 'string' },
-  { field: 'brandId', label: '品牌编号', type: 'number' },
-  { field: 'category', label: '类别编号', type: 'string' },
   { field: 'model', label: '商品型号', type: 'string' },
   { field: 'weight', label: '商品重量', type: 'string' },
   { field: 'image', label: '商品封面图', type: 'string' },
