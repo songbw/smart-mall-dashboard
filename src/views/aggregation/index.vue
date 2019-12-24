@@ -56,14 +56,24 @@
           :name="item.name"
         >
           <div v-if="hasEditPermission" style="display: flex;justify-content: space-between">
-            <el-button
-              :disabled="!vendorApproved"
-              type="primary"
-              icon="el-icon-document-add"
-              @click="createPage"
-            >
-              创建聚合页
-            </el-button>
+            <el-button-group>
+              <el-button
+                :disabled="!vendorApproved"
+                type="primary"
+                icon="el-icon-document-add"
+                @click="createPage"
+              >
+                创建聚合页
+              </el-button>
+              <el-button
+                :disabled="!vendorApproved || aggregationSelection.length === 0"
+                type="info"
+                icon="el-icon-brush"
+                @click="revisePages"
+              >
+                批量修正聚合页
+              </el-button>
+            </el-button-group>
             <el-button-group>
               <el-button
                 :disabled="!vendorApproved"
@@ -96,13 +106,20 @@
     </div>
     <div style="margin-top: 20px">
       <el-table
+        ref="aggregationTable"
         v-loading="listLoading"
         :data="aggregationList"
         row-key="id"
         border
         fit
         style="width: 100%;"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column
+          align="center"
+          type="selection"
+          width="55"
+        />
         <el-table-column label="编号" align="center" width="80">
           <template slot-scope="scope">
             <span>{{ scope.row.id }}</span>
@@ -277,7 +294,8 @@ export default {
       listLoading: false,
       queryGroupId: '-1',
       cloneDialogVisible: false,
-      cloneId: null
+      cloneId: null,
+      aggregationSelection: []
     }
   },
   computed: {
@@ -647,6 +665,28 @@ export default {
     },
     onOrderChanged(order) {
       this.getListData()
+    },
+    handleSelectionChange(selection) {
+      this.aggregationSelection = selection
+    },
+    async revisePages() {
+      try {
+        await this.$confirm('此操作将会删除所选聚合页中已下架的商品，是否继续？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.listLoading = true
+        for (const aggregation of this.aggregationSelection) {
+          await this.$store.dispatch('aggregations/revisePage', { id: aggregation.id })
+        }
+        this.$message.success('修改聚合页成功！')
+      } catch (e) {
+        console.warn('Revise aggregation error:' + e)
+      } finally {
+        this.$refs['aggregationTable'].clearSelection()
+        this.listLoading = false
+      }
     }
   }
 }

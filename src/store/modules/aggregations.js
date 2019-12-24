@@ -1,4 +1,5 @@
 import moment from 'moment'
+import { getProductsByIdList } from '@/api/products'
 import {
   createAggregationApi,
   getAggregationByIdApi,
@@ -10,6 +11,7 @@ import {
   deleteAggregationGroupApi
 } from '@/api/aggregations'
 import {
+  product_state_on_sale,
   aggregationBannerType,
   aggregationServiceType,
   aggregationGridType,
@@ -18,18 +20,19 @@ import {
   aggregationCouponType,
   aggregationHotZoneType,
   aggregationComboType,
-  aggregationPromotionListType
+  aggregationPromotionListType,
+  aggregationHorizontalGoodType
 } from '@/utils/constants'
 
 // corresponding to appId types
-const urlTypes = ['aggregation', 'promotion']
+const urlResetTypes = ['aggregation', 'promotion']
 
-const reviseList = (list, type) => {
+const cloneList = (list, type) => {
   switch (type) {
     case aggregationBannerType:
     case aggregationServiceType:
       return list.map(item => {
-        if (urlTypes.includes(item.targetType)) {
+        if (urlResetTypes.includes(item.targetType)) {
           return {
             name: item.name,
             imageUrl: item.imageUrl,
@@ -44,7 +47,7 @@ const reviseList = (list, type) => {
     case aggregationGridType:
       return list.map(item => {
         const grids = item.grids.map(grid => {
-          if (urlTypes.includes(grid.targetType)) {
+          if (urlResetTypes.includes(grid.targetType)) {
             return {
               imageUrl: grid.imageUrl,
               targetType: 'blank',
@@ -58,10 +61,11 @@ const reviseList = (list, type) => {
         return { grids, count: item.count, targetType: item.targetType }
       })
     case aggregationGoodsType:
+    case aggregationHorizontalGoodType:
       return list
     case aggregationHotZoneType:
       return list.map(item => {
-        if (urlTypes.includes(item.targetType)) {
+        if (urlResetTypes.includes(item.targetType)) {
           return {
             area: item.area,
             targetType: 'blank',
@@ -81,7 +85,7 @@ const reviseList = (list, type) => {
       return list
   }
 }
-const reviseSettings = (settings, type) => {
+const cloneSettings = (settings, type) => {
   switch (type) {
     case aggregationBannerType:
     case aggregationServiceType:
@@ -90,7 +94,7 @@ const reviseSettings = (settings, type) => {
     case aggregationPromotionListType:
       return settings
     case aggregationGridType:
-      if (urlTypes.includes(settings.title.text.linkType)) {
+      if (urlResetTypes.includes(settings.title.text.linkType)) {
         const { title, marginBottom } = settings
         const { text, ...rest } = title
         return {
@@ -176,22 +180,117 @@ const reviseSettings = (settings, type) => {
         countPerLine: settings.countPerLine,
         marginBottom: settings.marginBottom
       }
+    case aggregationHorizontalGoodType:
+      if (urlResetTypes.includes(settings.title.targetType)) {
+        const { title, marginBottom } = settings
+        return {
+          title: {
+            show: title.show,
+            textAlign: title.textAlign,
+            textValue: title.textValue,
+            hasTextLink: title.hasTextLink,
+            textLinkValue: title.textLinkValue,
+            hasImage: title.hasImage,
+            imageUrl: title.imageUrl,
+            targetType: 'blank',
+            targetUrl: 'about:blank',
+            targetName: '无链接'
+          },
+          marginBottom
+        }
+      } else {
+        return settings
+      }
     default:
       return settings
   }
 }
 
-const reviseTemplate = (srcAppId, dstAppId, template) => {
+const cloneTemplate = (srcAppId, dstAppId, template) => {
   if (srcAppId === dstAppId) {
     return template
   } else {
     const { data, ...rest } = template
-    const list = reviseList(data.list, template.type)
-    const settings = reviseSettings(data.settings, template.type)
+    const list = cloneList(data.list, template.type)
+    const settings = cloneSettings(data.settings, template.type)
     return {
       data: { list, settings },
       ...rest
     }
+  }
+}
+
+const isProductValid = (product) => {
+  const price = Number.parseFloat(product.price)
+  return !Number.isNaN(price) && price > 0 && Number.parseInt(product.state) === product_state_on_sale
+}
+
+async function filterOnSaleMpuList(mpuList) {
+  let onSaleList = []
+  if (mpuList.length > 0) {
+    for (let begin = 0; begin < mpuList.length; begin += 50) {
+      const params = {
+        mpuIdList: mpuList.slice(begin, begin + 50).join(',')
+      }
+      try {
+        const { code, data } = await getProductsByIdList(params)
+        if (code === 200 && data.result.length > 0) {
+          onSaleList = onSaleList.concat(
+            data.result.filter(item => isProductValid(item)).map(item => item.mpu)
+          )
+        }
+      } catch (err) {
+        console.warn('filterOnSaleMpuList:' + err)
+      }
+    }
+  }
+  return onSaleList
+}
+
+async function reviseList(list, type) {
+  switch (type) {
+    case aggregationPromotionType:
+    case aggregationComboType:
+    case aggregationHorizontalGoodType: {
+      const onSaleList = await filterOnSaleMpuList(list.map(item => item.mpu))
+      return list.filter(item => onSaleList.includes(item.mpu))
+    }
+    case aggregationPromotionListType: {
+      const newList = []
+      for (const promotion of list) {
+        const { skus, ...rest } = promotion
+        const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
+        newList.push({
+          skus: skus.filter(item => onSaleList.includes(item.mpu)),
+          ...rest
+        })
+      }
+      return newList
+    }
+    case aggregationGoodsType: {
+      const newList = []
+      for (const floor of list) {
+        const { skus, ...rest } = floor
+        const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
+        newList.push({
+          skus: skus.filter(item => onSaleList.includes(item.mpu)),
+          ...rest
+        })
+      }
+      return newList
+    }
+    default:
+      return list
+  }
+}
+
+async function reviseTemplate(template) {
+  const { data, ...rest } = template
+  const list = await reviseList(data.list, template.type)
+  const settings = data.settings
+  return {
+    data: { list, settings },
+    ...rest
   }
 }
 
@@ -461,12 +560,28 @@ const actions = {
         const content = JSON.parse(data.result.content)
         await updateAggregationContentApi({
           id: cloneId,
-          content: JSON.stringify(content.map(item => reviseTemplate(data.result.appId, params.appId, item)))
+          content: JSON.stringify(content.map(item => cloneTemplate(data.result.appId, params.appId, item)))
         })
         return cloneId
       }
     }
     return -1
+  },
+  async revisePage({ commit }, params) {
+    const id = params.id
+    const { code, data } = await getAggregationByIdApi({ id })
+    if (code === 200 && data.result) {
+      const content = JSON.parse(data.result.content)
+      const reviseContent = []
+      for (const contentItem of content) {
+        const reviseItem = await reviseTemplate(contentItem)
+        reviseContent.push(reviseItem)
+      }
+      await updateAggregationContentApi({
+        id,
+        content: JSON.stringify(reviseContent)
+      })
+    }
   }
 }
 
