@@ -51,7 +51,7 @@
         <span v-else>{{ productForm.skuid }}</span>
         <span v-if="productForm.merchantId === vendorAoyi" style="font-size: 12px;margin-left: 10px">
           <i class="el-icon-warning-outline">
-            奥义商品SKU规则：以10开始为奥义自营，20开始为苏宁易购，30开始为唯品会，50开始为天猫精选，60开始为京东
+            奥弋商品SKU规则：以10开始为奥弋自营，20开始为苏宁易购，30开始为唯品会，50开始为天猫精选，60开始为京东
           </i>
         </span>
       </el-form-item>
