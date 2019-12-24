@@ -103,6 +103,8 @@
       :dialog-visible="deliveryDialogVisible"
       :order-id="deliveryData.orderId"
       :sub-order-id="deliveryData.subOrderId"
+      :sub-id="deliveryData.subId"
+      :sub-order-status="deliveryData.subOrderStatus"
       @cancelled="deliveryDialogVisible = false"
       @confirmed="handleSetDeliver"
     />
@@ -151,7 +153,9 @@ export default {
       deliveryDialogVisible: false,
       deliveryData: {
         orderId: null,
-        subOrderId: null
+        subId: null,
+        subOrderId: null,
+        subOrderStatus: null
       }
     }
   },
@@ -190,6 +194,8 @@ export default {
     },
     handleDeliverSubOrder(row) {
       this.deliveryData.orderId = 'orderId' in row ? row.orderId : row.id
+      this.deliveryData.subId = 'subId' in row ? row.subId : row.id
+      this.deliveryData.subOrderStatus = 'subStatus' in row ? row.subStatus : row.status
       this.deliveryData.subOrderId = row.subOrderId
       this.deliveryDialogVisible = true
     },

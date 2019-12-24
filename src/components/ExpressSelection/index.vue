@@ -1,6 +1,5 @@
 <template>
   <el-dialog
-    v-loading="loading"
     :visible="dialogVisible"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
@@ -11,6 +10,7 @@
   >
     <el-form
       ref="deliveryForm"
+      v-loading="loading"
       :model="deliveryData"
       :rules="deliveryRules"
       label-width="100px"
@@ -38,7 +38,11 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
-import { getExpressCompanyApi, uploadLogisticsApi } from '@/api/orders'
+import { getExpressCompanyApi, uploadLogisticsApi, updateLogisticsApi } from '@/api/orders'
+import {
+  suborder_status_waiting_deliver,
+  suborder_status_delivered
+} from '@/utils/constants'
 
 export default {
   name: 'ExpressSelection',
@@ -48,6 +52,14 @@ export default {
       default: false
     },
     orderId: {
+      type: Number,
+      default: 0
+    },
+    subId: {
+      type: Number,
+      default: 0
+    },
+    subOrderStatus: {
       type: Number,
       default: 0
     },
@@ -119,9 +131,13 @@ export default {
       this.$emit('cancelled')
     },
     handleConfirmDeliver() {
-      this.$refs.deliveryForm.validate(async(valid) => {
+      this.$refs.deliveryForm.validate((valid) => {
         if (valid) {
-          await this.handleSetDeliver()
+          if (this.subOrderStatus === suborder_status_waiting_deliver) {
+            this.handleSetDeliver()
+          } else if (this.subOrderStatus === suborder_status_delivered) {
+            this.handleUpdateDeliver()
+          }
         }
       })
     },
@@ -133,6 +149,27 @@ export default {
       }
       try {
         const { code, msg } = await uploadLogisticsApi(params)
+        if (code === 200) {
+          this.$message.success('上传物流信息成功！')
+          this.$emit('confirmed')
+          this.$refs.deliveryForm.resetFields()
+        } else {
+          this.$message.warning(msg)
+        }
+      } catch (e) {
+        console.warn('Delivery upload logistics error:' + e)
+        this.$message.error('上传物流信息失败，请联系管理员！')
+      } finally {
+        this.loading = false
+      }
+    },
+    async handleUpdateDeliver() {
+      this.loading = true
+      const params = {
+        ...this.deliveryData, id: this.subId
+      }
+      try {
+        const { code, msg } = await updateLogisticsApi(params)
         if (code === 200) {
           this.$message.success('上传物流信息成功！')
           this.$emit('confirmed')

@@ -107,6 +107,16 @@ export function uploadLogisticsApi(params) {
   })
 }
 
+export function updateLogisticsApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/order/logisticsId',
+    method: 'put',
+    data: {
+      ...params
+    }
+  })
+}
+
 export function exportReconciliationApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/adminorder/export/admin/reconciliation',

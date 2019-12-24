@@ -78,7 +78,7 @@ export default {
         this.dataLoading = true
         const { data } = await getMainOrderDetailApi({ orderId, pageIndex: 1, pageSize: 100 })
         this.orderData = data.result
-        this.skuList = this.orderData.skusPage.list
+        this.skuList = this.orderData.skusPage.list.map(item => ({ subId: item.id, subStatus: item.status, ...item }))
       } catch (e) {
         console.warn('Get main order detail error:' + e)
       } finally {
