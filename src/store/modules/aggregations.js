@@ -61,13 +61,24 @@ const cloneList = (list, type) => {
         return { grids, count: item.count, targetType: item.targetType }
       })
     case aggregationGoodsType:
+      return list.map(floor => {
+        if (urlResetTypes.includes(floor.titleTargetType)) {
+          const { skus, ...title } = floor
+          const newTitle = {
+            ...title, titleTargetType: 'blank', titleTargetUrl: 'about:blank', titleTargetName: '无链接'
+          }
+          return { skus, ...newTitle }
+        } else {
+          return floor
+        }
+      })
     case aggregationHorizontalGoodType:
       return list
     case aggregationHotZoneType:
       return list.map(item => {
         if (urlResetTypes.includes(item.targetType)) {
           return {
-            area: item.area,
+            ...item,
             targetType: 'blank',
             targetUrl: 'about:blank',
             targetName: '无链接'
@@ -99,14 +110,7 @@ const cloneSettings = (settings, type) => {
         const { text, ...rest } = title
         return {
           title: {
-            text: {
-              align: text.align,
-              value: text.value,
-              hasLink: text.hasLink,
-              linkType: 'blank',
-              linkTitle: '无链接',
-              linkUrl: 'about:blank'
-            },
+            text: { ...text, linkType: 'blank', linkTitle: '无链接', linkUrl: 'about:blank' },
             ...rest
           },
           marginBottom
@@ -117,19 +121,13 @@ const cloneSettings = (settings, type) => {
     case aggregationPromotionType:
       return {
         title: {
-          show: settings.title.show,
-          textAlign: settings.title.textAlign,
-          textValue: settings.title.textValue,
-          hasTextLink: settings.title.hasTextLink,
-          textLinkValue: settings.title.textLinkValue,
+          ...settings.title,
           hasPromotionActivity: true,
-          promotionDailySchedule: settings.title.promotionDailySchedule,
           promotionActivityId: -1,
           promotionActivityName: '',
           promotionActivityStartDate: '',
           promotionActivityEndDate: '',
           hasImage: false,
-          imageUrl: settings.title.imageUrl,
           targetType: 'blank',
           targetUrl: 'about:blank',
           targetName: '无链接'
@@ -139,8 +137,7 @@ const cloneSettings = (settings, type) => {
     case aggregationCouponType:
       return {
         title: {
-          show: settings.title.show,
-          imageUrl: settings.title.imageUrl,
+          ...settings.title,
           targetType: 'blank',
           targetUrl: 'about:blank',
           targetName: '无链接'
@@ -150,29 +147,21 @@ const cloneSettings = (settings, type) => {
     case aggregationComboType:
       return {
         left: {
-          textValue: settings.left.textValue,
-          hasPromotionActivity: settings.left.hasPromotionActivity,
-          promotionDailySchedule: settings.left.promotionDailySchedule,
+          ...settings.left,
           promotionActivityId: -1,
           promotionActivityName: '',
           promotionActivityStartDate: '',
           promotionActivityEndDate: '',
-          hasImage: settings.left.hasImage,
-          imageUrl: settings.left.imageUrl,
           targetType: 'blank',
           targetUrl: 'about:blank',
           targetName: '无链接'
         },
         right: {
-          textValue: settings.right.textValue,
-          hasPromotionActivity: settings.right.hasPromotionActivity,
-          promotionDailySchedule: settings.right.promotionDailySchedule,
+          ...settings.right,
           promotionActivityId: -1,
           promotionActivityName: '',
           promotionActivityStartDate: '',
           promotionActivityEndDate: '',
-          hasImage: settings.right.hasImage,
-          imageUrl: settings.right.imageUrl,
           targetType: 'blank',
           targetUrl: 'about:blank',
           targetName: '无链接'
@@ -185,13 +174,7 @@ const cloneSettings = (settings, type) => {
         const { title, marginBottom } = settings
         return {
           title: {
-            show: title.show,
-            textAlign: title.textAlign,
-            textValue: title.textValue,
-            hasTextLink: title.hasTextLink,
-            textLinkValue: title.textLinkValue,
-            hasImage: title.hasImage,
-            imageUrl: title.imageUrl,
+            ...title,
             targetType: 'blank',
             targetUrl: 'about:blank',
             targetName: '无链接'
@@ -350,6 +333,9 @@ const mutations = {
             title: floor.title,
             titleImageUrl: 'titleImageUrl' in floor ? floor.titleImageUrl : null,
             skuBackgroundColor: 'skuBackgroundColor' in floor ? floor.skuBackgroundColor : null,
+            titleTargetType: 'titleTargetType' in floor ? floor.titleTargetType : 'blank',
+            titleTargetUrl: 'titleTargetUrl' in floor ? floor.titleTargetUrl : 'about:blank',
+            titleTargetName: 'titleTargetName' in floor ? floor.titleTargetName : '无链接',
             skus: floor.skus
           }))
           settings.showFloorTitle = 'showFloorTitle' in settings ? settings.showFloorTitle : true
@@ -432,6 +418,15 @@ const mutations = {
       }
       if ('titleImageUrl' in params.value) {
         template.data.list[index].titleImageUrl = params.value.titleImageUrl
+      }
+      if ('titleTargetType' in params.value) {
+        template.data.list[index].titleTargetType = params.value.titleTargetType
+      }
+      if ('titleTargetName' in params.value) {
+        template.data.list[index].titleTargetName = params.value.titleTargetName
+      }
+      if ('titleTargetUrl' in params.value) {
+        template.data.list[index].titleTargetUrl = params.value.titleTargetUrl
       }
       if ('skuBackgroundColor' in params.value) {
         template.data.list[index].skuBackgroundColor = params.value.skuBackgroundColor

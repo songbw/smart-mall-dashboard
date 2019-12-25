@@ -75,7 +75,7 @@ export default {
     },
     targetType: {
       type: String,
-      default: 'aggregation'
+      default: 'blank'
     },
     targetUrl: {
       type: String,

@@ -26,6 +26,12 @@
         <el-color-picker v-model="headerColor" />
         <el-tag>{{ headerColor }}</el-tag>
       </el-form-item>
+      <el-form-item label="显示底部">
+        <el-switch v-model="showFooter" />
+      </el-form-item>
+      <el-form-item v-if="showFooter" label="底部文字">
+        <el-input v-model.trim="footerText" maxlength="50" />
+      </el-form-item>
       <el-form-item v-if="homePage" label="新人礼包图">
         <image-upload
           :image-url="novicePackUrl"
@@ -85,6 +91,8 @@ import { searchAggregationsApi } from '@/api/aggregations'
 import ImageUpload from '@/components/ImageUpload'
 import { AggregationPermissions } from '@/utils/role-permissions'
 import { aggregation_on_sale_status } from '../constants'
+
+const defaultFooterText = '----我是有底线的-----'
 
 export default {
   name: 'CreationForm',
@@ -167,6 +175,17 @@ export default {
         this.pageForm.backgroundColor = newValue
       }
     },
+    pageHeader: {
+      get() {
+        return {
+          showSearchBar: this.showSearchBar,
+          backgroundColor: this.headerColor,
+          novicePackUrl: this.novicePackUrl,
+          showFooter: this.showFooter,
+          footerText: this.footerText
+        }
+      }
+    },
     headerColor: {
       get() {
         if (isEmpty(this.pageForm.header)) {
@@ -182,9 +201,7 @@ export default {
       },
       set(newValue) {
         const header = {
-          showSearchBar: this.showSearchBar,
-          backgroundColor: newValue,
-          novicePackUrl: this.novicePackUrl
+          ...this.pageHeader, ...{ backgroundColor: newValue }
         }
         this.pageForm.header = JSON.stringify(header)
       }
@@ -204,9 +221,47 @@ export default {
       },
       set(newValue) {
         const header = {
-          showSearchBar: newValue,
-          backgroundColor: this.headerColor,
-          novicePackUrl: this.novicePackUrl
+          ...this.pageHeader, ...{ showSearchBar: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    showFooter: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return false
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('showFooter' in header) {
+            return header.showFooter
+          } else {
+            return false
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ showFooter: newValue, footerText: newValue ? defaultFooterText : '' }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    footerText: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return ''
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('footerText' in header) {
+            return header.footerText
+          } else {
+            return ''
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ footerText: newValue }
         }
         this.pageForm.header = JSON.stringify(header)
       }
@@ -226,9 +281,7 @@ export default {
       },
       set(newValue) {
         const header = {
-          showSearchBar: this.showSearchBar,
-          backgroundColor: this.headerColor,
-          novicePackUrl: newValue
+          ...this.pageHeader, ...{ novicePackUrl: newValue }
         }
         this.pageForm.header = JSON.stringify(header)
       }
@@ -283,8 +336,7 @@ export default {
       }
       if (isEmpty(params.header)) {
         const header = {
-          showSearchBar: false,
-          backgroundColor: null
+          ...this.pageHeader
         }
         params.header = JSON.stringify(header)
       }

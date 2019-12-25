@@ -25,26 +25,39 @@
         </el-tooltip>
       </div>
     </div>
-    <div v-if="!hasTabBar && showFloorTitle" style="margin: 10px 20px;">
-      <image-upload
-        :image-url="titleImageUrl"
-        path-name="aggregations"
-        button-size="mini"
-        image-width="200px"
-        tip="如果上传，将不显示楼层标题！"
-        button-name="选择楼层标题图"
-        @success="handleUploadImageSuccess"
-      />
-      <el-button
-        :disabled="titleImageUrl === null"
-        type="danger"
-        icon="el-icon-delete"
-        style="margin-top: 10px"
-        size="mini"
-        @click="handleRemoveImage"
-      >
-        删除楼层标题图
-      </el-button>
+    <div v-if="!hasTabBar && showFloorTitle" style="margin: 10px 20px;display: flex;justify-content: space-between">
+      <div>
+        <image-upload
+          :image-url="titleImageUrl"
+          path-name="aggregations"
+          button-size="mini"
+          image-width="200px"
+          tip="如果上传，将不显示楼层标题！"
+          button-name="选择楼层标题图"
+          @success="handleUploadImageSuccess"
+        />
+        <el-button
+          :disabled="titleImageUrl === null"
+          type="danger"
+          icon="el-icon-delete"
+          style="margin-top: 10px"
+          size="mini"
+          @click="handleRemoveImage"
+        >
+          删除楼层标题图
+        </el-button>
+      </div>
+      <div>
+        <div>楼层链接</div>
+        <image-target-link
+          :target-index="index"
+          :target-type="titleTargetType"
+          :target-url="titleTargetUrl"
+          :target-name="titleTargetName"
+          :app-id="appId"
+          @targetChanges="handleImageTargetChanges"
+        />
+      </div>
     </div>
     <div class="header-container">
       <el-form :inline="true">
@@ -197,11 +210,12 @@ import { mapGetters } from 'vuex'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
+import ImageTargetLink from './imageTargetLink'
 import { goodsType } from './templateType'
 
 export default {
   name: 'GoodsFloor',
-  components: { GoodsSelectionDialog, GoodsImportDialog, ImageUpload },
+  components: { GoodsSelectionDialog, GoodsImportDialog, ImageUpload, ImageTargetLink },
   props: {
     title: {
       type: String,
@@ -210,6 +224,10 @@ export default {
     index: {
       type: Number,
       default: -1
+    },
+    appId: {
+      type: String,
+      default: null
     }
   },
   data() {
@@ -266,6 +284,21 @@ export default {
     titleImageUrl: {
       get() {
         return this.floorInfo.titleImageUrl
+      }
+    },
+    titleTargetType: {
+      get() {
+        return this.floorInfo.titleTargetType
+      }
+    },
+    titleTargetUrl: {
+      get() {
+        return this.floorInfo.titleTargetUrl
+      }
+    },
+    titleTargetName: {
+      get() {
+        return this.floorInfo.titleTargetName
       }
     },
     skuBackgroundColor: {
@@ -429,6 +462,9 @@ export default {
           filename: `${this.floorTitle}-商品列表`
         })
       })
+    },
+    handleImageTargetChanges(target) {
+      this.$emit('titleTargetChanged', this.index, target)
     }
   }
 }

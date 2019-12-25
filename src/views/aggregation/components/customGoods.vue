@@ -6,10 +6,12 @@
         :key="index"
         :index="index"
         :title="floor.title"
+        :app-id="pageAppId"
         @sortFloor="onSortGoodsFloor"
         @deleteFloor="onDeleteGoodsFloor"
         @titleChanged="onGoodsFloorTitleChanged"
         @titleImageChanged="onGoodsFloorTitleImageChanged"
+        @titleTargetChanged="onGoodsFloorTitleTargetChanged"
         @skuColorChanged="onGoodsFloorSkuColorChanged"
         @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
@@ -102,9 +104,13 @@ export default {
   },
   computed: {
     ...mapGetters({
+      pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    pageAppId() {
+      return this.pageInfo.appId
+    },
     goodsInfo: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === goodsType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
@@ -260,6 +266,19 @@ export default {
     },
     onGoodsFloorTitleImageChanged(floorIndex, url) {
       const floor = { titleImageUrl: url }
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onGoodsFloorTitleTargetChanged(floorIndex, target) {
+      const floor = {}
+      if ('type' in target) {
+        floor.titleTargetType = target.type
+      }
+      if ('name' in target) {
+        floor.titleTargetName = target.name
+      }
+      if ('url' in target) {
+        floor.titleTargetUrl = target.url
+      }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorSkuColorChanged(floorIndex, color) {
