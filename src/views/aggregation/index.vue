@@ -221,6 +221,23 @@
       @cancelled="cloneDialogVisible = false"
       @confirmed="handleClonePage"
     />
+    <el-dialog
+      title="正在修改聚合页商品"
+      :visible.sync="reviseDialogVisible"
+      :show-close="false"
+      :close-on-press-escape="false"
+      :close-on-click-modal="false"
+      width="300px"
+      center
+    >
+      <div style="display: flex; flex-direction:column; align-items: center; justify-content: center">
+        <div style="margin-bottom: 20px">{{ reviseName }}</div>
+        <el-progress type="circle" :percentage="reviseProgress" />
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="handleCancelRevise">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -295,7 +312,11 @@ export default {
       queryGroupId: '-1',
       cloneDialogVisible: false,
       cloneId: null,
-      aggregationSelection: []
+      aggregationSelection: [],
+      reviseDialogVisible: false,
+      reviseProgress: 0,
+      reviseName: '',
+      cancelRevise: false
     }
   },
   computed: {
@@ -676,17 +697,28 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.listLoading = true
+        this.cancelRevise = false
+        this.reviseDialogVisible = true
+        let count = 0
+        const total = this.aggregationSelection.length
         for (const aggregation of this.aggregationSelection) {
+          this.reviseName = aggregation.name
+          count++
+          this.reviseProgress = Math.round(100 * count / total)
           await this.$store.dispatch('aggregations/revisePage', { id: aggregation.id })
+          if (this.cancelRevise) break
         }
-        this.$message.success('修改聚合页成功！')
+        if (!this.cancelRevise) this.$message.success('修改聚合页成功！')
       } catch (e) {
         console.warn('Revise aggregation error:' + e)
       } finally {
         this.$refs['aggregationTable'].clearSelection()
-        this.listLoading = false
+        this.reviseDialogVisible = false
       }
+    },
+    handleCancelRevise() {
+      this.reviseDialogVisible = false
+      this.cancelRevise = true
     }
   }
 }

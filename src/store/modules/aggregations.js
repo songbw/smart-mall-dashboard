@@ -238,27 +238,18 @@ async function reviseList(list, type) {
       const onSaleList = await filterOnSaleMpuList(list.map(item => item.mpu))
       return list.filter(item => onSaleList.includes(item.mpu))
     }
+    case aggregationGoodsType:
     case aggregationPromotionListType: {
       const newList = []
-      for (const promotion of list) {
-        const { skus, ...rest } = promotion
-        const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
-        newList.push({
-          skus: skus.filter(item => onSaleList.includes(item.mpu)),
-          ...rest
-        })
-      }
-      return newList
-    }
-    case aggregationGoodsType: {
-      const newList = []
-      for (const floor of list) {
-        const { skus, ...rest } = floor
-        const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
-        newList.push({
-          skus: skus.filter(item => onSaleList.includes(item.mpu)),
-          ...rest
-        })
+      for (const listItem of list) {
+        const { skus, ...rest } = listItem
+        if (Array.isArray(skus)) {
+          const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
+          newList.push({
+            skus: skus.filter(item => onSaleList.includes(item.mpu)),
+            ...rest
+          })
+        }
       }
       return newList
     }
@@ -565,7 +556,7 @@ const actions = {
   async revisePage({ commit }, params) {
     const id = params.id
     const { code, data } = await getAggregationByIdApi({ id })
-    if (code === 200 && data.result) {
+    if (code === 200 && data.result && data.result.content) {
       const content = JSON.parse(data.result.content)
       const reviseContent = []
       for (const contentItem of content) {
