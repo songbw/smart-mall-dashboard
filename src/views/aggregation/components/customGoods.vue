@@ -248,6 +248,9 @@ export default {
         title: '楼层 ' + index,
         titleImageUrl: null,
         skuBackgroundColor: '#F8F8F8',
+        titleTargetType: 'blank',
+        titleTargetUrl: 'about:blank',
+        titleTargetName: '无链接',
         skus: []
       }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: -1, value: floor })
