@@ -23,10 +23,7 @@
     </el-form>
     <span slot="footer">
       <el-button @click="handleDialogCancel">取消</el-button>
-      <el-button
-        type="primary"
-        @click="handleDialogConfirm"
-      >
+      <el-button type="primary" @click="handleDialogConfirm">
         确认
       </el-button>
     </span>
@@ -92,8 +89,12 @@ export default {
       this.$refs.cloneForm.resetFields()
     },
     handleDialogConfirm() {
-      this.$emit('confirmed', { ...this.cloneForm })
-      this.$refs.cloneForm.resetFields()
+      this.$refs.cloneForm.validate((valid) => {
+        if (valid) {
+          this.$emit('confirmed', { ...this.cloneForm })
+          this.$refs.cloneForm.resetFields()
+        }
+      })
     }
   }
 }
