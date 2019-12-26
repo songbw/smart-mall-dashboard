@@ -62,6 +62,10 @@
         <span v-if="viewProduct">{{ productForm.name }}</span>
         <el-input v-else v-model="productForm.name" maxlength="100" />
       </el-form-item>
+      <el-form-item label="商品副标题" prop="subTitle">
+        <span v-if="viewProduct">{{ productForm.subTitle }}</span>
+        <el-input v-else v-model="productForm.subTitle" maxlength="100" />
+      </el-form-item>
       <el-form-item label="商品品牌" prop="brand">
         <span v-if="productForm.brand" style="margin-right: 10px">{{ productForm.brand }}</span>
         <el-select
@@ -104,6 +108,32 @@
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
+      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品库存">
+        <span v-if="viewProduct"> {{ productForm.inventory }}</span>
+        <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
+      </el-form-item>
+      <el-form-item label="商品税率" prop="taxRate">
+        <span v-if="viewProduct">
+          {{ getTaxRate(productForm.taxRate) }}
+        </span>
+        <el-select
+          v-else
+          v-model="productForm.taxRate"
+          clearable
+        >
+          <el-option
+            v-for="item in taxRateOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="对比商品链接" prop="model">
+        <span v-if="viewProduct"> {{ productForm.compareUrl }}</span>
+        <el-input v-else v-model="productForm.compareUrl" maxlength="100" />
+      </el-form-item>
+      <el-divider content-position="left">商品价格</el-divider>
       <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
         <el-input-number
@@ -124,9 +154,9 @@
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
-      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品库存">
-        <span v-if="viewProduct"> {{ productForm.inventory }}</span>
-        <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
+      <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
+        <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
+        <el-input-number v-else v-model="productForm.comparePrice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-divider v-if="productForm.merchantId !== vendorAoyi" content-position="left">商品物流</el-divider>
       <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="包邮模板">
@@ -351,8 +381,10 @@ import CategorySelection from '@/components/CategorySelection'
 import ImageUpload from '@/components/ImageUpload'
 import ShippingPriceSelection from './shippingPriceSelection'
 import {
+  max_upload_image_size,
   app_upload_url,
   ProductStateOptions,
+  ProductTaxRateOptions,
   vendor_status_approved
 } from '@/utils/constants'
 import { getVendorListApi } from '@/api/vendor'
@@ -364,7 +396,6 @@ import {
 } from '@/api/freight'
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
-import { max_upload_image_size } from '@/utils/constants'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -422,6 +453,7 @@ export default {
       }
     }
     return {
+      taxRateOptions: ProductTaxRateOptions,
       uploadUrl: app_upload_url,
       vendorAoyi: 2,
       maxThumbnailLength: 5,
@@ -484,7 +516,11 @@ export default {
         mpu: null,
         createdAt: null,
         imagesUrl: null,
-        introductionUrl: null
+        introductionUrl: null,
+        subTitle: null,
+        compareUrl: null,
+        comparePrice: null,
+        taxRate: null
       },
       formRules: {
         merchantId: [{
@@ -1223,6 +1259,14 @@ export default {
         this.getMpuShippingPrice(this.productForm.mpu)
       } else {
         this.shippingPriceData = ret.template
+      }
+    },
+    getTaxRate(value) {
+      if (value !== null) {
+        const find = ProductTaxRateOptions.find(item => item.value === value)
+        return find ? find.label : ''
+      } else {
+        return ''
       }
     },
     goBack() {

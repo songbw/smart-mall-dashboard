@@ -35,6 +35,28 @@ export const ProductStateOptions = [
   }
 ]
 
+export const ProductTaxRateOptions = [
+  {
+    value: '0',
+    label: '0%'
+  }, {
+    value: '0.03',
+    label: '3%'
+  }, {
+    value: '0.06',
+    label: '6%'
+  }, {
+    value: '0.09',
+    label: '9%'
+  }, {
+    value: '0.11',
+    label: '11%'
+  }, {
+    value: '0.13',
+    label: '13%'
+  }
+]
+
 export const order_status_deleted = -1
 export const order_status_waiting_pay = 0
 export const order_status_waiting_receipt = 1
