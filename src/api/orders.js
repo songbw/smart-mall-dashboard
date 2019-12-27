@@ -154,6 +154,15 @@ export function exportVendorDeliverOrdersApi() {
   })
 }
 
+export function exportInvoiceBillApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/receiptBill',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
 export function getPayInfoListApi(params) {
   return Vue.axios('orders').request({
     url: '/aggpays/wspay/query/pay',

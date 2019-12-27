@@ -102,24 +102,29 @@
       v-if="hasExportPermission || hasPayExportPermission"
       style="display: flex;justify-content: start;margin-bottom: 12px"
     >
-      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已支付与已退款的订单列表">
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已支付与已退款的订单列表" :open-delay="1000">
         <el-button icon="el-icon-download" type="success" @click="handleShowExportDialog">
           导出流水订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表">
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
         <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasPayExportPermission" content="根据支付类型导出所需时间段内已完成与已退款的交易列表">
+      <el-tooltip v-if="hasPayExportPermission" content="根据支付类型导出所需时间段内已完成与已退款的交易列表" :open-delay="1000">
         <el-button icon="el-icon-download" type="warning" @click="handleShowPaymentExportDialog">
           导出支付交易订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasExportPermission" content="导出当前供应商订单发货概况">
+      <el-tooltip v-if="hasExportPermission" content="导出当前供应商订单发货概况" :open-delay="1000">
         <el-button icon="el-icon-download" type="info" @click="handleExportDeliverOrders">
           导出发货概况
+        </el-button>
+      </el-tooltip>
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内商品发票报表" :open-delay="1000">
+        <el-button icon="el-icon-download" type="danger" @click="handleShowInvoiceDialog">
+          导出发票报表
         </el-button>
       </el-tooltip>
     </div>
@@ -137,7 +142,7 @@
             :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) }}
+            {{ scope.row.tradeNo ? scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) : '' }}
           </router-link>
         </template>
       </el-table-column>
@@ -230,7 +235,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="exportDialogVisible"
-      :title="exportReconciliation ? '导出结算订单' : '导出订单'"
+      :title="exportType === reconciliationType ? '导出结算订单' : '导出订单'"
     >
       <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
         <el-form-item label="开始日期" prop="payStartDate">
@@ -249,10 +254,22 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item v-if="exportPayment" label="支付类型" prop="payType">
+        <el-form-item v-if="exportType === paymentType" label="支付类型" prop="payType">
           <el-select v-model="exportForm.payType">
             <el-option
               v-for="item in paymentOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else-if="exportType === invoiceType" label="发票类型" prop="invoiceType">
+          <el-select v-model="exportForm.invoiceType">
+            <el-option
+              v-for="item in invoiceOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -298,7 +315,8 @@ import {
   exportPaymentBillApi,
   exportVendorOrdersApi,
   exportVendorReconciliationApi,
-  exportVendorDeliverOrdersApi
+  exportVendorDeliverOrdersApi,
+  exportInvoiceBillApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderListApi } from '@/api/workOrders'
@@ -310,11 +328,14 @@ import {
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
-const validateDates = (start, end) => {
+const wuxiPayInvoice = 'wuxi-payment'
+const wuxiKuaiJieInvoice = 'wuxi-kuai-jie'
+
+const validateDates = (start, end, amount = 3) => {
   const format = 'YYYY-MM-DD'
   if (start && end) {
     const startDate = moment(start, format)
-    const maxEndDate = moment(start, format).add(3, 'months')
+    const maxEndDate = moment(start, format).add(amount, 'months')
     const endDate = moment(end, format)
     return endDate.isSameOrAfter(startDate) && endDate.isSameOrBefore(maxEndDate)
   } else {
@@ -355,46 +376,68 @@ export default {
         value: 'card',
         label: '惠民优选卡'
       }],
+      invoiceOptions: [{
+        value: wuxiPayInvoice,
+        label: '无锡专用支付'
+      }, {
+        value: wuxiKuaiJieInvoice,
+        label: '无锡快捷支付'
+      }],
       vendorLoading: false,
       vendors: [],
       listLoading: false,
       orderData: [],
       orderTotal: 0,
       queryParams: null,
-      exportPayment: false,
-      exportReconciliation: false,
+      flowType: 'export-flow',
+      paymentType: 'export-payment',
+      reconciliationType: 'export-reconciliation',
+      exportType: 'export-flow',
+      invoiceType: 'export-invoice',
       exportDialogVisible: false,
       exportForm: {
         merchantId: -1,
         payStartDate: null,
         payEndDate: null,
+        invoiceType: null,
         payType: null
       },
       exportRules: {
         payStartDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            const amount = this.exportType === this.invoiceType ? 1 : 3
             if ((value && this.exportForm.payEndDate === null) ||
-              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
+              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate, amount)) {
               callback()
             } else {
-              callback(new Error('请选择合适导出的开始日期，区间最多3个月'))
+              callback(new Error(`请选择合适导出的开始日期，区间最多${amount}个月`))
             }
           }
         }],
         payEndDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            const amount = this.exportType === this.invoiceType ? 1 : 3
             if ((value && this.exportForm.payStartDate === null) ||
-              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate)) {
+              validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate, amount)) {
               callback()
             } else {
-              callback(new Error('请选择合适导出的结束日期， 区间最多3个月'))
+              callback(new Error(`请选择合适导出的结束日期， 区间最多${amount}个月`))
             }
           }
         }],
         payType: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.exportPayment && value === null) {
+            if (this.exportType === this.paymentType && value === null) {
               callback(new Error('请选择合适支付类型'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        invoiceType: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.exportType === this.invoiceType && value === null) {
+              callback(new Error('请选择对应发票类型'))
             } else {
               callback()
             }
@@ -723,20 +766,22 @@ export default {
     },
     handleShowExportDialog() {
       this.exportForm.merchantId = -1
-      this.exportReconciliation = false
-      this.exportPayment = false
+      this.exportType = this.flowType
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
       this.exportForm.merchantId = -1
-      this.exportReconciliation = true
-      this.exportPayment = false
+      this.exportType = this.reconciliationType
       this.exportDialogVisible = true
     },
     handleShowPaymentExportDialog() {
       this.exportForm.payType = null
-      this.exportReconciliation = false
-      this.exportPayment = true
+      this.exportType = this.paymentType
+      this.exportDialogVisible = true
+    },
+    handleShowInvoiceDialog() {
+      this.exportForm.merchantId = -1
+      this.exportType = this.invoiceType
       this.exportDialogVisible = true
     },
     async handleExportOrders() {
@@ -776,7 +821,6 @@ export default {
       }
     },
     async handleExportReconciliation() {
-      this.exportDialogVisible = false
       const params = {
         payStartDate: this.exportForm.payStartDate,
         payEndDate: this.exportForm.payEndDate
@@ -800,7 +844,6 @@ export default {
       }
     },
     async handleExportPayment() {
-      this.exportDialogVisible = false
       const params = {
         startDate: this.exportForm.payStartDate,
         endDate: this.exportForm.payEndDate,
@@ -817,6 +860,33 @@ export default {
         console.warn('Order export error:' + e)
         this.$message.warning('未找到有效的结算订单数据！')
       }
+    },
+    async handleExportInvoice() {
+      const params = {
+        startTime: this.exportForm.payStartDate,
+        endTime: this.exportForm.payEndDate
+      }
+      switch (this.exportForm.invoiceType) {
+        case wuxiPayInvoice:
+          params.appId = '11'
+          params.receiptType = 1
+          break
+        case wuxiKuaiJieInvoice:
+          params.appId = '11'
+          params.receiptType = 2
+          break
+      }
+      try {
+        const data = await exportInvoiceBillApi(params)
+        const invoiceOption = this.invoiceOptions.find(item => item.value === this.exportForm.invoiceType)
+        const invoiceLabel = invoiceOption ? invoiceOption.label : ''
+        const filename = `${invoiceLabel}-发票报表-${params.startTime}-${params.endTime}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+      this.$refs.exportForm.resetFields()
     },
     async handleExportDeliverOrders() {
       try {
@@ -836,12 +906,19 @@ export default {
       this.$refs.exportForm.validate(valid => {
         if (valid) {
           this.exportDialogVisible = false
-          if (this.exportReconciliation) {
-            this.handleExportReconciliation()
-          } else if (this.exportPayment) {
-            this.handleExportPayment()
-          } else {
-            this.handleExportOrders()
+          switch (this.exportType) {
+            case this.reconciliationType:
+              this.handleExportReconciliation()
+              break
+            case this.paymentType:
+              this.handleExportPayment()
+              break
+            case this.flowType:
+              this.handleExportOrders()
+              break
+            case this.invoiceType:
+              this.handleExportInvoice()
+              break
           }
         }
       })
