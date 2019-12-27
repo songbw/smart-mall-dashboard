@@ -35,6 +35,7 @@
               v-model="regPassword"
               placeholder="请输入密码"
               show-password
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item label="确认密码" prop="confirm">
@@ -42,6 +43,7 @@
               v-model="registerForm.confirm"
               type="password"
               placeholder="再次输入密码"
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item label="手机号码" prop="phone">
@@ -51,6 +53,7 @@
                 type="tel"
                 placeholder="输入手机号码"
                 style="width: 60%"
+                maxlength="20"
               />
               <el-button
                 :disabled="timedOut < 60"
@@ -69,6 +72,7 @@
                 type="number"
                 placeholder="输入手机验证码"
                 style="width: 60%"
+                maxlength="6"
               />
               <span v-if="showCode" style="font: 25px Georgia;background: #C0C4CC">{{ captcha }}</span>
             </div>

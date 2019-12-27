@@ -25,7 +25,7 @@
               v-model="passwordForm.oldPassword"
               placeholder="请输入就密码"
               show-password
-              maxlength="30"
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item label="新密码" prop="newPassword">
@@ -33,7 +33,7 @@
               v-model="passwordForm.newPassword"
               placeholder="请输入新密码"
               show-password
-              maxlength="30"
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item label="确认密码" prop="confirm">
@@ -41,7 +41,7 @@
               v-model="passwordForm.confirm"
               type="password"
               placeholder="再次输入密码"
-              maxlength="30"
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item>

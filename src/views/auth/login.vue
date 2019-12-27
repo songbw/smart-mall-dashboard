@@ -31,6 +31,7 @@
               placeholder="请输入密码"
               type="password"
               show-password
+              maxlength="20"
             />
           </el-form-item>
           <el-form-item>
