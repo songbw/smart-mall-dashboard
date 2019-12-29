@@ -79,12 +79,12 @@ module.exports = {
           {
             name: 'echarts',
             var: 'echarts',
-            version: '4.5.0',
+            version: '4.6.0',
             path: 'dist/echarts.min.js'
           },
           {
             name: 'v-charts',
-            var: 'echarts',
+            var: 'VeIndex',
             version: '1.19.0',
             path: 'lib/index.min.js'
           },
