@@ -103,6 +103,22 @@ export function consumeCouponApi(params) {
   })
 }
 
+export function redeemCouponApi(params) {
+  return Vue.axios('coupons')({
+    url: '/equities/adminCoupon/redemption',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
+export function getNotCollectUserCodeApi(params) {
+  return Vue.axios('coupons')({
+    url: '/equities/adminCoupon/unCollect',
+    method: 'get',
+    params
+  })
+}
+
 export function getPublishedCouponsApi(params) {
   return Vue.axios('coupons')({
     url: '/equities/adminCoupon/release',

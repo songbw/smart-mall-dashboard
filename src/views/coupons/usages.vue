@@ -76,6 +76,9 @@
         批量生成券码
       </el-button>
       <el-button v-if="false" type="warning" @click="handleImportUserCode">批量导入券码</el-button>
+      <el-button :disabled="!couldRedeem" type="warning" @click="handleShowRedeemDialog">
+        发放优惠券
+      </el-button>
     </div>
     <el-table
       ref="productsTable"
@@ -140,21 +143,35 @@
         <el-button type="primary" @click="handleCancelExport">取消</el-button>
       </span>
     </el-dialog>
+    <redeem-dialog
+      :dialog-visible="redeemDialogVisible"
+      :app-id="appId"
+      :code="redeemCode"
+      @cancelled="redeemDialogVisible = false"
+      @confirmed="handleRedeemCoupon"
+    />
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import isString from 'lodash/isString'
 import isNumber from 'lodash/isNumber'
 import Pagination from '@/components/Pagination'
+import RedeemDialog from './redeemDialog'
 import { UsageStatusOptions } from './constants'
 import {
   getCouponByIdApi,
   getCouponUsageByIdApi,
-  batchUserCodeByIdApi
+  batchUserCodeByIdApi,
+  getNotCollectUserCodeApi,
+  redeemCouponApi
 } from '@/api/coupons'
+import {
+  coupon_status_on_sale
+} from '@/utils/constants'
 
 const timeFormat = time => {
   const format = 'YYYY-MM-DD HH:mm:ss'
@@ -167,7 +184,7 @@ const timeFormat = time => {
 }
 export default {
   name: 'CouponUsages',
-  components: { Pagination },
+  components: { Pagination, RedeemDialog },
   filters: {
     usageStatus: status => {
       const usage = UsageStatusOptions.find(option => status === option.value)
@@ -201,10 +218,15 @@ export default {
       allExportProgress: 0,
       couponData: null,
       couponUsageData: [],
-      couponUsageTotal: 0
+      couponUsageTotal: 0,
+      redeemDialogVisible: false,
+      redeemCode: ''
     }
   },
   computed: {
+    ...mapGetters({
+      appId: 'platformAppId'
+    }),
     containerLoading() {
       return this.batchCodeLoading
     },
@@ -214,6 +236,9 @@ export default {
     needBatchCode() {
       // 优惠券的领取方式为人工分配，需要批量生成或导入
       return this.couponDataLoaded ? this.couponData.rules.collect.type === 4 : false
+    },
+    couldRedeem() {
+      return this.couponDataLoaded ? this.couponData.status === coupon_status_on_sale : false
     }
   },
   created() {
@@ -251,9 +276,11 @@ export default {
         if (!this.couponDataLoaded) {
           await this.getCouponData()
         }
-        const { data } = await getCouponUsageByIdApi(params)
-        this.couponUsageData = data.result.list
-        this.couponUsageTotal = data.result.total
+        const { code, data } = await getCouponUsageByIdApi(params)
+        if (code === 200) {
+          this.couponUsageData = data.result.list
+          this.couponUsageTotal = data.result.total
+        }
       } catch (e) {
         console.warn('Get coupon usages error: ' + e)
       } finally {
@@ -338,6 +365,40 @@ export default {
     },
     handleImportUserCode() {
       this.$message.warning('此功能稍后提供')
+    },
+    async handleShowRedeemDialog() {
+      try {
+        // find not used user coupons
+        const params = { couponId: this.couponId, offset: 1, limit: 1 }
+        this.dataLoading = true
+        const { code, data } = await getNotCollectUserCodeApi(params)
+        if (code === 200 && Array.isArray(data.result.list) && data.result.list.length > 0) {
+          this.redeemCode = data.result.list[0].userCouponCode
+          this.redeemDialogVisible = true
+        } else {
+          this.$message.warning('未找到此优惠券待发放的券码！')
+        }
+      } catch (e) {
+        console.warn('Find first not used coupon error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+    },
+    async handleRedeemCoupon(params) {
+      try {
+        this.dataLoading = true
+        this.redeemDialogVisible = false
+        const { code, msg } = await redeemCouponApi(params)
+        if (code === 200) {
+          await this.getUsageData()
+        } else {
+          this.$message.warning(msg)
+        }
+      } catch (e) {
+        console.warn('Redeem coupon code error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
     }
   }
 }

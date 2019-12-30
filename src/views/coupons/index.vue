@@ -204,7 +204,9 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
+import trim from 'lodash/trim'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
 import CloneDialog from '@/components/CloneDialog'
@@ -593,14 +595,17 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        const response = await consumeCouponApi({ userCouponCode: action.value })
-        if (response.code === 200) {
-          this.$message.success('核销优惠券码成功！')
-          const id = response.data.id
-          this.handleViewUsageCoupon(id)
-        } else {
-          const msg = response.msg || '核销优惠券码失败'
-          this.$message.error(msg + '，请仔细核查券码！')
+        const value = trim(action.value)
+        if (isEmpty(value) === false) {
+          const response = await consumeCouponApi({ userCouponCode: value })
+          if (response.code === 200) {
+            this.$message.success('核销优惠券码成功！')
+            const id = response.data.id
+            this.handleViewUsageCoupon(id)
+          } else {
+            const msg = response.msg || '核销优惠券码失败'
+            this.$message.error(msg + '，请仔细核查券码！')
+          }
         }
       } catch (e) {
         console.warn('Consume coupon user code: ' + e)
