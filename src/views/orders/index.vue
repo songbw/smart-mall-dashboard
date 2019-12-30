@@ -290,6 +290,18 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item v-if="exportType !== invoiceType" label="运营平台" prop="appId">
+          <el-select v-model="exportForm.appId">
+            <el-option
+              v-for="item in platformAppList"
+              :key="item.appId"
+              :label="item.name"
+              :value="item.appId"
+            >
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleCancelExport">取消</el-button>
@@ -375,6 +387,9 @@ export default {
       }, {
         value: 'card',
         label: '惠民优选卡'
+      }, {
+        value: 'bank',
+        label: '快捷支付'
       }],
       invoiceOptions: [{
         value: wuxiPayInvoice,
@@ -400,7 +415,8 @@ export default {
         payStartDate: null,
         payEndDate: null,
         invoiceType: null,
-        payType: null
+        payType: null,
+        appId: null
       },
       exportRules: {
         payStartDate: [{
@@ -438,6 +454,15 @@ export default {
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             if (this.exportType === this.invoiceType && value === null) {
               callback(new Error('请选择对应发票类型'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        appId: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (this.exportType !== this.invoiceType && value === null) {
+              callback(new Error('请选择对应运营平台'))
             } else {
               callback()
             }
@@ -800,7 +825,8 @@ export default {
 
       const params = {
         payStartDate: this.exportForm.payStartDate,
-        payEndDate: this.exportForm.payEndDate
+        payEndDate: this.exportForm.payEndDate,
+        appId: this.exportForm.appId
       }
       if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
@@ -813,7 +839,9 @@ export default {
       try {
         const data = this.hasVendorPermission
           ? await exportOrdersApi(params) : await exportVendorOrdersApi(params)
-        const filename = `订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const appOption = this.platformAppList.find(item => item.appId === params.appId)
+        const appLabel = appOption ? appOption.name : ''
+        const filename = `${appLabel}-订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -823,7 +851,8 @@ export default {
     async handleExportReconciliation() {
       const params = {
         payStartDate: this.exportForm.payStartDate,
-        payEndDate: this.exportForm.payEndDate
+        payEndDate: this.exportForm.payEndDate,
+        appId: this.exportForm.appId
       }
       if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
@@ -836,7 +865,9 @@ export default {
       try {
         const data = this.hasVendorPermission
           ? await exportReconciliationApi(params) : await exportVendorReconciliationApi(params)
-        const filename = `结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const appOption = this.platformAppList.find(item => item.appId === params.appId)
+        const appLabel = appOption ? appOption.name : ''
+        const filename = `${appLabel}-结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -847,6 +878,7 @@ export default {
       const params = {
         startDate: this.exportForm.payStartDate,
         endDate: this.exportForm.payEndDate,
+        appId: this.exportForm.appId,
         payType: this.exportForm.payType
       }
       this.$refs.exportForm.resetFields()
@@ -854,11 +886,13 @@ export default {
         const data = await exportPaymentBillApi(params)
         const payOption = this.paymentOptions.find(item => item.value === params.payType)
         const payLabel = payOption ? payOption.label : ''
-        const filename = `${payLabel}-交易订单列表-${params.startDate}-${params.endDate}.xls`
+        const appOption = this.platformAppList.find(item => item.appId === params.appId)
+        const appLabel = appOption ? appOption.name : ''
+        const filename = `${appLabel}-${payLabel}-交易订单列表-${params.startDate}-${params.endDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
-        this.$message.warning('未找到有效的结算订单数据！')
+        this.$message.warning('未找到有效的交易订单数据！')
       }
     },
     async handleExportInvoice() {
