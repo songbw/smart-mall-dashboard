@@ -101,49 +101,51 @@ import uniq from 'lodash/uniq'
 import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
 import { searchProductsApi } from '@/api/products'
-import { product_state_on_sale } from '@/utils/constants'
+import { product_state_on_sale, ProductTaxRateOptions } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 
 const CreationHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string' },
-  { field: 'name', label: '商品名称', type: 'string' },
-  { field: 'brand', label: '商品品牌', type: 'string' },
-  { field: 'model', label: '商品型号', type: 'string' },
-  { field: 'weight', label: '商品重量', type: 'string' },
-  { field: 'image', label: '商品封面图', type: 'string' },
-  { field: 'upc', label: '商品条形码', type: 'string' },
-  { field: 'saleunit', label: '销售单位', type: 'string' },
-  { field: 'price', label: '销售价格(元)', type: 'string' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string' },
-  { field: 'inventory', label: '商品库存', type: 'number' },
-  { field: 'imagesUrl', label: '商品主图', type: 'string' },
-  { field: 'introductionUrl', label: '商品描述图', type: 'string' }
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '' },
+  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
+  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题' },
+  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌' },
+  { field: 'model', label: '商品型号', type: 'string', template: '' },
+  { field: 'weight', label: '商品重量', type: 'string', template: '' },
+  { field: 'image', label: '商品封面图', type: 'string', template: '' },
+  { field: 'upc', label: '商品条形码', type: 'string', template: '' },
+  { field: 'saleunit', label: '销售单位', type: 'string', template: '' },
+  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' },
+  { field: 'inventory', label: '商品库存', type: 'number', template: '99999' },
+  { field: 'taxRate', label: '商品税率', type: 'string', template: '3%' },
+  { field: 'comparePrice', label: '对比价格(元)', type: 'string', template: '777.77' },
+  { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '' }
 ]
 
 const UpdateHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string' },
-  { field: 'name', label: '商品名称', type: 'string' },
-  { field: 'price', label: '销售价格(元)', type: 'string' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string' },
-  { field: 'inventory', label: '商品库存', type: 'number' }
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
+  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
+  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' },
+  { field: 'inventory', label: '商品库存', type: 'number', template: '99999' }
 ]
 
 const UpdatePriceHeaders = [
-  { field: 'mpu', label: '商品MPU', type: 'string' },
-  { field: 'skuid', label: '商品SKU', type: 'string' },
-  { field: 'state', label: '商品状态', type: 'string' },
-  { field: 'name', label: '商品名称', type: 'string' },
-  { field: 'price', label: '销售价格(元)', type: 'string' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string' }
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234' },
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
+  { field: 'state', label: '商品状态', type: 'string', template: '0' },
+  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
+  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' }
 ]
 
 const PromotionHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string' },
-  { field: 'pprice', label: '促销价格(元)', type: 'string' }
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
+  { field: 'pprice', label: '促销价格(元)', type: 'string', template: '888.88' }
 ]
 
 const SkuHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string' }
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' }
 ]
 
 const fileExt = filename => {
@@ -279,7 +281,7 @@ export default {
     handleTemplate() {
       import('@/utils/Export2Excel').then(excel => {
         const tHeader = this.getTemplateHeaders()
-        const data = []
+        const data = [tHeader.map(item => item.template)]
         excel.export_json_to_excel({
           header: tHeader.map(header => header.label),
           data,
@@ -367,7 +369,7 @@ export default {
     parseValue(type, value) {
       if (type === 'string') {
         if (isString(value)) {
-          return value
+          return value.trim()
         } else {
           return value != null ? value.toString() : null
         }
@@ -401,6 +403,10 @@ export default {
           }
           if (!('skuid' in product)) {
             product.skuid = ''
+          }
+          if ('taxRate' in product) {
+            const taxOption = ProductTaxRateOptions.find(item => item.label === product.taxRate)
+            product.taxRate = taxOption ? taxOption.value : ''
           }
           count++
           this.excelResults.push(product)
