@@ -210,8 +210,7 @@ export default {
               const format = 'YYYY-MM-DD HH:mm:ss'
               const startDate = moment(this.formData.startDate, format)
               const now = moment()
-              if (startDate.year() < now.year() ||
-                startDate.dayOfYear() < now.dayOfYear()) {
+              if (startDate.isSameOrBefore(now)) {
                 callback(new Error('活动日期必须晚于当前日期'))
               } else {
                 callback()
