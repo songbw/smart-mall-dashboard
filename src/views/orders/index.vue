@@ -340,7 +340,9 @@ import {
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
-const wuxiPayInvoice = 'wuxi-payment'
+const wuxiBalanceInvoice = 'wuxi-balance-payment'
+const wuxiCardInvoice = 'wuxi-card-payment'
+const wuxiWoaInvoice = 'wuxi-woa-payment'
 const wuxiKuaiJieInvoice = 'wuxi-kuai-jie'
 
 const validateDates = (start, end, amount = 3) => {
@@ -392,8 +394,14 @@ export default {
         label: '快捷支付'
       }],
       invoiceOptions: [{
-        value: wuxiPayInvoice,
-        label: '无锡专用支付'
+        value: wuxiBalanceInvoice,
+        label: '无锡余额支付'
+      }, {
+        value: wuxiCardInvoice,
+        label: '无锡惠民优选卡支付'
+      }, {
+        value: wuxiWoaInvoice,
+        label: '无锡联机账户支付'
       }, {
         value: wuxiKuaiJieInvoice,
         label: '无锡快捷支付'
@@ -901,13 +909,21 @@ export default {
         endTime: this.exportForm.payEndDate
       }
       switch (this.exportForm.invoiceType) {
-        case wuxiPayInvoice:
+        case wuxiBalanceInvoice:
           params.appId = '11'
           params.receiptType = 1
           break
-        case wuxiKuaiJieInvoice:
+        case wuxiCardInvoice:
           params.appId = '11'
           params.receiptType = 2
+          break
+        case wuxiWoaInvoice:
+          params.appId = '11'
+          params.receiptType = 3
+          break
+        case wuxiKuaiJieInvoice:
+          params.appId = '11'
+          params.receiptType = 4
           break
       }
       try {

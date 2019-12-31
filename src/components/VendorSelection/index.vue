@@ -1,102 +1,71 @@
 <template>
-  <el-dialog
-    :visible="dialogVisible"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    :show-close="false"
-    :append-to-body="true"
-    title="选择供应商"
+  <el-select
+    filterable
+    remote
+    clearable
+    placeholder="请输入供应商关键字"
+    :loading="dataLoading"
+    :value="vendorId"
+    :remote-method="handleFilterVendor"
+    @change="handleVendorChanged"
   >
-    <el-table
-      ref="dialogSkuTable"
-      v-loading="vendorLoading"
-      :data="vendorData"
-      style="width: 100%"
-      height="250"
-      border
-      highlight-current-row
-      @current-change="handleSelectionChange"
+    <el-option
+      v-for="item in vendorOptions"
+      :key="item.value"
+      :label="item.label"
+      :value="item.value"
     >
-      <el-table-column label="已选" align="center" width="55">
-        <template slot-scope="scope">
-          <el-checkbox :value="selectedItem !== null && selectedItem.id === scope.row.id" />
-        </template>
-      </el-table-column>
-      <el-table-column label="名称" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.name }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
-    <pagination
-      layout="total, prev, pager, next"
-      :auto-scroll="false"
-      :total="vendorList.length"
-      :page.sync="pageNo"
-      :limit.sync="pageSize"
-    />
-    <div slot="footer">
-      <el-button @click="handleCancel">取消</el-button>
-      <el-button type="primary" @click="handleConfirm">确认</el-button>
-    </div>
-  </el-dialog>
+      <span>{{ item.label }}</span>
+    </el-option>
+  </el-select>
 </template>
 
 <script>
-import Pagination from '@/components/Pagination'
+import isEmpty from 'lodash/isEmpty'
+import { getVendorListApi } from '@/api/vendor'
+import { vendor_status_approved } from '@/utils/constants'
 
 export default {
   name: 'VendorSelection',
-  components: { Pagination },
   props: {
-    dialogVisible: {
-      type: Boolean,
-      default: false
-    },
-    vendorLoading: {
-      type: Boolean,
-      default: false
-    },
-    vendorList: {
-      type: Array,
-      default: function() {
-        return []
-      }
+    vendorId: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
-      pageNo: 1,
-      pageSize: 10,
-      selectedItem: null
-    }
-  },
-  computed: {
-    vendorData: {
-      get() {
-        if (this.vendorList.length > 0) {
-          const begin = (this.pageNo > 1 ? (this.pageNo - 1) : 0) * this.pageSize
-          const end = begin + this.pageSize
-          return this.vendorList.slice(begin, end)
-        } else {
-          return []
-        }
-      }
+      dataLoading: false,
+      vendorOptions: []
     }
   },
   methods: {
-    handleSelectionChange(val) {
-      this.selectedItem = val
-    },
-    handleCancel() {
-      this.$emit('cancelled')
-    },
-    handleConfirm() {
-      if (this.selectedItem) {
-        this.$emit('confirmed', this.selectedItem)
+    async handleFilterVendor(word) {
+      if (isEmpty(word)) {
+        this.vendorOptions = []
       } else {
-        this.$message.warning('请选择一个供应商！')
+        try {
+          this.dataLoading = true
+          const params = {
+            page: 1,
+            limit: 50,
+            status: vendor_status_approved,
+            name: word
+          }
+          const data = await getVendorListApi(params)
+          this.vendorOptions = data.rows.map(item => ({
+            value: item.company.id.toString(),
+            label: item.company.name
+          }))
+        } catch (e) {
+          console.warn(`Vendor Selection: ${e}`)
+        } finally {
+          this.dataLoading = false
+        }
       }
+    },
+    handleVendorChanged(id) {
+      this.$emit('changed', id)
     }
   }
 }

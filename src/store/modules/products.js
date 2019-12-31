@@ -8,11 +8,12 @@ const queryTemplate = {
   brand: '',
   mpu: '',
   state: product_state_all,
-  vendorId: -1,
+  vendorId: '',
   firstCategoryId: null,
   secondCategoryId: null,
   thirdCategoryId: null
 }
+
 const state = {
   search: {
     ...queryTemplate
