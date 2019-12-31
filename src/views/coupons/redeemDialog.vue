@@ -15,6 +15,9 @@
           placeholder="请输入待发放会员电话"
           @select="handleSelectMember"
         />
+        <span style="margin-left:10px">
+          <i class="el-icon-warning-outline">请使用会员商城注册手机号码</i>
+        </span>
       </el-form-item>
       <el-form-item label="会员OpenID" prop="userOpenId">
         <el-input :value="redeemForm.userOpenId" maxlength="50" readonly />
