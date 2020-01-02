@@ -39,24 +39,10 @@
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
         <el-form-item v-if="hasVendorPermission" label="供应商名">
-          <el-select
-            filterable
-            remote
-            clearable
-            placeholder="请输入供应商关键字"
-            :value="listVendor"
-            :remote-method="handleFilterVendor"
-            @change="handleVendorChanged"
-          >
-            <el-option
-              v-for="item in vendorOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-              <span>{{ item.label }}</span>
-            </el-option>
-          </el-select>
+          <vendor-selection
+            :vendor-id="listVendor"
+            @changed="handleVendorChanged"
+          />
         </el-form-item>
       </el-form>
       <el-form v-if="showMoreOptions" :inline="true">
@@ -422,6 +408,7 @@ import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import CategorySelection from '@/components/CategorySelection'
+import VendorSelection from '@/components/VendorSelection'
 import {
   product_state_off_shelves,
   product_state_on_sale,
@@ -435,7 +422,7 @@ import ShippingPriceSelection from './shippingPriceSelection'
 
 export default {
   name: 'Product',
-  components: { Pagination, CategorySelection, GoodsImportDialog, ShippingPriceSelection },
+  components: { Pagination, CategorySelection, GoodsImportDialog, ShippingPriceSelection, VendorSelection },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -477,7 +464,6 @@ export default {
       exportingPriceProducts: false,
       brandLoading: false,
       brandOptions: [],
-      vendorOptions: [],
       selectionEditing: false,
       selectionForm: {
         state: null,
@@ -1074,11 +1060,6 @@ export default {
     },
     handleStateChanged(state) {
       this.listState = state
-    },
-    handleFilterVendor(word) {
-      this.vendorOptions = isEmpty(word) ? [] : this.productVendors
-        .filter(item => item.label.includes(word))
-        .map(item => ({ value: item.value.toString(), label: item.label }))
     },
     handleVendorChanged(vendorId) {
       this.listVendor = vendorId

@@ -21,19 +21,11 @@
       </el-form-item>
       <el-divider content-position="left">商品信息</el-divider>
       <el-form-item v-if="hasVendorPermission" label="商品供应商" prop="merchantId">
-        <el-select
+        <vendor-selection
           v-if="createProduct"
-          :value="productForm.merchantId"
-          style="width: 50%"
-          @change="handleMerchantChanged"
-        >
-          <el-option
-            v-for="item in vendorOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+          :vendor-id="productForm.merchantId"
+          @changed="handleMerchantChanged"
+        />
         <span v-else>
           {{ getVendorName(productForm.merchantId) }}
         </span>
@@ -379,6 +371,7 @@ import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
 import CategorySelection from '@/components/CategorySelection'
 import ImageUpload from '@/components/ImageUpload'
+import VendorSelection from '@/components/VendorSelection'
 import ShippingPriceSelection from './shippingPriceSelection'
 import {
   max_upload_image_size,
@@ -408,7 +401,14 @@ const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(val
 
 export default {
   name: 'ProductDetail',
-  components: { CustomIntroduction, CustomThumbnail, CategorySelection, ShippingPriceSelection, ImageUpload },
+  components: {
+    CustomIntroduction,
+    CustomThumbnail,
+    CategorySelection,
+    ShippingPriceSelection,
+    ImageUpload,
+    VendorSelection
+  },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -435,7 +435,7 @@ export default {
       if (value === null || value === '') {
         switch (rule.field) {
           case 'merchantId':
-            if (this.hasVendorPermission()) {
+            if (this.hasVendorPermission) {
               callback(new Error('请选择商品供应商'))
             } else {
               callback()
@@ -583,10 +583,6 @@ export default {
       get() {
         return this.uploading ? '正在上传图片...' + this.uploadPercent + '%' : '正在加载中...'
       }
-    },
-    vendorOptions() {
-      // Filter vendor Aoyi
-      return this.productVendors.filter(item => item.value !== this.vendorAoyi)
     },
     viewProduct() {
       return this.opType === OP_VIEW
