@@ -309,7 +309,7 @@ export default {
               const date = moment(item.statisticsDate).format(format)
               const dayData = {
                 date,
-                dateWithYear: date,
+                dateWithYear: item.statisticsDate,
                 earlyMorning: convertToNumber(item.earlyMorning),
                 morning: convertToNumber(item.morning),
                 noon: convertToNumber(item.noon),
