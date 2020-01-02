@@ -7,10 +7,10 @@
       :rules="formRules"
       label-position="right"
       label-width="120px"
-      status-icon
+      style="margin: 0 auto;width: 50%"
     >
       <el-form-item label="页面名称" prop="name">
-        <el-input v-model="pageName" maxlength="50" />
+        <el-input v-model="pageName" maxlength="50" style="width: 480px" />
       </el-form-item>
       <el-form-item v-if="hasHomePermission" label="主页设置" prop="homePage">
         <el-switch v-model="homePage" />
@@ -32,14 +32,46 @@
       <el-form-item v-if="showFooter" label="底部文字">
         <el-input v-model.trim="footerText" maxlength="50" />
       </el-form-item>
-      <el-form-item v-if="homePage" label="新人礼包图">
+      <el-form-item v-if="homePage" label="显示礼包图">
+        <el-switch v-model="showPackage" />
+      </el-form-item>
+      <el-form-item v-if="homePage && showPackage" label="新人礼包图">
         <image-upload
           :image-url="novicePackUrl"
           path-name="aggregations"
           image-width="150px"
-          tip="可选项，新人礼包宣传背景图，文件格式为JPG或PNG"
-          @success="handleUploadImageSuccess"
+          tip=""
+          @success="handleUploadNoviceSuccess"
         />
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="novicePackUrl = null">
+          删除图片
+        </el-button>
+      </el-form-item>
+      <el-form-item v-if="homePage && showPackage" label="普通礼包图">
+        <div style="display: flex;justify-content: start">
+          <div style="margin-right: 20px">
+            <image-upload
+              :image-url="commonPackUrl"
+              path-name="aggregations"
+              image-width="150px"
+              tip=""
+              @success="handleUploadCommonSuccess"
+            />
+            <el-button type="danger" size="small" icon="el-icon-delete" @click="commonPackUrl = null">
+              删除图片
+            </el-button>
+          </div>
+          <div>
+            <div>图片链接地址：</div>
+            <image-target-link
+              :target-type="commonPackTargetType"
+              :target-url="commonPackTargetUrl"
+              :target-name="commonPackTargetName"
+              :app-id="appId"
+              @targetChanges="handleCommonTargetChanges"
+            />
+          </div>
+        </div>
       </el-form-item>
       <el-form-item label="聚合页组">
         <span>{{ groupName }}</span>
@@ -91,12 +123,13 @@ import { searchAggregationsApi } from '@/api/aggregations'
 import ImageUpload from '@/components/ImageUpload'
 import { AggregationPermissions } from '@/utils/role-permissions'
 import { aggregation_on_sale_status } from '../constants'
+import ImageTargetLink from './imageTargetLink'
 
 const defaultFooterText = '----我是有底线的-----'
 
 export default {
   name: 'CreationForm',
-  components: { ImageUpload },
+  components: { ImageUpload, ImageTargetLink },
   props: {
     pageId: {
       type: Number,
@@ -180,7 +213,12 @@ export default {
         return {
           showSearchBar: this.showSearchBar,
           backgroundColor: this.headerColor,
+          showPackage: this.showPackage,
           novicePackUrl: this.novicePackUrl,
+          commonPackTargetType: this.commonPackTargetType,
+          commonPackTargetName: this.commonPackTargetName,
+          commonPackTargetUrl: this.commonPackTargetUrl,
+          commonPackUrl: this.commonPackUrl,
           showFooter: this.showFooter,
           footerText: this.footerText
         }
@@ -266,6 +304,26 @@ export default {
         this.pageForm.header = JSON.stringify(header)
       }
     },
+    showPackage: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return false
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('showPackage' in header) {
+            return header.showPackage
+          } else {
+            return false
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ showPackage: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
     novicePackUrl: {
       get() {
         if (isEmpty(this.pageForm.header)) {
@@ -282,6 +340,86 @@ export default {
       set(newValue) {
         const header = {
           ...this.pageHeader, ...{ novicePackUrl: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    commonPackTargetType: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return null
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('commonPackTargetType' in header) {
+            return header.commonPackTargetType
+          } else {
+            return null
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ commonPackTargetType: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    commonPackTargetName: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return null
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('commonPackTargetName' in header) {
+            return header.commonPackTargetName
+          } else {
+            return null
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ commonPackTargetName: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    commonPackTargetUrl: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return null
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('commonPackTargetUrl' in header) {
+            return header.commonPackTargetUrl
+          } else {
+            return null
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ commonPackTargetUrl: newValue }
+        }
+        this.pageForm.header = JSON.stringify(header)
+      }
+    },
+    commonPackUrl: {
+      get() {
+        if (isEmpty(this.pageForm.header)) {
+          return null
+        } else {
+          const header = JSON.parse(this.pageForm.header)
+          if ('commonPackUrl' in header) {
+            return header.commonPackUrl
+          } else {
+            return null
+          }
+        }
+      },
+      set(newValue) {
+        const header = {
+          ...this.pageHeader, ...{ commonPackUrl: newValue }
         }
         this.pageForm.header = JSON.stringify(header)
       }
@@ -460,8 +598,22 @@ export default {
       this.pageForm.groupId = Number.parseInt(this.groupSelectId)
       this.groupSelectId = null
     },
-    handleUploadImageSuccess(url) {
+    handleUploadNoviceSuccess(url) {
       this.novicePackUrl = url
+    },
+    handleUploadCommonSuccess(url) {
+      this.commonPackUrl = url
+    },
+    handleCommonTargetChanges(target) {
+      if ('type' in target) {
+        this.commonPackTargetType = target.type
+      }
+      if ('name' in target) {
+        this.commonPackTargetName = target.name
+      }
+      if ('url' in target) {
+        this.commonPackTargetUrl = target.url
+      }
     }
   }
 }

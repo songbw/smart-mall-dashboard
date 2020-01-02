@@ -12,7 +12,6 @@
         <create-page
           v-if="activeStep === 0"
           :page-id="pageId"
-          class="creation-container"
           @cancelCreation="handlePrevStep"
           @createPage="handleCreatePage"
         />
@@ -88,10 +87,6 @@ export default {
 </script>
 
 <style scoped>
-  .creation-container {
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
-  }
+
 </style>
 
