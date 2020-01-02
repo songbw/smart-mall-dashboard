@@ -286,9 +286,9 @@ export default {
               const format = 'MM/DD'
               const { date, ...others } = item
               const dataFormat = moment(date).format(format)
-              return { date: dataFormat, ...others }
+              return { date: dataFormat, dateWithYear: date, ...others }
             })
-          this.chartPromotionData.rows = sortBy(rows, ['date'])
+          this.chartPromotionData.rows = sortBy(rows, ['dateWithYear'])
         }
       } catch (e) {
         console.warn('Dashboard get promotion error:' + e)
@@ -309,6 +309,7 @@ export default {
               const date = moment(item.statisticsDate).format(format)
               const dayData = {
                 date,
+                dateWithYear: date,
                 earlyMorning: convertToNumber(item.earlyMorning),
                 morning: convertToNumber(item.morning),
                 noon: convertToNumber(item.noon),
@@ -320,7 +321,7 @@ export default {
                 dayData.afternoon + dayData.night + dayData.lateAtNight, 2)
               return dayData
             })
-          this.chartPeriodData.rows = sortBy(rows, ['date'])
+          this.chartPeriodData.rows = sortBy(rows, ['dateWithYear'])
         }
       } catch (e) {
         console.warn('Dashboard get period error:' + e)
