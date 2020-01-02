@@ -345,6 +345,8 @@ const wuxiCardInvoice = 'wuxi-card-payment'
 const wuxiWoaInvoice = 'wuxi-woa-payment'
 const wuxiKuaiJieInvoice = 'wuxi-kuai-jie'
 
+const maxExportMonths = 3
+
 const validateDates = (start, end, amount = 3) => {
   const format = 'YYYY-MM-DD'
   if (start && end) {
@@ -429,7 +431,7 @@ export default {
       exportRules: {
         payStartDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            const amount = this.exportType === this.invoiceType ? 1 : 3
+            const amount = maxExportMonths
             if ((value && this.exportForm.payEndDate === null) ||
               validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate, amount)) {
               callback()
@@ -440,7 +442,7 @@ export default {
         }],
         payEndDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            const amount = this.exportType === this.invoiceType ? 1 : 3
+            const amount = maxExportMonths
             if ((value && this.exportForm.payStartDate === null) ||
               validateDates(this.exportForm.payStartDate, this.exportForm.payEndDate, amount)) {
               callback()
@@ -818,19 +820,6 @@ export default {
       this.exportDialogVisible = true
     },
     async handleExportOrders() {
-      const format = 'YYYY-MM-DD'
-      const startDate = moment(this.exportForm.payStartDate, format)
-      const endDate = moment(this.exportForm.payEndDate, format)
-      if (startDate.isAfter(endDate)) {
-        this.$message.warning('导出订单的开始时间必须早于结束时间！')
-        return
-      }
-      endDate.subtract(1, 'months')
-      if (endDate.isAfter(startDate)) {
-        this.$message.warning('导出订单的时间段不能大于一个自然月！')
-        return
-      }
-
       const params = {
         payStartDate: this.exportForm.payStartDate,
         payEndDate: this.exportForm.payEndDate,
