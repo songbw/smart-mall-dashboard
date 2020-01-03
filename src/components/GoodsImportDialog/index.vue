@@ -104,6 +104,12 @@ import { searchProductsApi } from '@/api/products'
 import { product_state_on_sale, ProductTaxRateOptions } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 
+const floatToFixed = (value, precision) =>
+  parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
+const convertToNumber = value => isNumber(value) ? floatToFixed(value, 2)
+  : floatToFixed(Number.parseFloat(value), 2)
+const convertToInt = value => Number.isInteger(value) ? value : Math.round(convertToNumber(value))
+
 const CreationHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string', template: '' },
   { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
@@ -114,9 +120,9 @@ const CreationHeaders = [
   { field: 'image', label: '商品封面图', type: 'string', template: '' },
   { field: 'upc', label: '商品条形码', type: 'string', template: '' },
   { field: 'saleunit', label: '销售单位', type: 'string', template: '' },
-  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' },
-  { field: 'inventory', label: '商品库存', type: 'number', template: '99999' },
+  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
+  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999' },
   { field: 'taxRate', label: '商品税率', type: 'string', template: '3%' },
   { field: 'comparePrice', label: '对比价格(元)', type: 'string', template: '777.77' },
   { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '' }
@@ -125,9 +131,9 @@ const CreationHeaders = [
 const UpdateHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
   { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
-  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' },
-  { field: 'inventory', label: '商品库存', type: 'number', template: '99999' }
+  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
+  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999' }
 ]
 
 const UpdatePriceHeaders = [
@@ -135,13 +141,13 @@ const UpdatePriceHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
   { field: 'state', label: '商品状态', type: 'string', template: '0' },
   { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
-  { field: 'price', label: '销售价格(元)', type: 'string', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'string', template: '666.66' }
+  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
+  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' }
 ]
 
 const PromotionHeaders = [
   { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'pprice', label: '促销价格(元)', type: 'string', template: '888.88' }
+  { field: 'pprice', label: '促销价格(元)', type: 'float', template: '888.88' }
 ]
 
 const SkuHeaders = [
@@ -366,19 +372,19 @@ export default {
       }
     },
     parseValue(type, value) {
-      if (type === 'string') {
-        if (isString(value)) {
-          return value.trim()
-        } else {
-          return value != null ? value.toString() : null
-        }
-      } else {
-        if (isNumber(value)) {
+      switch (type) {
+        case 'string':
+          if (isString(value)) {
+            return value.trim()
+          } else {
+            return value != null ? value.toString() : null
+          }
+        case 'integer':
+          return convertToInt(value)
+        case 'float':
+          return convertToNumber(value)
+        default:
           return value
-        } else {
-          const val = Number.parseInt(value)
-          return Number.isNaN(val) ? null : val
-        }
       }
     },
     parseCreateSkuData(results) {
