@@ -127,6 +127,11 @@
             <span>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
+        <el-table-column label="商品状态" align="center">
+          <template slot-scope="scope">
+            <span>{{ scope.row.state | productState }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="120">
           <template slot-scope="scope">
             <span>{{ scope.row.price }}</span>
@@ -294,6 +299,7 @@ import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import PromotionInfo from './promotionInfo'
+import { ProductStateOptions } from '@/utils/constants'
 
 export default {
   name: 'SelectGoods',
@@ -306,6 +312,15 @@ export default {
     },
     limitFilter: limit => {
       return limit === -1 || limit === null ? '不限购' : `${limit}`
+    },
+    productState: state => {
+      const value = Number.parseInt(state)
+      if (Number.isNaN(value)) {
+        return state
+      } else {
+        const find = ProductStateOptions.find(option => option.value === value)
+        return find ? find.label : state
+      }
     }
   },
   props: {

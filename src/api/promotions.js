@@ -151,3 +151,12 @@ export function updatePromotionDefaultSchedulesApi(params) {
     data: { ...params }
   })
 }
+
+export function exportComparedPromotion(params) {
+  return Vue.axios('promotions').request({
+    url: '/equities/adminPromotion/export',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}

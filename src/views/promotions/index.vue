@@ -45,6 +45,27 @@
         </el-button>
       </el-form-item>
     </el-form>
+    <el-form inline>
+      <el-form-item>
+        <el-button
+          :loading="promotionExporting"
+          type="info"
+          icon="el-icon-download"
+          @click="exportDialogVisible = true"
+        >
+          比价导出活动商品
+        </el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button
+          type="success"
+          icon="el-icon-upload2"
+          @click="importDialogVisible = true"
+        >
+          定价导入活动商品
+        </el-button>
+      </el-form-item>
+    </el-form>
     <div>
       <el-tabs v-model="currentType" type="card" @tab-click="onTypeClicked">
         <el-tab-pane
@@ -238,6 +259,18 @@
       @cancelled="cloneDialogVisible = false"
       @confirmed="handleClonePromotion"
     />
+    <export-promotions
+      :app-id="appId"
+      :dialog-visible="exportDialogVisible"
+      @cancelled="exportDialogVisible = false"
+      @confirmed="handleExportPromotion"
+    />
+    <import-promotions
+      :app-id="appId"
+      :dialog-visible="importDialogVisible"
+      @cancelled="importDialogVisible = false"
+      @confirmed="handleImportPromotion"
+    />
   </div>
 </template>
 
@@ -251,7 +284,9 @@ import {
   getPromotionsApi,
   searchPromotionsApi,
   updatePromotionApi,
-  deletePromotionApi
+  deletePromotionApi,
+  exportComparedPromotion,
+  updatePromotionContentApi
 } from '@/api/promotions'
 import {
   promotion_status_init,
@@ -263,10 +298,13 @@ import {
   PromotionAccountTypeDefinition
 } from '@/utils/constants'
 import { PromotionPermissions } from '@/utils/role-permissions'
+import ExportPromotions from './exportPromotions'
+import ImportPromotions from './importPromotion'
+import uniq from 'lodash/uniq'
 
 export default {
   name: 'PromotionActivity',
-  components: { Pagination, CloneDialog },
+  components: { Pagination, CloneDialog, ExportPromotions, ImportPromotions },
   filters: {
     promotionStatus: (status) => {
       const find = PromotionStatusDefinition.find(item => item.value === status)
@@ -306,7 +344,10 @@ export default {
       promotionTotal: 0,
       queryTypeId: '-1',
       cloneDialogVisible: false,
-      clonePromotionId: -1
+      clonePromotionId: -1,
+      exportDialogVisible: false,
+      promotionExporting: false,
+      importDialogVisible: false
     }
   },
   computed: {
@@ -803,13 +844,68 @@ export default {
       } catch (e) {
         console.warn('Delete promotion type:' + e)
       }
+    },
+    downloadBlobData(data, filename) {
+      try {
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download blob data error:' + e)
+      }
+    },
+    async handleExportPromotion(params) {
+      this.exportDialogVisible = false
+      try {
+        this.promotionExporting = true
+        const data = await exportComparedPromotion(params)
+        const date = moment().format('YYYY-MM-DD')
+        const filename = `活动商品-${date}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Export promotion error:' + e)
+        this.$message.warning('导出活动商品失败！')
+      } finally {
+        this.promotionExporting = false
+      }
+    },
+    async handleImportPromotion(skus) {
+      this.importDialogVisible = false
+      try {
+        this.dataLoading = true
+        const promotionIds = uniq(skus.map(item => item.promotionId))
+        let sum = 0
+        for (const promotionId of promotionIds) {
+          const mpuList = skus.filter(item => item.promotionId === promotionId)
+            .map(item => ({ mpu: item.mpu, discount: item.discount }))
+          const params = { id: promotionId, promotionSkus: mpuList }
+          const { code } = await updatePromotionContentApi(params)
+          if (code === 200) {
+            sum++
+          }
+        }
+        if (sum === promotionIds.length) {
+          this.$message.success('更新活动商品成功！')
+        } else {
+          this.$message.warning('部分活动更新失败，请重新检查！')
+        }
+      } catch (e) {
+        console.warn('Import Promotion error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-
   .ops-button {
     margin: 0 10px;
   }
