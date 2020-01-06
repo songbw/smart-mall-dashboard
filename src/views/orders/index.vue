@@ -107,7 +107,7 @@
           导出流水订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasPayExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
+      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
         <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
