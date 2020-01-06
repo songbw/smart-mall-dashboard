@@ -35,6 +35,22 @@ export const ProductStateOptions = [
   }
 ]
 
+export const product_type_physical_goods = 0
+export const product_type_virtual_voucher = 1
+export const product_type_physical_voucher = 2
+export const ProductTypeOptions = [
+  {
+    value: product_type_physical_goods,
+    label: '实体类商品'
+  }, {
+    value: product_type_virtual_voucher,
+    label: '虚拟卡券类'
+  }, {
+    value: product_type_physical_voucher,
+    label: '实体卡券类'
+  }
+]
+
 export const ProductTaxRateOptions = [
   {
     value: '0',

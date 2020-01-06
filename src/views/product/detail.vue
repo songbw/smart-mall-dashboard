@@ -50,6 +50,20 @@
       <el-form-item v-if="!createProduct" label="商品状态">
         <span>{{ productForm.state | productState }}</span>
       </el-form-item>
+      <el-form-item label="商品类型">
+        <span v-if="viewProduct"> {{ productForm.type | typeFilter }}</span>
+        <div v-else>
+          <el-radio-group v-model="productForm.type">
+            <el-radio
+              v-for="item in typeOptions"
+              :key="'type- ' + item.value"
+              :label="item.value"
+            >
+              {{ item.label }}
+            </el-radio>
+          </el-radio-group>
+        </div>
+      </el-form-item>
       <el-form-item label="商品名称" prop="name">
         <span v-if="viewProduct">{{ productForm.name }}</span>
         <el-input v-else v-model="productForm.name" maxlength="100" />
@@ -378,7 +392,8 @@ import {
   app_upload_url,
   ProductStateOptions,
   ProductTaxRateOptions,
-  vendor_status_approved
+  vendor_status_approved,
+  ProductTypeOptions
 } from '@/utils/constants'
 import { getVendorListApi } from '@/api/vendor'
 import {
@@ -419,6 +434,10 @@ export default {
         return find ? find.label : state
       }
     },
+    typeFilter: type => {
+      const find = ProductTypeOptions.find(item => item.value === type)
+      return find ? find.label : ''
+    },
     dateFormat: date => {
       if (isEmpty(date)) {
         return ''
@@ -455,6 +474,7 @@ export default {
     return {
       taxRateOptions: ProductTaxRateOptions,
       uploadUrl: app_upload_url,
+      typeOptions: ProductTypeOptions,
       vendorAoyi: 2,
       maxThumbnailLength: 5,
       maxIntroductionLength: 30,
@@ -501,6 +521,7 @@ export default {
         merchantId: null,
         skuid: null,
         state: null,
+        type: 0,
         name: null,
         brandId: null, // Number
         brand: null,
