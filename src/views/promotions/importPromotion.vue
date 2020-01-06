@@ -51,7 +51,7 @@
           <span>{{ scope.row.promotionName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品SKU" align="center" width="150">
+      <el-table-column label="商品SKU" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
         </template>
@@ -61,17 +61,17 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="促销价格(元)" align="center" width="150">
+      <el-table-column label="促销价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.discount }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="销售价格(元)" align="center" width="150">
+      <el-table-column label="销售价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="进货价格(元)" align="center" width="150">
+      <el-table-column label="进货价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.sprice }}</span>
         </template>
@@ -112,7 +112,7 @@ const PromotionHeaders = [
   { field: 'promotionState', label: '活动状态', type: 'string', template: '编辑中' },
   { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234' },
   { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
+  { field: 'name', label: '商品名', type: 'string', template: '凤巢测试商品' },
   { field: 'discount', label: '促销价格(元)', type: 'float', template: '888.88' },
   { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
   { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
