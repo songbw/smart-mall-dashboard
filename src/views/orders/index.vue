@@ -107,7 +107,7 @@
           导出流水订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
+      <el-tooltip v-if="hasPayExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
         <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
@@ -117,12 +117,12 @@
           导出支付交易订单
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasExportPermission" content="导出当前供应商订单发货概况" :open-delay="1000">
+      <el-tooltip v-if="hasExportPermission && hasVendorPermission" content="导出供应商订单发货概况" :open-delay="1000">
         <el-button icon="el-icon-download" type="info" @click="handleExportDeliverOrders">
           导出发货概况
         </el-button>
       </el-tooltip>
-      <el-tooltip v-if="hasExportPermission" content="导出所需时间段内商品发票报表" :open-delay="1000">
+      <el-tooltip v-if="hasPayExportPermission" content="导出所需时间段内商品发票报表" :open-delay="1000">
         <el-button icon="el-icon-download" type="danger" @click="handleShowInvoiceDialog">
           导出发票报表
         </el-button>
