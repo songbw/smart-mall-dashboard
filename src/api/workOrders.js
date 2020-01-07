@@ -31,6 +31,14 @@ export function createWorkOrderFlowApi(params) {
   })
 }
 
+export function reopenWorkOrderFlowApi(params) {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/work_flows/work_order',
+    method: 'post',
+    data: { ...params }
+  })
+}
+
 export function getReturnAddressListApi(params) {
   return Vue.axios('work_orders').request({
     url: '/workorders/addresses/list',

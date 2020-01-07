@@ -5,14 +5,23 @@
         <el-card shadow="never">
           <div slot="header" style="display: flex;justify-content: space-between;align-items: center">
             <span class="card-header-text">售后信息</span>
-            <el-button
-              v-if="!isWatcherUser"
-              :disabled="flowOptions.length === 0"
-              type="primary"
-              @click="handleShowFlowDialog"
-            >
-              处理
-            </el-button>
+            <div>
+              <el-button
+                v-if="couldReopenWorkorder"
+                type="danger"
+                @click="handleReopenWorkOrder"
+              >
+                重置工单
+              </el-button>
+              <el-button
+                v-if="!isWatcherUser"
+                :disabled="flowOptions.length === 0"
+                type="primary"
+                @click="handleShowFlowDialog"
+              >
+                处理
+              </el-button>
+            </div>
           </div>
           <el-form label-position="right" label-width="120">
             <el-form-item label="售后状态:">
@@ -45,6 +54,9 @@
             <el-form-item label="更新时间:">
               <span>{{ workOrderData.updateTime | timeFilter }}</span>
             </el-form-item>
+            <el-form-item label="退款时间:">
+              <span>{{ workOrderData.refundTime | timeFilter }}</span>
+            </el-form-item>
             <el-form-item v-if="workOrderData.realRefundAmount" label="累计退款:">
               <span>￥ {{ workOrderData.realRefundAmount }}</span>
             </el-form-item>
@@ -71,12 +83,18 @@
                 <address-info :return-address="flow.returnAddress" />
               </div>
               <div v-if="flow.logisticsInfo" style="font-size: 13px">
-                <div>客户退货物流信息如下：</div>
+                <div>物流信息如下：</div>
                 <div>物流公司：{{ flow.logisticsInfo.com }}</div>
                 <div>物流单号：{{ flow.logisticsInfo.order }}</div>
               </div>
               <div v-if="flow.refund">
                 <span>发起退款金额：￥{{ flow.refund }}</span>
+              </div>
+              <div v-if="flow.operator">
+                <span>操作员：{{ flow.operator }}</span>
+                <span v-if="flow.operation" style="margin-left: 10px">
+                  处理方式：{{ flow.operation | operationFilter }}
+                </span>
               </div>
             </el-timeline-item>
           </el-timeline>
@@ -133,7 +151,7 @@
       <el-form ref="flowForm" :model="flowForm" :rules="flowRules" label-width="120px">
         <el-form-item label="处理选项" prop="status">
           <el-select
-            :value="flowForm.status"
+            :value="flowForm.operation"
             placeholder="请选择处理"
             @change="handleFlowOptionChanged"
           >
@@ -145,7 +163,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 3" label="退货地址">
+        <el-form-item v-if="flowForm.operation === approveRequest" label="退货地址">
           <el-switch v-model="includeAddress" />
           <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowAddressDialog">
             选择地址
@@ -159,10 +177,25 @@
             />
           </div>
         </el-form-item>
-        <el-form-item v-if="flowForm.status === 7" label="退款金额" prop="refund">
+        <el-form-item
+          v-if="workOrderData.status >= 3 && flowForm.operation === changeGood"
+          label="换货物流"
+          prop="logisticsInfo"
+        >
+          <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowExpressDialog">
+            填写物流
+          </el-button>
+          <div v-if="flowForm.logisticsInfo.code">
+            <el-form inline>
+              <el-form-item label="物流公司"><span>{{ flowForm.logisticsInfo.com }}</span></el-form-item>
+              <el-form-item label="物流单号"><span>{{ flowForm.logisticsInfo.order }}</span></el-form-item>
+            </el-form>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="flowForm.operation === agreeRefund" label="退款金额" prop="refund">
           <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
             <i class="el-icon-warning-outline">
-              主订单实际支付金额：{{ orderData.paymentAmount | centFilter }}，
+              主订单实际支付金额：￥{{ orderData.paymentAmount | centFilter }}，
               运费：￥{{ orderData.servFee }}，
               申请退款金额：￥{{ workOrderData.refundAmount }}
             </i>
@@ -178,12 +211,68 @@
         <el-button type="primary" @click="handleCreateFlow">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="dialogReopenVisible"
+      title="重置工单"
+    >
+      <el-form
+        ref="reopenForm"
+        v-loading="reopenLoading"
+        :model="reopenForm"
+        :rules="reopenRules"
+        label-width="120px"
+      >
+        <el-form-item label="重置类型" prop="typeId">
+          <el-select
+            v-model="reopenForm.typeId"
+            placeholder="请选择重置类型"
+          >
+            <el-option
+              v-for="item in typeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="reopenForm.typeId !== null && reopenForm.typeId !== changeGoodType"
+          label="退款金额"
+          prop="refund"
+        >
+          <div v-if="orderData.paymentAmount" style="font-size: 14px;margin-bottom: 10px">
+            <i class="el-icon-warning-outline">
+              主订单实际支付金额：￥{{ orderData.paymentAmount | centFilter }}，
+              运费：￥{{ orderData.servFee }}，
+              申请退款金额：￥{{ workOrderData.refundAmount }}
+            </i>
+          </div>
+          <el-input-number v-model="reopenForm.refund" :precision="2" :step="1" :min="0" :max="maxRefund" />
+        </el-form-item>
+        <el-form-item label="备注信息" prop="remark">
+          <el-input v-model="reopenForm.remark" autocomplete="off" maxlength="50" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelReopen">取消</el-button>
+        <el-button type="primary" @click="handleConfirmReopen">确定</el-button>
+      </div>
+    </el-dialog>
     <address-selection
       :dialog-visible="dialogAddressVisible"
       :list-loading="returnAddressLoading"
       :address-list="returnAddressList"
       @onCancelled="dialogAddressVisible = false"
       @onConfirmed="onReturnAddressSelected"
+    />
+    <express-selection
+      :update-order="false"
+      :dialog-visible="expressDialogVisible"
+      @cancelled="expressDialogVisible = false"
+      @confirmed="handleSetExpress"
     />
   </div>
 </template>
@@ -196,49 +285,48 @@ import OrderInfo from '@/components/Order/orderInfo'
 import ReceiverInfo from '@/components/Order/receiverInfo'
 import PaymentInfo from '@/components/Order/paymentInfo'
 import GoodsInfo from '@/components/Order/goodsInfo'
+import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
-import {
-  getOrderListApi
-} from '@/api/orders'
+import { getOrderListApi } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
   createWorkOrderFlowApi,
+  reopenWorkOrderFlowApi,
   getDefaultReturnAddressApi,
   getReturnAddressListApi
 } from '@/api/workOrders'
 import {
   OrderStatusDefinitions,
-  PaymentStatusDefinitions,
-  WorkOrderStatusDefinition
+  PaymentStatusDefinitions
 } from '@/utils/constants'
-import { WorkOrderTypes } from './constants'
+import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
 
-const FlowOperateOptions = [{
-  value: 2, label: '收到审核'
+const approve_request = 1
+const agree_refund = 2
+const reject_refund = 3
+const reject_change = 4
+const change_good = 5
+const reopen_workorder = 6
+const FlowOperations = [
+  { value: approve_request, label: '通过申请' },
+  { value: agree_refund, label: '同意退款' },
+  { value: reject_refund, label: '拒绝退款' },
+  { value: reject_change, label: '拒绝换货' },
+  { value: change_good, label: '换货处理' },
+  { value: reopen_workorder, label: '重置工单' }
+]
+
+const RefundResultStatusOptions = [{
+  value: 0, label: '处理中'
 }, {
-  value: 3, label: '通过审核'
+  value: 1, label: '成功'
 }, {
-  value: 5, label: '退货处理'
+  value: 2, label: '失败'
 }, {
-  value: 6, label: '处理完成'
-}, {
-  value: 7, label: '同意退款'
+  value: 3, label: '超时'
 }]
-
-const FlowStatusOptions = [{
-  value: 2, label: '收到审核'
-}, {
-  value: 3, label: '通过审核'
-}, {
-  value: 5, label: '退货处理'
-}, {
-  value: 6, label: '处理完成'
-}, {
-  value: 7, label: '同意退款'
-}]
-
 export default {
   name: 'WorkOrderDetail',
   components: {
@@ -247,11 +335,12 @@ export default {
     PaymentInfo,
     GoodsInfo,
     AddressInfo,
-    AddressSelection
+    AddressSelection,
+    ExpressSelection
   },
   filters: {
     workOrderStatus: status => {
-      const find = WorkOrderStatusDefinition.find(option => option.value === status)
+      const find = WorkOrderStatus.find(option => option.value === status)
       return find ? find.label : status
     },
     orderStatus: status => {
@@ -264,7 +353,7 @@ export default {
       }
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
-      return momentDate.isValid() ? momentDate.format(format) : ''
+      return momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year') ? momentDate.format(format) : ''
     },
     invoiceFilter(state) {
       return state === '1' ? '需要' : '不需要'
@@ -278,18 +367,31 @@ export default {
       if (Number.isNaN(yuan)) {
         return ''
       } else {
-        const value = (yuan / 100).toFixed(2)
-        return `￥ ${value}`
+        return (yuan / 100).toFixed(2)
       }
+    },
+    refundStatus: status => {
+      const find = RefundResultStatusOptions.find(option => option.value === status)
+      return find ? find.label : ''
+    },
+    operationFilter: op => {
+      const find = FlowOperations.find(option => option.value === op)
+      return find ? find.label : ''
     }
   },
   data() {
     return {
+      approveRequest: approve_request,
+      agreeRefund: agree_refund,
+      rejectRefund: reject_refund,
+      changeGood: change_good,
+      operationOptions: FlowOperations,
       dataLoading: false,
       province: '',
       city: '',
       country: '',
       typeOptions: WorkOrderTypes,
+      changeGoodType: type_change_good,
       orderData: {},
       workOrderData: {},
       flows: [],
@@ -301,13 +403,19 @@ export default {
       dialogAddressVisible: false,
       returnAddressLoading: false,
       returnAddressList: [],
+      expressDialogVisible: false,
       flowForm: {
-        status: null,
+        operation: null,
         refund: 0,
+        logisticsInfo: {
+          com: null,
+          code: null,
+          order: null
+        },
         remark: null
       },
       flowRules: {
-        status: [{
+        operation: [{
           required: true,
           validator: (rule, value, callback) => {
             if (value === null) {
@@ -321,7 +429,68 @@ export default {
         refund: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (this.flowForm.status !== 7) {
+            if (this.flowForm.operation !== agree_refund) {
+              callback()
+            } else {
+              if (value <= 0) {
+                callback(new Error('请输入合适的退款金额'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }],
+        remark: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (isEmpty(value)) {
+              callback(new Error('请输入备注信息'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }],
+        logisticsInfo: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.flowForm.operation !== change_good) {
+              callback()
+            } else {
+              if (value.code === null) {
+                callback(new Error('请输入正确的物流信息'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }]
+      },
+      dialogReopenVisible: false,
+      reopenLoading: false,
+      reopenForm: {
+        typeId: null,
+        refund: 0,
+        remark: ''
+      },
+      reopenRules: {
+        typeId: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择重置类型'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }],
+        refund: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.reopenForm.typeId !== change_good) {
               callback()
             } else {
               if (value <= 0) {
@@ -351,18 +520,30 @@ export default {
     ...mapGetters({
       isWatcherUser: 'isWatcherUser'
     }),
+    flowStatusOptions() {
+      return WorkOrderStatus
+    },
+    couldReopenWorkorder() {
+      let noRefund = isEmpty(this.workOrderData.refundTime)
+      if (!noRefund) {
+        const momentDate = moment(this.workOrderData.refundTime)
+        noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
+      }
+      return this.workOrderData.status === 6 && noRefund
+    },
     flowOptions() {
       let options = []
       if (this.workOrderData.status === 1) {
-        options = [3]
-      } else if (this.workOrderData.status === 2) {
-        options = [3]
+        options = this.workOrderData.typeId === type_change_good
+          ? [approve_request, reject_change] : [approve_request, reject_refund]
       } else if (this.workOrderData.status === 3) {
-        options = [6, 7]
+        options = this.workOrderData.typeId === type_change_good
+          ? [change_good, reject_change] : [agree_refund, reject_refund]
       } else if (this.workOrderData.status === 5) {
-        options = [6, 7]
+        options = this.workOrderData.typeId === type_change_good
+          ? [change_good, reject_change] : [agree_refund, reject_refund]
       }
-      return FlowOperateOptions.filter(option => options.includes(option.value))
+      return this.operationOptions.filter(option => options.includes(option.value))
     },
     maxRefund() {
       const yuan = Number.parseFloat(this.orderData.paymentAmount)
@@ -396,7 +577,7 @@ export default {
             const format = 'YYYY-MM-DD HH:mm:ss'
             const momentDate = moment(row.createTime)
             const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
-            const find = FlowStatusOptions.find(option => option.value === row.status)
+            const find = this.flowStatusOptions.find(option => option.value === row.status)
             let flowComment = {}
             try {
               flowComment = { ...JSON.parse(row.comments) }
@@ -461,11 +642,14 @@ export default {
         this.getReturnAddressList()
       }
     },
+    handleShowExpressDialog() {
+      this.expressDialogVisible = true
+    },
     handleShowFlowDialog() {
-      this.flowForm.status = null
+      this.flowForm.operation = null
       this.flowForm.refund = 0
       this.flowForm.remark = ''
-      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== 3 // 3 means 仅退款
+      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== type_refund_only
       this.dialogFlowVisible = true
     },
     handleCancelFlow() {
@@ -473,7 +657,17 @@ export default {
       this.$refs.flowForm.clearValidate()
     },
     handleFlowOptionChanged(value) {
-      this.flowForm.status = value
+      this.flowForm.operation = value
+    },
+    handleSetExpress(express) {
+      this.expressDialogVisible = false
+      this.flowForm.logisticsInfo = {
+        com: express.logisticsContent,
+        code: express.comCode,
+        order: express.logisticsId
+      }
+      this.$refs.flowForm.validateField('logisticsInfo', (_) => {
+      })
     },
     handleCreateFlow() {
       this.$refs.flowForm.validate(async(valid) => {
@@ -481,21 +675,43 @@ export default {
           this.dialogFlowVisible = false
           try {
             const operator = this.$store.state.user.name
-            const { status, refund, remark } = this.flowForm
-            const comments = { remark }
-            if (status === 3 && this.includeAddress) { // 3 通过审核，是否包含退货地址
-              comments.returnAddress = this.returnAddress
-            }
-            if (status === 7) { // 7为发起退款，是否包含运费
-              comments.refund = refund
+            const { operation, refund, remark } = this.flowForm
+            const comments = { remark, operation }
+            let status = -1
+            switch (operation) {
+              case approve_request:
+                status = 3
+                if (this.includeAddress) {
+                  comments.returnAddress = this.returnAddress
+                }
+                break
+              case reject_refund:
+                status = 6
+                break
+              case reject_change:
+                status = 6
+                break
+              case agree_refund:
+                status = 7
+                comments.refund = refund
+                break
+              case change_good:
+                status = 6
+                if (this.workOrderData.typeId === type_change_good) {
+                  comments.logisticsInfo = this.flowForm.logisticsInfo
+                }
+                break
+              default:
+                this.$message.warning('未知操作，请重新选择处理选项')
+                return
             }
             const params = {
               workOrderId: this.workOrderData.id,
               operator,
-              status, // 6 直接关闭工单， 和客户协商处理
+              status,
               comments: JSON.stringify(comments)
             }
-            if (status === 7) { // 7为发起退款，是否包含运费
+            if (operation === agree_refund) {
               params.refund = refund
             }
             await createWorkOrderFlowApi(params)
@@ -504,6 +720,41 @@ export default {
           } catch (e) {
             console.warn('Work order create flow error:' + e)
             this.$message.error('处理工单失败，请稍后重试！')
+          }
+        }
+      })
+    },
+    handleReopenWorkOrder() {
+      this.reopenForm.typeId = null
+      this.reopenForm.refund = 0
+      this.reopenForm.remark = ''
+      this.dialogReopenVisible = true
+    },
+    handleCancelReopen() {
+      this.$refs.reopenForm.clearValidate()
+      this.dialogReopenVisible = false
+    },
+    handleConfirmReopen() {
+      this.$refs.reopenForm.validate(async(valid) => {
+        if (valid) {
+          try {
+            this.reopenLoading = true
+            const operator = this.$store.state.user.name
+            const comments = { remark: this.reopenForm.remark, operation: reopen_workorder }
+            const workOrderId = this.workOrderData.id
+            const typeId = this.reopenForm.typeId
+            const params = { workOrderId, operator, typeId, comments: JSON.stringify(comments) }
+            if (typeId !== change_good) {
+              params.refund = this.reopenForm.refund
+            }
+            await reopenWorkOrderFlowApi(params)
+            this.$message.success('重置工单成功！')
+            this.getWorkOrderData()
+          } catch (e) {
+            console.warn(`Update product state error: ${e}`)
+          } finally {
+            this.reopenLoading = false
+            this.dialogReopenVisible = false
           }
         }
       })

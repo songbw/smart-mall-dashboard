@@ -295,6 +295,8 @@ export default {
     },
     handleShowDialog() {
       this.resetAddressForm()
+      this.cityList = []
+      this.countyList = []
       this.dialogFormVisible = true
       if (this.provinceList.length === 0) {
         this.getProvinceList()
