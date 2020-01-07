@@ -89,19 +89,6 @@
           @input="onEndTimeChanged"
         />
       </el-form-item>
-      <el-form-item label="结算类型">
-        <el-select v-model="formData.accountType">
-          <el-option
-            v-for="item in accountTypeOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-        <span style="font-size: 12px;margin-left: 10px">
-          <i class="el-icon-warning-outline" />此类型对应不同的服务费，请仔细选择！
-        </span>
-      </el-form-item>
       <el-form-item>
         <el-button @click="$emit('cancelCreation')">取消</el-button>
         <el-button type="primary" @click="savePromotion">{{ saveButtonLabel }}</el-button>
@@ -129,7 +116,6 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import range from 'lodash/range'
-import { PromotionAccountTypeDefinition } from '@/utils/constants'
 import { PromotionPermissions } from '@/utils/role-permissions'
 
 export default {
@@ -156,15 +142,13 @@ export default {
       scheduleOptions: [],
       scheduleUpdating: false,
       checkSchedules: [],
-      accountTypeOptions: [...PromotionAccountTypeDefinition],
       formData: {
         name: this.promotionData.name,
         promotionTypeId: this.promotionData.promotionTypeId,
         tag: this.promotionData.tag,
         dailySchedule: this.promotionData.dailySchedule,
         startDate: this.promotionData.startDate,
-        endDate: this.promotionData.endDate,
-        accountType: this.promotionData.accountType
+        endDate: this.promotionData.endDate
       },
       formRules: {
         name: [{

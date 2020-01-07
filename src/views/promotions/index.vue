@@ -7,22 +7,12 @@
       <el-form-item label="活动名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
+    </el-form>
+    <el-form inline>
       <el-form-item label="活动状态">
         <el-select v-model="queryStatus">
           <el-option
             v-for="item in statusOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-    </el-form>
-    <el-form inline>
-      <el-form-item label="结算类型">
-        <el-select v-model="queryAccountType">
-          <el-option
-            v-for="item in accountTypeOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -157,11 +147,6 @@
           <span>{{ scope.row.dailySchedule ? '是' : '否' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="结算类型" align="center" width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.accountType | accountTypeFilter }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="活动状态" align="center" width="100">
         <template slot-scope="scope">
           <el-tag>{{ scope.row.status | promotionStatus }}</el-tag>
@@ -294,8 +279,7 @@ import {
   promotion_status_off_shelves,
   promotion_status_ready_for_sale,
   promotion_status_on_sale,
-  PromotionStatusDefinition,
-  PromotionAccountTypeDefinition
+  PromotionStatusDefinition
 } from '@/utils/constants'
 import { PromotionPermissions } from '@/utils/role-permissions'
 import ExportPromotions from './exportPromotions'
@@ -309,10 +293,6 @@ export default {
     promotionStatus: (status) => {
       const find = PromotionStatusDefinition.find(item => item.value === status)
       return find ? find.label : ''
-    },
-    accountTypeFilter: (type) => {
-      const find = PromotionAccountTypeDefinition.find(item => item.value === type)
-      return find ? find.label : ''
     }
   },
   data() {
@@ -324,10 +304,6 @@ export default {
         value: 0,
         label: '全部'
       }].concat(PromotionStatusDefinition),
-      accountTypeOptions: [{
-        value: -1,
-        label: '全部'
-      }].concat(PromotionAccountTypeDefinition),
       scheduleOptions: [{
         value: -1,
         label: '全部'
@@ -387,14 +363,6 @@ export default {
       },
       set(value) {
         this.$store.commit('promotions/SET_SEARCH_DATA', { dailySchedule: value })
-      }
-    },
-    queryAccountType: {
-      get() {
-        return this.promotionQuery.accountType
-      },
-      set(value) {
-        this.$store.commit('promotions/SET_SEARCH_DATA', { accountType: value })
       }
     },
     queryOffset: {
@@ -511,10 +479,6 @@ export default {
       }
       if (this.queryDailySchedule > -1) {
         params.dailySchedule = this.queryDailySchedule > 0
-        needFilter = true
-      }
-      if (this.queryAccountType > -1) {
-        params.accountType = this.queryAccountType
         needFilter = true
       }
       if (this.promotionTypeId >= 0) {

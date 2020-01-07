@@ -26,7 +26,6 @@ const promotionTemplate = {
   dailySchedule: false,
   startDate: '',
   endDate: '',
-  accountType: 0,
   discountType: 0,
   status: 1,
   promotionSkus: [],
@@ -38,7 +37,6 @@ const state = {
     name: '',
     status: 0,
     dailySchedule: -1,
-    accountType: -1,
     offset: 1,
     limit: 20
   },
@@ -257,7 +255,6 @@ const actions = {
         dailySchedule: srcPromotion.dailySchedule,
         startDate: srcPromotion.startDate,
         endDate: srcPromotion.endDate,
-        accountType: srcPromotion.accountType,
         appId: params.appId
       }
       const newRes = await createPromotionApi(newPromotion)

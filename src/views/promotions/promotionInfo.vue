@@ -7,9 +7,6 @@
       <el-form-item label="活动类型">
         <el-input :value="type" readonly />
       </el-form-item>
-      <el-form-item label="结算类型">
-        <el-input :value="accountType" readonly />
-      </el-form-item>
     </el-form>
     <el-form inline>
       <el-form-item label="活动状态">
@@ -36,8 +33,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import {
-  PromotionStatusDefinition,
-  PromotionAccountTypeDefinition
+  PromotionStatusDefinition
 } from '@/utils/constants'
 
 export default {
@@ -70,13 +66,6 @@ export default {
         } else {
           return ''
         }
-      }
-    },
-    accountType: {
-      get() {
-        const type = this.promotionData.accountType
-        const find = PromotionAccountTypeDefinition.find(item => item.value === type)
-        return find ? find.label : ''
       }
     }
   }
