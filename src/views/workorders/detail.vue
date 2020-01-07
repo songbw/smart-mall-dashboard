@@ -284,6 +284,7 @@
       @onConfirmed="onReturnAddressSelected"
     />
     <express-selection
+      :update-order="false"
       :dialog-visible="expressDialogVisible"
       @cancelled="expressDialogVisible = false"
       @confirmed="handleSetExpress"

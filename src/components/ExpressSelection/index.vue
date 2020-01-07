@@ -51,6 +51,10 @@ export default {
       type: Boolean,
       default: false
     },
+    updateOrder: {
+      type: Boolean,
+      default: true
+    },
     orderId: {
       type: Number,
       default: 0
@@ -133,10 +137,15 @@ export default {
     handleConfirmDeliver() {
       this.$refs.deliveryForm.validate((valid) => {
         if (valid) {
-          if (this.subOrderStatus === suborder_status_waiting_deliver) {
-            this.handleSetDeliver()
-          } else if (this.subOrderStatus === suborder_status_delivered) {
-            this.handleUpdateDeliver()
+          if (this.updateOrder) {
+            if (this.subOrderStatus === suborder_status_waiting_deliver) {
+              this.handleSetDeliver()
+            } else if (this.subOrderStatus === suborder_status_delivered) {
+              this.handleUpdateDeliver()
+            }
+          } else {
+            this.$emit('confirmed', { ...this.deliveryData })
+            this.$refs.deliveryForm.resetFields()
           }
         }
       })
