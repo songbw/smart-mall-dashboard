@@ -324,29 +324,31 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
+import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
 import OrderProduct from './OrderProduct'
 import {
+  exportInvoiceBillApi,
   exportOrdersApi,
-  getOrderListApi,
-  updateSubOrderApi,
-  exportReconciliationApi,
   exportPaymentBillApi,
+  exportReconciliationApi,
+  exportVendorDeliverOrdersApi,
   exportVendorOrdersApi,
   exportVendorReconciliationApi,
-  exportVendorDeliverOrdersApi,
-  exportInvoiceBillApi,
-  reopenOrderApi
+  getOrderListApi,
+  reopenOrderApi,
+  updateSubOrderApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
-import { getWorkOrderListApi } from '@/api/workOrders'
+import { getWorkOrderByOrderListApi } from '@/api/workOrders'
 import {
+  suborder_status_requested_service,
   SubOrderStatusDefinitions,
   vendor_status_approved,
-  suborder_status_requested_service,
-  WorkOrderStatusDefinition,
-  work_order_status_finished
+  work_order_status_rejected,
+  work_order_status_finished,
+  WorkOrderStatusDefinition
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
@@ -700,17 +702,17 @@ export default {
       }
       return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
-    async getWorkOrder(subOrderId) {
+    async getWorkOrder(idList) {
       try {
-        const params = { orderId: subOrderId, pageIndex: 1, pageSize: 1 }
-        const data = await getWorkOrderListApi(params)
-        if (data && data.total === 1) {
-          return data.rows[0]
+        if (idList.length > 0) {
+          return await getWorkOrderByOrderListApi(idList)
+        } else {
+          return []
         }
       } catch (e) {
         console.warn('Work orders List error: ' + e)
       }
-      return null
+      return []
     },
     async getOrderList() {
       if (this.hasViewPermission) {
@@ -722,27 +724,36 @@ export default {
             if (code === 200) {
               this.orderTotal = data.result.total
               this.orderData = []
+              const orderList = []
+              const queryList = []
               for (const order of data.result.list) {
                 const { subStatus, subOrderId, ...rest } = order
                 const merchantName = this.getVendorName(order.merchantId)
-                let workOrderId = null
-                let workOrderStatus = null
-                let subOrderReopen = false
                 if (subStatus === suborder_status_requested_service) {
-                  const workOrder = await this.getWorkOrder(subOrderId)
-                  workOrderId = workOrder ? workOrder.id : null
-                  workOrderStatus = workOrder ? workOrder.status : null
-                  let noRefund = isEmpty(workOrder ? workOrder.refundTime : '')
-                  if (!noRefund) {
-                    const momentDate = moment(workOrder.refundTime)
-                    noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
-                  }
-                  subOrderReopen = (workOrderStatus === work_order_status_finished) && noRefund
+                  queryList.push(subOrderId)
                 }
-                this.orderData.push({
-                  subStatus, subOrderId, subOrderReopen, workOrderId, workOrderStatus, merchantName, ...rest
-                })
+                orderList.push({ subStatus, subOrderId, merchantName, ...rest })
               }
+              const workOrderList = await this.getWorkOrder(queryList)
+              if (queryList.length > 0 && workOrderList.length > 0) {
+                for (const subOrderId of queryList) {
+                  const order = orderList.find(item => item.subOrderId === subOrderId)
+                  const workOrders = sortBy(workOrderList.filter(item => item.orderId === subOrderId), ['createTime'])
+                  if (workOrders.length > 0) {
+                    order.workOrderId = workOrders[0].id
+                    order.workOrderStatus = workOrders[0].status
+                    let noRefund = isEmpty(workOrders[0].refundTime)
+                    if (!noRefund) {
+                      const momentDate = moment(workOrders[0].refundTime)
+                      noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
+                    }
+                    order.subOrderReopen = (order.workOrderStatus === work_order_status_finished ||
+                      order.workOrderStatus === work_order_status_rejected) &&
+                      noRefund
+                  }
+                }
+              }
+              this.orderData = orderList
             }
           }
         } catch (e) {

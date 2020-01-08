@@ -86,7 +86,8 @@ export default {
     timeFilter(date) {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
-      return momentDate.isValid() ? momentDate.format(format) : ''
+      const isValid = momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year')
+      return isValid ? momentDate.format(format) : ''
     },
     invoiceFilter(state) {
       return state === '1' ? '需要' : '不需要'

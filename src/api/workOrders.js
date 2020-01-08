@@ -78,3 +78,11 @@ export function deleteReturnAddressApi(params) {
     method: 'delete'
   })
 }
+
+export function getWorkOrderByOrderListApi(params) {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/work_orders/byOrderList',
+    method: 'post',
+    data: params
+  })
+}
