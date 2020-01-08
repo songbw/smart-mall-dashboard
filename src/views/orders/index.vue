@@ -628,13 +628,6 @@ export default {
   created() {
     this.prepareData()
   },
-  beforeRouteLeave(to, from, next) {
-    const toGroup = to.meta.group || ''
-    if (toGroup !== this.$route.meta.group) {
-      this.$store.commit('orders/RESET_SEARCH_DATA')
-    }
-    next()
-  },
   methods: {
     async prepareData() {
       this.listLoading = true
