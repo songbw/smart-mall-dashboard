@@ -315,6 +315,7 @@ import {
 import {
   work_order_status_request,
   work_order_status_approved,
+  work_order_status_rejected,
   work_order_status_working,
   work_order_status_finished,
   work_order_status_refunding,
@@ -562,7 +563,9 @@ export default {
         const momentDate = moment(this.workOrderData.refundTime)
         noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
       }
-      return this.hasResetPermission && this.workOrderData.status === work_order_status_finished && noRefund
+      const status = this.workOrderData.status
+      const closed = status === work_order_status_rejected || status === work_order_status_finished
+      return this.hasResetPermission && closed && noRefund
     },
     flowOptions() {
       let options = []
@@ -723,10 +726,10 @@ export default {
                 }
                 break
               case reject_refund:
-                status = work_order_status_finished
+                status = work_order_status_rejected
                 break
               case reject_change:
-                status = work_order_status_finished
+                status = work_order_status_rejected
                 break
               case agree_refund:
                 status = work_order_status_refunding

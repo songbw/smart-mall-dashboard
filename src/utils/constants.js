@@ -242,6 +242,7 @@ export const PayTypeOptions = [{
 
 export const work_order_status_request = 1
 export const work_order_status_approved = 3
+export const work_order_status_rejected = 4
 export const work_order_status_working = 5
 export const work_order_status_finished = 6
 export const work_order_status_refunding = 7
@@ -254,10 +255,10 @@ export const WorkOrderStatusDefinition = [{
 }, */{
   value: work_order_status_approved,
   label: '审核通过'
-}, /* {
-  value: 4,
-  label: '审核有问题'
-}, */{
+}, {
+  value: work_order_status_rejected,
+  label: '已关闭'
+}, {
   value: work_order_status_working,
   label: '处理中'
 }, {
