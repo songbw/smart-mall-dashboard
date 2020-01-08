@@ -95,10 +95,10 @@ module.exports = {
             path: 'dist/xlsx.full.min.js'
           },
           {
-            name: 'libphonenumber-js',
+            name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '1.7.29',
-            path: 'bundle/libphonenumber-max.js'
+            version: '3.2.6',
+            path: 'dist/libphonenumber.min.js'
           },
           {
             name: 'cos-js-sdk-v5',

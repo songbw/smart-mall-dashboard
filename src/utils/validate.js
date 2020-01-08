@@ -1,5 +1,6 @@
 import PasswordValidator from 'password-validator'
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
+
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 
 export function isExternal(path) {
   return /^(https?:|mailto:|tel:)/.test(path)
@@ -24,8 +25,8 @@ export function validPassword(password) {
 }
 
 export function validPhone(str) {
-  const reg = /^[0-9]{11}$/
-  return reg.test(str) ? parsePhoneNumberFromString(str, 'CN').isValid() : false
+  const number = phoneUtil.parseAndKeepRawInput(str, 'CN')
+  return phoneUtil.isValidNumber(number)
 }
 
 export function validVerificationCode(str) {
