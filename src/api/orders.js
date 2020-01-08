@@ -163,9 +163,9 @@ export function exportInvoiceBillApi(params) {
   })
 }
 
-export function getPayInfoListApi(params) {
+export function reopenOrderApi(params) {
   return Vue.axios('orders').request({
-    url: '/aggpays/wspay/query/pay',
+    url: '/orders/order/workorder/goback',
     method: 'get',
     params
   })

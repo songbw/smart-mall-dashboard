@@ -145,7 +145,6 @@ import {
   createBrandApi,
   deleteBrandApi
 } from '@/api/brands'
-import { app_upload_url } from '@/utils/constants'
 import { validateURL } from '@/utils/validate'
 import { BrandPermissions } from '@/utils/role-permissions'
 
@@ -168,10 +167,6 @@ export default {
       }
     }
     return {
-      uploadUrl: app_upload_url,
-      uploadData: {
-        pathName: 'brands'
-      },
       dialogFormTitle: '',
       dialogFormVisible: false,
       dialogValue: {

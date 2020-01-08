@@ -78,7 +78,7 @@
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import { PaymentStatusDefinitions, PayTypeOptions } from '@/utils/constants'
-import { getPayInfoListApi } from '@/api/orders'
+import { getPayInfoListApi } from '@/api/payments'
 
 export default {
   name: 'PaymentInfo',

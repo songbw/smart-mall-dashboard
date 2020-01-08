@@ -200,10 +200,10 @@
         </template>
       </el-table-column>
       <el-table-column
-        align="center"
+        align="left"
         class-name="small-padding fixed-width"
         label="操作"
-        width="160"
+        width="240"
       >
         <template slot-scope="scope">
           <el-button
@@ -220,6 +220,14 @@
             @click="handleEditOrderRemark(scope.row.subId)"
           >
             备注
+          </el-button>
+          <el-button
+            v-if="hasEditPermission && scope.row.subOrderReopen"
+            size="mini"
+            type="danger"
+            @click="handleReopenSubOrder(scope.row.subId)"
+          >
+            恢复
           </el-button>
         </template>
       </el-table-column>
@@ -328,7 +336,8 @@ import {
   exportVendorOrdersApi,
   exportVendorReconciliationApi,
   exportVendorDeliverOrdersApi,
-  exportInvoiceBillApi
+  exportInvoiceBillApi,
+  reopenOrderApi
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderListApi } from '@/api/workOrders'
@@ -336,7 +345,8 @@ import {
   SubOrderStatusDefinitions,
   vendor_status_approved,
   suborder_status_requested_service,
-  WorkOrderStatusDefinition
+  WorkOrderStatusDefinition,
+  work_order_status_finished
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
@@ -724,13 +734,20 @@ export default {
                 const merchantName = this.getVendorName(order.merchantId)
                 let workOrderId = null
                 let workOrderStatus = null
+                let subOrderReopen = false
                 if (subStatus === suborder_status_requested_service) {
                   const workOrder = await this.getWorkOrder(subOrderId)
                   workOrderId = workOrder ? workOrder.id : null
                   workOrderStatus = workOrder ? workOrder.status : null
+                  let noRefund = isEmpty(workOrder ? workOrder.refundTime : '')
+                  if (!noRefund) {
+                    const momentDate = moment(workOrder.refundTime)
+                    noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
+                  }
+                  subOrderReopen = (workOrderStatus === work_order_status_finished) && noRefund
                 }
                 this.orderData.push({
-                  subStatus, subOrderId, workOrderId, workOrderStatus, merchantName, ...rest
+                  subStatus, subOrderId, subOrderReopen, workOrderId, workOrderStatus, merchantName, ...rest
                 })
               }
             }
@@ -754,6 +771,27 @@ export default {
       this.$router.push({
         name: 'ViewSubOrder',
         params: { subId: subOrderId }
+      })
+    },
+    handleReopenSubOrder(subId) {
+      this.$confirm('是否继续恢复使用此订单？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          this.listLoading = true
+          const { code, msg } = await reopenOrderApi({ orderDetailId: subId })
+          if (code === 200) {
+            this.$message.warning(msg)
+            await this.getOrderList()
+          }
+        } catch (e) {
+          console.warn('Reopen order error:' + e)
+        } finally {
+          this.listLoading = false
+        }
+      }).catch(() => {
       })
     },
     handleEditOrderRemark(id) {

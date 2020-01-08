@@ -1,4 +1,3 @@
-export const app_upload_url = `${process.env.VUE_APP_BASE_URL}/bases/upload/relative`
 export const max_upload_image_size = 2 * 1024 * 1024
 export const storage_key_token = 'user_token'
 export const storage_key_name = 'user_name'
@@ -241,26 +240,31 @@ export const PayTypeOptions = [{
   label: '快捷支付'
 }]
 
+export const work_order_status_request = 1
+export const work_order_status_approved = 3
+export const work_order_status_working = 5
+export const work_order_status_finished = 6
+export const work_order_status_refunding = 7
 export const WorkOrderStatusDefinition = [{
-  value: 1,
+  value: work_order_status_request,
   label: '待审核'
 }, /* {
   value: 2,
   label: '审核中'
 }, */{
-  value: 3,
+  value: work_order_status_approved,
   label: '审核通过'
 }, /* {
   value: 4,
   label: '审核有问题'
 }, */{
-  value: 5,
+  value: work_order_status_working,
   label: '处理中'
 }, {
-  value: 6,
+  value: work_order_status_finished,
   label: '处理完成'
 }, {
-  value: 7,
+  value: work_order_status_refunding,
   label: '退款中'
 }]
 

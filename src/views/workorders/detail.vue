@@ -193,7 +193,7 @@
           </div>
         </el-form-item>
         <el-form-item
-          v-if="workOrderData.status >= 3 && flowForm.operation === changeGood"
+          v-if="flowForm.operation === changeGood"
           label="换货物流"
           prop="logisticsInfo"
         >
@@ -313,6 +313,11 @@ import {
   getReturnAddressListApi
 } from '@/api/workOrders'
 import {
+  work_order_status_request,
+  work_order_status_approved,
+  work_order_status_working,
+  work_order_status_finished,
+  work_order_status_refunding,
   OrderStatusDefinitions,
   PaymentStatusDefinitions,
   PayTypeOptions
@@ -557,17 +562,17 @@ export default {
         const momentDate = moment(this.workOrderData.refundTime)
         noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
       }
-      return this.hasResetPermission && this.workOrderData.status === 6 && noRefund
+      return this.hasResetPermission && this.workOrderData.status === work_order_status_finished && noRefund
     },
     flowOptions() {
       let options = []
-      if (this.workOrderData.status === 1) {
+      if (this.workOrderData.status === work_order_status_request) {
         options = this.workOrderData.typeId === type_change_good
           ? [approve_request, reject_change] : [approve_request, reject_refund]
-      } else if (this.workOrderData.status === 3) {
+      } else if (this.workOrderData.status === work_order_status_approved) {
         options = this.workOrderData.typeId === type_change_good
           ? [change_good, reject_change] : [agree_refund, reject_refund]
-      } else if (this.workOrderData.status === 5) {
+      } else if (this.workOrderData.status === work_order_status_working) {
         options = this.workOrderData.typeId === type_change_good
           ? [change_good, reject_change] : [agree_refund, reject_refund]
       }
@@ -680,7 +685,8 @@ export default {
       this.flowForm.operation = null
       this.flowForm.refund = 0
       this.flowForm.remark = ''
-      this.includeAddress = this.workOrderData.status === 1 && this.workOrderData.typeId !== type_refund_only
+      this.includeAddress = this.workOrderData.status === work_order_status_request &&
+        this.workOrderData.typeId !== type_refund_only
       this.dialogFlowVisible = true
     },
     handleCancelFlow() {
@@ -711,23 +717,23 @@ export default {
             let status = -1
             switch (operation) {
               case approve_request:
-                status = 3
+                status = work_order_status_approved
                 if (this.includeAddress) {
                   comments.returnAddress = this.returnAddress
                 }
                 break
               case reject_refund:
-                status = 6
+                status = work_order_status_finished
                 break
               case reject_change:
-                status = 6
+                status = work_order_status_finished
                 break
               case agree_refund:
-                status = 7
+                status = work_order_status_refunding
                 comments.refund = refund
                 break
               case change_good:
-                status = 6
+                status = work_order_status_finished
                 if (this.workOrderData.typeId === type_change_good) {
                   comments.logisticsInfo = this.flowForm.logisticsInfo
                 }

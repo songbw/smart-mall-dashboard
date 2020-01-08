@@ -389,7 +389,6 @@ import VendorSelection from '@/components/VendorSelection'
 import ShippingPriceSelection from './shippingPriceSelection'
 import {
   max_upload_image_size,
-  app_upload_url,
   ProductStateOptions,
   ProductTaxRateOptions,
   vendor_status_approved,
@@ -473,7 +472,6 @@ export default {
     }
     return {
       taxRateOptions: ProductTaxRateOptions,
-      uploadUrl: app_upload_url,
       typeOptions: ProductTypeOptions,
       vendorAoyi: 2,
       maxThumbnailLength: 5,
