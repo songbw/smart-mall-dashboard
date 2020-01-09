@@ -740,11 +740,12 @@ export default {
                   const order = orderList.find(item => item.subOrderId === subOrderId)
                   const workOrders = sortBy(workOrderList.filter(item => item.orderId === subOrderId), ['createTime'])
                   if (workOrders.length > 0) {
-                    order.workOrderId = workOrders[0].id
-                    order.workOrderStatus = workOrders[0].status
-                    let noRefund = isEmpty(workOrders[0].refundTime)
+                    const workOrder = workOrders[workOrders.length - 1]
+                    order.workOrderId = workOrder.id
+                    order.workOrderStatus = workOrder.status
+                    let noRefund = isEmpty(workOrder.refundTime)
                     if (!noRefund) {
-                      const momentDate = moment(workOrders[0].refundTime)
+                      const momentDate = moment(workOrder.refundTime)
                       noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
                     }
                     order.subOrderReopen = (order.workOrderStatus === work_order_status_finished ||
