@@ -7,7 +7,7 @@
             <span class="card-header-text">售后信息</span>
             <div>
               <el-button
-                v-if="couldReopenWorkorder"
+                v-if="couldReopenWorkOrder"
                 type="danger"
                 @click="handleReopenWorkOrder"
               >
@@ -557,14 +557,14 @@ export default {
     flowStatusOptions() {
       return WorkOrderStatus
     },
-    couldReopenWorkorder() {
+    couldReopenWorkOrder() {
       let noRefund = isEmpty(this.workOrderData.refundTime)
       if (!noRefund) {
         const momentDate = moment(this.workOrderData.refundTime)
         noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
       }
       const status = this.workOrderData.status
-      const closed = status === work_order_status_rejected || status === work_order_status_finished
+      const closed = status === work_order_status_finished
       return this.hasResetPermission && closed && noRefund
     },
     flowOptions() {
