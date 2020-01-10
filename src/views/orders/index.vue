@@ -108,7 +108,7 @@
         </el-button>
       </el-tooltip>
       <el-tooltip v-if="hasExportPermission" content="导出所需时间段内已完成与已退款的订单列表" :open-delay="1000">
-        <el-button icon="el-icon-download" type="danger" @click="handleShowReconciliationDialog">
+        <el-button icon="el-icon-download" type="success" @click="handleShowReconciliationDialog">
           导出结算订单
         </el-button>
       </el-tooltip>
@@ -125,6 +125,11 @@
       <el-tooltip v-if="hasPayExportPermission" content="导出所需时间段内商品发票报表" :open-delay="1000">
         <el-button icon="el-icon-download" type="danger" @click="handleShowInvoiceDialog">
           导出发票报表
+        </el-button>
+      </el-tooltip>
+      <el-tooltip v-if="hasPayExportPermission" content="导出所需运营平台的分润报表" :open-delay="1000">
+        <el-button icon="el-icon-download" type="danger" @click="handleShowProfitDialog">
+          导出分润报表
         </el-button>
       </el-tooltip>
     </div>
@@ -286,7 +291,11 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-else-if="hasVendorPermission" label="供应商名" prop="merchantId">
+        <el-form-item
+          v-if="hasVendorPermission && (exportType === flowType || exportType === reconciliationType)"
+          label="供应商名"
+          prop="merchantId"
+        >
           <el-select v-model="exportForm.merchantId">
             <el-option
               v-for="item in vendorOptions"
@@ -336,6 +345,7 @@ import {
   exportVendorDeliverOrdersApi,
   exportVendorOrdersApi,
   exportVendorReconciliationApi,
+  exportShareProfitApi,
   getOrderListApi,
   reopenOrderApi,
   updateSubOrderApi
@@ -431,6 +441,7 @@ export default {
       reconciliationType: 'export-reconciliation',
       exportType: 'export-flow',
       invoiceType: 'export-invoice',
+      profitType: 'export-profit',
       exportDialogVisible: false,
       exportForm: {
         merchantId: -1,
@@ -862,6 +873,10 @@ export default {
       this.exportType = this.invoiceType
       this.exportDialogVisible = true
     },
+    handleShowProfitDialog() {
+      this.exportType = this.profitType
+      this.exportDialogVisible = true
+    },
     async handleExportOrders() {
       const params = {
         payStartDate: this.exportForm.payStartDate,
@@ -970,6 +985,24 @@ export default {
       }
       this.$refs.exportForm.resetFields()
     },
+    async handleExportShareProfit() {
+      const params = {
+        startTime: this.exportForm.payStartDate,
+        endTime: this.exportForm.payEndDate,
+        appId: this.exportForm.appId
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportShareProfitApi(params)
+        const appOption = this.platformAppList.find(item => item.appId === params.appId)
+        const appLabel = appOption ? appOption.name : ''
+        const filename = `${appLabel}-分润报表-${params.startTime}-${params.endTime}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
     async handleExportDeliverOrders() {
       try {
         const data = await exportVendorDeliverOrdersApi()
@@ -1000,6 +1033,9 @@ export default {
               break
             case this.invoiceType:
               this.handleExportInvoice()
+              break
+            case this.profitType:
+              this.handleExportShareProfit()
               break
           }
         }

@@ -163,6 +163,15 @@ export function exportInvoiceBillApi(params) {
   })
 }
 
+export function exportShareProfitApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/adminorder/export/shareprofit',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
 export function reopenOrderApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/order/workorder/goback',
