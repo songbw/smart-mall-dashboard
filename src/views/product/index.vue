@@ -89,21 +89,11 @@
           </el-button>
           <el-button
             v-if="hasUpdatePermission"
-            :disabled="productSelection.length === 0"
-            type="info"
-            icon="el-icon-edit"
-            @click="handleEditSelection"
+            type="success"
+            icon="el-icon-upload2"
+            @click="dialogUpdateStateVisible = true"
           >
-            修改已选{{ productSelection.length }}个商品
-          </el-button>
-          <el-button
-            v-if="hasUpdatePermission"
-            :disabled="productSelection.length === 0"
-            type="danger"
-            icon="el-icon-edit-outline"
-            @click="handleEditSelectionShipping"
-          >
-            修改已选运费模板
+            批量上下架商品
           </el-button>
         </div>
         <div>
@@ -120,29 +110,27 @@
         </div>
       </div>
     </div>
-    <el-form v-if="hasSalePricePermission && hasCostPricePermission" inline @submit.prevent.native="() => {}">
-      <el-form-item label="底价比率">
-        <el-input-number
-          v-model="floorPriceRate"
-          :precision="2"
-          :step="0.05"
-          :min="1"
-          :max="10"
-        />
+    <el-form inline>
+      <el-form-item>
+        <el-button
+          v-if="hasUpdatePermission"
+          :disabled="productSelection.length === 0"
+          type="info"
+          icon="el-icon-edit"
+          @click="handleEditSelection"
+        >
+          修改已选{{ productSelection.length }}个商品
+        </el-button>
       </el-form-item>
       <el-form-item>
-        <el-tooltip content="导出上架商品中销售价异常列表" placement="top">
-          <el-button
-            :loading="exportingPriceProducts"
-            icon="el-icon-download"
-            type="primary"
-            @click="handleExportWithFloorPrice"
-          >
-            导出价格异常商品
-          </el-button>
-        </el-tooltip>
-        <el-button type="success" icon="el-icon-upload2" @click="dialogUpdatePriceVisible = true">
-          批量导入更新商品价格
+        <el-button
+          v-if="hasUpdatePermission"
+          :disabled="productSelection.length === 0"
+          type="danger"
+          icon="el-icon-edit-outline"
+          @click="handleEditSelectionShipping"
+        >
+          修改已选运费模板
         </el-button>
       </el-form-item>
     </el-form>
@@ -160,7 +148,7 @@
         align="center"
         width="55"
       />
-      <el-table-column label="商品SKU" align="center" width="140">
+      <el-table-column label="商品SKU" align="center" width="120">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ShowProduct', params: { id: scope.row.id }}"
@@ -168,6 +156,11 @@
           >
             {{ scope.row.skuid }}
           </router-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品MPU" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品图" align="center" width="140">
@@ -182,11 +175,6 @@
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="品牌" align="center" width="120">
-        <template slot-scope="scope">
-          <span>{{ scope.row.brand }}</span>
         </template>
       </el-table-column>
       <el-table-column label="销售价格(元)" align="center" width="160">
@@ -225,10 +213,10 @@
               circle
               @click="scope.row.editPrice=!scope.row.editPrice"
             />
-            <div v-if="hasSalePricePermission && hasCostPricePermission && scope.row.sprice !== null">
-              <span style="font-size: 12px">(底价:{{ getFloorPrice(scope.row) }})</span>
+            <div v-if="hasSalePricePermission && hasCostPricePermission && scope.row.floorPrice">
+              <span style="font-size: 12px">(底价:{{ scope.row.floorPrice }})</span>
             </div>
-            <div v-if="hasCostPricePermission && scope.row.sprice !== null">
+            <div v-if="hasCostPricePermission && scope.row.sprice">
               <span style="font-size: 12px">(进价:{{ scope.row.sprice }})</span>
             </div>
           </template>
@@ -320,10 +308,10 @@
       @onSelectionConfirmed="onGoodsUpdateConfirmed"
     />
     <goods-import-dialog
-      :dialog-visible="dialogUpdatePriceVisible"
-      :update-price="true"
-      @onSelectionCancelled="dialogUpdatePriceVisible = false"
-      @onSelectionConfirmed="onUpdatePriceConfirmed"
+      :dialog-visible="dialogUpdateStateVisible"
+      :update-state="true"
+      @onSelectionCancelled="dialogUpdateStateVisible = false"
+      @onSelectionConfirmed="onUpdateStateConfirmed"
     />
     <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
       <div style="font-size: 14px;margin-bottom: 10px">
@@ -400,7 +388,6 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
-  exportFloorPriceApi,
   updatePriceOrStateApi
 } from '@/api/products'
 import { getVendorListApi } from '@/api/vendor'
@@ -449,7 +436,6 @@ export default {
         label: '下架'
       }],
       showMoreOptions: true,
-      floorPriceRate: 1.1,
       productsTotal: 0,
       productsData: [],
       listLoading: false,
@@ -458,7 +444,7 @@ export default {
       selectedMpuList: [],
       dialogImportVisible: false,
       dialogUpdateVisible: false,
-      dialogUpdatePriceVisible: false,
+      dialogUpdateStateVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
       exportingPriceProducts: false,
@@ -762,14 +748,6 @@ export default {
         this.$message.warning('没有查看商品权限，请联系管理员！')
       }
     },
-    getFloorPrice(row) {
-      const sprice = Number.parseFloat(row.sprice)
-      if (Number.isNaN(sprice)) {
-        return null
-      } else {
-        return (sprice * this.floorPriceRate).toFixed(2)
-      }
-    },
     handleCreateProduct() {
       this.$router.push({
         name: 'CreateProduct'
@@ -794,7 +772,9 @@ export default {
       return !(Number.isNaN(price) || price < 0 ||
         isEmpty(product.image) ||
         isEmpty(product.imagesUrl) ||
-        isEmpty(product.introductionUrl))
+        isEmpty(product.introductionUrl) ||
+        isEmpty(product.category)
+      )
     },
     handleProductOnSale(index) {
       if (this.isReadyForSale(this.productsData[index])) {
@@ -958,40 +938,13 @@ export default {
     handleSelectionChange(selection) {
       this.productSelection = selection
     },
-    async handleExportWithFloorPrice() {
-      const floorPriceRate = Math.round(this.floorPriceRate * 100)
-      if (floorPriceRate < 100 || Number.isNaN(floorPriceRate)) {
-        this.$message.warning('请设置商品底价比率大于1！')
-        return
-      }
-      try {
-        this.listLoading = true
-        this.exportingPriceProducts = true
-        const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
-        const data = await exportFloorPriceApi({ floorPriceRate, pageNo: 1, pageSize: 5000 })
-        const blob = new Blob([data])
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', filename)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        window.URL.revokeObjectURL(url)
-      } catch (e) {
-        console.warn('Products export floor price error:' + e)
-      } finally {
-        this.listLoading = false
-        this.exportingPriceProducts = false
-      }
-    },
-    async onUpdatePriceConfirmed(skus) {
-      this.dialogUpdatePriceVisible = false
+    async onUpdateStateConfirmed(skus) {
+      this.dialogUpdateStateVisible = false
       try {
         this.listLoading = true
         for (let i = 0; i < skus.length; i += 100) {
           const skuList = skus.slice(i, i + 100)
-            .map(item => ({ mpu: item.mpu, price: item.price, state: item.state }))
+            .map(item => ({ mpu: item.mpu, state: item.state }))
           await updatePriceOrStateApi(skuList)
         }
       } catch (e) {
@@ -1003,6 +956,7 @@ export default {
     },
     async handleExportAllProducts() {
       const params = this.getFilterParams()
+      this.productExporting = true
       try {
         const filename = '商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
         this.getListData()
@@ -1028,22 +982,9 @@ export default {
           }
         }
         this.$message.warning(msg)
-      }
-    },
-    exportToFile(dataList) {
-      this.productExporting = true
-      import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['商品SKU']
-        const filterVal = ['skuid']
-        const data = this.formatJson(filterVal, dataList)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: '商品信息表'
-        })
-        this.$refs.productsTable.clearSelection()
+      } finally {
         this.productExporting = false
-      })
+      }
     },
     formatJson(filterVal, jsonData) {
       return jsonData.map(v => filterVal.map(j => {
@@ -1095,11 +1036,10 @@ export default {
           spinner: 'el-icon-loading'
         })
         for (const sku of skus) {
-          const { skuid, ...params } = sku
           try {
-            await updateProductApi(params)
+            await updateProductApi(sku)
           } catch (e) {
-            console.warn(`Good import update ${skuid} error: ${e}`)
+            console.warn(`Good import update ${sku.mpu} error: ${e}`)
           }
         }
         loading.close()

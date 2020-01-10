@@ -46,9 +46,9 @@ export function deleteProductApi(params) {
   })
 }
 
-export function getProductsByIdList(params) {
+export function getProductsByMpuList(params) {
   return Vue.axios('products').request({
-    url: '/products/prod/findByMpuIdList',
+    url: '/products/prod/mpuIds',
     method: 'get',
     params
   })

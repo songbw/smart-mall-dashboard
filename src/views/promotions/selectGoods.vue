@@ -134,7 +134,10 @@
         </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="120">
           <template slot-scope="scope">
-            <span>{{ scope.row.price }}</span>
+            <div>{{ scope.row.price }}</div>
+            <div v-if="scope.row.floorPrice" style="font-size: 12px">
+              (销售底价:{{ scope.row.floorPrice }})
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="促销价格(元)" align="center" width="250">
@@ -212,6 +215,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
+              style="margin-top: 6px"
               @click="handleRemoveImage(scope.row)"
             >
               删除图片
@@ -623,6 +627,7 @@ export default {
             name: sku.name,
             brand: sku.brand,
             price: Number.parseFloat(sku.price),
+            floorPrice: isNaN(Number.parseFloat(sku.floorPrice)) ? '' : sku.floorPrice,
             promotionImage: '',
             perLimited: -1
           })

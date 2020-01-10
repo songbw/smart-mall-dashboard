@@ -50,6 +50,7 @@ export const ProductTypeOptions = [
   }
 ]
 
+export const product_default_tax_rate = '0.13'
 export const ProductTaxRateOptions = [
   {
     value: '0',

@@ -151,10 +151,14 @@
           :max="1000000"
         />
       </el-form-item>
-      <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售底价(元)">
-        <span style="margin-right: 10px"> {{ floorPrice }}</span>
-        <el-input-number v-model="floorPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
-        <span style="font-size: 12px;margin-left: 10px;">基于进货价的比率</span>
+      <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售参考价(元)">
+        <span style="margin-right: 10px"> {{ suggestPrice }}</span>
+        <el-input-number v-model="suggestPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
+        <span style="font-size: 12px;margin-left: 10px;">基于销售底价的比率</span>
+      </el-form-item>
+      <el-form-item v-if="hasSalePricePermission" label="销售底价(元)">
+        <span v-if="viewProduct"> {{ productForm.floorPrice }}</span>
+        <el-input-number v-else v-model="productForm.floorPrice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
@@ -390,6 +394,7 @@ import ShippingPriceSelection from './shippingPriceSelection'
 import {
   max_upload_image_size,
   ProductStateOptions,
+  product_default_tax_rate,
   ProductTaxRateOptions,
   vendor_status_approved,
   ProductTypeOptions
@@ -499,7 +504,7 @@ export default {
       firstCategoryValue: null,
       secondCategoryValue: null,
       thirdCategoryValue: null,
-      floorPriceRate: 1.1,
+      suggestPriceRate: 1.1,
       shippingPriceDialogVisible: false,
       freeShippingData: null,
       shippingPriceLoading: false,
@@ -539,7 +544,8 @@ export default {
         subTitle: null,
         compareUrl: null,
         comparePrice: null,
-        taxRate: null
+        taxRate: product_default_tax_rate,
+        floorPrice: null
       },
       formRules: {
         merchantId: [{
@@ -612,10 +618,10 @@ export default {
     editProduct() {
       return this.opType === OP_EDIT
     },
-    floorPrice() {
-      const sprice = convertToNumber(this.productForm.sprice)
+    suggestPrice() {
+      const sprice = convertToNumber(this.productForm.floorPrice)
       if (!Number.isNaN(sprice)) {
-        return floatToFixed(sprice * this.floorPriceRate, 2).toString()
+        return floatToFixed(sprice * this.suggestPriceRate, 2).toString()
       } else {
         return '无进货价格'
       }

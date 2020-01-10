@@ -5,6 +5,7 @@
     :close-on-press-escape="false"
     :show-close="false"
     title="导入商品"
+    top="5vh"
     width="60%"
   >
     <input
@@ -48,15 +49,20 @@
           style="width: 80%"
         />
       </el-form-item>
+      <el-form-item v-if="productUpdate" label="上架可更新">
+        <div>{{ changeOnSaleLabel }}</div>
+      </el-form-item>
+      <el-form-item v-if="productUpdate" label="需下架更新">
+        <div>{{ changeNotSaleLabel }}</div>
+      </el-form-item>
     </el-form>
-
     <el-table
       v-loading="loading"
       element-loading-text="正在导入..."
-      :data="excelResults"
+      :data="parsedSkuList"
       border
       style="width: 100%;margin-top:20px;"
-      height="250"
+      height="350"
     >
       <el-table-column label="商品SKU" align="center" width="150">
         <template slot-scope="scope">
@@ -68,7 +74,12 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品价格(元)" align="center" width="150">
+      <el-table-column v-if="updateState" label="操作" align="center" width="80">
+        <template slot-scope="scope">
+          <span>{{ scope.row.state | productState }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="!updateState" label="商品价格(元)" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
         </template>
@@ -100,8 +111,12 @@ import isNumber from 'lodash/isNumber'
 import uniq from 'lodash/uniq'
 import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
-import { searchProductsApi } from '@/api/products'
-import { product_state_on_sale, ProductTaxRateOptions } from '@/utils/constants'
+import { getProductsByMpuList, searchProductsApi } from '@/api/products'
+import {
+  product_state_on_sale,
+  product_state_off_shelves,
+  ProductTaxRateOptions
+} from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 
 const floatToFixed = (value, precision) =>
@@ -111,47 +126,55 @@ const convertToNumber = value => isNumber(value) ? floatToFixed(value, 2)
 const convertToInt = value => Number.isInteger(value) ? value : Math.round(convertToNumber(value))
 
 const CreationHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string', template: '' },
-  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
-  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题' },
-  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌' },
-  { field: 'model', label: '商品型号', type: 'string', template: '' },
-  { field: 'weight', label: '商品重量', type: 'string', template: '' },
-  { field: 'image', label: '商品封面图', type: 'string', template: '' },
-  { field: 'upc', label: '商品条形码', type: 'string', template: '' },
-  { field: 'saleunit', label: '销售单位', type: 'string', template: '' },
-  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
-  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999' },
-  { field: 'taxRate', label: '商品税率', type: 'string', template: '3%' },
-  { field: 'comparePrice', label: '对比价格(元)', type: 'string', template: '777.77' },
-  { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '' }
+  { field: 'skuid', label: '商品SKU', type: 'string', template: '(可填项)' },
+  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品(必填项)' },
+  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题(可填项)' },
+  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌(可填项)' },
+  { field: 'model', label: '商品型号', type: 'string', template: '(可填项)' },
+  { field: 'weight', label: '商品重量', type: 'string', template: '(可填项)' },
+  { field: 'image', label: '商品封面图', type: 'string', template: '(可填项)' },
+  { field: 'upc', label: '商品条形码', type: 'string', template: '(可填项)' },
+  { field: 'saleunit', label: '销售单位', type: 'string', template: '(可填项)' },
+  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88(必填项)' },
+  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66(可填项)' },
+  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999(可填项)' },
+  { field: 'taxRate', label: '商品税率', type: 'string', template: '3%(可填项)' },
+  { field: 'floorPrice', label: '销售底价(元)', type: 'float', template: '777.77(可填项)' },
+  { field: 'comparePrice', label: '对比价格(元)', type: 'float', template: '999.99(可填项)' },
+  { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '(可填项)' }
 ]
 
 const UpdateHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
-  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
-  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999' }
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)', changeOnSale: false },
+  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品(可填项)', changeOnSale: false },
+  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题(可填项)', changeOnSale: false },
+  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌(可填项)', changeOnSale: false },
+  { field: 'model', label: '商品型号', type: 'string', template: '(可填项)', changeOnSale: true },
+  { field: 'weight', label: '商品重量', type: 'string', template: '(可填项)', changeOnSale: true },
+  { field: 'image', label: '商品封面图', type: 'string', template: '(可填项)', changeOnSale: false },
+  { field: 'upc', label: '商品条形码', type: 'string', template: '(可填项)', changeOnSale: true },
+  { field: 'saleunit', label: '销售单位', type: 'string', template: '(可填项)', changeOnSale: true },
+  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88(可填项)', changeOnSale: false },
+  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66(可填项)', changeOnSale: false },
+  { field: 'inventory', label: '商品库存', type: 'integer', template: '99999(可填项)', changeOnSale: false },
+  { field: 'taxRate', label: '商品税率', type: 'string', template: '3%(可填项)', changeOnSale: true },
+  { field: 'floorPrice', label: '销售底价(元)', type: 'float', template: '777.77(可填项)', changeOnSale: true },
+  { field: 'comparePrice', label: '对比价格(元)', type: 'float', template: '999.99(可填项)', changeOnSale: true },
+  { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '(可填项)', changeOnSale: true }
 ]
 
-const UpdatePriceHeaders = [
-  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234' },
-  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'state', label: '商品状态', type: 'string', template: '0' },
-  { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品' },
-  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
-  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' }
+const UpdateStateHeaders = [
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)' },
+  { field: 'state', label: '商品状态', type: 'string', template: '0(必填项 0:下架,1:上架)' }
 ]
 
 const PromotionHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'pprice', label: '促销价格(元)', type: 'float', template: '888.88' }
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)' },
+  { field: 'pprice', label: '促销价格(元)', type: 'float', template: '888.88(可填项)' }
 ]
 
 const SkuHeaders = [
-  { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' }
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)' }
 ]
 
 const fileExt = filename => {
@@ -165,6 +188,10 @@ export default {
     promotionPrice: sku => {
       const discount = sku.discount > 0 ? Math.round(sku.discount * 100) : 0
       return discount > 0 ? discount / 100 : null
+    },
+    productState: state => {
+      const value = Number.parseInt(state)
+      return value === product_state_on_sale ? '上架' : '下架'
     }
   },
   props: {
@@ -184,7 +211,7 @@ export default {
       type: Boolean,
       default: false
     },
-    updatePrice: {
+    updateState: {
       type: Boolean,
       default: false
     }
@@ -210,6 +237,7 @@ export default {
         fileName: null
       },
       percentage: 0,
+      parsedSkuList: [],
       excelResults: []
     }
   },
@@ -226,7 +254,19 @@ export default {
       return this.userPermissions.includes(ProductPermissions.salePrice)
     },
     needVendor() {
-      return !this.updatePrice && (this.productCreation || this.productUpdate) && this.hasVendorPermission
+      return this.productCreation && this.hasVendorPermission
+    },
+    changeOnSaleLabel() {
+      return UpdateHeaders
+        .filter(item => item.changeOnSale && item.field !== 'mpu')
+        .map(item => item.label)
+        .join('，')
+    },
+    changeNotSaleLabel() {
+      return UpdateHeaders
+        .filter(item => !item.changeOnSale && item.field !== 'mpu')
+        .map(item => item.label)
+        .join('，')
     }
   },
   methods: {
@@ -276,9 +316,8 @@ export default {
         return this.hasSalePricePermission ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
       } else if (this.productPromotion) {
         return PromotionHeaders
-      } else if (this.updatePrice) {
-        return this.hasSalePricePermission
-          ? UpdatePriceHeaders : UpdatePriceHeaders.filter(item => item.field !== 'price')
+      } else if (this.updateState) {
+        return UpdateStateHeaders
       } else {
         return SkuHeaders
       }
@@ -318,6 +357,7 @@ export default {
       this.percentage = 0
       this.formData.merchantId = null
       this.formData.fileName = null
+      this.parsedSkuList = []
       this.excelResults = []
     },
     readDate(rawFile) {
@@ -365,27 +405,35 @@ export default {
         this.parseUpdateSkuData(results)
       } else if (this.productPromotion) {
         this.parsePromotionData(results)
-      } else if (this.updatePrice) {
-        this.parseUpdatePriceSkuData(results)
+      } else if (this.updateState) {
+        this.parseUpdateStateSkuData(results)
       } else {
         this.searchSkuData(results)
       }
     },
     parseValue(type, value) {
+      let parsedValue = null
+      if (isString(value) && isEmpty(value.trim())) {
+        return null
+      }
       switch (type) {
         case 'string':
           if (isString(value)) {
-            return value.trim()
+            parsedValue = value.trim()
           } else {
-            return value != null ? value.toString() : null
+            parsedValue = value != null ? value.toString() : null
           }
+          break
         case 'integer':
-          return convertToInt(value)
+          parsedValue = convertToInt(value)
+          break
         case 'float':
-          return convertToNumber(value)
+          parsedValue = convertToNumber(value)
+          break
         default:
-          return value
+          break
       }
+      return parsedValue
     },
     parseCreateSkuData(results) {
       let count = 0
@@ -395,7 +443,10 @@ export default {
         const product = {}
         importHeaders.forEach(header => {
           if (header.label in item) {
-            product[header.field] = this.parseValue(header.type, item[header.label])
+            const value = this.parseValue(header.type, item[header.label])
+            if (value !== null) {
+              product[header.field] = value
+            }
           }
         })
         if (!isEmpty(product) && !isEmpty(product.name)) {
@@ -414,114 +465,175 @@ export default {
             product.taxRate = taxOption ? taxOption.value : ''
           }
           count++
-          this.excelResults.push(product)
+          this.parsedSkuList.push(product)
         }
       })
+      this.excelResults = this.parsedSkuList
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
     },
-    parseUpdatePriceSkuData(results) {
-      let count = 0
-      const importHeaders = this.hasSalePricePermission
-        ? UpdatePriceHeaders : UpdatePriceHeaders.filter(item => item.field !== 'price')
-      for (const item of results) {
-        const product = {}
-        importHeaders.forEach(header => {
-          if (header.label in item) {
-            product[header.field] = this.parseValue(header.type, item[header.label])
-          }
-        })
-        if (!isEmpty(product) && !isEmpty(product.mpu)) {
-          count++
-          this.excelResults.push(product)
-        }
-      }
-      this.loading = false
-      this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
+    isReadyForSale(product) {
+      const price = Number.parseFloat(product.price)
+      return !(Number.isNaN(price) || price < 0 ||
+        isEmpty(product.image) ||
+        isEmpty(product.imagesUrl) ||
+        isEmpty(product.introductionUrl) ||
+        isEmpty(product.category)
+      )
     },
-    async parseUpdateSkuData(results) {
-      let count = 0
-      const importHeaders = this.hasSalePricePermission
-        ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
+    async parseUpdateStateSkuData(results) {
+      const fetchList = []
       for (const item of results) {
         const product = {}
-        importHeaders.forEach(header => {
+        UpdateStateHeaders.forEach(header => {
           if (header.label in item) {
-            product[header.field] = this.parseValue(header.type, item[header.label])
-          }
-        })
-        if (!isEmpty(product) && !isEmpty(product.skuid)) {
-          let merchantId = this.vendorId
-          if (this.hasVendorPermission) {
-            if (this.formData.merchantId) {
-              merchantId = this.formData.merchantId
+            const value = this.parseValue(header.type, item[header.label])
+            if (value !== null) {
+              product[header.field] = value
             }
           }
-          const { skuid, ...rest } = product
-          const { code, data } = await searchProductsApi({ offset: 1, limit: 1, skuid, merchantId })
-          if (code === 200 && data.result.total === 1) {
-            count++
-            this.excelResults.push({ id: data.result.list[0].id, skuid, ...rest })
+        })
+        if ('mpu' in product && 'state' in product && !isEmpty(product.mpu)) {
+          const state = Number.parseInt(product.state)
+          if (state === product_state_on_sale || state === product_state_off_shelves) {
+            fetchList.push(product)
           }
         }
-        if (!this.dialogVisible) {
-          break
+      }
+      const mpuList = await this.getProductsByMpuList(fetchList.map(item => item.mpu))
+      const productList = fetchList.map(item => {
+        const find = mpuList.find(mpuItem => mpuItem.mpu === item.mpu)
+        if (find) {
+          const state = Number.parseInt(item.state)
+          const couldAdd = state === product_state_on_sale ? this.isReadyForSale(find) : true
+          const hasPermission = this.hasVendorPermission ? true : find.merchantId === this.vendorId
+          return couldAdd && hasPermission ? { ...find, ...item } : null
+        } else {
+          return null
+        }
+      })
+      this.parsedSkuList = productList.filter(item => item !== null)
+      this.excelResults = this.parsedSkuList.map(item => ({ mpu: item.mpu, state: item.state }))
+      this.loading = false
+      const count = this.excelResults.length
+      this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
+    },
+    async getProductsByMpuList(fetchList) {
+      let mpuList = []
+      for (let begin = 0; begin < fetchList.length; begin += 50) {
+        const params = {
+          mpuIdList: fetchList.slice(begin, begin + 50).join(',')
+        }
+        try {
+          const { code, data } = await getProductsByMpuList(params)
+          if (code === 200 && data.result.length > 0) {
+            mpuList = mpuList.concat(data.result)
+          }
+        } catch (err) {
+          console.warn('Coupon Goods: search error:' + err)
         }
       }
+      return mpuList
+    },
+    async parseUpdateSkuData(results) {
+      const importHeaders = this.hasSalePricePermission
+        ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
+      const fetchList = []
+      for (const item of results) {
+        const product = {}
+        importHeaders.forEach(header => {
+          if (header.label in item) {
+            const value = this.parseValue(header.type, item[header.label])
+            if (value !== null) {
+              product[header.field] = value
+            }
+          }
+        })
+        if ('mpu' in product && Object.keys(product).length > 1) {
+          if ('taxRate' in product) {
+            const taxOption = ProductTaxRateOptions.find(
+              item => item.label === product.taxRate || item.value === product.taxRate
+            )
+            product.taxRate = taxOption ? taxOption.value : ''
+          }
+          fetchList.push(product)
+        }
+      }
+      const mpuList = await this.getProductsByMpuList(fetchList.map(item => item.mpu))
+      const productList = fetchList.map(item => {
+        const find = mpuList.find(mpuItem => mpuItem.mpu === item.mpu)
+        if (find) {
+          const couldAdd = this.hasVendorPermission ? true : find.merchantId === this.vendorId
+          return couldAdd ? { ...find, ...item } : null
+        } else {
+          return null
+        }
+      })
+      this.parsedSkuList = productList.filter(item => item !== null)
+      this.excelResults = fetchList
+        .map(item => {
+          const { mpu, ...updateItems } = item
+          const find = this.parsedSkuList.find(mpuItem => mpuItem.mpu === mpu)
+          const state = Number.parseInt(find.state)
+          if (state !== product_state_on_sale) {
+            return { id: find.id, ...updateItems }
+          } else {
+            const keys = UpdateHeaders.filter(item => item.changeOnSale).map(item => item.field)
+            const onSaleUpdateItems = {}
+            for (const key of keys) {
+              if (key in updateItems) {
+                onSaleUpdateItems[key] = updateItems[key]
+              }
+            }
+            return isEmpty(onSaleUpdateItems) ? null : { id: find.id, ...onSaleUpdateItems }
+          }
+        })
+        .filter(item => item !== null)
+      const count = this.excelResults.length
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
     },
     async parsePromotionData(results) {
-      let fetchedNum = 0
       const parsedSkus = []
       const skus = results.map(item => {
         const product = {}
         for (const header of PromotionHeaders) {
           if (header.label in item) {
-            product[header.field] = this.parseValue(header.type, item[header.label])
+            const value = this.parseValue(header.type, item[header.label])
+            if (value != null) {
+              product[header.field] = value
+            }
           }
         }
         return product
       })
-      const filterSkus = uniqBy(skus.filter(item => 'skuid' in item && !isEmpty(item.skuid)), 'skuid')
-      for (const product of filterSkus) {
-        try {
-          const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: product.skuid })
-          if (code !== 200) {
-            continue
-          }
-          if (!this.dialogVisible) {
-            break
-          }
-          fetchedNum++
-          this.percentage = Math.round(fetchedNum * 100 / results.length)
-          for (const fetchedData of data.result.list) {
-            if (this.isSearchProductValid(fetchedData)) {
-              const item = {
-                skuid: fetchedData.skuid,
-                mpu: fetchedData.mpu,
-                price: fetchedData.price,
-                name: fetchedData.name,
-                brand: fetchedData.brand,
-                imagePath: fetchedData.image,
-                intro: ''
-              }
-              if ('pprice' in product) {
-                const pprice = Number.parseFloat(product.pprice)
-                const price = Number.parseFloat(item.price)
-                if (!Number.isNaN(pprice) && !Number.isNaN(price) && pprice > 0 && price > 0) {
-                  const ipprice = Math.round(pprice * 100)
-                  const iprice = Math.round(price * 100)
-                  item.discount = iprice > ipprice ? ipprice / 100 : 0
-                }
-              }
-              parsedSkus.push(item)
-            }
-          }
-        } catch (err) {
-          console.log('GoodImport: search error ' + product.skuid)
+      const filterSkus = uniqBy(skus.filter(item => 'mpu' in item && !isEmpty(item.mpu)), 'mpu')
+      const mpuList = await this.getProductsByMpuList(filterSkus.map(item => item.mpu))
+      const validMpuList = mpuList.filter(item => this.isSearchProductValid(item))
+      for (const product of validMpuList) {
+        const promotion = filterSkus.find(item => item.mpu === product.mpu)
+        const item = {
+          skuid: product.skuid,
+          mpu: product.mpu,
+          price: product.price,
+          floorPrice: product.floorPrice,
+          name: product.name,
+          brand: product.brand,
+          imagePath: product.image,
+          intro: ''
         }
+        if ('pprice' in promotion) {
+          const pprice = Number.parseFloat(promotion.pprice)
+          const price = Number.parseFloat(item.price)
+          if (!Number.isNaN(pprice) && !Number.isNaN(price) && pprice > 0 && price > 0) {
+            const ipprice = Math.round(pprice * 100)
+            const iprice = Math.round(price * 100)
+            item.discount = iprice > ipprice ? ipprice / 100 : 0
+          }
+        }
+        parsedSkus.push(item)
       }
+      this.parsedSkuList = parsedSkus
       this.excelResults = parsedSkus
       this.loading = false
       let msg = `成功导入${parsedSkus.length}个商品，`
@@ -530,46 +642,25 @@ export default {
       this.$message.info(msg)
     },
     async searchSkuData(results) {
-      const fetchedSkus = []
-      let fetchedNum = 0
-      const skus = uniq(results.map(item => this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])))
-      for (let i = 0; i < skus.length; i++) {
-        const skuID = skus[i]
-        if (skuID) {
-          try {
-            const { code, data } = await searchProductsApi({ offset: 1, limit: 10, skuid: skuID })
-            if (code !== 200) {
-              continue
-            }
-            if (!this.dialogVisible) {
-              break
-            }
-            fetchedNum++
-            this.percentage = Math.round(fetchedNum * 100 / skus.length)
-            for (const product of data.result.list) {
-              if (this.isSearchProductValid(product)) {
-                const item = {
-                  skuid: product.skuid,
-                  mpu: product.mpu,
-                  price: product.price,
-                  name: product.name,
-                  brand: product.brand,
-                  imagePath: product.image,
-                  intro: ''
-                }
-                fetchedSkus.push(item)
-              }
-            }
-          } catch (err) {
-            console.log('GoodImport: search error ' + skuID)
-          }
-        }
-      }
+      const parsedMpuList = uniq(results.map(item => this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])))
+      const mpuList = await this.getProductsByMpuList(parsedMpuList)
+      const fetchedSkus = mpuList
+        .filter(item => this.isSearchProductValid(item))
+        .map(product => ({
+          skuid: product.skuid,
+          mpu: product.mpu,
+          price: product.price,
+          floorPrice: product.floorPrice,
+          name: product.name,
+          brand: product.brand,
+          imagePath: product.image,
+          intro: ''
+        }))
+      this.parsedSkuList = fetchedSkus
       this.excelResults = fetchedSkus
       this.loading = false
       let msg = `成功导入${fetchedSkus.length}个商品，`
-      msg += `重复商品为${results.length - skus.length}个，`
-      msg += `无效商品为${skus.length - fetchedSkus.length}个。`
+      msg += `无效商品为${results.length - fetchedSkus.length}个。`
       this.$message.info(msg)
     }
   }

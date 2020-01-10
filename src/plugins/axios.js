@@ -33,7 +33,7 @@ const axiosService = apiKey => {
     const service = axios.create({
       baseURL: process.env.VUE_APP_BASE_URL, // url = base url + request url
       withCredentials: false,
-      timeout: 10000 // request timeout
+      timeout: 30000 // request timeout
     })
     service.interceptors.request.use(
       async config => {

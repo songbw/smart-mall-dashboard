@@ -30,7 +30,7 @@
 import { mapGetters } from 'vuex'
 import CustomPromotion from './custom'
 import SelectGoods from './selectGoods'
-import { getProductsByIdList } from '@/api/products'
+import { getProductsByMpuList } from '@/api/products'
 
 export default {
   name: 'PromotionCreate',
@@ -103,7 +103,7 @@ export default {
             }
             begin = end
             end = begin + num
-            const response = await getProductsByIdList(params)
+            const response = await getProductsByMpuList(params)
             const data = response.data.result
             if (Array.isArray(data) && data.length > 0) {
               this.skuList = this.skuList.concat(data)
