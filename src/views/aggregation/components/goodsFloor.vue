@@ -452,8 +452,8 @@ export default {
     },
     handleExportGoods() {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['商品SKU']
-        const filterVal = ['skuid']
+        const tHeader = ['商品MPU']
+        const filterVal = ['mpu']
         const list = this.skuData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
