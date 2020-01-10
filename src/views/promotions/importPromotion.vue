@@ -259,6 +259,7 @@ export default {
     },
     async parsePromotionData(results) {
       try {
+        this.excelResults = []
         const skus = results.map(item => {
           const product = {}
           for (const header of PromotionHeaders) {
@@ -271,6 +272,8 @@ export default {
         const promotionIds = uniq(skus.map(item => item.promotionId))
         const editingIds = []
         const promotionResponse = await getPromotionsApi({
+          offset: 1,
+          limit: promotionIds.length,
           ids: promotionIds.join(',')
         })
         if (promotionResponse.code === 200) {
@@ -281,7 +284,8 @@ export default {
             }
           }
         }
-        const filterSkus = skus.filter(item => editingIds.includes(item.promotionId) && !isEmpty(item.mpu))
+        const filterSkus = skus.filter(item => editingIds.includes(item.promotionId) &&
+          !isEmpty(item.mpu) && item.discount > 0)
         const fetchList = filterSkus.map(item => item.mpu)
         const validMpus = []
         if (fetchList.length > 0) {
