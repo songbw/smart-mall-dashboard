@@ -111,7 +111,7 @@ import isNumber from 'lodash/isNumber'
 import uniq from 'lodash/uniq'
 import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
-import { getProductsByMpuList, searchProductsApi } from '@/api/products'
+import { getProductsByMpuList } from '@/api/products'
 import {
   product_state_on_sale,
   product_state_off_shelves,
@@ -399,6 +399,8 @@ export default {
       return !(Number.isNaN(price) || isEmpty(name) || state !== product_state_on_sale)
     },
     generateData({ header, results }) {
+      this.parsedSkuList = []
+      this.excelResults = []
       if (this.productCreation) {
         this.parseCreateSkuData(results)
       } else if (this.productUpdate) {
@@ -439,7 +441,7 @@ export default {
       let count = 0
       const importHeaders = this.hasSalePricePermission
         ? CreationHeaders : CreationHeaders.filter(item => item.field !== 'price')
-      results.forEach(item => {
+      for (const item of results) {
         const product = {}
         importHeaders.forEach(header => {
           if (header.label in item) {
@@ -450,6 +452,9 @@ export default {
           }
         })
         if (!isEmpty(product) && !isEmpty(product.name)) {
+          if (this.hasSalePricePermission && !('price' in product)) {
+            continue
+          }
           if (this.hasVendorPermission) {
             if (this.formData.merchantId) {
               product.merchantId = this.formData.merchantId
@@ -461,13 +466,15 @@ export default {
             product.skuid = ''
           }
           if ('taxRate' in product) {
-            const taxOption = ProductTaxRateOptions.find(item => item.label === product.taxRate)
+            const taxOption = ProductTaxRateOptions.find(
+              item => item.label === product.taxRate || item.value === product.taxRate
+            )
             product.taxRate = taxOption ? taxOption.value : ''
           }
           count++
           this.parsedSkuList.push(product)
         }
-      })
+      }
       this.excelResults = this.parsedSkuList
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
@@ -574,18 +581,22 @@ export default {
         .map(item => {
           const { mpu, ...updateItems } = item
           const find = this.parsedSkuList.find(mpuItem => mpuItem.mpu === mpu)
-          const state = Number.parseInt(find.state)
-          if (state !== product_state_on_sale) {
-            return { id: find.id, ...updateItems }
-          } else {
-            const keys = UpdateHeaders.filter(item => item.changeOnSale).map(item => item.field)
-            const onSaleUpdateItems = {}
-            for (const key of keys) {
-              if (key in updateItems) {
-                onSaleUpdateItems[key] = updateItems[key]
+          if (find) {
+            const state = Number.parseInt(find.state)
+            if (state !== product_state_on_sale) {
+              return { id: find.id, ...updateItems }
+            } else {
+              const keys = UpdateHeaders.filter(item => item.changeOnSale).map(item => item.field)
+              const onSaleUpdateItems = {}
+              for (const key of keys) {
+                if (key in updateItems) {
+                  onSaleUpdateItems[key] = updateItems[key]
+                }
               }
+              return isEmpty(onSaleUpdateItems) ? null : { id: find.id, ...onSaleUpdateItems }
             }
-            return isEmpty(onSaleUpdateItems) ? null : { id: find.id, ...onSaleUpdateItems }
+          } else {
+            return null
           }
         })
         .filter(item => item !== null)
