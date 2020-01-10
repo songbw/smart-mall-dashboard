@@ -339,7 +339,7 @@ export default {
           skuid: row.skuid,
           mpu: row.mpu,
           price: row.price,
-          floorPrice: item.floorPrice,
+          floorPrice: row.floorPrice,
           imagePath: row.image,
           brand: row.brand,
           name: row.name,
