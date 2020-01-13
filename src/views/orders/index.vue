@@ -358,7 +358,8 @@ import {
   vendor_status_approved,
   work_order_status_rejected,
   work_order_status_finished,
-  WorkOrderStatusDefinition
+  WorkOrderStatusDefinition,
+  PayTypeOptions
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
@@ -404,19 +405,7 @@ export default {
         value: -1,
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
-      paymentOptions: [{
-        value: 'balance',
-        label: '余额支付'
-      }, {
-        value: 'woa',
-        label: '联机账户'
-      }, {
-        value: 'card',
-        label: '惠民优选卡'
-      }, {
-        value: 'bank',
-        label: '快捷支付'
-      }],
+      paymentOptions: [].concat(PayTypeOptions),
       invoiceOptions: [{
         value: wuxiBalanceInvoice,
         label: '无锡余额支付'
