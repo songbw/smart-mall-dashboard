@@ -426,12 +426,16 @@ export default {
             parsedValue = value != null ? value.toString() : null
           }
           break
-        case 'integer':
-          parsedValue = convertToInt(value)
+        case 'integer': {
+          const temp = convertToInt(value)
+          parsedValue = temp >= 0 ? temp : null
           break
-        case 'float':
-          parsedValue = convertToNumber(value)
+        }
+        case 'float': {
+          const temp = convertToNumber(value)
+          parsedValue = temp >= 0 ? temp : null
           break
+        }
         default:
           break
       }
