@@ -50,23 +50,29 @@
           <el-tag>{{ scope.row.company.status | vendorStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="更新时间" align="center" width="180">
+      <el-table-column label="发票类型" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.company.updateTime | dateFormat }}</span>
+          <span>{{ scope.row.company.invoiceType | vendorInvoice }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" :width="hasEditPermission ? '320' : '100'">
+      <el-table-column label="操作" align="left" :width="hasEditPermission ? '360' : '100'">
         <template slot-scope="scope">
           <el-button
-            type="primary"
+            type="default"
             size="mini"
             @click="handleViewVendor(scope.$index)"
           >
             查看
           </el-button>
           <el-button
-            v-if="hasEditPermission"
-            :disabled="scope.row.company.status !== statusReviewing"
+            type="primary"
+            size="mini"
+            @click="handleEditVendor(scope.$index)"
+          >
+            编辑
+          </el-button>
+          <el-button
+            v-if="hasEditPermission && scope.row.company.status === statusReviewing"
             type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -74,8 +80,7 @@
             批准
           </el-button>
           <el-button
-            v-if="hasEditPermission"
-            :disabled="scope.row.company.status !== statusReviewing"
+            v-if="hasEditPermission && scope.row.company.status === statusReviewing"
             type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -83,13 +88,30 @@
             拒绝
           </el-button>
           <el-button
-            v-if="hasEditPermission"
-            :disabled="scope.row.company.status === statusApproved"
-            type="danger"
+            v-if="hasEditPermission &&
+              scope.row.company.status !== statusApproved &&
+              scope.row.company.status !== statusLocked"
+            type="warning"
             size="mini"
             @click="handleDeleteVendor(scope.$index)"
           >
             删除
+          </el-button>
+          <el-button
+            v-if="hasEditPermission && scope.row.company.status === statusApproved"
+            type="danger"
+            size="mini"
+            @click="handleLockVendor(scope.$index)"
+          >
+            冻结
+          </el-button>
+          <el-button
+            v-if="hasEditPermission && scope.row.company.status === statusLocked"
+            type="success"
+            size="mini"
+            @click="handleUnlockVendor(scope.$index)"
+          >
+            恢复
           </el-button>
         </template>
       </el-table-column>
@@ -130,6 +152,20 @@
             maxlength="50"
           />
         </el-form-item>
+        <el-form-item label="发票类型" prop="invoiceType">
+          <el-select
+            v-model="vendorProfile.invoiceType"
+            placeholder="请选择发票类型"
+            class="item-input"
+          >
+            <el-option
+              v-for="item in invoiceOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="商户行业" prop="industry">
           <el-select
             v-model="vendorIndustry"
@@ -145,10 +181,17 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="运营平台" prop="appId">
+          <el-checkbox-group v-model="vendorAppId">
+            <el-checkbox v-for="platform in platformAppList" :key="platform.appId" :label="platform.appId">
+              {{ platform.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="cancelCreateVendor">取消</el-button>
-        <el-button type="primary" @click="confirmCreateVendor">确定</el-button>
+        <el-button @click="handleDialogCancel">取消</el-button>
+        <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -163,49 +206,43 @@ import VendorDetail from './detail'
 import {
   getVendorListApi,
   deleteVendorApi,
+  lockVendorApi,
+  unlockVendorApi,
   reviewVendorProfileApi,
-  createVendorProfileApi
+  createVendorProfileApi,
+  updateVendorProfileApi
 } from '@/api/vendor'
 import {
-  vendor_status_editing,
   vendor_status_reviewing,
   vendor_status_approved,
-  vendor_status_rejected
+  vendor_status_rejected,
+  vendor_status_locked,
+  VendorStatusOptions,
+  VendorInvoiceOptions
 } from '@/utils/constants'
 import { IndustryDefinitions } from './constants'
 import { VendorPermissions } from '@/utils/role-permissions'
-
-const VendorStatus = [
-  {
-    value: vendor_status_editing,
-    label: '编辑中'
-  },
-  {
-    value: vendor_status_reviewing,
-    label: '待审核'
-  },
-  {
-    value: vendor_status_approved,
-    label: '审核已通过'
-  },
-  {
-    value: vendor_status_rejected,
-    label: '审核有问题'
-  }
-]
 
 export default {
   name: 'VendorManager',
   components: { Pagination, VendorDetail },
   filters: {
     vendorStatus: (status) => {
-      const item = VendorStatus.find(vendor => vendor.value === status)
+      const item = VendorStatusOptions.find(vendor => vendor.value === status)
       return item ? item.label : ''
     },
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() ? momentDate.format(format) : date
+    },
+    vendorInvoice: type => {
+      if (type !== null) {
+        const item = VendorInvoiceOptions.find(invoice => invoice.value === type)
+        return item ? item.label : ''
+      } else {
+        return ''
+      }
     }
   },
   data() {
@@ -223,6 +260,20 @@ export default {
         callback(new Error('请输入商户地址'))
       }
     }
+    const validateInvoice = (rule, value, callback) => {
+      if (value !== null) {
+        callback()
+      } else {
+        callback(new Error('请选择发票类型'))
+      }
+    }
+    const validateAppId = (rule, value, callback) => {
+      if (!isEmpty(value)) {
+        callback()
+      } else {
+        callback(new Error('请选择运营平台'))
+      }
+    }
     const validateIndustry = (rule, value, callback) => {
       if (!isEmpty(value)) {
         callback()
@@ -233,11 +284,13 @@ export default {
     return {
       statusReviewing: vendor_status_reviewing,
       statusApproved: vendor_status_approved,
+      statusLocked: vendor_status_locked,
       statusOptions: [{
         value: -1,
         label: '全部'
-      }].concat(VendorStatus),
+      }].concat(VendorStatusOptions),
       industryOptions: IndustryDefinitions,
+      invoiceOptions: VendorInvoiceOptions,
       detailVisible: false,
       dataLoading: false,
       vendorData: [],
@@ -251,28 +304,47 @@ export default {
         users: []
       },
       vendorDialogVisible: false,
+      vendorId: -1,
       vendorProfile: {
         name: null,
         address: null,
-        industry: null
+        industry: null,
+        invoiceType: null,
+        appId: null
       },
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
-        industry: [{ required: true, trigger: 'change', validator: validateIndustry }]
+        invoiceType: [{ required: true, trigger: 'blur', validator: validateInvoice }],
+        appId: [{ required: true, trigger: 'blur', validator: validateAppId }],
+        industry: [{ required: true, trigger: 'blur', validator: validateIndustry }]
       }
     }
   },
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      queryData: 'couponQuery'
+      queryData: 'couponQuery',
+      platformAppList: 'platformAppList'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(VendorPermissions.view)
     },
     hasEditPermission() {
       return this.userPermissions.includes(VendorPermissions.update)
+    },
+    vendorAppId: {
+      get() {
+        const appId = this.vendorProfile.appId
+        if (appId) {
+          return appId.split(',')
+        } else {
+          return []
+        }
+      },
+      set(values) {
+        this.vendorProfile.appId = values.join(',')
+      }
     },
     vendorIndustry: {
       get() {
@@ -289,9 +361,25 @@ export default {
     }
   },
   created() {
-    this.getVendorData()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      await this.getAppPlatformList()
+      await this.getVendorData()
+    },
+    async getAppPlatformList() {
+      try {
+        this.dataLoading = true
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+      } catch (e) {
+        console.warn('Get platform list error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+    },
     async getVendorData() {
       if (this.hasViewPermission) {
         try {
@@ -369,36 +457,103 @@ export default {
         console.warn('Vendor manager delete:' + e)
       }
     },
+    async handleLockVendor(index) {
+      try {
+        const name = this.vendorData[index].company.name
+        await this.$confirm(`冻结公司：${name}，此公司的管理员将无法登录, 是否继续?`, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        await lockVendorApi({ id: this.vendorData[index].company.id })
+        this.getVendorData()
+      } catch (e) {
+        console.warn('Vendor manager delete:' + e)
+      }
+    },
+    async handleUnlockVendor(index) {
+      try {
+        const name = this.vendorData[index].company.name
+        await this.$confirm(`恢复公司：${name}， 此公司需要重新批准审核, 是否继续?`, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        await unlockVendorApi({ id: this.vendorData[index].company.id })
+        this.getVendorData()
+      } catch (e) {
+        console.warn('Vendor manager delete:' + e)
+      }
+    },
     onQueryStatusChanged(value) {
       this.queryStatus = value
     },
-    handleCreateVendor() {
+    resetVendorForm() {
       this.vendorProfile.name = ''
       this.vendorProfile.address = ''
       this.vendorProfile.industry = ''
+      this.vendorProfile.invoiceType = null
+      this.vendorProfile.appId = null
+    },
+    handleCreateVendor() {
+      this.resetVendorForm()
+      this.vendorId = -1
       this.vendorDialogVisible = true
     },
-    cancelCreateVendor() {
+    handleEditVendor(index) {
+      const company = this.vendorData[index].company
+      this.vendorId = company.id
+      this.vendorProfile.name = company.name
+      this.vendorProfile.address = company.address
+      this.vendorProfile.industry = company.industry
+      this.vendorProfile.invoiceType = company.invoiceType
+      this.vendorProfile.appId = company.appId
+      this.vendorDialogVisible = true
+    },
+    handleDialogCancel() {
+      this.resetVendorForm()
       this.$refs.vendorForm.clearValidate()
       this.vendorDialogVisible = false
     },
-    confirmCreateVendor() {
+    handleDialogConfirm() {
       this.$refs.vendorForm.validate(async(valid) => {
         if (valid) {
-          try {
-            const { id } = await createVendorProfileApi(this.vendorProfile)
-            await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
-            this.vendorDialogVisible = false
-            this.getVendorData()
-          } catch (e) {
-            console.warn('Create vendor profile error:' + e)
-            const msg = this.getErrorMessage(e)
-            if (msg) {
-              this.$message.error(msg)
-            }
+          if (this.vendorId >= 0) {
+            this.confirmUpdateVendor()
+          } else {
+            this.confirmCreateVendor()
           }
         }
       })
+    },
+    async confirmCreateVendor() {
+      try {
+        const { id } = await createVendorProfileApi(this.vendorProfile)
+        await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
+        this.vendorDialogVisible = false
+        this.getVendorData()
+        this.$message.success('商户创建成功！')
+      } catch (e) {
+        console.warn('Create vendor profile error:' + e)
+        const msg = this.getErrorMessage(e)
+        if (msg) {
+          this.$message.error(msg)
+        }
+      }
+    },
+    async confirmUpdateVendor() {
+      try {
+        await updateVendorProfileApi({ id: this.vendorId, ...this.vendorProfile })
+        this.vendorDialogVisible = false
+        this.getVendorData()
+        this.$message.success('商户更新成功！')
+      } catch (e) {
+        console.warn('Update vendor profile error:' + e)
+        const msg = this.getErrorMessage(e)
+        if (msg) {
+          this.$message.error(msg)
+        }
+      }
     },
     getErrorMessage(error) {
       if (error.response) {

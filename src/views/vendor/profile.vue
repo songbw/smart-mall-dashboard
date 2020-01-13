@@ -118,7 +118,6 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'cosUrl',
       'vendorProfile'
     ]),
     statusLabel() {

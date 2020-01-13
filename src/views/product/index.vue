@@ -390,7 +390,6 @@ import {
   exportProductsApi,
   updatePriceOrStateApi
 } from '@/api/products'
-import { getVendorListApi } from '@/api/vendor'
 import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
@@ -402,7 +401,6 @@ import {
   product_state_is_editing,
   product_state_all,
   ProductStateOptions,
-  vendor_status_approved
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
@@ -610,20 +608,8 @@ export default {
     },
     async getVendorList() {
       try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
         this.listLoading = true
-        const data = await getVendorListApi(params)
-        const vendors = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
-          }
-        })
-        this.$store.commit('products/SET_VENDOR_OPTIONS', vendors)
+        await this.$store.dispatch('products/getVendorList')
       } catch (e) {
         console.warn('Product get vendor list error:' + e)
       } finally {
@@ -632,7 +618,7 @@ export default {
     },
     getVendorName(vendorId) {
       if (this.productVendors.length > 0 && vendorId != null) {
-        const vendor = this.productVendors.find(option => option.value === vendorId)
+        const vendor = this.productVendors.find(option => option.value === vendorId.toString())
         if (vendor) {
           return vendor.label
         } else {

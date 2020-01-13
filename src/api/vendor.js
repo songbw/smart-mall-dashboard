@@ -57,6 +57,20 @@ export function deleteVendorApi(params) {
   })
 }
 
+export function lockVendorApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/companies/${params.id}/locked`,
+    method: 'put'
+  })
+}
+
+export function unlockVendorApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/companies/${params.id}/unlocked`,
+    method: 'put'
+  })
+}
+
 export function getVendorProfileByIdApi(params) {
   return Vue.axios('vendor').request({
     url: `/vendors/vendors/companyById`,
@@ -124,6 +138,17 @@ export function createVendorProfileApi(params) {
     method: 'post',
     data: {
       ...params
+    }
+  })
+}
+
+export function updateVendorProfileApi(params) {
+  const { id, ...data } = params
+  return Vue.axios('vendor').request({
+    url: `/vendors/companies/admin/${id}/profile`,
+    method: 'put',
+    data: {
+      ...data
     }
   })
 }

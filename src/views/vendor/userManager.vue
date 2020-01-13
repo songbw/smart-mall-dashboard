@@ -7,6 +7,24 @@
       <el-form-item label="电话号码">
         <el-input v-model="queryPhone" placeholder="输入电话号码" clearable />
       </el-form-item>
+    </el-form>
+    <el-form inline>
+      <el-form-item label="用户角色">
+        <el-select v-model="queryRoleId" placeholder="请选择角色" clearable>
+          <el-option
+            v-for="item in roleOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="公司名称">
+        <vendor-selection
+          :vendor-id="queryCompanyId"
+          @changed="value => queryCompanyId = value"
+        />
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getUsersData">
           搜索
@@ -235,6 +253,7 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination'
+import VendorSelection from '@/components/VendorSelection'
 import VendorDetail from './detail'
 import {
   getVendorUserListApi,
@@ -258,7 +277,7 @@ export default {
       return momentDate.isValid() ? momentDate.format(format) : date
     }
   },
-  components: { Pagination, VendorDetail },
+  components: { Pagination, VendorDetail, VendorSelection },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (validUserName(value) === false) {
@@ -294,6 +313,8 @@ export default {
       dataLoading: false,
       queryName: '',
       queryPhone: '',
+      queryRoleId: null,
+      queryCompanyId: null,
       queryOffset: 1,
       queryLimit: 20,
       userData: [],
@@ -418,6 +439,12 @@ export default {
         }
         if (!isEmpty(this.queryName)) {
           params.name = this.queryName
+        }
+        if (this.queryRoleId !== null) {
+          params.roleId = this.queryRoleId
+        }
+        if (this.queryCompanyId !== null) {
+          params.companyId = this.queryCompanyId
         }
         this.dataLoading = true
         const data = await getVendorUserListApi(params)

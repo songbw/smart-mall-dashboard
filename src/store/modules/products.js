@@ -1,4 +1,5 @@
-import { product_state_all } from '@/utils/constants'
+import { product_state_all, vendor_status_approved } from '@/utils/constants'
+import { getVendorListApi } from '@/api/vendor'
 
 const queryTemplate = {
   offset: 1,
@@ -42,8 +43,34 @@ const mutations = {
   }
 }
 
+const actions = {
+  async getVendorList({ commit }) {
+    try {
+      const params = {
+        page: 1,
+        limit: 1000,
+        status: vendor_status_approved
+      }
+      this.listLoading = true
+      const data = await getVendorListApi(params)
+      const vendors = data.rows.map(row => {
+        return {
+          value: row.company.id.toString(),
+          label: row.company.name,
+          invoiceType: row.company.invoiceType
+        }
+      })
+      commit('SET_VENDOR_OPTIONS', vendors)
+    } catch (e) {
+      console.warn('Product get vendor list error:' + e)
+    } finally {
+      this.listLoading = false
+    }
+  }
+}
 export default {
   namespaced: true,
   state,
-  mutations
+  mutations,
+  actions
 }

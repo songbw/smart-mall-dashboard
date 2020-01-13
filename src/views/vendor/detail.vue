@@ -18,6 +18,11 @@
       <el-form-item label="商户地址">
         <el-input :value="company.address" readonly class="item-input" />
       </el-form-item>
+      <el-form-item label="运营平台">
+        <el-tag v-for="name in platformNameList" :key="name" type="info" style="margin-right: 10px">
+          {{ name }}
+        </el-tag>
+      </el-form-item>
       <el-form-item label="商户行业">
         <el-tag v-for="tag in tags" :key="tag" style="margin-right: 10px">
           {{ tag }}
@@ -28,9 +33,6 @@
       </el-form-item>
       <el-form-item label="更新时间">
         <el-input :value="updatedTime" readonly class="item-input" />
-      </el-form-item>
-      <el-form-item v-if="company.licenseUrl" label="营业执照">
-        <img :src="company.licenseUrl" width="50%" alt="">
       </el-form-item>
       <el-form-item v-if="users.length > 0" label="商户管理员">
         <el-table :data="users" border style="width: 100%;">
@@ -64,7 +66,9 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
+import isEmpty from 'lodash/isEmpty'
 import { IndustryDefinitions } from './constants'
 import {
   vendor_status_rejected
@@ -105,15 +109,29 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      platformAppList: 'platformAppList'
+    }),
+    platformNameList() {
+      if (isEmpty(this.company.appId)) {
+        return []
+      } else {
+        return this.company.appId.split(',')
+          .map(appId => {
+            const find = this.platformAppList.find(item => item.appId === appId)
+            return find ? find.name : appId
+          })
+      }
+    },
     tags() {
-      if (this.company.industry) {
+      if (isEmpty(this.company.industry)) {
+        return []
+      } else {
         return this.company.industry.split(';')
           .map(item => {
             const find = IndustryDefinitions.find(definition => definition.value === item)
             return find ? find.label : item
           })
-      } else {
-        return []
       }
     },
     createdTime() {

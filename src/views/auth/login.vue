@@ -183,8 +183,9 @@ export default {
             if (res && res.status >= 400 && res.status < 500) {
               if (res && res.data) {
                 const data = res.data
-                if (data.error && Number.parseInt(data.error) === 400006) {
-                  msg = '此用户名未注册，请确认后重试！'
+                const error = data.error
+                if (Number.parseInt(error) === 410003) {
+                  msg = '此用户所属公司已被冻结，请联系管理员！'
                 } else {
                   msg = '用户名或密码错误，请确认后重试！'
                 }

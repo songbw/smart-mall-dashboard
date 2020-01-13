@@ -16,6 +16,23 @@ export const vendor_status_editing = 1
 export const vendor_status_reviewing = 2
 export const vendor_status_approved = 3
 export const vendor_status_rejected = 4
+export const vendor_status_locked = 5
+export const VendorStatusOptions = [{
+  value: vendor_status_editing,
+  label: '编辑中'
+}, {
+  value: vendor_status_reviewing,
+  label: '待审核'
+}, {
+  value: vendor_status_approved,
+  label: '审核已通过'
+}, {
+  value: vendor_status_rejected,
+  label: '审核有问题'
+}, {
+  value: vendor_status_locked,
+  label: '已冻结'
+}]
 
 export const product_state_off_shelves = 0
 export const product_state_on_sale = 1
@@ -70,6 +87,9 @@ export const ProductTaxRateOptions = [
   }, {
     value: '0.13',
     label: '13%'
+  }, {
+    value: '-1',
+    label: '免税'
   }
 ]
 
@@ -239,6 +259,21 @@ export const PayTypeOptions = [{
 }, {
   value: 'bank',
   label: '快捷支付'
+}, {
+  value: 'pingan',
+  label: '平安统一支付'
+}, {
+  value: 'fcwxh5',
+  label: '微信H5支付'
+}, {
+  value: 'fcwx',
+  label: '微信公众号支付'
+}, {
+  value: 'fcwxxcx',
+  label: '微信小程序支付'
+}, {
+  value: 'fcalipay',
+  label: '支付宝H5支付'
 }]
 
 export const work_order_status_request = 1
@@ -280,3 +315,13 @@ export const aggregationHotZoneType = '7'
 export const aggregationComboType = '8'
 export const aggregationPromotionListType = '9'
 export const aggregationHorizontalGoodType = '10'
+
+export const vendor_invoice_type_special = 1
+export const vendor_invoice_type_normal = 2
+export const VendorInvoiceOptions = [{
+  value: vendor_invoice_type_special,
+  label: '增值税专用发票'
+}, {
+  value: vendor_invoice_type_normal,
+  label: '增值税普通发票'
+}]

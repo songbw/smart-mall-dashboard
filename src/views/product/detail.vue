@@ -154,11 +154,21 @@
       <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售参考价(元)">
         <span style="margin-right: 10px"> {{ suggestPrice }}</span>
         <el-input-number v-model="suggestPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
-        <span style="font-size: 12px;margin-left: 10px;">基于销售底价的比率</span>
+        <span style="font-size: 12px;margin-left: 10px;"><i class="el-icon-warning-outline">基于销售底价的比率</i></span>
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="销售底价(元)">
-        <span v-if="viewProduct"> {{ productForm.floorPrice }}</span>
-        <el-input-number v-else v-model="productForm.floorPrice" :precision="2" :step="1" :min="0" :max="1000000" />
+        <span style="margin-right: 10px"> {{ floorPrice }}</span>
+        <el-input-number
+          v-if="!viewProduct"
+          v-model="productForm.floorPrice"
+          :precision="2"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
+        <span style="font-size: 12px;margin-left: 10px;">
+          <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
+        </span>
       </el-form-item>
       <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
@@ -397,6 +407,7 @@ import {
   product_default_tax_rate,
   ProductTaxRateOptions,
   vendor_status_approved,
+  vendor_invoice_type_special,
   ProductTypeOptions
 } from '@/utils/constants'
 import { getVendorListApi } from '@/api/vendor'
@@ -618,8 +629,33 @@ export default {
     editProduct() {
       return this.opType === OP_EDIT
     },
+    floorPrice: {
+      get() {
+        if (this.productForm.floorPrice > 0) {
+          return this.productForm.floorPrice
+        } else {
+          if (this.productForm.merchantId !== null && this.productForm.sprice > 0) {
+            const vendor = this.productVendors.find(item => item.value === this.productForm.merchantId.toString())
+            const taxRate = floatToFixed(Number.parseFloat(this.productForm.taxRate), 2)
+            if (vendor !== null && taxRate >= 0) {
+              const invoiceType = vendor.invoiceType
+              const value = this.productForm.sprice *
+                (invoiceType === vendor_invoice_type_special ? (1.13 - taxRate) : 1.13)
+              return floatToFixed(value, 2)
+            } else {
+              return this.productForm.sprice
+            }
+          } else {
+            return 0
+          }
+        }
+      },
+      set(value) {
+        this.productForm.floorPrice = value
+      }
+    },
     suggestPrice() {
-      const sprice = convertToNumber(this.productForm.floorPrice)
+      const sprice = convertToNumber(this.floorPrice)
       if (!Number.isNaN(sprice)) {
         return floatToFixed(sprice * this.suggestPriceRate, 2).toString()
       } else {
@@ -661,19 +697,7 @@ export default {
       if (this.productVendors.length === 0) {
         try {
           this.loading = true
-          const params = {
-            page: 1,
-            limit: 1000,
-            status: vendor_status_approved
-          }
-          const data = await getVendorListApi(params)
-          const vendors = data.rows.map(row => {
-            return {
-              value: row.company.id,
-              label: row.company.name
-            }
-          })
-          this.$store.commit('products/SET_VENDOR_OPTIONS', vendors)
+          await this.$store.dispatch('products/getVendorList')
         } catch (e) {
           console.warn('Product get vendor list error:' + e)
         } finally {
@@ -683,7 +707,7 @@ export default {
     },
     getVendorName(vendorId) {
       if (this.productVendors.length > 0 && vendorId != null) {
-        const vendor = this.productVendors.find(option => option.value === vendorId)
+        const vendor = this.productVendors.find(option => option.value === vendorId.toString())
         if (vendor) {
           return vendor.label
         } else {
@@ -948,6 +972,9 @@ export default {
         }
         if (this.autoSku) {
           params.skuid = ''
+        }
+        if (!(params.floorPrice > 0)) {
+          params.floorPrice = this.floorPrice
         }
         const res = await createProductApi(params)
         if (res.code === 200) {
