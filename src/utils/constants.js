@@ -249,13 +249,13 @@ export const CouponPublishedDefinition = [{
 
 export const PayTypeOptions = [{
   value: 'balance',
-  label: '余额'
+  label: '无锡余额'
 }, {
   value: 'woa',
-  label: '联机账户'
+  label: '无锡联机账户'
 }, {
   value: 'card',
-  label: '惠民优选卡'
+  label: '无锡惠民优选卡'
 }, {
   value: 'bank',
   label: '快捷支付'
