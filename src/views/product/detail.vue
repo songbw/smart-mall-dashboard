@@ -950,7 +950,7 @@ export default {
               break
             }
             case 'inventory': {
-              if (value > 0) {
+              if (value >= 0) {
                 params[key] = value
               }
               break
