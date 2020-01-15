@@ -1053,6 +1053,7 @@ export default {
     },
     async onExportAppIdChanged(value) {
       if (this.exportType === this.paymentType) {
+        this.exportForm.payType = null
         this.exportPayTypeOptions = value !== null ? await this.getPayTypeListByAppId(value) : []
       }
     },
