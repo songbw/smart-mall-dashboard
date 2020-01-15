@@ -406,11 +406,9 @@ import {
   ProductStateOptions,
   product_default_tax_rate,
   ProductTaxRateOptions,
-  vendor_status_approved,
   vendor_invoice_type_special,
   ProductTypeOptions
 } from '@/utils/constants'
-import { getVendorListApi } from '@/api/vendor'
 import {
   getMerchantFreeShippingApi,
   getMpuShippingPriceApi,

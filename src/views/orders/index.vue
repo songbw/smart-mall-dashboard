@@ -267,10 +267,22 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
+        <el-form-item v-if="exportType !== invoiceType" label="运营平台" prop="appId">
+          <el-select v-model="exportForm.appId" @change="onExportAppIdChanged">
+            <el-option
+              v-for="item in platformAppList"
+              :key="item.appId"
+              :label="item.name"
+              :value="item.appId"
+            >
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item v-if="exportType === paymentType" label="支付类型" prop="payType">
           <el-select v-model="exportForm.payType">
             <el-option
-              v-for="item in paymentOptions"
+              v-for="item in exportPayTypeOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -307,18 +319,6 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="exportType !== invoiceType" label="运营平台" prop="appId">
-          <el-select v-model="exportForm.appId">
-            <el-option
-              v-for="item in platformAppList"
-              :key="item.appId"
-              :label="item.name"
-              :value="item.appId"
-            >
-              <span>{{ item.name }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleCancelExport">取消</el-button>
@@ -352,6 +352,7 @@ import {
 } from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderByOrderListApi } from '@/api/workOrders'
+import { getPayTypeListByAppIdApi } from '@/api/payments'
 import {
   suborder_status_requested_service,
   SubOrderStatusDefinitions,
@@ -405,7 +406,6 @@ export default {
         value: -1,
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
-      paymentOptions: [].concat(PayTypeOptions),
       invoiceOptions: [{
         value: wuxiBalanceInvoice,
         label: '无锡余额支付'
@@ -432,6 +432,7 @@ export default {
       invoiceType: 'export-invoice',
       profitType: 'export-profit',
       exportDialogVisible: false,
+      exportPayTypeOptions: [],
       exportForm: {
         merchantId: -1,
         payStartDate: null,
@@ -928,7 +929,7 @@ export default {
       this.$refs.exportForm.resetFields()
       try {
         const data = await exportPaymentBillApi(params)
-        const payOption = this.paymentOptions.find(item => item.value === params.payType)
+        const payOption = PayTypeOptions.find(item => item.value === params.payType)
         const payLabel = payOption ? payOption.label : ''
         const appOption = this.platformAppList.find(item => item.appId === params.appId)
         const appLabel = appOption ? appOption.name : ''
@@ -1003,13 +1004,15 @@ export default {
       }
     },
     handleCancelExport() {
-      this.$refs.exportForm.resetFields()
       this.exportDialogVisible = false
+      this.exportPayTypeOptions = []
+      this.$refs.exportForm.resetFields()
     },
     handleConfirmExport() {
       this.$refs.exportForm.validate(valid => {
         if (valid) {
           this.exportDialogVisible = false
+          this.exportPayTypeOptions = []
           switch (this.exportType) {
             case this.reconciliationType:
               this.handleExportReconciliation()
@@ -1029,6 +1032,29 @@ export default {
           }
         }
       })
+    },
+    async getPayTypeListByAppId(appId) {
+      try {
+        const { code, data } = await getPayTypeListByAppIdApi({ appid: appId })
+        if (code === 200) {
+          return data.map(item => {
+            const find = PayTypeOptions.find(type => type.value === item.name)
+            return {
+              id: item.id,
+              value: item.name,
+              label: find ? find.label : item.desc
+            }
+          })
+        }
+      } catch (e) {
+        console.warn('Get pay type list error:' + e)
+      }
+      return []
+    },
+    async onExportAppIdChanged(value) {
+      if (this.exportType === this.paymentType) {
+        this.exportPayTypeOptions = value !== null ? await this.getPayTypeListByAppId(value) : []
+      }
     },
     onAppIdChanged(platform) {
       if (this.queryAppId !== platform.appId) {

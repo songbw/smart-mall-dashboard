@@ -24,16 +24,22 @@
           <span>{{ scope.row.appId }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="网关地址" align="center">
+      <el-table-column label="支付方式" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.gatewayUrl }}</span>
+          <el-tag
+            v-for="pay in scope.row.payTypes"
+            :key="pay.value"
+            style="margin: 0 3px"
+          >
+            {{ pay.label }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column
         v-if="hasEditPermission"
         label="操作"
         align="center"
-        width="120"
+        width="240"
       >
         <template slot-scope="scope">
           <el-button
@@ -41,7 +47,14 @@
             size="mini"
             @click="handleEdit(scope.row)"
           >
-            编辑
+            编辑平台
+          </el-button>
+          <el-button
+            type="info"
+            size="mini"
+            @click="handleEditPayment(scope.row)"
+          >
+            修改支付
           </el-button>
         </template>
       </el-table-column>
@@ -93,6 +106,33 @@
         <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="dialogPaymentVisible"
+      title="修改支付方式"
+      width="850px"
+    >
+      <el-form ref="paymentForm" :model="paymentForm" label-width="120px">
+        <el-form-item label="运营平台">
+          <span>{{ paymentForm.name }}</span>
+        </el-form-item>
+        <el-form-item label="支付方式">
+          <el-transfer
+            v-model="paymentForm.payTypes"
+            :titles="['未添加', '已添加']"
+            :button-texts="['删除', '添加']"
+            :props="{key: 'value', label: 'label'}"
+            :data="payTypeOptions"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogPaymentVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmPayment">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -106,19 +146,32 @@ import {
   createAppPlatformApi,
   updateAppPlatformApi
 } from '@/api/products'
+import {
+  getPayTypeListByAppIdApi,
+  bindPayTypeWithPlatformApi,
+  deletePayTypeFromAppIdApi
+} from '@/api/payments'
 import { validateURL } from '@/utils/validate'
+import { PayTypeOptions } from '@/utils/constants'
 
 export default {
   name: 'AppPlatformManagement',
   components: { Pagination },
   data() {
     return {
+      payTypeOptions: PayTypeOptions,
       listLoading: false,
       queryOffset: 1,
       queryLimit: 20,
       total: 0,
       appPlatformList: [],
       editId: -1,
+      dialogPaymentVisible: false,
+      paymentForm: {
+        name: '',
+        appId: null,
+        payTypes: []
+      },
       platformDialogVisible: false,
       platformForm: {
         name: '',
@@ -165,15 +218,39 @@ export default {
     }
   },
   created() {
-    this.getAppPlatformList()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      await this.getAppPlatformList()
+    },
+    async getPayTypeListByAppId(appId) {
+      try {
+        const { code, data } = await getPayTypeListByAppIdApi({ appid: appId })
+        if (code === 200) {
+          return data.map(item => {
+            const find = PayTypeOptions.find(type => type.value === item.name)
+            return {
+              id: item.id,
+              value: item.name,
+              label: find ? find.label : item.desc
+            }
+          })
+        }
+      } catch (e) {
+        console.warn('Get pay type list error:' + e)
+      }
+      return []
+    },
     async getAppPlatformList() {
       this.listLoading = true
       try {
         const { code, data } = await getAppPlatformListApi({ pageNo: this.queryOffset, pageSize: this.queryLimit })
         if (code === 200) {
-          this.appPlatformList = data.list
+          for (const item of data.list) {
+            const payTypes = await this.getPayTypeListByAppId(item.appId)
+            this.appPlatformList.push({ payTypes, ...item })
+          }
           this.total = data.total
         }
       } catch (e) {
@@ -192,6 +269,12 @@ export default {
       this.platformForm.appId = row.appId
       this.platformForm.gatewayUrl = row.gatewayUrl
       this.platformDialogVisible = true
+    },
+    handleEditPayment(row) {
+      this.paymentForm.appId = row.appId
+      this.paymentForm.name = row.name
+      this.paymentForm.payTypes = row.payTypes.map(item => item.value)
+      this.dialogPaymentVisible = true
     },
     handleDialogCancel() {
       this.$refs.platformForm.resetFields()
@@ -220,6 +303,30 @@ export default {
           }
         }
       })
+    },
+    async handleConfirmPayment() {
+      this.dialogPaymentVisible = false
+      try {
+        this.listLoading = true
+        const platform = this.appPlatformList.find(item => item.appId === this.paymentForm.appId)
+        const toDelIds = platform.payTypes
+          .filter(item => !this.paymentForm.payTypes.includes(item.value))
+          .map(item => item.id)
+        const appTypes = platform.payTypes.map(item => item.value)
+        const toAddTypes = this.paymentForm.payTypes.filter(item => !appTypes.includes(item))
+        const params = toAddTypes.map(item => ({ appid: this.paymentForm.appId, name: item, desc: '' }))
+        if (toAddTypes.length > 0) {
+          await bindPayTypeWithPlatformApi({ mutilPayTypes: params })
+        }
+        if (toDelIds.length > 0) {
+          await deletePayTypeFromAppIdApi({ ids: toDelIds.join(',') })
+        }
+        platform.payTypes = await this.getPayTypeListByAppId(this.paymentForm.appId)
+      } catch (e) {
+        console.warn('Bind payment with app id error:' + e)
+      } finally {
+        this.listLoading = false
+      }
     }
   }
 }

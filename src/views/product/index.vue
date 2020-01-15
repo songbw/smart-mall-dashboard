@@ -400,7 +400,7 @@ import {
   product_state_on_sale,
   product_state_is_editing,
   product_state_all,
-  ProductStateOptions,
+  ProductStateOptions
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
@@ -607,13 +607,15 @@ export default {
       this.getListData()
     },
     async getVendorList() {
-      try {
-        this.listLoading = true
-        await this.$store.dispatch('products/getVendorList')
-      } catch (e) {
-        console.warn('Product get vendor list error:' + e)
-      } finally {
-        this.listLoading = false
+      if (this.productVendors.length === 0) {
+        try {
+          this.listLoading = true
+          await this.$store.dispatch('products/getVendorList')
+        } catch (e) {
+          console.warn('Product get vendor list error:' + e)
+        } finally {
+          this.listLoading = false
+        }
       }
     },
     getVendorName(vendorId) {
