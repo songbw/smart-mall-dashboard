@@ -51,9 +51,9 @@
           <span>{{ scope.row.promotionName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="商品SKU" align="center" width="120">
+      <el-table-column label="商品MPU" align="center" width="120">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">

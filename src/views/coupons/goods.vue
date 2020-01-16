@@ -45,9 +45,11 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" align="center" width="55" />
-      <el-table-column label="商品SKU" align="center" width="150">
+      <el-table-column label="商品MPU" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+            {{ scope.row.mpu }}
+          </el-link>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">

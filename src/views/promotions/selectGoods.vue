@@ -15,14 +15,14 @@
           :data="conflictedSkus"
           style="width: 100%"
         >
-          <el-table-column label="商品SKU" align="center" width="150">
+          <el-table-column label="商品MPU" align="center" width="150">
             <template slot="header">
               <el-button type="danger" size="mini" @click="handleDeleteConflictedMpus">
                 全部删除
               </el-button>
             </template>
             <template slot-scope="scope">
-              <span>{{ scope.row.skuid }}</span>
+              <span>{{ scope.row.mpu }}</span>
             </template>
           </el-table-column>
           <el-table-column label="商品名" align="center">
@@ -117,9 +117,11 @@
           type="selection"
           width="55"
         />
-        <el-table-column label="商品SKU" align="center" width="150">
+        <el-table-column label="商品MPU" align="center" width="150">
           <template slot-scope="scope">
-            <span>{{ scope.row.skuid }}</span>
+            <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
+              {{ scope.row.mpu }}
+            </el-link>
           </template>
         </el-table-column>
         <el-table-column label="商品名" align="center">

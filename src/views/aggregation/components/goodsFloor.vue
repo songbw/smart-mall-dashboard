@@ -106,10 +106,10 @@
           type="selection"
           width="55"
         />
-        <el-table-column label="商品SKU" align="center" width="150">
+        <el-table-column label="商品MPU" align="center" width="150">
           <template slot-scope="scope">
             <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
-              {{ scope.row.skuid }}
+              {{ scope.row.mpu }}
             </el-link>
           </template>
         </el-table-column>

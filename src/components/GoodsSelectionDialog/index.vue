@@ -27,13 +27,13 @@
       </el-button>
     </el-form>
     <el-form v-else inline :model="dialogFilterForm" @submit.prevent.native="handleDialogFilterSearch">
-      <el-form-item label="商品SKU">
+      <el-form-item label="商品MPU">
         <span class="el-icon-warning-outline" style="font-size: 12px">以英文逗号分隔</span>
         <el-input
-          v-model="filterSkus"
+          v-model="filterMpus"
           :rows="3"
           resize="none"
-          placeholder="商品SKU之间以英文逗号分隔，最多输入50个"
+          placeholder="商品MPU之间以英文逗号分隔，最多输入50个"
           type="textarea"
           label="http"
         />
@@ -69,9 +69,9 @@
           <el-checkbox :value="dialogSelectedItems.length > 0 && dialogSelectedItems[0].mpu === scope.row.mpu" />
         </template>
       </el-table-column>
-      <el-table-column label="商品SKU" align="center" width="150">
+      <el-table-column label="商品MPU" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
@@ -112,9 +112,9 @@
         type="selection"
         width="55"
       />
-      <el-table-column label="商品SKU" align="center" width="150">
+      <el-table-column label="商品MPU" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
@@ -160,7 +160,7 @@ import uniq from 'lodash/uniq'
 import isEmpty from 'lodash/isEmpty'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
-import { searchProductsApi } from '@/api/products'
+import { getProductsByMpuList, searchProductsApi } from '@/api/products'
 import { getPromotionByIdApi } from '@/api/promotions'
 
 export default {
@@ -200,7 +200,7 @@ export default {
     return {
       filterSkuString: '',
       dialogFilterForm: {
-        skus: [],
+        mpus: [],
         query: ''
       },
       total: 0,
@@ -215,18 +215,18 @@ export default {
     }
   },
   computed: {
-    filterSkus: {
+    filterMpus: {
       get() {
         return this.filterSkuString
       },
       set(newValue) {
         this.filterSkuString = newValue
         if (newValue.trim()) {
-          this.dialogFilterForm.skus = newValue.trim().split(',')
+          this.dialogFilterForm.mpus = newValue.trim().split(',')
             .map(item => item.trim())
             .filter(item => !isEmpty(item))
         } else {
-          this.dialogFilterForm.skus = []
+          this.dialogFilterForm.mpus = []
         }
       }
     },
@@ -254,35 +254,37 @@ export default {
     },
     handleDialogFilterClear() {
       this.offset = 1
-      this.dialogFilterForm.skus = []
+      this.dialogFilterForm.mpus = []
       this.dialogFilterForm.query = ''
       this.firstCategoryValue = null
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
     },
-    async handleFilterSkuList() {
-      this.dataLoading = true
-      const skus = uniq(this.dialogFilterForm.skus)
-      for (const skuId of skus) {
+    async getProductsByMpuList(fetchList) {
+      let mpuList = []
+      for (let begin = 0; begin < fetchList.length; begin += 50) {
         const params = {
-          offset: 1,
-          limit: this.limit,
-          state: 1,
-          skuid: skuId.trim()
+          mpuIdList: fetchList.slice(begin, begin + 50).join(',')
         }
         try {
-          const { code, data } = await searchProductsApi(params)
-          if (code === 200) {
-            const products = data.result.list
-            for (const product of products) {
-              const index = this.dialogSkuData.findIndex(item => item.mpu === product.mpu)
-              if (index < 0 && this.isProductValid(product)) {
-                this.dialogSkuData.push(product)
-              }
-            }
+          const { code, data } = await getProductsByMpuList(params)
+          if (code === 200 && data.result.length > 0) {
+            mpuList = mpuList.concat(data.result)
           }
-        } catch (e) {
-          console.warn('Good selection search error:' + e)
+        } catch (err) {
+          console.warn('Select Goods: search error:' + err)
+        }
+      }
+      return mpuList
+    },
+    async handleFilterSkuList() {
+      this.dataLoading = true
+      const mpus = uniq(this.dialogFilterForm.mpus)
+      const products = await this.getProductsByMpuList(mpus)
+      for (const product of products) {
+        const index = this.dialogSkuData.findIndex(item => item.mpu === product.mpu)
+        if (index < 0 && this.isProductValid(product)) {
+          this.dialogSkuData.push(product)
         }
       }
       this.total = this.dialogSkuData.length
@@ -292,7 +294,7 @@ export default {
       const categoryId = this.presetThirdCategory || this.thirdCategoryValue ||
         this.presetSecondCategory || this.secondCategoryValue ||
         this.presetFirstCategory || this.firstCategoryValue
-      if (this.dialogFilterForm.skus.length > 0) {
+      if (this.dialogFilterForm.mpus.length > 0) {
         this.handleFilterSkuList()
       } else if (this.dialogFilterForm.query !== '' || categoryId !== null) {
         const params = {

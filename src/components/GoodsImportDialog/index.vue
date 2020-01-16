@@ -64,7 +64,12 @@
       style="width: 100%;margin-top:20px;"
       height="350"
     >
-      <el-table-column label="商品SKU" align="center" width="150">
+      <el-table-column label="商品MPU" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.mpu }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="productCreation" label="商品SKU" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.skuid }}</span>
         </template>
@@ -79,7 +84,7 @@
           <span>{{ scope.row.state | productState }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="!updateState" label="商品价格(元)" align="center" width="150">
+      <el-table-column v-if="productCreation || productPromotion" label="商品价格(元)" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
         </template>
@@ -135,12 +140,12 @@ const CreationHeaders = [
   { field: 'image', label: '商品封面图', type: 'string', template: '(可填项)' },
   { field: 'upc', label: '商品条形码', type: 'string', template: '(可填项)' },
   { field: 'saleunit', label: '销售单位', type: 'string', template: '(可填项)' },
-  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88(必填项)' },
-  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66(可填项)' },
+  { field: 'price', label: '销售价格(元)', type: 'price', template: '888.88(必填项)' },
+  { field: 'sprice', label: '进货价格(元)', type: 'price', template: '666.66(可填项)' },
   { field: 'inventory', label: '商品库存', type: 'integer', template: '99999(可填项)' },
   { field: 'taxRate', label: '商品税率', type: 'string', template: '3%(可填项)' },
-  { field: 'floorPrice', label: '销售底价(元)', type: 'float', template: '777.77(可填项)' },
-  { field: 'comparePrice', label: '对比价格(元)', type: 'float', template: '999.99(可填项)' },
+  { field: 'floorPrice', label: '销售底价(元)', type: 'price', template: '777.77(可填项)' },
+  { field: 'comparePrice', label: '对比价格(元)', type: 'price', template: '999.99(可填项)' },
   { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '(可填项)' }
 ]
 
@@ -154,12 +159,12 @@ const UpdateHeaders = [
   { field: 'image', label: '商品封面图', type: 'string', template: '(可填项)', changeOnSale: false },
   { field: 'upc', label: '商品条形码', type: 'string', template: '(可填项)', changeOnSale: true },
   { field: 'saleunit', label: '销售单位', type: 'string', template: '(可填项)', changeOnSale: true },
-  { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88(可填项)', changeOnSale: false },
-  { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66(可填项)', changeOnSale: false },
+  { field: 'price', label: '销售价格(元)', type: 'price', template: '888.88(可填项)', changeOnSale: false },
+  { field: 'sprice', label: '进货价格(元)', type: 'price', template: '666.66(可填项)', changeOnSale: false },
   { field: 'inventory', label: '商品库存', type: 'integer', template: '99999(可填项)', changeOnSale: false },
   { field: 'taxRate', label: '商品税率', type: 'string', template: '3%(可填项)', changeOnSale: true },
-  { field: 'floorPrice', label: '销售底价(元)', type: 'float', template: '777.77(可填项)', changeOnSale: true },
-  { field: 'comparePrice', label: '对比价格(元)', type: 'float', template: '999.99(可填项)', changeOnSale: true },
+  { field: 'floorPrice', label: '销售底价(元)', type: 'price', template: '777.77(可填项)', changeOnSale: true },
+  { field: 'comparePrice', label: '对比价格(元)', type: 'Price', template: '999.99(可填项)', changeOnSale: true },
   { field: 'compareUrl', label: '对比商品链接', type: 'string', template: '(可填项)', changeOnSale: true }
 ]
 
@@ -434,6 +439,11 @@ export default {
         case 'float': {
           const temp = convertToNumber(value)
           parsedValue = temp >= 0 ? temp : null
+          break
+        }
+        case 'price': {
+          const temp = convertToNumber(value)
+          parsedValue = temp >= 0 ? temp.toString() : null
           break
         }
         default:
