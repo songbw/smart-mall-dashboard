@@ -138,7 +138,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="vendorDialogVisible"
-      title="创建商户"
+      :title="vendorId >= 0 ? '编辑商户' : '创建商户'"
     >
       <el-form
         ref="vendorForm"
