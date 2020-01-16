@@ -325,3 +325,13 @@ export const VendorInvoiceOptions = [{
   value: vendor_invoice_type_normal,
   label: '增值税普通发票'
 }]
+
+export const vendor_taxpayer_type_general = 1
+export const vendor_taxpayer_type_small_scale = 2
+export const VendorTaxpayerOptions = [{
+  value: vendor_taxpayer_type_general,
+  label: '一般纳税人'
+}, {
+  value: vendor_taxpayer_type_small_scale,
+  label: '小规模纳税人'
+}]

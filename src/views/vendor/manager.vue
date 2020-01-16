@@ -55,6 +55,11 @@
           <span>{{ scope.row.company.invoiceType | vendorInvoice }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="纳税人类型" align="center" width="180">
+        <template slot-scope="scope">
+          <span>{{ scope.row.company.taxpayerType | vendorTaxpayer }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="left" :width="hasEditPermission ? '360' : '100'">
         <template slot-scope="scope">
           <el-button
@@ -166,6 +171,20 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="纳税人类型" prop="taxpayerType">
+          <el-select
+            v-model="vendorProfile.taxpayerType"
+            placeholder="请选择纳税人类型"
+            class="item-input"
+          >
+            <el-option
+              v-for="item in taxpayerOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="商户行业" prop="industry">
           <el-select
             v-model="vendorIndustry"
@@ -218,7 +237,8 @@ import {
   vendor_status_rejected,
   vendor_status_locked,
   VendorStatusOptions,
-  VendorInvoiceOptions
+  VendorInvoiceOptions,
+  VendorTaxpayerOptions
 } from '@/utils/constants'
 import { IndustryDefinitions } from './constants'
 import { VendorPermissions } from '@/utils/role-permissions'
@@ -239,6 +259,14 @@ export default {
     vendorInvoice: type => {
       if (type !== null) {
         const item = VendorInvoiceOptions.find(invoice => invoice.value === type)
+        return item ? item.label : ''
+      } else {
+        return ''
+      }
+    },
+    vendorTaxpayer: type => {
+      if (type !== null) {
+        const item = VendorTaxpayerOptions.find(invoice => invoice.value === type)
         return item ? item.label : ''
       } else {
         return ''
@@ -267,6 +295,13 @@ export default {
         callback(new Error('请选择发票类型'))
       }
     }
+    const validateTaxpayer = (rule, value, callback) => {
+      if (value !== null) {
+        callback()
+      } else {
+        callback(new Error('请选择纳税人类型'))
+      }
+    }
     const validateAppId = (rule, value, callback) => {
       if (!isEmpty(value)) {
         callback()
@@ -291,6 +326,7 @@ export default {
       }].concat(VendorStatusOptions),
       industryOptions: IndustryDefinitions,
       invoiceOptions: VendorInvoiceOptions,
+      taxpayerOptions: VendorTaxpayerOptions,
       detailVisible: false,
       dataLoading: false,
       vendorData: [],
@@ -310,12 +346,14 @@ export default {
         address: null,
         industry: null,
         invoiceType: null,
+        taxpayerType: null,
         appId: null
       },
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
         invoiceType: [{ required: true, trigger: 'blur', validator: validateInvoice }],
+        taxpayerType: [{ required: true, trigger: 'blur', validator: validateTaxpayer }],
         appId: [{ required: true, trigger: 'blur', validator: validateAppId }],
         industry: [{ required: true, trigger: 'blur', validator: validateIndustry }]
       }
@@ -493,6 +531,7 @@ export default {
       this.vendorProfile.address = ''
       this.vendorProfile.industry = ''
       this.vendorProfile.invoiceType = null
+      this.vendorProfile.taxpayerType = null
       this.vendorProfile.appId = null
     },
     handleCreateVendor() {
@@ -507,6 +546,7 @@ export default {
       this.vendorProfile.address = company.address
       this.vendorProfile.industry = company.industry
       this.vendorProfile.invoiceType = company.invoiceType
+      this.vendorProfile.taxpayerType = company.taxpayerType
       this.vendorProfile.appId = company.appId
       this.vendorDialogVisible = true
     },
