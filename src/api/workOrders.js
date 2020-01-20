@@ -62,6 +62,13 @@ export function createReturnAddressApi(params) {
   })
 }
 
+export function getReturnAddressByIdApi(params) {
+  return Vue.axios('work_orders').request({
+    url: `/workorders/addresses/${params.id}`,
+    method: 'get'
+  })
+}
+
 export function updateReturnAddressApi(params) {
   const { id, ...content } = params
   return Vue.axios('work_orders').request({

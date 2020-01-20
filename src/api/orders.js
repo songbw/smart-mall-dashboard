@@ -179,3 +179,13 @@ export function reopenOrderApi(params) {
     params
   })
 }
+
+export function changeOrderReceiverApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/order/address',
+    method: 'put',
+    data: {
+      ...params
+    }
+  })
+}

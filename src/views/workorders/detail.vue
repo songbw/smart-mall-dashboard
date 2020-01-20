@@ -94,7 +94,15 @@
               <span style="font-weight: bolder;margin-bottom: 10px">{{ flow.content }}</span>
               <div v-if="flow.returnAddress" style="font-size: 13px">
                 <span>客户退货地址如下：</span>
-                <address-info :return-address="flow.returnAddress" />
+                <address-info
+                  :address="flow.returnAddress"
+                />
+              </div>
+              <div v-if="flow.receiverAddress" style="font-size: 13px">
+                <span>修改订单收货人地址如下：</span>
+                <address-info
+                  :address="flow.receiverAddress"
+                />
               </div>
               <div v-if="flow.logisticsInfo" style="font-size: 13px">
                 <div>物流信息如下：</div>
@@ -188,7 +196,17 @@
           </el-button>
           <div v-if="includeAddress && returnAddress.id >= 0">
             <address-info
-              :return-address="returnAddress"
+              :address="returnAddress"
+            />
+          </div>
+        </el-form-item>
+        <el-form-item v-if="flowForm.operation === changeReceiver" label="收货人地址" prop="receiverAddress">
+          <el-button type="primary" size="mini" @click="showReceiverDialog">
+            修改地址
+          </el-button>
+          <div v-if="flowForm.receiverAddress !== null">
+            <address-info
+              :address="flowForm.receiverAddress"
             />
           </div>
         </el-form-item>
@@ -289,6 +307,12 @@
       @cancelled="expressDialogVisible = false"
       @confirmed="handleSetExpress"
     />
+    <receiver-dialog
+      :dialog-visible="dialogReceiverVisible"
+      :sub-order-id="workOrderData.orderId"
+      @cancelled="dialogReceiverVisible = false"
+      @confirmed="onReceiverAddressChanged"
+    />
   </div>
 </template>
 
@@ -303,7 +327,7 @@ import GoodsInfo from '@/components/Order/goodsInfo'
 import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
-import { getOrderListApi } from '@/api/orders'
+import { getOrderListApi, changeOrderReceiverApi } from '@/api/orders'
 import {
   getWorkOrderByIdApi,
   getWorkFlowListApi,
@@ -325,6 +349,7 @@ import {
 } from '@/utils/constants'
 import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
 import { WorkOrderPermissions } from '@/utils/role-permissions'
+import ReceiverDialog from './receiverDialog'
 
 const approve_request = 1
 const agree_refund = 2
@@ -332,13 +357,15 @@ const reject_refund = 3
 const reject_change = 4
 const change_good = 5
 const reopen_workorder = 6
+const change_receiver = 7
 const FlowOperations = [
   { value: approve_request, label: '通过申请' },
   { value: agree_refund, label: '同意退款' },
   { value: reject_refund, label: '拒绝退款' },
   { value: reject_change, label: '拒绝换货' },
   { value: change_good, label: '换货处理' },
-  { value: reopen_workorder, label: '重置工单' }
+  { value: reopen_workorder, label: '重置工单' },
+  { value: change_receiver, label: '修改收货人信息' }
 ]
 
 const RefundResultStatusOptions = [{
@@ -359,7 +386,8 @@ export default {
     GoodsInfo,
     AddressInfo,
     AddressSelection,
-    ExpressSelection
+    ExpressSelection,
+    ReceiverDialog
   },
   filters: {
     workOrderStatus: status => {
@@ -412,6 +440,7 @@ export default {
       agreeRefund: agree_refund,
       rejectRefund: reject_refund,
       changeGood: change_good,
+      changeReceiver: change_receiver,
       operationOptions: FlowOperations,
       dataLoading: false,
       province: '',
@@ -428,6 +457,7 @@ export default {
       returnAddress: {
         id: -1
       },
+      dialogReceiverVisible: false,
       dialogAddressVisible: false,
       returnAddressLoading: false,
       returnAddressList: [],
@@ -440,6 +470,7 @@ export default {
           code: null,
           order: null
         },
+        receiverAddress: null,
         remark: null
       },
       flowRules: {
@@ -488,6 +519,21 @@ export default {
             } else {
               if (value.code === null) {
                 callback(new Error('请输入正确的物流信息'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }],
+        receiverAddress: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.flowForm.operation !== change_receiver) {
+              callback()
+            } else {
+              if (value === null) {
+                callback(new Error('请选择对应的收货人地址'))
               } else {
                 callback()
               }
@@ -571,7 +617,7 @@ export default {
       let options = []
       if (this.workOrderData.status === work_order_status_request) {
         options = this.workOrderData.typeId === type_change_good
-          ? [approve_request, reject_change] : [approve_request, reject_refund]
+          ? [approve_request, reject_change, change_receiver] : [approve_request, reject_refund, change_receiver]
       } else if (this.workOrderData.status === work_order_status_approved) {
         options = this.workOrderData.typeId === type_change_good
           ? [change_good, reject_change] : [agree_refund, reject_refund]
@@ -617,7 +663,7 @@ export default {
             const momentDate = moment(row.createTime)
             const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
             const find = this.flowStatusOptions.find(option => option.value === row.status)
-            let flowComment = {}
+            let flowComment
             try {
               flowComment = { ...JSON.parse(row.comments) }
             } catch (e) {
@@ -718,6 +764,7 @@ export default {
             const { operation, refund, remark } = this.flowForm
             const comments = { remark, operation }
             let status = -1
+            let receiverChanged = false
             switch (operation) {
               case approve_request:
                 status = work_order_status_approved
@@ -739,6 +786,15 @@ export default {
                 status = work_order_status_finished
                 if (this.workOrderData.typeId === type_change_good) {
                   comments.logisticsInfo = this.flowForm.logisticsInfo
+                }
+                break
+              case change_receiver:
+                receiverChanged = await this.handleChangeOrderReceiver()
+                if (receiverChanged) {
+                  status = work_order_status_rejected
+                  comments.receiverAddress = this.flowForm.receiverAddress
+                } else {
+                  return
                 }
                 break
               default:
@@ -793,6 +849,37 @@ export default {
           }
         }
       })
+    },
+    showReceiverDialog() {
+      this.dialogReceiverVisible = true
+    },
+    onReceiverAddressChanged(address) {
+      this.dialogReceiverVisible = false
+      this.flowForm.receiverAddress = address
+    },
+    async handleChangeOrderReceiver() {
+      let ret = false
+      try {
+        this.dataLoading = true
+        const { receiverPhone, ...rest } = this.flowForm.receiverAddress
+        const params = {
+          orderDetailId: this.orderData.subId,
+          mobile: receiverPhone,
+          ...rest
+        }
+        const { code, msg } = await changeOrderReceiverApi(params)
+        if (code === 200) {
+          this.$message.success('修改收货人地址成功！')
+          ret = true
+        } else {
+          this.$message.warning(msg)
+        }
+      } catch (e) {
+        console.warn('Change order receiver error:' + e)
+      } finally {
+        this.dataLoading = false
+      }
+      return ret
     },
     gotoReturnAddress() {
       this.handleCancelFlow()

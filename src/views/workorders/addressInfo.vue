@@ -1,17 +1,17 @@
 <template>
   <div>
     <div>
-      <span>收货人：{{ returnAddress.receiverName }} </span>
-      <span>联系电话：{{ returnAddress.receiverPhone }}</span>
+      <span>收货人：{{ address.receiverName }} </span>
+      <span>联系电话：{{ address.receiverPhone }}</span>
     </div>
     <div>
       <span>地址：</span>
-      <span>{{ returnAddress.provinceName }} </span>
-      <span>{{ returnAddress.cityName }} </span>
-      <span>{{ returnAddress.countyName }} </span>
-      <span>{{ returnAddress.address }}</span>
+      <span>{{ address.provinceName }} </span>
+      <span>{{ address.cityName }} </span>
+      <span>{{ address.countyName }} </span>
+      <span>{{ address.address }}</span>
     </div>
-    <div>邮政编码：{{ returnAddress.zipCode }}</div>
+    <div>邮政编码：{{ address.zipCode }}</div>
   </div>
 </template>
 
@@ -19,7 +19,7 @@
 export default {
   name: 'AddressInfo',
   props: {
-    returnAddress: {
+    address: {
       type: Object,
       default: function() {
         return {}

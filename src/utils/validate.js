@@ -1,4 +1,5 @@
 import PasswordValidator from 'password-validator'
+import isEmpty from 'lodash/isEmpty'
 
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 
@@ -25,7 +26,11 @@ export function validPassword(password) {
 }
 
 export function validPhone(str) {
-  const number = phoneUtil.parseAndKeepRawInput(str, 'CN')
+  const value = isEmpty(str.trim()) ? null : str.trim()
+  if (value === null) {
+    return false
+  }
+  const number = phoneUtil.parseAndKeepRawInput(value, 'CN')
   return phoneUtil.isValidNumber(number)
 }
 
