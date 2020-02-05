@@ -1,6 +1,12 @@
 <template>
   <div class="app-container">
+    <el-steps :active="activeStep" align-center style="margin-bottom: 20px">
+      <el-step title="商品信息" />
+      <el-step title="商品图片" />
+      <el-step title="其他属性（只读）" />
+    </el-steps>
     <el-form
+      v-if="activeStep === 0"
       ref="productForm"
       v-loading="loading"
       :model="productForm"
@@ -19,11 +25,10 @@
       <el-form-item v-if="!createProduct" label="创建时间">
         <span>{{ productForm.createdAt | dateFormat }}</span>
       </el-form-item>
-      <el-divider content-position="left">商品信息</el-divider>
       <el-form-item v-if="hasVendorPermission" label="商品供应商" prop="merchantId">
         <vendor-selection
           v-if="createProduct"
-          :vendor-id="productForm.merchantId"
+          :vendor-id="productForm.merchantId ? productForm.merchantId.toString() : null"
           @changed="handleMerchantChanged"
         />
         <span v-else>
@@ -256,7 +261,17 @@
           :max="1000000"
         />
       </el-form-item>
-      <el-divider content-position="left">商品图片</el-divider>
+    </el-form>
+    <el-form
+      v-if="activeStep === 1"
+      v-loading="loading"
+      :model="productForm"
+      :rules="formRules"
+      :element-loading-text="loadingMessage"
+      element-loading-spinner="el-icon-loading"
+      label-position="right"
+      label-width="200px"
+    >
       <el-form-item label="商品封面图">
         <template>
           <image-upload
@@ -370,16 +385,33 @@
           </div>
         </template>
       </el-form-item>
-      <el-divider v-if="productForm.introduction" content-position="left">商品介绍</el-divider>
-      <el-form-item v-if="productForm.introduction" label="介绍（只读）">
-        <p v-html="productForm.introduction" />
+    </el-form>
+
+    <el-form
+      v-if="activeStep === 2"
+      label-position="right"
+      label-width="200px"
+    >
+      <el-form-item label="商品介绍">
+        <p v-if="productForm.introduction" v-html="productForm.introduction" />
+        <div v-else>暂无介绍</div>
       </el-form-item>
+    </el-form>
+
+    <el-form>
       <el-divider />
       <el-form-item>
-        <el-button type="primary" @click="goBack">返回</el-button>
-        <el-button v-if="!viewProduct" type="danger" @click="handleSubmit">
-          {{ createProduct ? '创建' : '修改' }}
-        </el-button>
+        <div style="display: flex;justify-content: space-between">
+          <el-button type="primary" @click="goBack">返回</el-button>
+          <el-button-group>
+            <el-button :disabled="activeStep === 0" type="info" @click="handlePrevStep">
+              上一步
+            </el-button>
+            <el-button :disabled="activeStep === 2" type="danger" @click="handleNextStep">
+              {{ viewProduct ? '下一步' : '保存并下一步' }}
+            </el-button>
+          </el-button-group>
+        </div>
       </el-form-item>
     </el-form>
     <shipping-price-selection
@@ -424,6 +456,8 @@ import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
 import { validateURL } from '@/utils/validate'
 
+const decode = require('unescape')
+
 const OP_VIEW = 1
 const OP_EDIT = 2
 const OP_CREATE = 3
@@ -432,6 +466,9 @@ const floatToFixed = (value, precision) =>
   parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
 
 const convertToNumber = value => isNumber(value) ? value : Number.parseFloat(value)
+
+const imageKeys = ['image', 'imagesUrl', 'introductionUrl']
+const notUpdateKeys = ['mpu', 'introduction', 'createdAt', 'state']
 
 export default {
   name: 'ProductDetail',
@@ -534,6 +571,8 @@ export default {
       newIntroductionType: 1, // 1 for normal, 2 for head, 3 for tail
       introductions: [],
       introductionUrls: [],
+      activeStep: 0,
+      productInfo: null,
       productForm: {
         id: null,
         merchantId: null,
@@ -629,7 +668,7 @@ export default {
       return this.opType === OP_VIEW
     },
     createProduct() {
-      return this.opType === OP_CREATE
+      return this.opType === OP_CREATE && this.productForm.id === null
     },
     editProduct() {
       return this.opType === OP_EDIT
@@ -724,7 +763,15 @@ export default {
       try {
         const { code, data } = await getDetailInfoByMpuApi({ mpu })
         if (code === 200) {
-          return data.result
+          const prod = data.result
+          if (prod.introductionUrl === null) {
+            prod.introductionUrl = ''
+          }
+          if (prod.imagesUrl === null) {
+            prod.imagesUrl = ''
+          }
+          prod.introduction = decode(prod.introduction)
+          return prod
         }
       } catch (e) {
         console.warn('Get product detail info error:' + e)
@@ -830,8 +877,8 @@ export default {
       }
     },
     handleMerchantChanged(value) {
-      this.productForm.merchantId = value
-      this.getMerchantFreeShipping(value)
+      this.productForm.merchantId = Number.parseInt(value)
+      this.getMerchantFreeShipping(this.productForm.merchantId)
     },
     handleBrandChanged(value) {
       this.productForm.brandId = value
@@ -910,18 +957,49 @@ export default {
       this.introductions.splice(index, 1)
       this.introductionUrls.splice(index, 1)
     },
-    handleSubmit() {
+    handlePrevStep() {
+      this.activeStep--
+    },
+    handleNextStep() {
+      if (this.viewProduct) {
+        this.activeStep++
+      } else {
+        if (this.activeStep === 0) {
+          this.handleSubmitInfo()
+        } else if (this.activeStep === 1) {
+          this.handleUpdateImages()
+        }
+      }
+    },
+    handleUpdateImages() {
+      const formData = {
+        id: this.productForm.id,
+        imagesUrl: this.thumbnails.length > 0 ? this.thumbnails.join(';') : '',
+        introductionUrl: this.introductions.length > 0 ? this.introductions.join(';') : ''
+      }
+      if (formData.image === null && this.hasCoverImage) {
+        formData.image = ''
+      }
+      if (this.hasUpdatePermission) {
+        this.handleUpdateProduct(formData)
+      } else {
+        this.$message.warning('没有修改商品权限，请联系管理员！')
+      }
+    },
+    handleSubmitInfo() {
       this.$refs.productForm.validate((valid) => {
         if (valid) {
-          const formData = { ...this.productForm }
-          formData.name = trim(formData.name)
-          formData.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(';') : ''
-          formData.introductionUrl = this.introductions.length > 0 ? this.introductions.join(';') : ''
-          if (formData.image === null && this.hasCoverImage) {
-            formData.image = ''
+          const keys = Object.keys(this.productForm).filter(key => !imageKeys.includes(key))
+          const formData = { }
+          for (const key of keys) {
+            formData[key] = this.productForm[key]
           }
+          formData.name = trim(formData.name)
+
           if (this.createProduct) {
             if (this.hasCreatePermission) {
+              delete formData.id
+              delete formData.mpu
               this.handleCreateProduct(formData)
             } else {
               this.$message.warning('没有创建商品权限，请联系管理员！')
@@ -957,7 +1035,9 @@ export default {
           const value = formData[key]
           switch (key) {
             case 'price':
-            case 'sprice': {
+            case 'sprice':
+            case 'floorPrice':
+            case 'comparePrice': {
               if (value > 0) {
                 params[key] = floatToFixed(value, 2).toString()
               }
@@ -996,11 +1076,23 @@ export default {
         }
         const res = await createProductApi(params)
         if (res.code === 200) {
+          const mpu = res.data.result
           if (this.shippingPriceData !== null) {
-            await this.setMpuShippingPrice(res.data.result, this.shippingPriceData)
+            await this.setMpuShippingPrice(mpu, this.shippingPriceData)
           }
-          this.$message({ message: '创建产品信息成功。', type: 'success' })
-          this.goBack()
+          const prod = await this.getDetailInfo(mpu)
+          if (prod) {
+            this.productInfo = prod
+            this.productForm.id = prod.id
+            this.productForm.skuid = prod.skuid
+            this.productForm.mpu = prod.mpu
+            this.productForm.state = prod.state
+            this.productForm.createdAt = prod.createdAt
+            this.$message({ message: '创建产品信息成功。', type: 'success' })
+            this.activeStep++
+          } else {
+            this.$message.error('创建商品信息失败，请联系管理员！')
+          }
         } else {
           this.$message.error(res.msg || '创建商品信息失败，请联系管理员！')
         }
@@ -1016,20 +1108,11 @@ export default {
       }
       const filterForm = this.getValidFormItem(formData)
       Object.keys(filterForm).forEach(key => {
-        if (this.productInfo[key] !== filterForm[key]) {
+        if (this.productInfo[key] !== filterForm[key] && !notUpdateKeys.includes(key)) {
           params[key] = filterForm[key]
           changed = true
         }
       })
-      // remove sprice if product form has not contain sprice field
-      const sprice = Number.parseFloat(this.productInfo.sprice)
-      if (!Number.isNaN(sprice)) {
-        const hasSprice = 'sprice' in filterForm
-        if (!hasSprice) {
-          params.sprice = ''
-          changed = true
-        }
-      }
       if (changed) {
         this.$confirm('请确定是否修改此商品的信息？', '警告', {
           confirmButtonText: '确定',
@@ -1038,7 +1121,7 @@ export default {
         }).then(() => {
           updateProductApi(params).then(_ => {
             this.$message({ message: '更新产品信息成功。', type: 'success' })
-            this.goBack()
+            this.activeStep++
           }).catch(error => {
             console.log('updateProductInfo:' + JSON.stringify(error))
             this.$message.error('更新产品信息失败！')
@@ -1046,7 +1129,7 @@ export default {
         }).catch(() => {
         })
       } else {
-        this.goBack()
+        this.activeStep++
       }
     },
     handleRemoveCoverImage() {

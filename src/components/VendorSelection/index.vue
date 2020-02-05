@@ -22,7 +22,7 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
-import { getVendorListApi } from '@/api/vendor'
+import { getVendorListApi, getVendorProfileByIdApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
 
 export default {
@@ -39,7 +39,33 @@ export default {
       vendorOptions: []
     }
   },
+  created() {
+    const id = Number.parseInt(this.vendorId)
+    if (!Number.isNaN(id) && this.vendorOptions.length === 0) {
+      this.initVendorOptions(id)
+    }
+  },
   methods: {
+    async initVendorOptions(id) {
+      const label = await this.getVendorName(id)
+      if (label !== null) {
+        this.vendorOptions = [{
+          value: id.toString(),
+          label
+        }]
+      }
+    },
+    async getVendorName(id) {
+      try {
+        const { code, data } = await getVendorProfileByIdApi({ id })
+        if (code === 200) {
+          return data.name
+        }
+      } catch (e) {
+        console.warn('Vendor selection error:' + e)
+      }
+      return null
+    },
     async handleFilterVendor(word) {
       if (isEmpty(word)) {
         this.vendorOptions = []
