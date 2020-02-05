@@ -54,6 +54,14 @@ export function getProductsByMpuList(params) {
   })
 }
 
+export function getDetailInfoByMpuApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/prod',
+    method: 'get',
+    params
+  })
+}
+
 export function exportProductsApi(params) {
   return Vue.axios('products').request({
     url: '/products/adminProd/export',

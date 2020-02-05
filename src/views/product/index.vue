@@ -757,12 +757,15 @@ export default {
     },
     isReadyForSale(product) {
       const price = Number.parseFloat(product.price)
+      return !Number.isNaN(price) && price > 0
+      /*
       return !(Number.isNaN(price) || price < 0 ||
         isEmpty(product.image) ||
         isEmpty(product.imagesUrl) ||
         isEmpty(product.introductionUrl) ||
         isEmpty(product.category)
       )
+       */
     },
     handleProductOnSale(index) {
       if (this.isReadyForSale(this.productsData[index])) {

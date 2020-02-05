@@ -262,6 +262,7 @@
           <image-upload
             :image-url="productCover"
             :path-name="uploadCoverData.pathName"
+            :view-only="viewProduct"
             button-size="normal"
             image-width="200px"
             tip="如果未上传，将以第一张主图作为封面图。"
@@ -269,7 +270,7 @@
             @success="handleUploadCoverSuccess"
           />
           <el-button
-            v-if="hasCustomCover"
+            v-if="hasCustomCover && !viewProduct"
             type="danger"
             icon="el-icon-delete"
             style="margin-top: 10px"
@@ -281,7 +282,7 @@
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
-          <div>
+          <div v-if="!viewProduct">
             <input
               ref="thumbnailUpload"
               class="image-upload-input"
@@ -307,7 +308,7 @@
           <el-row v-if="thumbnailUrls.length > 0">
             <el-col
               v-for="(imgUrl, index) in thumbnailUrls"
-              :key="thumbnails[index]"
+              :key="'thumbnail' + index"
               :span="4"
               :offset="index > 0 ? 1 : 0"
             >
@@ -355,7 +356,7 @@
               </i>
             </div>
           </div>
-          <div v-for="(img, index) in introductionUrls" :key="introductions[index]" style="padding: 14px">
+          <div v-for="(img, index) in introductionUrls" :key="'introduction' + index" style="padding: 14px">
             <custom-introduction
               :could-edit="!viewProduct"
               :image-url="img"
@@ -368,6 +369,10 @@
             />
           </div>
         </template>
+      </el-form-item>
+      <el-divider v-if="productForm.introduction" content-position="left">商品介绍</el-divider>
+      <el-form-item v-if="productForm.introduction" label="介绍（只读）">
+        <p v-html="productForm.introduction" />
       </el-form-item>
       <el-divider />
       <el-form-item>
@@ -393,7 +398,7 @@ import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
-import { createProductApi, updateProductApi, searchProductsApi } from '@/api/products'
+import { createProductApi, updateProductApi, searchProductsApi, getDetailInfoByMpuApi } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
@@ -417,6 +422,7 @@ import {
 } from '@/api/freight'
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
+import { validateURL } from '@/utils/validate'
 
 const OP_VIEW = 1
 const OP_EDIT = 2
@@ -554,7 +560,8 @@ export default {
         compareUrl: null,
         comparePrice: null,
         taxRate: product_default_tax_rate,
-        floorPrice: null
+        floorPrice: null,
+        introduction: null
       },
       formRules: {
         merchantId: [{
@@ -713,7 +720,18 @@ export default {
         }
       }
     },
-    async getProductInfo() {
+    async getDetailInfo(mpu) {
+      try {
+        const { code, data } = await getDetailInfoByMpuApi({ mpu })
+        if (code === 200) {
+          return data.result
+        }
+      } catch (e) {
+        console.warn('Get product detail info error:' + e)
+      }
+      return null
+    },
+    getProductInfo() {
       const params = {
         offset: 1,
         limit: 1
@@ -727,10 +745,11 @@ export default {
         params.merchantId = this.vendorId
       }
       this.loading = true
-      searchProductsApi(params).then(response => {
+      searchProductsApi(params).then(async response => {
         const data = response.data.result
-        if (data.total === 1) {
-          this.productInfo = data.list[0]
+        if (data.total >= 1) {
+          const mpu = data.list[0].mpu
+          this.productInfo = await this.getDetailInfo(mpu)
           Object.keys(this.productForm).forEach(key => {
             if (key in this.productInfo) {
               switch (key) {
@@ -754,8 +773,9 @@ export default {
           this.thumbnails = []
           this.thumbnailUrls = []
           if (!isEmpty(this.productForm.imagesUrl)) {
-            this.thumbnails = this.productForm.imagesUrl.split(':')
-            this.thumbnailUrls = this.thumbnails.map(img => this.$store.getters.cosUrl + img)
+            this.thumbnails = this.productForm.imagesUrl.split(';')
+            this.thumbnailUrls = this.thumbnails.map(
+              img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
             // Check if has custom cover image
             if (this.productForm.image !== null && this.productForm.image === this.thumbnailUrls[0]) {
               this.productForm.image = null
@@ -767,16 +787,16 @@ export default {
           this.introductionUrls = []
 
           if (!isEmpty(this.productForm.introductionUrl)) {
-            this.introductions = this.productForm.introductionUrl.split(':')
-            this.introductionUrls = this.introductions.map(img => this.$store.getters.cosUrl + img)
+            this.introductions = this.productForm.introductionUrl.split(';')
+            this.introductionUrls = this.introductions.map(
+              img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
           }
 
-          this.uploadCoverData.pathName = this.productInfo.category + '/' + this.productInfo.id + '/CoverU'
-          this.thumbnailUploadPath = this.productInfo.category + '/' + this.productInfo.id + '/ZTU'
+          this.uploadCoverData.pathName = this.productInfo.id + '/CoverU'
+          this.thumbnailUploadPath = this.productInfo.id + '/ZTU'
           this.uploadThumbnailData.pathName = this.thumbnailUploadPath
-          this.introductionUploadPath = this.productInfo.category + '/' + this.productInfo.id + '/XTU'
+          this.introductionUploadPath = this.productInfo.id + '/XTU'
           this.uploadIntroductionData.pathName = this.introductionUploadPath
-
           this.getCategoryName(this.productForm.category)
           this.getMerchantFreeShipping(this.productForm.merchantId)
           this.getMpuShippingPrice(this.productForm.mpu)
@@ -895,8 +915,8 @@ export default {
         if (valid) {
           const formData = { ...this.productForm }
           formData.name = trim(formData.name)
-          formData.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(':') : ''
-          formData.introductionUrl = this.introductions.length > 0 ? this.introductions.join(':') : ''
+          formData.imagesUrl = this.thumbnails.length > 0 ? this.thumbnails.join(';') : ''
+          formData.introductionUrl = this.introductions.length > 0 ? this.introductions.join(';') : ''
           if (formData.image === null && this.hasCoverImage) {
             formData.image = ''
           }

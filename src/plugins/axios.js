@@ -46,6 +46,7 @@ const axiosService = apiKey => {
           if (id !== null && id !== -1) {
             config.headers['Merchant'] = id
           }
+          config.headers['appId'] = 0
         } catch (e) {
           console.warn(`Axios request: ${e}`)
         }
