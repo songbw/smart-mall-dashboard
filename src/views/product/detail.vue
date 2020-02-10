@@ -277,7 +277,7 @@
           <image-upload
             :image-url="productCover"
             :path-name="uploadCoverData.pathName"
-            :view-only="viewProduct"
+            :view-only="viewImageOnly"
             button-size="normal"
             image-width="200px"
             tip="如果未上传，将以第一张主图作为封面图。"
@@ -285,7 +285,7 @@
             @success="handleUploadCoverSuccess"
           />
           <el-button
-            v-if="hasCustomCover && !viewProduct"
+            v-if="hasCustomCover && !viewImageOnly"
             type="danger"
             icon="el-icon-delete"
             style="margin-top: 10px"
@@ -297,7 +297,7 @@
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
-          <div v-if="!viewProduct">
+          <div v-if="!viewImageOnly">
             <input
               ref="thumbnailUpload"
               class="image-upload-input"
@@ -328,7 +328,7 @@
               :offset="index > 0 ? 1 : 0"
             >
               <custom-thumbnail
-                :could-edit="!viewProduct"
+                :could-edit="!viewImageOnly"
                 :image-url="imgUrl"
                 :index="index"
                 :length="thumbnailUrls.length"
@@ -343,7 +343,7 @@
       </el-form-item>
       <el-form-item label="商品描述图">
         <template>
-          <div v-if="!viewProduct">
+          <div v-if="!viewImageOnly">
             <el-radio-group v-model="newIntroductionType" style="display: block;margin: 10px 0">
               <el-radio :label="1">正常详情图</el-radio>
               <el-radio :label="2">头部详情图</el-radio>
@@ -373,7 +373,7 @@
           </div>
           <div v-for="(img, index) in introductionUrls" :key="'introduction' + index" style="padding: 14px">
             <custom-introduction
-              :could-edit="!viewProduct"
+              :could-edit="!viewImageOnly"
               :image-url="img"
               :index="index"
               :length="introductions.length"
@@ -458,6 +458,9 @@ import { validateURL } from '@/utils/validate'
 
 const decode = require('unescape')
 
+const vendorAoyi = 2
+const vendorYiyatong = 4
+
 const OP_VIEW = 1
 const OP_EDIT = 2
 const OP_CREATE = 3
@@ -530,7 +533,7 @@ export default {
     return {
       taxRateOptions: ProductTaxRateOptions,
       typeOptions: ProductTypeOptions,
-      vendorAoyi: 2,
+      vendorAoyi: vendorAoyi,
       maxThumbnailLength: 5,
       maxIntroductionLength: 30,
       uploading: false,
@@ -672,6 +675,9 @@ export default {
     },
     editProduct() {
       return this.opType === OP_EDIT
+    },
+    viewImageOnly() {
+      return this.opType === OP_VIEW || this.productForm.merchantId === vendorYiyatong
     },
     floorPrice: {
       get() {
@@ -816,11 +822,11 @@ export default {
               }
             }
           })
-
+          const imageSep = this.productForm.merchantId === vendorYiyatong ? ';' : ':'
           this.thumbnails = []
           this.thumbnailUrls = []
           if (!isEmpty(this.productForm.imagesUrl)) {
-            this.thumbnails = this.productForm.imagesUrl.split(';')
+            this.thumbnails = this.productForm.imagesUrl.split(imageSep)
             this.thumbnailUrls = this.thumbnails.map(
               img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
             // Check if has custom cover image
@@ -834,7 +840,7 @@ export default {
           this.introductionUrls = []
 
           if (!isEmpty(this.productForm.introductionUrl)) {
-            this.introductions = this.productForm.introductionUrl.split(';')
+            this.introductions = this.productForm.introductionUrl.split(imageSep)
             this.introductionUrls = this.introductions.map(
               img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
           }
@@ -967,15 +973,19 @@ export default {
         if (this.activeStep === 0) {
           this.handleSubmitInfo()
         } else if (this.activeStep === 1) {
-          this.handleUpdateImages()
+          if (this.viewImageOnly) {
+            this.activeStep++
+          } else {
+            this.handleUpdateImages()
+          }
         }
       }
     },
     handleUpdateImages() {
       const formData = {
         id: this.productForm.id,
-        imagesUrl: this.thumbnails.length > 0 ? this.thumbnails.join(';') : '',
-        introductionUrl: this.introductions.length > 0 ? this.introductions.join(';') : ''
+        imagesUrl: this.thumbnails.length > 0 ? this.thumbnails.join(':') : '',
+        introductionUrl: this.introductions.length > 0 ? this.introductions.join(':') : ''
       }
       if (formData.image === null && this.hasCoverImage) {
         formData.image = ''
@@ -990,7 +1000,7 @@ export default {
       this.$refs.productForm.validate((valid) => {
         if (valid) {
           const keys = Object.keys(this.productForm).filter(key => !imageKeys.includes(key))
-          const formData = { }
+          const formData = {}
           for (const key of keys) {
             formData[key] = this.productForm[key]
           }
