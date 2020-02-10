@@ -152,8 +152,8 @@ const actions = {
     try {
       commit('SET_ALL_DATA', { firstClassList: [], secondClassList: [] })
 
-      const { data } = await getAllCategoriesApi()
-      const allData = data.result
+      const { code, data } = await getAllCategoriesApi()
+      const allData = code === 200 ? data.result : []
       const firstClassList = []
       const secondClassList = []
       for (const item of allData) {

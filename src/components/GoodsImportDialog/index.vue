@@ -252,7 +252,9 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions',
       vendorId: 'vendorId',
-      productVendors: 'productVendors'
+      productVendors: 'productVendors',
+      categoriesLoaded: 'categoriesLoaded',
+      categoryData: 'categories'
     }),
     hasVendorPermission() {
       return this.userPermissions.includes(ProductPermissions.vendor)
@@ -274,6 +276,26 @@ export default {
         .filter(item => !item.changeOnSale && item.field !== 'mpu')
         .map(item => item.label)
         .join('，')
+    },
+    fullPathCategoryOptions() {
+      if (this.categoriesLoaded) {
+        const categoryList = []
+        for (const first of this.categoryData) {
+          const rootName = first.categoryName
+          for (const second of first.subs) {
+            const secondName = second.categoryName
+            for (const third of second.subs) {
+              categoryList.push({
+                categoryId: third.categoryId,
+                categoryName: rootName + '/' + secondName + '/' + third.categoryName
+              })
+            }
+          }
+        }
+        return categoryList
+      } else {
+        return []
+      }
     }
   },
   methods: {
@@ -487,6 +509,10 @@ export default {
             )
             product.taxRate = taxOption ? taxOption.value : ''
           }
+          if ('category' in product) {
+            const category = this.fullPathCategoryOptions.find(item => item.categoryName === product.category)
+            product.category = category ? category.categoryId.toString() : null
+          }
           count++
           this.parsedSkuList.push(product)
         }
@@ -494,15 +520,6 @@ export default {
       this.excelResults = this.parsedSkuList
       this.loading = false
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)
-    },
-    isReadyForSale(product) {
-      const price = Number.parseFloat(product.price)
-      return !(Number.isNaN(price) || price < 0 ||
-        isEmpty(product.image) ||
-        isEmpty(product.imagesUrl) ||
-        isEmpty(product.introductionUrl) ||
-        isEmpty(product.category)
-      )
     },
     async parseUpdateStateSkuData(results) {
       const fetchList = []
@@ -527,10 +544,8 @@ export default {
       const productList = fetchList.map(item => {
         const find = mpuList.find(mpuItem => mpuItem.mpu === item.mpu)
         if (find) {
-          const state = Number.parseInt(item.state)
-          const couldAdd = state === product_state_on_sale ? this.isReadyForSale(find) : true
           const hasPermission = this.hasVendorPermission ? true : find.merchantId === this.vendorId
-          return couldAdd && hasPermission ? { ...find, ...item } : null
+          return hasPermission ? { ...find, ...item } : null
         } else {
           return null
         }
@@ -578,6 +593,10 @@ export default {
               item => item.label === product.taxRate || item.value === product.taxRate
             )
             product.taxRate = taxOption ? taxOption.value : ''
+          }
+          if ('category' in product) {
+            const category = this.fullPathCategoryOptions.find(item => item.categoryName === product.category)
+            product.category = category ? category.categoryId : null
           }
           fetchList.push(product)
         }
