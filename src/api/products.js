@@ -38,6 +38,14 @@ export function updateProductApi(params) {
   })
 }
 
+export function batchUpdateProductsApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/batch',
+    method: 'put',
+    data: params
+  })
+}
+
 export function deleteProductApi(params) {
   return Vue.axios('products').request({
     url: `/products/adminProd`,

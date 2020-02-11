@@ -388,7 +388,8 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
-  updatePriceOrStateApi
+  updatePriceOrStateApi,
+  batchUpdateProductsApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
@@ -934,8 +935,7 @@ export default {
       try {
         this.listLoading = true
         for (let i = 0; i < skus.length; i += 100) {
-          const skuList = skus.slice(i, i + 100)
-            .map(item => ({ mpu: item.mpu, state: item.state }))
+          const skuList = skus.slice(i, i + 100).map(item => ({ mpu: item.mpu, state: item.state }))
           await updatePriceOrStateApi(skuList)
         }
       } catch (e) {
@@ -1026,11 +1026,13 @@ export default {
           text: '正在更新商品...',
           spinner: 'el-icon-loading'
         })
-        for (const sku of skus) {
+        const maxNum = 100
+        for (let begin = 0; begin < skus.length; begin += maxNum) {
+          const skuSlice = skus.slice(begin, begin + maxNum)
           try {
-            await updateProductApi(sku)
+            await batchUpdateProductsApi(skuSlice)
           } catch (e) {
-            console.warn(`Good import update ${sku.mpu} error: ${e}`)
+            console.warn('Batch update products error:' + e)
           }
         }
         loading.close()
