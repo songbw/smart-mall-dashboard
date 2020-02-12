@@ -4,7 +4,7 @@
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="false"
-    title="选择运费模板"
+    title="编辑商品"
     @opened="skuInit"
   >
     <el-form ref="subSkuForm" :model="skuForm" :rules="formRules" label-width="160px">

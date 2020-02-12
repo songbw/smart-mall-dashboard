@@ -119,7 +119,7 @@
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" />
       </el-form-item>
-      <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品库存">
+      <el-form-item v-if="couldUpdateInventory" label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
@@ -253,7 +253,7 @@
           <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
         </span>
       </el-form-item>
-      <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
+      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
@@ -526,7 +526,9 @@ import {
   ProductTypeOptions,
   product_sub_sku_sold_out,
   product_sub_sku_on_sale,
-  ProductSubSkuStatusOptions
+  ProductSubSkuStatusOptions,
+  product_state_on_sale,
+  product_state_off_shelves
 } from '@/utils/constants'
 import {
   getMerchantFreeShippingApi,
@@ -781,6 +783,9 @@ export default {
     viewImageOnly() {
       return this.opType === OP_VIEW || this.productForm.merchantId === vendorYiyatong
     },
+    couldUpdateInventory() {
+      return this.productForm.merchantId !== vendorYiyatong && this.productForm.merchantId !== vendorAoyi
+    },
     floorPrice: {
       get() {
         if (this.productForm.floorPrice >= 0) {
@@ -917,7 +922,9 @@ export default {
             if (key in this.productInfo) {
               switch (key) {
                 case 'price':
-                case 'sprice': {
+                case 'sprice':
+                case 'floorPrice':
+                case 'comparePrice': {
                   const value = convertToNumber(this.productInfo[key])
                   this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 2)
                   break
@@ -1551,9 +1558,13 @@ export default {
       this.subSkuDialogVisible = false
       const ret = await this.handleUpdateSubSku(params)
       if (ret) {
-        const find = this.productInfo.skuList.find(item => item.id === params.id)
-        if (find) {
-          find.price = params.price
+        const index = this.productInfo.skuList.findIndex(item => item.id === params.id)
+        if (index >= 0) {
+          this.productInfo.skuList[index].price = params.price
+          if (index === 0) {
+            const price = floatToFixed(params.price / 100, 2)
+            this.updateProductPrice(price)
+          }
         }
       }
     },
@@ -1580,7 +1591,9 @@ export default {
     },
     handleSubSkuOnSale(index) {
       if (this.isReadyForSale(this.subSkuList[index])) {
-        this.$confirm('是否继续上架此商品品种？', '警告', {
+        const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
+        const message = spuSoldOut ? '此商品为下架状态，上架将会同时影响整个商品，是否继续？' : '是否继续上架此商品品种？'
+        this.$confirm(message, '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
@@ -1593,6 +1606,9 @@ export default {
           const ret = await this.handleUpdateSubSku(params)
           if (ret) {
             this.productInfo.skuList[index].status = product_sub_sku_on_sale
+            if (spuSoldOut) {
+              this.updateProductState(product_state_on_sale.toString())
+            }
           }
         }).catch(() => {
         })
@@ -1608,7 +1624,9 @@ export default {
       }
     },
     handleSubSkuSoldOut(index) {
-      this.$confirm('是否继续下架此商品？', '警告', {
+      const oneOnSale = this.subSkuList.filter(item => item.status === product_sub_sku_on_sale).length === 1
+      const message = oneOnSale ? '此为唯一销售中品种，下架将会同时影响整个商品，是否继续？' : '是否继续下架此商品品种？'
+      this.$confirm(message, '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -1621,9 +1639,42 @@ export default {
         const ret = await this.handleUpdateSubSku(params)
         if (ret) {
           this.productInfo.skuList[index].status = product_sub_sku_sold_out
+          if (oneOnSale) {
+            await this.updateProductState(product_state_off_shelves.toString())
+          }
         }
       }).catch(() => {
       })
+    },
+    async updateProductPrice(price) {
+      try {
+        this.loading = true
+        const priceParams = { id: this.productInfo.id, price: price.toString() }
+        const { code } = await updateProductApi(priceParams)
+        if (code === 200) {
+          this.productInfo.price = price.toString()
+          this.productForm.price = price
+        }
+      } catch (e) {
+        console.warn('Update price after sub sku price error:' + e)
+      } finally {
+        this.loading = false
+      }
+    },
+    async updateProductState(state) {
+      try {
+        this.loading = true
+        const params = { id: this.productInfo.id, state }
+        const { code } = await updateProductApi(params)
+        if (code === 200) {
+          this.productInfo.state = state
+          this.productForm.state = state
+        }
+      } catch (e) {
+        console.warn('Update spu state error:' + e)
+      } finally {
+        this.loading = false
+      }
     },
     goBack() {
       window.history.length > 1

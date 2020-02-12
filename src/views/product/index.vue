@@ -694,8 +694,10 @@ export default {
         params.state = this.listState
       }
       if (!isEqual(this.queryParams, params)) {
+        if (this.queryParams !== null) {
+          this.listOffset = 1
+        }
         this.queryParams = { ...params }
-        this.listOffset = 1
       }
       return { ...params }
     },
