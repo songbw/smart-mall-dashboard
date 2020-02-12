@@ -388,7 +388,6 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
-  updatePriceOrStateApi,
   batchUpdateProductsApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
@@ -774,7 +773,7 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        }).then(async() => {
+        }).then(async () => {
           try {
             const id = this.productsData[index].id
             const params = {
@@ -806,7 +805,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const id = that.productsData[index].id
           const params = {
@@ -828,7 +827,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const id = that.productsData[index].id
           const params = {
@@ -880,7 +879,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const price = row.price
           const params = {
@@ -935,8 +934,8 @@ export default {
       try {
         this.listLoading = true
         for (let i = 0; i < skus.length; i += 100) {
-          const skuList = skus.slice(i, i + 100).map(item => ({ mpu: item.mpu, state: item.state }))
-          await updatePriceOrStateApi(skuList)
+          const skuList = skus.slice(i, i + 100)
+          await batchUpdateProductsApi(skuList)
         }
       } catch (e) {
         console.warn('Products update product price error:' + e)

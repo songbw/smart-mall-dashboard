@@ -38,60 +38,64 @@ export const product_state_off_shelves = 0
 export const product_state_on_sale = 1
 export const product_state_is_editing = -2
 export const product_state_all = -3
-export const ProductStateOptions = [
-  {
-    value: product_state_is_editing,
-    label: '编辑中'
-  }, {
-    value: product_state_on_sale,
-    label: '销售中'
-  }, {
-    value: product_state_off_shelves,
-    label: '已下架'
-  }
+export const ProductStateOptions = [{
+  value: product_state_is_editing,
+  label: '编辑中'
+}, {
+  value: product_state_on_sale,
+  label: '销售中'
+}, {
+  value: product_state_off_shelves,
+  label: '已下架'
+}
+]
+
+export const product_sub_sku_sold_out = 0
+export const product_sub_sku_on_sale = 1
+export const ProductSubSkuStatusOptions = [{
+  value: product_sub_sku_on_sale,
+  label: '销售中'
+}, {
+  value: product_sub_sku_sold_out,
+  label: '已下架'
+}
 ]
 
 export const product_type_physical_goods = 0
 export const product_type_virtual_voucher = 1
 export const product_type_physical_voucher = 2
-export const ProductTypeOptions = [
-  {
-    value: product_type_physical_goods,
-    label: '实体类商品'
-  }, {
-    value: product_type_virtual_voucher,
-    label: '虚拟卡券类'
-  }, {
-    value: product_type_physical_voucher,
-    label: '实体卡券类'
-  }
+export const ProductTypeOptions = [{
+  value: product_type_physical_goods,
+  label: '实体类商品'
+}, {
+  value: product_type_virtual_voucher,
+  label: '虚拟卡券类'
+}, {
+  value: product_type_physical_voucher,
+  label: '实体卡券类'
+}
 ]
 
 export const product_default_tax_rate = '0.13'
-export const ProductTaxRateOptions = [
-  {
-    value: '0',
-    label: '0%'
-  }, {
-    value: '0.03',
-    label: '3%'
-  }, {
-    value: '0.06',
-    label: '6%'
-  }, {
-    value: '0.09',
-    label: '9%'
-  }, {
-    value: '0.11',
-    label: '11%'
-  }, {
-    value: '0.13',
-    label: '13%'
-  }, {
-    value: '-1',
-    label: '免税'
-  }
-]
+export const ProductTaxRateOptions = [{
+  value: '0',
+  label: '0%'
+}, {
+  value: '0.03',
+  label: '3%'
+}, {
+  value: '0.06',
+  label: '6%'
+}, {
+  value: '0.09',
+  label: '9%'
+}, {
+  value: '0.11',
+  label: '11%'
+}, {
+  value: '0.13',
+  label: '13%'
+}]
 
 export const order_status_deleted = -1
 export const order_status_waiting_pay = 0

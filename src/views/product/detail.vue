@@ -144,45 +144,6 @@
         <span v-if="viewProduct"> {{ productForm.compareUrl }}</span>
         <el-input v-else v-model="productForm.compareUrl" maxlength="100" />
       </el-form-item>
-      <el-divider content-position="left">商品价格</el-divider>
-      <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
-        <span v-if="viewProduct"> {{ productForm.price }}</span>
-        <el-input-number
-          v-else
-          v-model="productForm.price"
-          :precision="2"
-          :step="1"
-          :min="0"
-          :max="1000000"
-        />
-      </el-form-item>
-      <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售参考价(元)">
-        <span style="margin-right: 10px"> {{ suggestPrice }}</span>
-        <el-input-number v-model="suggestPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
-        <span style="font-size: 12px;margin-left: 10px;"><i class="el-icon-warning-outline">基于销售底价的比率</i></span>
-      </el-form-item>
-      <el-form-item v-if="hasSalePricePermission" label="销售底价(元)">
-        <span style="margin-right: 10px"> {{ floorPrice }}</span>
-        <el-input-number
-          v-if="!viewProduct"
-          v-model="productForm.floorPrice"
-          :precision="2"
-          :step="1"
-          :min="0"
-          :max="1000000"
-        />
-        <span style="font-size: 12px;margin-left: 10px;">
-          <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
-        </span>
-      </el-form-item>
-      <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
-        <span v-if="viewProduct"> {{ productForm.sprice }}</span>
-        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
-      </el-form-item>
-      <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
-        <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
-        <el-input-number v-else v-model="productForm.comparePrice" :precision="2" :step="1" :min="0" :max="1000000" />
-      </el-form-item>
       <el-divider v-if="productForm.merchantId !== vendorAoyi" content-position="left">商品物流</el-divider>
       <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="包邮模板">
         <router-link
@@ -261,6 +222,45 @@
           :max="1000000"
         />
       </el-form-item>
+      <el-divider content-position="left">商品价格</el-divider>
+      <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
+        <span v-if="viewProduct"> {{ productForm.price }}</span>
+        <el-input-number
+          v-else
+          v-model="productForm.price"
+          :precision="2"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
+      </el-form-item>
+      <el-form-item v-if="hasSalePricePermission && hasCostPricePermission" label="销售参考价(元)">
+        <span style="margin-right: 10px"> {{ suggestPrice }}</span>
+        <el-input-number v-model="suggestPriceRate" :precision="2" :step="0.05" :min="1" :max="10" />
+        <span style="font-size: 12px;margin-left: 10px;"><i class="el-icon-warning-outline">基于销售底价的比率</i></span>
+      </el-form-item>
+      <el-form-item v-if="hasSalePricePermission" label="销售底价(元)">
+        <span style="margin-right: 10px"> {{ floorPrice }}</span>
+        <el-input-number
+          v-if="!viewProduct"
+          v-model="productForm.floorPrice"
+          :precision="2"
+          :step="1"
+          :min="0"
+          :max="1000000"
+        />
+        <span style="font-size: 12px;margin-left: 10px;">
+          <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
+        </span>
+      </el-form-item>
+      <el-form-item v-if="hasCostPricePermission" label="进货价格(元)">
+        <span v-if="viewProduct"> {{ productForm.sprice }}</span>
+        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
+      </el-form-item>
+      <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
+        <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
+        <el-input-number v-else v-model="productForm.comparePrice" :precision="2" :step="1" :min="0" :max="1000000" />
+      </el-form-item>
       <el-divider v-if="hasSubSku" content-position="left">商品品种</el-divider>
       <el-form-item v-if="hasSubSku" label-width="0">
         <el-table
@@ -295,17 +295,24 @@
           </el-table-column>
           <el-table-column label="状态" align="center">
             <template slot-scope="scope">
-              <span>{{ scope.row.status | productState }}</span>
+              <span>{{ scope.row.status | subSkuStatus }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" width="180">
+          <el-table-column v-if="hasUpdatePermission" label="操作" align="center" width="180">
             <template slot-scope="scope">
-              <el-button size="mini" type="warning" @click="handleEditSubSku(scope.$index)">编辑</el-button>
+              <el-button
+                v-if="!viewProduct"
+                size="mini"
+                type="warning"
+                @click="handleEditSubSkuPrice(scope.$index)"
+              >
+                编辑
+              </el-button>
               <el-button
                 v-if="scope.row.status !== 1"
                 size="mini"
                 type="danger"
-                @click="handleEditSubSku(scope.$index)"
+                @click="handleSubSkuOnSale(scope.$index)"
               >
                 上架
               </el-button>
@@ -313,7 +320,7 @@
                 v-else
                 size="mini"
                 type="danger"
-                @click="handleEditSubSku(scope.$index)"
+                @click="handleSubSkuSoldOut(scope.$index)"
               >
                 下架
               </el-button>
@@ -480,6 +487,12 @@
       @onCancelled="shippingPriceDialogVisible = false"
       @onConfirmed="handleConfirmShippingPrice"
     />
+    <sub-sku-info
+      :dialog-visible="subSkuDialogVisible"
+      :sub-sku="editSubSku"
+      @cancelled="subSkuDialogVisible = false"
+      @confirmed="handleUpdateSubSkuPrice"
+    />
   </div>
 </template>
 
@@ -490,7 +503,13 @@ import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
-import { createProductApi, updateProductApi, searchProductsApi, getDetailInfoByMpuApi } from '@/api/products'
+import {
+  createProductApi,
+  updateProductApi,
+  searchProductsApi,
+  getDetailInfoByMpuApi,
+  updateSubSkuApi
+} from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
 import CustomIntroduction from './customIntroduction'
@@ -504,7 +523,10 @@ import {
   product_default_tax_rate,
   ProductTaxRateOptions,
   vendor_invoice_type_special,
-  ProductTypeOptions
+  ProductTypeOptions,
+  product_sub_sku_sold_out,
+  product_sub_sku_on_sale,
+  ProductSubSkuStatusOptions
 } from '@/utils/constants'
 import {
   getMerchantFreeShippingApi,
@@ -515,6 +537,7 @@ import {
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
 import { validateURL } from '@/utils/validate'
+import SubSkuInfo from './subSkuInfo'
 
 const decode = require('unescape')
 
@@ -541,7 +564,8 @@ export default {
     CategorySelection,
     ShippingPriceSelection,
     ImageUpload,
-    VendorSelection
+    VendorSelection,
+    SubSkuInfo
   },
   filters: {
     productState: state => {
@@ -551,6 +575,15 @@ export default {
       } else {
         const find = ProductStateOptions.find(option => option.value === value)
         return find ? find.label : state
+      }
+    },
+    subSkuStatus: status => {
+      const value = isNumber(status) ? status : Number.parseInt(status)
+      if (Number.isNaN(value)) {
+        return status
+      } else {
+        const find = ProductSubSkuStatusOptions.find(option => option.value === value)
+        return find ? find.label : status
       }
     },
     typeFilter: type => {
@@ -643,6 +676,8 @@ export default {
       introductions: [],
       introductionUrls: [],
       activeStep: 0,
+      subSkuDialogVisible: false,
+      editSubSku: {},
       productInfo: null,
       productForm: {
         id: null,
@@ -673,43 +708,38 @@ export default {
         floorPrice: null
       },
       formRules: {
-        merchantId: [
-          {
-            required: true, validator: validateValue, trigger: 'change'
-          }],
-        skuid: [
-          {
-            required: true, validator: (rule, value, callback) => {
-              const reg = /^[a-zA-Z0-9]+$/
-              if (this.autoSku || (value && reg.test(value))) {
+        merchantId: [{
+          required: true, validator: validateValue, trigger: 'change'
+        }],
+        skuid: [{
+          required: true, validator: (rule, value, callback) => {
+            const reg = /^[a-zA-Z0-9]+$/
+            if (this.autoSku || (value && reg.test(value))) {
+              callback()
+            } else {
+              callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
+            }
+          }, trigger: 'change'
+        }],
+        name: [{
+          required: true, validator: validateValue, trigger: 'change'
+        }],
+        category: [{
+          required: true, validator: validateValue, trigger: 'change'
+        }],
+        price: [{
+          required: true, validator: (rule, value, callback) => {
+            if (this.hasSalePricePermission) {
+              if (isNumber(value) && value > 0) {
                 callback()
               } else {
-                callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
+                callback(new Error('请输入商品销售价'))
               }
-            }, trigger: 'change'
-          }],
-        name: [
-          {
-            required: true, validator: validateValue, trigger: 'change'
-          }],
-        category: [
-          {
-            required: true, validator: validateValue, trigger: 'change'
-          }],
-        price: [
-          {
-            required: true, validator: (rule, value, callback) => {
-              if (this.hasSalePricePermission) {
-                if (isNumber(value) && value > 0) {
-                  callback()
-                } else {
-                  callback(new Error('请输入商品销售价'))
-                }
-              } else {
-                callback()
-              }
-            }, trigger: 'change'
-          }]
+            } else {
+              callback()
+            }
+          }, trigger: 'change'
+        }]
       }
     }
   },
@@ -753,7 +783,7 @@ export default {
     },
     floorPrice: {
       get() {
-        if (this.productForm.floorPrice > 0) {
+        if (this.productForm.floorPrice >= 0) {
           return this.productForm.floorPrice
         } else {
           if (this.productForm.merchantId !== null && this.productForm.sprice > 0) {
@@ -1211,6 +1241,10 @@ export default {
         }).then(() => {
           updateProductApi(params).then(_ => {
             this.$message({ message: '更新产品信息成功。', type: 'success' })
+            if ('price' in params && this.hasSubSku) {
+              const price = floatToFixed(Number.parseFloat(params.price), 2) * 100
+              this.productInfo.skuList[0].price = Math.round(price)
+            }
             this.activeStep++
           }).catch(error => {
             console.log('updateProductInfo:' + JSON.stringify(error))
@@ -1474,7 +1508,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           if (this.mpuShippingPriceId !== null) {
             this.shippingPriceLoading = true
@@ -1509,7 +1543,88 @@ export default {
         return ''
       }
     },
-    handleEditSubSku(index) {},
+    handleEditSubSkuPrice(index) {
+      this.editSubSku = this.subSkuList[index]
+      this.subSkuDialogVisible = true
+    },
+    async handleUpdateSubSkuPrice(params) {
+      this.subSkuDialogVisible = false
+      const ret = await this.handleUpdateSubSku(params)
+      if (ret) {
+        const find = this.productInfo.skuList.find(item => item.id === params.id)
+        if (find) {
+          find.price = params.price
+        }
+      }
+    },
+    async handleUpdateSubSku(params) {
+      let suc = false
+      try {
+        this.loading = true
+        const { code, msg } = await updateSubSkuApi(params)
+        if (code === 200) {
+          suc = true
+          this.$message.success('更新商品品种成功！')
+        } else {
+          this.$message.warning(msg)
+        }
+      } catch (e) {
+        console.warn('Update sub sku status error:' + e)
+      } finally {
+        this.loading = false
+      }
+      return suc
+    },
+    isReadyForSale(sku) {
+      return sku.price > 0
+    },
+    handleSubSkuOnSale(index) {
+      if (this.isReadyForSale(this.subSkuList[index])) {
+        this.$confirm('是否继续上架此商品品种？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+          const id = this.subSkuList[index].id
+          const params = {
+            id,
+            status: product_sub_sku_on_sale
+          }
+          const ret = await this.handleUpdateSubSku(params)
+          if (ret) {
+            this.productInfo.skuList[index].status = product_sub_sku_on_sale
+          }
+        }).catch(() => {
+        })
+      } else {
+        this.$confirm('此商品品种不满足上架条件，是否去修改此商品品种？', '提示', {
+          confirmButtonText: '去编辑',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.handleEditSubSkuPrice(index)
+        }).catch(() => {
+        })
+      }
+    },
+    handleSubSkuSoldOut(index) {
+      this.$confirm('是否继续下架此商品？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const id = this.subSkuList[index].id
+        const params = {
+          id,
+          status: product_sub_sku_sold_out
+        }
+        const ret = await this.handleUpdateSubSku(params)
+        if (ret) {
+          this.productInfo.skuList[index].status = product_sub_sku_sold_out
+        }
+      }).catch(() => {
+      })
+    },
     goBack() {
       window.history.length > 1
         ? this.$router.go(-1)

@@ -557,7 +557,7 @@ export default {
         }
       })
       this.parsedSkuList = productList.filter(item => item !== null)
-      this.excelResults = this.parsedSkuList.map(item => ({ mpu: item.mpu, state: item.state }))
+      this.excelResults = this.parsedSkuList.map(item => ({ id: item.id, state: item.state }))
       this.loading = false
       const count = this.excelResults.length
       this.$message.info(`成功导入${count}个商品，无效商品为${results.length - count}个`)

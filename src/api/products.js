@@ -126,3 +126,19 @@ export function updateAppPlatformApi(params) {
     data: params
   })
 }
+
+export function updateSubSkuApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/star/sku',
+    method: 'put',
+    data: params
+  })
+}
+
+export function batchUpdateSubSkuApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/batch/star/sku',
+    method: 'put',
+    data: params
+  })
+}
