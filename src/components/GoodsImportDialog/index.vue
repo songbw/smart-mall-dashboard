@@ -510,8 +510,9 @@ export default {
             product.taxRate = taxOption ? taxOption.value : ''
           }
           if ('category' in product) {
+            const val = product.category.replace(/\s/g, '')
             const category = this.fullPathCategoryOptions.find(
-              item => item.categoryName === product.category)
+              item => item.categoryName === val)
             if (category) {
               product.category = category.categoryId.toString()
             } else {
@@ -600,8 +601,9 @@ export default {
             product.taxRate = taxOption ? taxOption.value : ''
           }
           if ('category' in product) {
+            const val = product.category.replace(/\s/g, '')
             const category = this.fullPathCategoryOptions.find(
-              item => item.categoryName === product.category)
+              item => item.categoryName === val)
             if (category) {
               product.category = category.categoryId
             } else {

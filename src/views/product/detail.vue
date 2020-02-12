@@ -261,6 +261,66 @@
           :max="1000000"
         />
       </el-form-item>
+      <el-divider v-if="hasSubSku" content-position="left">商品品种</el-divider>
+      <el-form-item v-if="hasSubSku" label-width="0">
+        <el-table
+          :data="subSkuList"
+          fit
+          style="width: 100%;"
+        >
+          <el-table-column label="品种编码" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.code }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="品种SKU" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.skuId }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="销售价(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.price | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="进货价(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.sprice | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="建议销售价(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.advisePrice | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.status | productState }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="180">
+            <template slot-scope="scope">
+              <el-button size="mini" type="warning" @click="handleEditSubSku(scope.$index)">编辑</el-button>
+              <el-button
+                v-if="scope.row.status !== 1"
+                size="mini"
+                type="danger"
+                @click="handleEditSubSku(scope.$index)"
+              >
+                上架
+              </el-button>
+              <el-button
+                v-else
+                size="mini"
+                type="danger"
+                @click="handleEditSubSku(scope.$index)"
+              >
+                下架
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
     </el-form>
     <el-form
       v-if="activeStep === 1"
@@ -393,7 +453,7 @@
       label-width="200px"
     >
       <el-form-item label="商品介绍">
-        <p v-if="productForm.introduction" v-html="productForm.introduction" />
+        <p v-if="productInfo.introduction" v-html="productInfo.introduction" />
         <div v-else>暂无介绍</div>
       </el-form-item>
     </el-form>
@@ -485,7 +545,7 @@ export default {
   },
   filters: {
     productState: state => {
-      const value = Number.parseInt(state)
+      const value = isNumber(state) ? state : Number.parseInt(state)
       if (Number.isNaN(value)) {
         return state
       } else {
@@ -504,6 +564,14 @@ export default {
         const format = 'YYYY-MM-DD HH:mm:ss'
         const momentDate = moment(date)
         return momentDate.isValid() ? momentDate.format(format) : date
+      }
+    },
+    centFilter: cent => {
+      const yuan = Number.parseFloat(cent)
+      if (Number.isNaN(yuan)) {
+        return ''
+      } else {
+        return (yuan / 100).toFixed(2)
       }
     }
   },
@@ -602,42 +670,46 @@ export default {
         compareUrl: null,
         comparePrice: null,
         taxRate: product_default_tax_rate,
-        floorPrice: null,
-        introduction: null
+        floorPrice: null
       },
       formRules: {
-        merchantId: [{
-          required: true, validator: validateValue, trigger: 'change'
-        }],
-        skuid: [{
-          required: true, validator: (rule, value, callback) => {
-            const reg = /^[a-zA-Z0-9]+$/
-            if (this.autoSku || (value && reg.test(value))) {
-              callback()
-            } else {
-              callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
-            }
-          }, trigger: 'change'
-        }],
-        name: [{
-          required: true, validator: validateValue, trigger: 'change'
-        }],
-        category: [{
-          required: true, validator: validateValue, trigger: 'change'
-        }],
-        price: [{
-          required: true, validator: (rule, value, callback) => {
-            if (this.hasSalePricePermission) {
-              if (isNumber(value) && value > 0) {
+        merchantId: [
+          {
+            required: true, validator: validateValue, trigger: 'change'
+          }],
+        skuid: [
+          {
+            required: true, validator: (rule, value, callback) => {
+              const reg = /^[a-zA-Z0-9]+$/
+              if (this.autoSku || (value && reg.test(value))) {
                 callback()
               } else {
-                callback(new Error('请输入商品销售价'))
+                callback(new Error('请输入正确的商品SKU，只能包含字母以及数字'))
               }
-            } else {
-              callback()
-            }
-          }, trigger: 'change'
-        }]
+            }, trigger: 'change'
+          }],
+        name: [
+          {
+            required: true, validator: validateValue, trigger: 'change'
+          }],
+        category: [
+          {
+            required: true, validator: validateValue, trigger: 'change'
+          }],
+        price: [
+          {
+            required: true, validator: (rule, value, callback) => {
+              if (this.hasSalePricePermission) {
+                if (isNumber(value) && value > 0) {
+                  callback()
+                } else {
+                  callback(new Error('请输入商品销售价'))
+                }
+              } else {
+                callback()
+              }
+            }, trigger: 'change'
+          }]
       }
     }
   },
@@ -722,6 +794,14 @@ export default {
     hasCustomCover() {
       const thumbnail = this.thumbnailUrls.length > 0 ? this.thumbnailUrls[0] : null
       return this.productForm.image != null ? thumbnail === null || this.productForm.image !== thumbnail : false
+    },
+    hasSubSku() {
+      return this.productInfo &&
+        Array.isArray(this.productInfo.skuList) &&
+        this.productInfo.skuList.length > 0
+    },
+    subSkuList() {
+      return this.hasSubSku ? this.productInfo.skuList : []
     }
   },
   created() {
@@ -1156,15 +1236,16 @@ export default {
       this.productForm.image = imageUrl
     },
     sortByFileName(fileList) {
-      return sortBy(fileList, [file => {
-        const regex = /\d+/g
-        const found = regex.exec(file.name)
-        if (found) {
-          return Number.parseInt(found[0])
-        } else {
-          return 0
-        }
-      }])
+      return sortBy(fileList, [
+        file => {
+          const regex = /\d+/g
+          const found = regex.exec(file.name)
+          if (found) {
+            return Number.parseInt(found[0])
+          } else {
+            return 0
+          }
+        }])
     },
     handleThumbnailSelect() {
       this.$refs['thumbnailUpload'].click()
@@ -1428,6 +1509,7 @@ export default {
         return ''
       }
     },
+    handleEditSubSku(index) {},
     goBack() {
       window.history.length > 1
         ? this.$router.go(-1)
