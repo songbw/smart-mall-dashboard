@@ -160,7 +160,7 @@ import uniq from 'lodash/uniq'
 import isEmpty from 'lodash/isEmpty'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
-import { getProductsByMpuList, searchProductsApi } from '@/api/products'
+import { getProductsByMpuListApi, searchProductsApi } from '@/api/products'
 import { getPromotionByIdApi } from '@/api/promotions'
 
 export default {
@@ -267,7 +267,7 @@ export default {
           mpuIdList: fetchList.slice(begin, begin + 50).join(',')
         }
         try {
-          const { code, data } = await getProductsByMpuList(params)
+          const { code, data } = await getProductsByMpuListApi(params)
           if (code === 200 && data.result.length > 0) {
             mpuList = mpuList.concat(data.result)
           }

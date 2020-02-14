@@ -109,7 +109,7 @@ import findIndex from 'lodash/findIndex'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import Pagination from '@/components/Pagination'
-import { getProductsByMpuList } from '@/api/products'
+import { getProductsByMpuListApi } from '@/api/products'
 
 export default {
   name: 'CouponGoods',
@@ -182,7 +182,7 @@ export default {
             if (!this.pageMounted) {
               return
             }
-            const response = await getProductsByMpuList(params)
+            const response = await getProductsByMpuListApi(params)
             const data = response.data.result
             if (data.length > 0) {
               data.forEach(product => {

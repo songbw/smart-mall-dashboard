@@ -97,7 +97,7 @@ import isNumber from 'lodash/isNumber'
 import uniq from 'lodash/uniq'
 import XLSX from 'xlsx'
 import { getPromotionsApi } from '@/api/promotions'
-import { getProductsByMpuList } from '@/api/products'
+import { getProductsByMpuListApi } from '@/api/products'
 import { product_state_on_sale, promotion_status_init } from '@/utils/constants'
 
 const floatToFixed = (value, precision) =>
@@ -293,7 +293,7 @@ export default {
             const params = {
               mpuIdList: fetchList.slice(begin, begin + 50).join(',')
             }
-            const response = await getProductsByMpuList(params)
+            const response = await getProductsByMpuListApi(params)
             const data = response.data.result
             if (data.length > 0) {
               data.forEach(product => {

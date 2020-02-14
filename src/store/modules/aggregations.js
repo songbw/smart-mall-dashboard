@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { getProductsByMpuList } from '@/api/products'
+import { getProductsByMpuListApi } from '@/api/products'
 import {
   createAggregationApi,
   getAggregationByIdApi,
@@ -216,7 +216,7 @@ async function filterOnSaleMpuList(mpuList) {
         mpuIdList: mpuList.slice(begin, begin + 50).join(',')
       }
       try {
-        const { code, data } = await getProductsByMpuList(params)
+        const { code, data } = await getProductsByMpuListApi(params)
         if (code === 200 && data.result.length > 0) {
           onSaleList = onSaleList.concat(
             data.result.filter(item => isProductValid(item)).map(item => item.mpu)

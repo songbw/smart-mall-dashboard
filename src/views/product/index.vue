@@ -98,6 +98,14 @@
         </div>
         <div>
           <el-button
+            :disabled="!vendorApproved"
+            type="info"
+            icon="el-icon-download"
+            @click="dialogInventoryVisible = true"
+          >
+            商品库存
+          </el-button>
+          <el-button
             v-if="hasExportPermission"
             :disabled="!vendorApproved"
             :loading="productExporting"
@@ -372,6 +380,10 @@
       @onCancelled="handleCloseSelectionShipping"
       @onConfirmed="handleCloseSelectionShipping"
     />
+    <inventory-dialog
+      :dialog-visible="dialogInventoryVisible"
+      @cancelled="dialogInventoryVisible = false"
+    />
   </div>
 </template>
 
@@ -404,10 +416,18 @@ import {
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
+import InventoryDialog from './inventoryDialog'
 
 export default {
   name: 'Product',
-  components: { Pagination, CategorySelection, GoodsImportDialog, ShippingPriceSelection, VendorSelection },
+  components: {
+    Pagination,
+    CategorySelection,
+    GoodsImportDialog,
+    ShippingPriceSelection,
+    VendorSelection,
+    InventoryDialog
+  },
   filters: {
     productState: state => {
       const value = Number.parseInt(state)
@@ -458,7 +478,8 @@ export default {
         secondCategoryValue: null,
         thirdCategoryValue: null
       },
-      queryParams: null
+      queryParams: null,
+      dialogInventoryVisible: false
     }
   },
   computed: {

@@ -116,7 +116,7 @@ import isNumber from 'lodash/isNumber'
 import uniq from 'lodash/uniq'
 import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
-import { getProductsByMpuList } from '@/api/products'
+import { getProductsByMpuListApi } from '@/api/products'
 import {
   product_state_on_sale,
   product_state_off_shelves,
@@ -569,7 +569,7 @@ export default {
           mpuIdList: fetchList.slice(begin, begin + 50).join(',')
         }
         try {
-          const { code, data } = await getProductsByMpuList(params)
+          const { code, data } = await getProductsByMpuListApi(params)
           if (code === 200 && data.result.length > 0) {
             mpuList = mpuList.concat(data.result)
           }

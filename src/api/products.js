@@ -54,7 +54,7 @@ export function deleteProductApi(params) {
   })
 }
 
-export function getProductsByMpuList(params) {
+export function getProductsByMpuListApi(params) {
   return Vue.axios('products').request({
     url: '/products/prod/mpuIds',
     method: 'get',
@@ -139,6 +139,14 @@ export function batchUpdateSubSkuApi(params) {
   return Vue.axios('products').request({
     url: '/products/adminProd/batch/star/sku',
     method: 'put',
+    data: params
+  })
+}
+
+export function getInventoryBySkuCodesApi(params) {
+  return Vue.axios('products').request({
+    url: '/aoyis/star/product/inventory',
+    method: 'post',
     data: params
   })
 }
