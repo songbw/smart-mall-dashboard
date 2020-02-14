@@ -270,10 +270,11 @@
         <el-form-item v-if="exportType !== invoiceType" label="运营平台" prop="appId">
           <el-select v-model="exportForm.appId" @change="onExportAppIdChanged">
             <el-option
-              v-for="item in platformAppList"
+              v-for="item in appIdOptions"
               :key="item.appId"
               :label="item.name"
               :value="item.appId"
+              :disabled="item.appId === 'all' && (exportType === profitType || exportType === paymentType)"
             >
               <span>{{ item.name }}</span>
             </el-option>
@@ -784,7 +785,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           this.listLoading = true
           const { code, msg } = await reopenOrderApi({ orderDetailId: subId })
@@ -804,7 +805,7 @@ export default {
       this.$prompt('请输入订单备注信息', '备注', {
         confirmButtonText: '确定',
         cancelButtonText: '取消'
-      }).then(async({ value }) => {
+      }).then(async ({ value }) => {
         try {
           await updateSubOrderApi({ id, remark: value })
           this.$message.success('更新订单备注信息成功！')
@@ -870,8 +871,10 @@ export default {
     async handleExportOrders() {
       const params = {
         payStartDate: this.exportForm.payStartDate,
-        payEndDate: this.exportForm.payEndDate,
-        appId: this.exportForm.appId
+        payEndDate: this.exportForm.payEndDate
+      }
+      if (this.exportForm.appId !== 'all') {
+        params.appId = this.exportForm.appId
       }
       if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
@@ -884,9 +887,9 @@ export default {
       try {
         const data = this.hasVendorPermission
           ? await exportOrdersApi(params) : await exportVendorOrdersApi(params)
-        const appOption = this.platformAppList.find(item => item.appId === params.appId)
-        const appLabel = appOption ? appOption.name : ''
-        const filename = `${appLabel}-订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
+        const appLabel = appOption ? appOption.name + '-' : ''
+        const filename = `${appLabel}订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -896,8 +899,10 @@ export default {
     async handleExportReconciliation() {
       const params = {
         payStartDate: this.exportForm.payStartDate,
-        payEndDate: this.exportForm.payEndDate,
-        appId: this.exportForm.appId
+        payEndDate: this.exportForm.payEndDate
+      }
+      if (this.exportForm.appId !== 'all') {
+        params.appId = this.exportForm.appId
       }
       if (this.hasVendorPermission) {
         if (this.exportForm.merchantId > 0) {
@@ -910,9 +915,9 @@ export default {
       try {
         const data = this.hasVendorPermission
           ? await exportReconciliationApi(params) : await exportVendorReconciliationApi(params)
-        const appOption = this.platformAppList.find(item => item.appId === params.appId)
-        const appLabel = appOption ? appOption.name : ''
-        const filename = `${appLabel}-结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
+        const appLabel = appOption ? appOption.name + '-' : ''
+        const filename = `${appLabel}结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
