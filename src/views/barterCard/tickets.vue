@@ -67,7 +67,7 @@
       </el-table-column>
       <el-table-column label="提货券密码" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.password | passwordFilter }}</span>
+          <span>{{ scope.row.password }}</span>
         </template>
       </el-table-column>
       <el-table-column label="用户优惠券码" align="center">
