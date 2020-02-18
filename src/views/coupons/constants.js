@@ -18,6 +18,9 @@ export const CouponTypeOptions = [{
 }, {
   value: 3,
   label: '服务券'
+}, {
+  value: 4,
+  label: '礼包券'
 }]
 
 export const CouponCollectOptions = [{

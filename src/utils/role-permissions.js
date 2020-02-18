@@ -35,6 +35,11 @@ export const CouponPermissions = {
   view: 'coupon:view'
 }
 
+export const BarterCardPermissions = {
+  update: 'barterCard:update',
+  view: 'barterCard:view'
+}
+
 export const AggregationPermissions = {
   update: 'aggregation:update',
   view: 'aggregation:view',

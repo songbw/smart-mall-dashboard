@@ -43,6 +43,7 @@ const getters = {
   conflictedMpus: state => state.promotions.conflictedMpus,
   defaultSchedules: state => state.promotions.defaultSchedules,
   couponQuery: state => state.coupons.search,
+  barterCardQuery: state => state.barterCards.search,
   orderQuery: state => state.orders.search,
   orderDeliveryQuery: state => state.orders.deliveryQuery,
   workOrdersQuery: state => state.workOrders.search,

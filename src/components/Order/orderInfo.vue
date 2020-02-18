@@ -60,6 +60,9 @@ import { OrderStatusDefinitions } from '@/utils/constants'
 import { getVendorProfileByIdApi } from '@/api/vendor'
 import { OrderPermissions } from '@/utils/role-permissions'
 
+const vendorAoyi = 2
+const vendorYiyatong = 4
+
 export default {
   name: 'OrderInfo',
   filters: {
@@ -130,7 +133,13 @@ export default {
     },
     supplierName: {
       get() {
-        return this.merchantNo === '20' ? '苏宁单号' : ''
+        if (this.merchantId === vendorAoyi) {
+          return this.merchantNo === '20' ? '苏宁单号' : '外部单号'
+        } else if (this.merchantId === vendorYiyatong) {
+          return '怡亚通单号'
+        } else {
+          return '外部单号'
+        }
       }
     }
   },

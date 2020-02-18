@@ -212,7 +212,12 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/marketing/aggregations',
     name: 'Marketing',
-    meta: { title: '营销', icon: 'marketing', roles: [role_admin_name], needSettings: true },
+    meta: {
+      title: '营销',
+      icon: 'marketing',
+      roles: [role_admin_name],
+      needSettings: true
+    },
     children: [
       {
         path: 'aggregations',
@@ -286,6 +291,33 @@ export const constantRoutes = [
         name: 'CouponUsages',
         component: () => import('@/views/coupons/usages'),
         meta: { title: '领取详情', group: 'coupons' },
+        hidden: true
+      },
+      {
+        path: 'barterCards',
+        name: 'barterCards',
+        component: () => import('@/views/barterCard/index'),
+        meta: { title: '提货卡管理', icon: 'barterCard', group: 'barterCards' }
+      },
+      {
+        path: 'barterCardDetail/:id',
+        name: 'BarterCardDetail',
+        component: () => import('@/views/barterCard/custom'),
+        meta: { title: '提货卡详情', group: 'barterCards' },
+        hidden: true
+      },
+      {
+        path: 'barterCardCreation',
+        name: 'CreateBarterCard',
+        component: () => import('@/views/barterCard/custom'),
+        meta: { title: '创建提货卡', group: 'barterCards' },
+        hidden: true
+      },
+      {
+        path: 'barterCardTickets/:id',
+        name: 'BarterCardTickets',
+        component: () => import('@/views/barterCard/tickets'),
+        meta: { title: '提货券使用详情', group: 'barterCards' },
         hidden: true
       }
     ]
@@ -373,26 +405,46 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/members/index',
     name: 'Members',
-    meta: { title: '会员', icon: 'members', group: 'members', roles: [role_admin_name, role_watcher_name] },
+    meta: {
+      title: '会员',
+      icon: 'members',
+      group: 'members',
+      roles: [role_admin_name, role_watcher_name]
+    },
     children: [
       {
         path: 'index',
         name: 'MemberManager',
         component: () => import('@/views/members/index'),
-        meta: { title: '会员管理', icon: 'members-manager', group: 'members', roles: [role_admin_name, role_watcher_name] }
+        meta: {
+          title: '会员管理',
+          icon: 'members-manager',
+          group: 'members',
+          roles: [role_admin_name, role_watcher_name]
+        }
       },
       {
         path: 'profile/:id',
         name: 'MemberProfile',
         component: () => import('@/views/members/profile'),
-        meta: { title: '会员详情', icon: 'member-profile', group: 'members', roles: [role_admin_name, role_watcher_name] },
+        meta: {
+          title: '会员详情',
+          icon: 'member-profile',
+          group: 'members',
+          roles: [role_admin_name, role_watcher_name]
+        },
         hidden: true
       },
       {
         path: 'balances',
         name: 'MemberBalances',
         component: () => import('@/views/members/balances'),
-        meta: { title: '余额管理', icon: 'balances', group: 'members', roles: [role_admin_name, role_watcher_name] },
+        meta: {
+          title: '余额管理',
+          icon: 'balances',
+          group: 'members',
+          roles: [role_admin_name, role_watcher_name]
+        },
         hidden: process.env.VUE_APP_HOST !== 'WX-MALL'
       }
     ]

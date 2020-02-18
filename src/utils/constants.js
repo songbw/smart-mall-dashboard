@@ -251,6 +251,26 @@ export const CouponPublishedDefinition = [{
   label: '进行中'
 }]
 
+export const barter_card_type_gift = 1
+export const barter_card_type_voucher = 2
+export const BarterCardTypeDefinition = [{
+  value: barter_card_type_gift,
+  label: '礼包类'
+}, {
+  value: barter_card_type_voucher,
+  label: '代金类'
+}]
+
+export const barter_card_status_init = 1
+export const barter_card_status_published = 2
+export const BarterCardStatusDefinition = [{
+  value: barter_card_status_init,
+  label: '编辑中'
+}, {
+  value: barter_card_status_published,
+  label: '已发布'
+}]
+
 export const PayTypeOptions = [{
   value: 'balance',
   label: '无锡余额'
