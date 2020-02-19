@@ -4,9 +4,9 @@
     <div v-if="!viewOnly">
       <input
         :ref="refName"
-        class="image-upload-input"
         type="file"
         accept=".png, .jpeg, .jpg"
+        style="z-index: -9999;display: none"
         @change="handleFileChange"
       >
       <el-button
@@ -149,8 +149,4 @@ export default {
 </script>
 
 <style scoped>
-  .image-upload-input {
-    display: none;
-    z-index: -9999;
-  }
 </style>
