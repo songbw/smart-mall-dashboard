@@ -35,7 +35,7 @@
                     <el-timeline-item
                       v-for="item in scope.row.logisticsTimeline"
                       :key="item.time"
-                      :timestamp="item.ftime"
+                      :timestamp="item.time"
                     >
                       {{ item.context }}
                     </el-timeline-item>
@@ -120,7 +120,10 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
-import { getLogisticsInfoApi } from '@/api/orders'
+import {
+  getLogisticsInfoApi,
+  getExpressByThirdSnApi
+} from '@/api/orders'
 import {
   SubOrderStatusDefinitions,
   suborder_status_waiting_deliver,
@@ -179,22 +182,43 @@ export default {
     }
   },
   methods: {
-    getLogisticsInfo() {
-      this.skuData.forEach(sku => {
-        if (!isEmpty(sku.logisticsId) && !sku.fetchedLogistics) {
+    async getLogisticsInfo() {
+      for (const sku of this.skuData) {
+        if (!sku.fetchedLogistics) {
           sku.fetchedLogistics = true
-          getLogisticsInfoApi({ subOrderId: sku.subOrderId }).then(res => {
-            const { code, data } = res
-            if (code === 200) {
-              const query = data.result.data
-              sku.logisticsTimeline = Array.isArray(query) ? query : []
-            }
-          }).catch(e => {
-            console.warn('Order goods get logistics error:' + e)
-            sku.logisticsTimeline = []
-          })
+          if (!isEmpty(sku.logisticsId)) {
+            sku.logisticsTimeline = await this.getExpressByOrderId(sku.subOrderId)
+          } else if (!isEmpty(sku.thirdOrderSn)) {
+            sku.logisticsTimeline = await this.getExpressByThirdSn(sku.thirdOrderSn)
+          }
         }
-      })
+      }
+    },
+    async getExpressByOrderId(subOrderId) {
+      let dataList = []
+      try {
+        const { code, data } = await getLogisticsInfoApi({ subOrderId })
+        if (code === 200) {
+          const query = data.result.data
+          dataList = Array.isArray(query) ? query : []
+        }
+      } catch (e) {
+        console.warn('Get express info by order id error:' + e)
+      }
+      return dataList
+    },
+    async getExpressByThirdSn(orderSn) {
+      let dataList = []
+      try {
+        const { code, data } = await getExpressByThirdSnApi({ orderSn })
+        if (code === 200 && Array.isArray(data) && data.length > 0) {
+          const deliveryList = data[0].deliveryList
+          dataList = Array.isArray(deliveryList) ? deliveryList : []
+        }
+      } catch (e) {
+        console.warn('Get express by third sn error:' + e)
+      }
+      return dataList
     },
     getSubStatus(row) {
       return 'subStatus' in row ? row.subStatus : row.status

@@ -189,3 +189,12 @@ export function changeOrderReceiverApi(params) {
     }
   })
 }
+
+export function getExpressByThirdSnApi(params) {
+  return Vue.axios('products').request({
+    url: '/aoyis/star/orders/express',
+    method: 'get',
+    params
+  })
+}
+
