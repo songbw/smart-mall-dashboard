@@ -1101,6 +1101,7 @@ export default {
     handleUpdateImages() {
       const formData = {
         id: this.productForm.id,
+        image: this.productForm.image,
         imagesUrl: this.thumbnails.length > 0 ? this.thumbnails.join(':') : '',
         introductionUrl: this.introductions.length > 0 ? this.introductions.join(':') : ''
       }
