@@ -157,7 +157,7 @@
             maxlength="50"
           />
         </el-form-item>
-        <el-form-item label="发票类型" prop="invoiceType">
+        <el-form-item label="发票类型">
           <el-select
             v-model="vendorProfile.invoiceType"
             placeholder="请选择发票类型"
@@ -171,7 +171,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="纳税人类型" prop="taxpayerType">
+        <el-form-item label="纳税人类型">
           <el-select
             v-model="vendorProfile.taxpayerType"
             placeholder="请选择纳税人类型"
@@ -556,7 +556,7 @@ export default {
       this.vendorDialogVisible = false
     },
     handleDialogConfirm() {
-      this.$refs.vendorForm.validate(async(valid) => {
+      this.$refs.vendorForm.validate(async (valid) => {
         if (valid) {
           if (this.vendorId >= 0) {
             this.confirmUpdateVendor()

@@ -80,7 +80,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      appList: 'platformAppList'
+      appList: 'validAppList'
     })
   },
   methods: {

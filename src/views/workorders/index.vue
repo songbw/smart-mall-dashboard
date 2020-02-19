@@ -205,13 +205,21 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions',
       platformAppList: 'platformAppList',
+      validAppList: 'validAppList',
       workOrdersQuery: 'workOrdersQuery'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(WorkOrderPermissions.view)
     },
     appIdOptions() {
-      return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+      if (this.showAllAppIdList) {
+        return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+      } else {
+        return this.validAppList
+      }
+    },
+    showAllAppIdList() {
+      return this.validAppList.length === this.platformAppList.length
     },
     queryAppId: {
       get() {
@@ -316,6 +324,9 @@ export default {
       try {
         if (this.platformAppList.length === 0) {
           await this.$store.dispatch('app/getPlatformList')
+        }
+        if (!this.showAllAppIdList) {
+          this.queryAppId = this.validAppList.length > 0 ? this.validAppList[0].appId : 'invalid'
         }
       } catch (e) {
         console.warn('Order get app list error:' + e)

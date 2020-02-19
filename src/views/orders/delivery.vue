@@ -233,6 +233,7 @@ export default {
       userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
       platformAppList: 'platformAppList',
+      validAppList: 'validAppList',
       orderQuery: 'orderDeliveryQuery'
     }),
     hasViewPermission() {
@@ -249,7 +250,14 @@ export default {
       return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendorList)
     },
     appIdOptions() {
-      return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+      if (this.showAllAppIdList) {
+        return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+      } else {
+        return this.validAppList
+      }
+    },
+    showAllAppIdList() {
+      return this.validAppList.length === this.platformAppList.length
     },
     queryAppId: {
       get() {
@@ -323,6 +331,9 @@ export default {
       try {
         if (this.platformAppList.length === 0) {
           await this.$store.dispatch('app/getPlatformList')
+        }
+        if (!this.showAllAppIdList) {
+          this.queryAppId = this.validAppList.length > 0 ? this.validAppList[0].appId : 'invalid'
         }
       } catch (e) {
         console.warn('Deliver get app list error:' + e)

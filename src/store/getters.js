@@ -10,6 +10,9 @@ const getters = {
   needAppSettings: state => state.app.needSettings,
   platformAppId: state => state.app.platformId,
   platformAppList: state => state.app.platformList,
+  vendorAppList: state => state.app.vendorPlatformList,
+  validAppList: state => state.app.platformList.filter(
+    item => state.app.vendorPlatformList.includes(item.appId)),
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,
   userName: state => state.user.name,
@@ -17,13 +20,17 @@ const getters = {
   userRole: state => state.user.role,
   userPermissions: state => state.user.permissions,
   vendorLoading: state => state.user.role === '' ||
-    (role_admin_name !== state.user.role && role_watcher_name !== state.user.role && state.vendor.profile.id === -2),
+    (role_admin_name !== state.user.role &&
+      role_watcher_name !== state.user.role &&
+      state.vendor.profile.id === -2),
   vendorProfile: state => state.vendor.profile,
   vendorApproved: state => {
-    return role_admin_name === state.user.role || role_watcher_name === state.user.role ||
+    return role_admin_name === state.user.role ||
+      role_watcher_name === state.user.role ||
       state.vendor.profile.status === vendor_status_approved
   },
-  vendorId: state => state.vendor.profile.status === vendor_status_approved ? state.vendor.profile.id : -1,
+  vendorId: state => state.vendor.profile.status === vendor_status_approved
+    ? state.vendor.profile.id : -1,
   productQuery: state => state.products.search,
   productVendors: state => state.products.vendors,
   categoriesLoaded: state => state.categories.dataLoaded,

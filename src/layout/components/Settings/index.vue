@@ -28,7 +28,7 @@ export default {
   computed: {
     ...mapGetters([
       'platformAppId',
-      'platformAppList'
+      'validAppList'
     ])
   },
   created() {
@@ -43,10 +43,10 @@ export default {
     },
     async getAppPlatformList() {
       try {
-        if (this.platformAppList.length === 0) {
+        if (this.validAppList.length === 0) {
           await this.$store.dispatch('app/getPlatformList')
         }
-        this.platformOptions = this.platformAppList.map(option => ({ selected: false, ...option }))
+        this.platformOptions = this.validAppList.map(option => ({ selected: false, ...option }))
         this.selectPlatform(this.platformAppId)
       } catch (e) {
         console.warn('Get platform list error:' + e)

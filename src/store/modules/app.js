@@ -3,8 +3,22 @@ import { getCosUrlApi } from '@/api/app'
 import { storage_platform_id } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
 import { getAppPlatformListApi } from '@/api/products'
+import { getProfileApi } from '@/api/vendor'
 
 const invalidAppIdList = ['09', '10', 'test']
+
+async function getVendorPlatformList() {
+  let appIdList = []
+  try {
+    const { company } = await getProfileApi()
+    if (!isEmpty(company.appId)) {
+      appIdList = company.appId.split(',')
+    }
+  } catch (e) {
+    console.warn('App store get vendor app list:' + e)
+  }
+  return appIdList
+}
 
 const state = {
   sidebar: {
@@ -14,7 +28,8 @@ const state = {
   platformId: '11', // For WuXi Mall
   needSettings: true,
   cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
-  platformList: []
+  platformList: [],
+  vendorPlatformList: [] // The app id list of the login user
 }
 
 const mutations = {
@@ -31,7 +46,15 @@ const mutations = {
     state.cosUrl = url
   },
   SET_PLATFORM_LIST: (state, list) => {
-    state.platformList = list.filter(item => !invalidAppIdList.includes(item.appId))
+    state.platformList = list.filter(
+      item => !invalidAppIdList.includes(item.appId))
+  },
+  SET_VENDOR_LIST: (state, vendorList) => {
+    state.vendorPlatformList = vendorList.filter(
+      appId => !invalidAppIdList.includes(appId))
+    if (!state.vendorPlatformList.includes(state.platformId)) {
+      state.platformId = state.vendorPlatformList[0]
+    }
   },
   SET_PLATFORM_ID: (state, platformId) => {
     state.platformId = platformId
@@ -61,10 +84,14 @@ const actions = {
     }
   },
   async getPlatformList({ commit }) {
-    const { code, data } = await getAppPlatformListApi({ pageNo: 1, pageSize: 100 })
+    const { code, data } = await getAppPlatformListApi(
+      { pageNo: 1, pageSize: 100 })
     if (code === 200) {
-      const appList = data.list.map(item => ({ appId: item.appId, name: item.name }))
+      const appList = data.list.map(
+        item => ({ appId: item.appId, name: item.name }))
+      const vendorList = await getVendorPlatformList()
       commit('SET_PLATFORM_LIST', appList)
+      commit('SET_VENDOR_LIST', vendorList)
     }
   },
   async setPlatformId({ commit }, appId) {
