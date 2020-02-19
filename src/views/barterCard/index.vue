@@ -108,6 +108,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 :command="`tickets:${scope.$index}`"
+                :disabled="scope.row.status === initStatus"
                 icon="el-icon-collection"
               >
                 提货卡记录
