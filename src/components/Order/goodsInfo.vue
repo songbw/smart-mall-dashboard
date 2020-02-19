@@ -15,13 +15,20 @@
           >
             <el-table-column type="expand">
               <template slot-scope="scope">
-                <div style="display: flex;justify-content: space-between">
-                  <div><span class="item-label">子订单状态：</span> {{ getSubStatus(scope.row)| statusFilter }}</div>
-                  <div><span class="item-label">子订单号：</span> {{ scope.row.subOrderId }}</div>
-                </div>
-                <div style="margin-top: 10px">
-                  <span class="item-label">备注信息：</span> {{ scope.row.remark }}
-                </div>
+                <el-row>
+                  <el-col :span="12">
+                    <div class="item-label">子订单状态：{{ getSubStatus(scope.row) | statusFilter }}</div>
+                  </el-col>
+                  <el-col :span="12">
+                    <div class="item-label">子订单号：{{ scope.row.subOrderId }}</div>
+                  </el-col>
+                </el-row>
+                <el-row style="margin-top: 10px">
+                  <el-col :span="12" class="item-label">备注信息：{{ scope.row.remark }}</el-col>
+                  <el-col v-if="scope.row.thirdOrderSn" :span="12" class="item-label">
+                    外部订单：{{ scope.row.thirdOrderSn }}
+                  </el-col>
+                </el-row>
                 <div v-if="scope.row.fetchedLogistics" style="margin-top: 10px">
                   <div class="item-label">物流信息：</div>
                   <el-timeline style="margin-top: 10px">
