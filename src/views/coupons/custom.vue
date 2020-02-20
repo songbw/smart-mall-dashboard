@@ -305,7 +305,10 @@
           <span style="margin: 0 10px">元</span>
         </div>
       </el-form-item>
-      <el-form-item v-else-if="formData.rules.couponRules.type === 1" label="优惠券面值(元)">
+      <el-form-item
+        v-else-if="formData.rules.couponRules.type === 1 || formData.rules.couponRules.type === 4"
+        label="优惠券面值(元)"
+      >
         <span v-if="viewOnly">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
         <el-input-number
           v-else
@@ -480,7 +483,7 @@
               <span>满<span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.fullPrice }}</span>元减
                 <span class="data-text">{{ formData.rules.couponRules.fullReduceCoupon.reducePrice }}</span>元</span>
             </span>
-            <span v-else-if="formData.rules.couponRules.type === 1">
+            <span v-else-if="formData.rules.couponRules.type === 1 || formData.rules.couponRules.type === 4">
               <span>面值为
                 <span class="data-text">{{ formData.rules.couponRules.cashCoupon.amount }}</span>
                 元

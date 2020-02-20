@@ -14,7 +14,7 @@
         <span>{{ formData.status | statusFilter }}</span>
       </el-form-item>
       <el-form-item label="提货券金额(元)" prop="amount">
-        <span v-if="viewOnly"> {{ formData.amout }}</span>
+        <span v-if="viewOnly"> {{ formData.amount }}</span>
         <el-input-number
           v-else
           v-model="formData.amount"
@@ -24,7 +24,7 @@
           :max="1000000"
         />
       </el-form-item>
-      <el-form-item label="提货券类型" prop="type">
+      <el-form-item v-if="hasType" label="提货券类型" prop="type">
         <span v-if="viewOnly">{{ formData.type | typeFilter }}</span>
         <el-select v-else v-model="formData.type">
           <el-option
@@ -175,6 +175,7 @@ export default {
   },
   data() {
     return {
+      hasType: false,
       typeOptions: BarterCardTypeDefinition,
       dataLoading: false,
       createBarterCard: false,
@@ -187,7 +188,7 @@ export default {
         name: '',
         amount: 0,
         status: barter_card_status_init,
-        type: null,
+        type: barter_card_type_gift,
         effectiveDays: 0
       },
       formRules: {
@@ -398,11 +399,15 @@ export default {
       })
     },
     handleShowCouponSelection() {
-      this.$refs.barterCardForm.validateField('type', errorMessage => {
-        if (isEmpty(errorMessage)) {
-          this.dialogSelectionVisible = true
-        }
-      })
+      if (this.hasType) {
+        this.$refs.barterCardForm.validateField('type', errorMessage => {
+          if (isEmpty(errorMessage)) {
+            this.dialogSelectionVisible = true
+          }
+        })
+      } else {
+        this.dialogSelectionVisible = true
+      }
     },
     onCouponSelectionCancelled() {
       this.dialogSelectionVisible = false

@@ -7,9 +7,7 @@
       <el-form-item label="提货卡名称">
         <el-input v-model="queryName" placeholder="输入名称关键字" clearable maxlength="20" />
       </el-form-item>
-    </el-form>
-    <el-form inline :model="queryData">
-      <el-form-item label="提货卡类型">
+      <el-form-item v-if="hasType" label="提货卡类型">
         <el-select v-model="queryType">
           <el-option
             v-for="item in typeOptions"
@@ -72,7 +70,7 @@
           <span>{{ scope.row.amount }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="类型" align="center" width="140">
+      <el-table-column v-if="hasType" label="类型" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.type | typeFilter }}</span>
         </template>
@@ -194,6 +192,7 @@ export default {
   },
   data() {
     return {
+      hasType: false,
       initStatus: barter_card_status_init,
       publishedStatus: barter_card_status_published,
       statusOptions: [{
