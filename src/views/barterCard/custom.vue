@@ -2,7 +2,7 @@
   <div v-loading="dataLoading" class="app-container">
     <el-form ref="barterCardForm" :model="formData" :rules="viewOnly ? {} : formRules" label-width="120px">
       <el-divider content-position="left"><span class="divider-text">基础信息</span></el-divider>
-      <el-form-item label="提货卡名称" prop="name">
+      <el-form-item label="名称" prop="name">
         <el-input
           v-model="formData.name"
           :readonly="viewOnly"
@@ -13,7 +13,7 @@
       <el-form-item v-if="viewOnly" label="提货卡状态">
         <span>{{ formData.status | statusFilter }}</span>
       </el-form-item>
-      <el-form-item label="提货券金额(元)" prop="amount">
+      <el-form-item label="金额(元)" prop="amount">
         <span v-if="viewOnly"> {{ formData.amount }}</span>
         <el-input-number
           v-else
@@ -24,7 +24,7 @@
           :max="1000000"
         />
       </el-form-item>
-      <el-form-item v-if="hasType" label="提货券类型" prop="type">
+      <el-form-item v-if="hasType" label="类型" prop="type">
         <span v-if="viewOnly">{{ formData.type | typeFilter }}</span>
         <el-select v-else v-model="formData.type">
           <el-option

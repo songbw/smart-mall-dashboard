@@ -65,7 +65,7 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="总量" align="center" width="100">
+      <el-table-column label="金额(元)" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.amount }}</span>
         </template>
