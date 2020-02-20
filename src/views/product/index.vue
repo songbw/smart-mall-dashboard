@@ -321,7 +321,7 @@
       @onSelectionCancelled="dialogUpdateStateVisible = false"
       @onSelectionConfirmed="onUpdateStateConfirmed"
     />
-    <el-dialog v-loading="selectionEditing" :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
+    <el-dialog :visible.sync="editDialogVisible" title="批量修改商品" width="400px">
       <div style="font-size: 14px;margin-bottom: 10px">
         <i class="el-icon-warning-outline">如果无需修改对应属性，可以不选择！</i>
       </div>
@@ -400,7 +400,8 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
-  batchUpdateProductsApi
+  batchUpdateProductsApi,
+  batchUpdateStateApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
@@ -468,7 +469,6 @@ export default {
       exportingPriceProducts: false,
       brandLoading: false,
       brandOptions: [],
-      selectionEditing: false,
       selectionForm: {
         state: null,
         brandId: null, // Number
@@ -791,36 +791,36 @@ export default {
        */
     },
     handleProductOnSale(index) {
-      if (this.isReadyForSale(this.productsData[index])) {
-        this.$confirm('是否继续上架此商品？', '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(async () => {
-          try {
-            const id = this.productsData[index].id
-            const params = {
-              id,
-              state: product_state_on_sale
-            }
-            await updateProductApi(params)
+      this.$confirm('是否继续上架此商品？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          const id = this.productsData[index].id
+          const params = [{
+            id,
+            state: product_state_on_sale
+          }]
+          const { code } = await batchUpdateStateApi(params)
+          if (code === 200) {
             this.$message({ message: '产品上架成功！', type: 'success' })
             this.getListData()
-          } catch (e) {
-            console.warn(`Update product state error: ${e}`)
+          } else {
+            this.$confirm('此商品不满足上架条件，是否去修改此商品信息？', '提示', {
+              confirmButtonText: '去编辑',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.handleEditProduct(index)
+            }).catch(() => {
+            })
           }
-        }).catch(() => {
-        })
-      } else {
-        this.$confirm('此商品不满足上架条件，是否去修改此商品信息？', '提示', {
-          confirmButtonText: '去编辑',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          this.handleEditProduct(index)
-        }).catch(() => {
-        })
-      }
+        } catch (e) {
+          console.warn(`Update product state error: ${e}`)
+        }
+      }).catch(() => {
+      })
     },
     handleProductOffShelves(index) {
       const that = this
@@ -831,11 +831,11 @@ export default {
       }).then(async () => {
         try {
           const id = that.productsData[index].id
-          const params = {
+          const params = [{
             id,
             state: product_state_off_shelves
-          }
-          await updateProductApi(params)
+          }]
+          await batchUpdateStateApi(params)
           that.$message({ message: '产品下架成功！', type: 'success' })
           await that.getListData()
         } catch (e) {
@@ -958,7 +958,7 @@ export default {
         this.listLoading = true
         for (let i = 0; i < skus.length; i += 100) {
           const skuList = skus.slice(i, i + 100)
-          await batchUpdateProductsApi(skuList)
+          await batchUpdateStateApi(skuList)
         }
       } catch (e) {
         console.warn('Products update product price error:' + e)
@@ -1132,27 +1132,30 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
-          this.selectionEditing = true
+          this.listLoading = true
           let warning = null
-          for (const product of this.productSelection) {
-            if ('state' in params && params.state === product_state_on_sale) {
-              if (this.isReadyForSale(product) === false) {
-                warning = '部分商品上架失败，请修改商品信息！'
-                continue
-              }
+          if ('state' in params) {
+            const stateList = this.productSelection.map(
+              product => ({ id: product.id, state: params.state })
+            )
+            const ret = await batchUpdateStateApi(stateList)
+            if (ret.code !== 200) {
+              warning = '部分商品上架失败，请修改商品信息！'
             }
-            const id = product.id
-            await updateProductApi({ id, ...params })
+            delete params.state
           }
-          this.selectionEditing = false
-          this.getListData()
+          if (!isEmpty(params)) {
+            const updateList = this.productSelection.map(product => ({ id: product.id, ...params }))
+            await batchUpdateProductsApi(updateList)
+          }
+          await this.getListData()
           if (warning !== null) {
             this.$message.warning(warning)
           }
         } catch (e) {
           console.warn('Product edit selection error:' + e)
         } finally {
-          this.selectionEditing = false
+          this.listLoading = false
         }
       }
     },
