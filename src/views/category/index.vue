@@ -88,13 +88,12 @@
             </el-table-column>
             <el-table-column label="类别图标" align="center">
               <template slot-scope="scope">
-                <el-image
+                <img
                   v-if="scope.row.categoryIcon"
                   :src="scope.row.categoryIcon"
-                  fit="contain"
-                  style="width: 100px; height: 100px"
-                  lazy
-                />
+                  class="category-image"
+                  alt=""
+                >
               </template>
             </el-table-column>
             <el-table-column label="显示状态" align="center" width="120">
@@ -436,7 +435,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         this.currentSelectedTopCategory = null
         this.filterName = ''
         try {
@@ -572,5 +571,11 @@ export default {
 
   .dialog-form-item {
     width: 80%;
+  }
+
+  .category-image {
+    object-fit: contain;
+    width: 100px;
+    height: 100px;
   }
 </style>

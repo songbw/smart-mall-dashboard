@@ -39,13 +39,12 @@
       </el-table-column>
       <el-table-column label="品牌图标" align="center" width="200">
         <template slot-scope="scope">
-          <el-image
+          <img
             v-if="scope.row.brandLogo"
             :src="scope.row.brandLogo"
-            fit="contain"
-            style="width: 100px"
-            lazy
-          />
+            class="brand-image"
+            alt=""
+          >
         </template>
       </el-table-column>
       <el-table-column
@@ -263,7 +262,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const id = that.listData[index].brandId
           const params = {
@@ -365,6 +364,12 @@ export default {
 </script>
 
 <style scoped>
+  .brand-image {
+    object-fit: contain;
+    width: 100px;
+    height: 100px;
+  }
+
   .dialog-form-item {
     width: 80%;
   }

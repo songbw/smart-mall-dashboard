@@ -26,7 +26,7 @@
         </el-table-column>
         <el-table-column label="缩略图">
           <template slot-scope="scope">
-            <el-image v-if="scope.row.imageUrl" :src="scope.row.imageUrl" fit="contain" style="width: 50px" />
+            <img v-if="scope.row.imageUrl" :src="scope.row.imageUrl" class="thumb-image" alt="">
           </template>
         </el-table-column>
         <el-table-column label="排序">
@@ -278,3 +278,10 @@ export default {
 }
 </script>
 
+<style scoped>
+  .thumb-image {
+    object-fit: contain;
+    width: 50px;
+    height: 50px;
+  }
+</style>

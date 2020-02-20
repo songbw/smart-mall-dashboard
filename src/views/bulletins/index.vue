@@ -138,7 +138,7 @@
       :visible.sync="imageDialogVisible"
       title="商品公告"
     >
-      <el-image :src="dialogImageUrl" fit="contain" />
+      <img :src="dialogImageUrl" class="thumb-image" alt="">
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="imageDialogVisible = false">确定</el-button>
       </div>
@@ -314,7 +314,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const { code, msg } = await updateBulletinStateApi({ id, state })
           if (code === 200) {
@@ -333,7 +333,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const id = this.bulletinList[index].id
           const { code, msg } = await deleteBulletinApi({ id })
@@ -420,5 +420,9 @@ export default {
 </script>
 
 <style scoped>
-
+  .thumb-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%
+  }
 </style>

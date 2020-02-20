@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-image v-if="imageUrl" :src="imageUrl" :style="imageClass" fit="contain" />
+    <img v-if="imageUrl" :src="imageUrl" class="thumb-image" :style="imageClass">
     <div v-if="!viewOnly">
       <input
         :ref="refName"
@@ -149,4 +149,9 @@ export default {
 </script>
 
 <style scoped>
+  .thumb-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%
+  }
 </style>

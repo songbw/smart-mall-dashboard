@@ -57,7 +57,7 @@
             </el-table-column>
             <el-table-column label="商品图" align="center" width="100">
               <template slot-scope="scope">
-                <el-image :src="scope.row.image" fit="contain" />
+                <img :src="scope.row.image" class="thumb-image" alt="">
               </template>
             </el-table-column>
             <el-table-column label="数量" align="center" width="80">
@@ -252,5 +252,11 @@ export default {
     font-size: 16px;
     color: #606266;
     font-weight: bolder;
+  }
+
+  .thumb-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%
   }
 </style>

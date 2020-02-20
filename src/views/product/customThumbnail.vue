@@ -1,6 +1,6 @@
 <template>
   <el-card :body-style="{ padding: '0px' }" style="min-width: 180px">
-    <el-image :src="imageUrl" class="image" fit="contain" />
+    <img :src="imageUrl" class="thumb-image" alt="">
     <div v-if="couldEdit" style="display: flex;flex-direction: column;align-items: center">
       <image-upload
         tip=""
@@ -85,7 +85,9 @@ export default {
 </script>
 
 <style scoped>
-  .image {
+  .thumb-image {
+    object-fit: contain;
     width: 100%;
+    height: 100%
   }
 </style>

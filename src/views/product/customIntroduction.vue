@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="20" style="border: 1px solid #99a9bf;">
     <el-col :span="18">
-      <el-image :src="imageUrl" width="100%" style="margin: 10px" fit="contain" />
+      <img :src="imageUrl" class="thumb-image" alt="">
     </el-col>
     <el-col :span="6">
       <div v-if="couldEdit" style="padding: 14px;">
@@ -87,3 +87,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .thumb-image {
+    margin: 10px;
+    object-fit: contain;
+    width: 100%;
+    height: 100%
+  }
+</style>

@@ -10,7 +10,7 @@
         >
           <el-popover :title="item.name" placement="right" trigger="hover">
             <el-card :body-style="{ padding: '0px' }">
-              <el-image :src="item.image" style="width: 128px;height: 128px" fit="contain" />
+              <img :src="item.image" class="thumb-image" alt="">
             </el-card>
             <div slot="reference">
               <span>{{ item.name }}</span>
@@ -401,6 +401,7 @@ export default {
 
 <style scoped>
   .aside-image {
+    object-fit: contain;
     width: 100%;
   }
 
@@ -413,5 +414,11 @@ export default {
     margin: 10px 0;
     flex-direction: row;
     justify-content: center;
+  }
+
+  .thumb-image {
+    object-fit: contain;
+    width: 128px;
+    height: 128px;
   }
 </style>

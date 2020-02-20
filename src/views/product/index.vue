@@ -173,11 +173,7 @@
       </el-table-column>
       <el-table-column label="商品图" align="center" width="140">
         <template slot-scope="scope">
-          <el-image :src="scope.row.image" fit="contain">
-            <div slot="error" class="image-slot">
-              <i class="el-icon-picture-outline" />
-            </div>
-          </el-image>
+          <img :src="scope.row.image" class="thumb-image" alt="">
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
@@ -1173,4 +1169,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .thumb-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%
+  }
+</style>
 
