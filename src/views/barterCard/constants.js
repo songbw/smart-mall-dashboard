@@ -20,11 +20,11 @@ export const TicketStatusOptions = [{
   label: '已兑换'
 }, {
   value: ticket_status_pending,
-  label: '待确认'
+  label: '已占用'
 }, {
   value: ticket_status_used,
   label: '已使用'
 }, {
   value: ticket_status_expired,
-  label: '已失效'
+  label: '已过期'
 }]
