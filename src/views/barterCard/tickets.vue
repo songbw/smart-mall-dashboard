@@ -85,7 +85,7 @@
           <span>{{ scope.row.activateTime | timeFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="消费时间" align="center" width="180">
+      <el-table-column label="使用时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.consumedTime | timeFormat }}</span>
         </template>
