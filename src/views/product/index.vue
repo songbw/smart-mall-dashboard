@@ -111,9 +111,9 @@
             :loading="productExporting"
             type="warning"
             icon="el-icon-download"
-            @click="handleExportAllProducts"
+            @click="dialogExportVisible = true"
           >
-            导出全部
+            导出商品
           </el-button>
         </div>
       </div>
@@ -380,6 +380,13 @@
       :dialog-visible="dialogInventoryVisible"
       @cancelled="dialogInventoryVisible = false"
     />
+    <export-dialog
+      :dialog-visible="dialogExportVisible"
+      :has-vendor-permission="hasVendorPermission"
+      :has-sale-price-permission="hasSalePricePermission"
+      @cancelled="dialogExportVisible = false"
+      @confirmed="handleConfirmExportProducts"
+    />
   </div>
 </template>
 
@@ -396,6 +403,7 @@ import {
   deleteProductApi,
   createProductApi,
   exportProductsApi,
+  exportFloorPriceApi,
   batchUpdateProductsApi,
   batchUpdateStateApi
 } from '@/api/products'
@@ -414,6 +422,7 @@ import {
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
 import InventoryDialog from './inventoryDialog'
+import ExportDialog from './exportDialog'
 
 export default {
   name: 'Product',
@@ -423,7 +432,8 @@ export default {
     GoodsImportDialog,
     ShippingPriceSelection,
     VendorSelection,
-    InventoryDialog
+    InventoryDialog,
+    ExportDialog
   },
   filters: {
     productState: state => {
@@ -462,7 +472,6 @@ export default {
       dialogUpdateStateVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
-      exportingPriceProducts: false,
       brandLoading: false,
       brandOptions: [],
       selectionForm: {
@@ -475,7 +484,8 @@ export default {
         thirdCategoryValue: null
       },
       queryParams: null,
-      dialogInventoryVisible: false
+      dialogInventoryVisible: false,
+      dialogExportVisible: false
     }
   },
   computed: {
@@ -963,13 +973,8 @@ export default {
       }
       this.getListData()
     },
-    async handleExportAllProducts() {
-      const params = this.getFilterParams()
-      this.productExporting = true
+    downloadBlobFile(data, filename) {
       try {
-        const filename = '商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
-        this.getListData()
-        const data = await exportProductsApi(params)
         const blob = new Blob([data])
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -979,6 +984,30 @@ export default {
         link.click()
         link.remove()
         window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download product export file error:' + e)
+      }
+    },
+    handleConfirmExportProducts(params) {
+      this.dialogExportVisible = false
+      if ('floorPriceRate' in params) {
+        this.handleExportWithFloorPrice(params.floorPriceRate)
+      } else {
+        this.handleExportAllProducts(params)
+      }
+    },
+    async handleExportAllProducts(params) {
+      this.productExporting = true
+      try {
+        const exportParams = {}
+        for (const key of Object.keys(params)) {
+          if (params[key] !== null) {
+            exportParams[key] = params[key]
+          }
+        }
+        const filename = '商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
+        const data = await exportProductsApi(exportParams)
+        this.downloadBlobFile(data, filename)
       } catch (e) {
         console.warn('Export all products:' + e)
         const res = e.response
@@ -991,6 +1020,23 @@ export default {
           }
         }
         this.$message.warning(msg)
+      } finally {
+        this.productExporting = false
+      }
+    },
+    async handleExportWithFloorPrice(rate) {
+      const floorPriceRate = Math.round(rate * 100)
+      if (floorPriceRate < 100 || Number.isNaN(floorPriceRate)) {
+        this.$message.warning('请设置商品底价比率大于1！')
+        return
+      }
+      try {
+        this.productExporting = true
+        const filename = '价格异常商品列表-' + moment().format('YYYY-MM-DD') + '.xls'
+        const data = await exportFloorPriceApi({ floorPriceRate, pageNo: 1, pageSize: 5000 })
+        this.downloadBlobFile(data, filename)
+      } catch (e) {
+        console.warn('Products export floor price error:' + e)
       } finally {
         this.productExporting = false
       }
