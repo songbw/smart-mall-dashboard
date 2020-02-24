@@ -40,7 +40,10 @@
         生成提货券
       </el-button>
       <el-button :disabled="activateSelection.length === 0" type="warning" @click="handleActivateTickets">
-        批量激活
+        激活已选提货券
+      </el-button>
+      <el-button type="success" @click="importDialogVisible = true">
+        批量激活提货券
       </el-button>
       <el-button type="info" @click="exportDialogVisible = true">
         导出提货券
@@ -143,11 +146,17 @@
         <el-button type="primary" @click="handleConfirmExport">确定</el-button>
       </span>
     </el-dialog>
+    <import-dialog
+      :dialog-visible="importDialogVisible"
+      @cancelled="importDialogVisible = false"
+      @confirmed="handleActivateImport"
+    />
   </div>
 </template>
 
 <script>
 import moment from 'moment'
+import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
 import {
   getTicketsByIdApi,
@@ -159,7 +168,7 @@ import {
   ticket_status_init,
   TicketStatusOptions
 } from './constants'
-import isEqual from 'lodash/isEqual'
+import ImportDialog from './importDialog'
 
 const timeFormat = time => {
   const format = 'YYYY-MM-DD HH:mm:ss'
@@ -173,7 +182,7 @@ const timeFormat = time => {
 
 export default {
   name: 'Tickets',
-  components: { Pagination },
+  components: { Pagination, ImportDialog },
   filters: {
     statusFilter: status => {
       const usage = TicketStatusOptions.find(option => status === option.value)
@@ -212,7 +221,8 @@ export default {
       distributeDialogVisible: false,
       distributeNum: 1,
       exportDialogVisible: false,
-      exportTicketStatus: 0
+      exportTicketStatus: 0,
+      importDialogVisible: false
     }
   },
   created() {
@@ -269,11 +279,22 @@ export default {
         .map(item => ({ id: item.id, card: item.card }))
     },
     async handleActivateTickets() {
+      await this.batchActivateTickets(this.activateSelection)
+      this.activateSelection = []
+    },
+    async handleActivateImport(tickets) {
+      this.importDialogVisible = false
+      if (tickets.length > 0) {
+        await this.batchActivateTickets(tickets)
+      }
+    },
+    async batchActivateTickets(tickets) {
+      let suc = false
       try {
         this.dataLoading = true
-        const { code } = await batchActivateTicketsApi(this.activateSelection)
+        const { code } = await batchActivateTicketsApi(tickets)
         if (code === 200) {
-          this.activateSelection = []
+          suc = true
           await this.getTicketData()
         } else {
           this.$message.warning('激活失败，请联系管理员！')
@@ -283,6 +304,7 @@ export default {
       } finally {
         this.dataLoading = false
       }
+      return suc
     },
     handleCancelDistribute() {
       this.distributeDialogVisible = false
