@@ -207,9 +207,9 @@ export default {
             let permissionsDesc = ''
             let permissionList = []
             if (!isEmpty(permissions) && this.permissionList.length > 0) {
-              const permissionIds = permissions.split(',')
-                .filter(item => isEmpty(item.trim()) === false)
-                .map(item => Number.parseInt(item))
+              const permissionIds = permissions.split(',').
+                filter(item => isEmpty(item.trim()) === false).
+                map(item => Number.parseInt(item))
               permissionList = this.permissionList.filter(permission => permissionIds.includes(permission.id))
               permissionsDesc = permissionList.reduce(
                 (desc, permission) => isEmpty(desc) ? permission.name : desc + ',' + permission.name, '')
@@ -230,7 +230,7 @@ export default {
       this.$refs.roleForm.clearValidate()
     },
     handleConfirmCreation() {
-      this.$refs.roleForm.validate(async(valid) => {
+      this.$refs.roleForm.validate(async (valid) => {
         if (valid) {
           this.dialogCreationVisible = false
           try {

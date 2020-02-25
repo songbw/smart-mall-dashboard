@@ -403,7 +403,7 @@ export default {
     }
   },
   watch: {
-    appId: function(value, old) {
+    appId: function (value, old) {
       this.currentType = '-1'
       this.queryOffset = 1
       this.prepareData()
@@ -528,7 +528,7 @@ export default {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         const id = this.promotionData[index].id
         const dateNow = moment()
         dateNow.minute(0)
@@ -565,7 +565,7 @@ export default {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         const id = this.promotionData[index].id
         const params = { id: id, status: promotion_status_off_shelves }
         try {
@@ -622,10 +622,11 @@ export default {
       }).then(() => {
         const id = res.data.promotionId
         if (id) {
-          this.$router.push({
+          const routePath = {
             name: 'ViewPromotion',
-            params: { id: id }
-          })
+            params: { id }
+          }
+          this.$router.push(routePath)
         }
       }).catch(() => {
       })
@@ -648,7 +649,7 @@ export default {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         const id = promotion.id
         const params = { id: id, status: promotion_status_published }
         try {

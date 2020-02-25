@@ -275,7 +275,7 @@ export default {
       }
     },
     handleSaveVendor() {
-      this.$refs.vendorForm.validate(async(valid) => {
+      this.$refs.vendorForm.validate(async (valid) => {
         if (valid) {
           await this.createOrSaveProfile()
         }
@@ -286,7 +286,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           await this.updateVendorProfile()
           await this.$store.dispatch('vendor/submitProfile')

@@ -336,13 +336,13 @@ export default {
     },
     promotionData: {
       type: Object,
-      default: function() {
+      default: function () {
         return {}
       }
     },
     conflictedSkus: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     }
@@ -814,7 +814,7 @@ export default {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const index = this.scheduleTabs.findIndex(item => item.name === tab)
           const nextIndex = index > 1 ? index - 1 : 0
@@ -831,11 +831,11 @@ export default {
       })
     },
     handleAddScheduleTime() {
-      this.$refs.scheduleForm.validate(async(valid) => {
+      this.$refs.scheduleForm.validate(async (valid) => {
         if (valid) {
           try {
-            const index = this.promotionData.promotionSchedules
-              .findIndex(item => item.schedule === this.scheduleData.schedule)
+            const index = this.promotionData.promotionSchedules.findIndex(
+              item => item.schedule === this.scheduleData.schedule)
             if (index < 0) {
               const id = await this.$store.dispatch('promotions/addScheduleTime',
                 { promotionId: this.promotionData.id, ...this.scheduleData })

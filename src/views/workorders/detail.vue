@@ -656,27 +656,25 @@ export default {
       }
     },
     async getWorkFlows(id) {
-      getWorkFlowListApi({ pageIndex: 1, pageSize: 100, workOrderId: id })
-        .then(data => {
-          this.flows = data.rows.map(row => {
-            const format = 'YYYY-MM-DD HH:mm:ss'
-            const momentDate = moment(row.createTime)
-            const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
-            const find = this.flowStatusOptions.find(option => option.value === row.status)
-            let flowComment
-            try {
-              flowComment = { ...JSON.parse(row.comments) }
-            } catch (e) {
-              flowComment = {}
-            }
-            const remark = flowComment.remark ? flowComment.remark : ''
-            const content = find ? find.label + ' - ' + remark : remark
-            return { ...row, timeline, content, ...flowComment }
-          })
+      getWorkFlowListApi({ pageIndex: 1, pageSize: 100, workOrderId: id }).then(data => {
+        this.flows = data.rows.map(row => {
+          const format = 'YYYY-MM-DD HH:mm:ss'
+          const momentDate = moment(row.createTime)
+          const timeline = momentDate.isValid() ? momentDate.format(format) : row.createTime
+          const find = this.flowStatusOptions.find(option => option.value === row.status)
+          let flowComment
+          try {
+            flowComment = { ...JSON.parse(row.comments) }
+          } catch (e) {
+            flowComment = {}
+          }
+          const remark = flowComment.remark ? flowComment.remark : ''
+          const content = find ? find.label + ' - ' + remark : remark
+          return { ...row, timeline, content, ...flowComment }
         })
-        .catch(e => {
-          console.warn('Get work flows error:' + e)
-        })
+      }).catch(e => {
+        console.warn('Get work flows error:' + e)
+      })
     },
     async getOrderData(subOrderId) {
       try {
@@ -756,7 +754,7 @@ export default {
       })
     },
     handleCreateFlow() {
-      this.$refs.flowForm.validate(async(valid) => {
+      this.$refs.flowForm.validate(async (valid) => {
         if (valid) {
           this.dialogFlowVisible = false
           try {
@@ -826,7 +824,7 @@ export default {
       this.dialogReopenVisible = false
     },
     handleConfirmReopen() {
-      this.$refs.reopenForm.validate(async(valid) => {
+      this.$refs.reopenForm.validate(async (valid) => {
         if (valid) {
           try {
             this.reopenLoading = true
