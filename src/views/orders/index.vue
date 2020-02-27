@@ -369,6 +369,7 @@ const wuxiBalanceInvoice = 'wuxi-balance-payment'
 const wuxiCardInvoice = 'wuxi-card-payment'
 const wuxiWoaInvoice = 'wuxi-woa-payment'
 const wuxiKuaiJieInvoice = 'wuxi-kuai-jie'
+const wuxiAliPayInvoice = 'wuxi-ali-pay'
 
 const maxExportMonths = 3
 
@@ -419,6 +420,9 @@ export default {
       }, {
         value: wuxiKuaiJieInvoice,
         label: '无锡快捷支付'
+      }, {
+        value: wuxiAliPayInvoice,
+        label: '无锡支付宝支付'
       }],
       vendorLoading: false,
       vendors: [],
@@ -977,6 +981,10 @@ export default {
         case wuxiKuaiJieInvoice:
           params.appId = '11'
           params.receiptType = 4
+          break
+        case wuxiAliPayInvoice:
+          params.appId = '11'
+          params.receiptType = 5
           break
       }
       try {
