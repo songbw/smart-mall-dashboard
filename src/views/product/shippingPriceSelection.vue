@@ -67,7 +67,7 @@ export default {
     },
     mpuList: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     }

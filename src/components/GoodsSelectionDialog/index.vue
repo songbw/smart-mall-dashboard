@@ -6,10 +6,11 @@
     :show-close="false"
     :append-to-body="true"
     title="选择商品"
-    width="60%"
+    top="5vh"
+    width="70%"
   >
-    <el-form>
-      <el-form-item v-if="!hasPromotion" label="商品类别">
+    <el-form v-if="!hasPromotion">
+      <el-form-item label="商品类别">
         <category-selection
           :first-selectable="presetFirstCategory === null"
           :first-value="presetFirstCategory || firstCategoryValue"
@@ -21,8 +22,33 @@
         />
       </el-form-item>
     </el-form>
+    <el-form v-if="!hasPromotion" inline>
+      <el-form-item v-if="hasVendorPermission && merchantId === 0" label="供应商名">
+        <vendor-selection
+          :vendor-id="dialogFilterForm.merchantId"
+          @changed="handleVendorChanged"
+        />
+      </el-form-item>
+      <el-form-item label="价格区间">
+        <div>
+          <el-input-number
+            v-model="dialogFilterForm.minPrice"
+            :min="0"
+            :max="dialogFilterForm.maxPrice"
+            step-strictly
+          />
+          <span> - </span>
+          <el-input-number
+            v-model="dialogFilterForm.maxPrice"
+            :min="dialogFilterForm.minPrice"
+            :max="1000000"
+            step-strictly
+          />
+        </div>
+      </el-form-item>
+    </el-form>
     <el-form v-if="hasPromotion" inline>
-      <el-button type="primary" @click="handleDialogPromotionQuery">
+      <el-button :loading="dataLoading" type="primary" @click="handleDialogPromotionQuery">
         获取促销活动商品
       </el-button>
     </el-form>
@@ -74,6 +100,11 @@
           <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.skuId }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
@@ -117,6 +148,11 @@
           <span>{{ scope.row.mpu }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.skuId }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
@@ -156,18 +192,28 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import uniq from 'lodash/uniq'
 import isEmpty from 'lodash/isEmpty'
 import CategorySelection from '@/components/CategorySelection'
 import Pagination from '@/components/Pagination'
+import VendorSelection from '@/components/VendorSelection'
 import { getProductsByMpuListApi, searchProductsApi } from '@/api/products'
 import { getPromotionByIdApi } from '@/api/promotions'
+import { ProductPermissions } from '@/utils/role-permissions'
+
+const productMinPrice = 0
+const productMaxPrice = 1000000
 
 export default {
   name: 'GoodsSelectionDialog',
-  components: { CategorySelection, Pagination },
+  components: { CategorySelection, Pagination, VendorSelection },
   props: {
     dialogVisible: {
+      type: Boolean,
+      default: false
+    },
+    useDefaultSku: {
       type: Boolean,
       default: false
     },
@@ -200,6 +246,9 @@ export default {
     return {
       filterSkuString: '',
       dialogFilterForm: {
+        merchantId: null,
+        minPrice: productMinPrice,
+        maxPrice: productMaxPrice,
         mpus: [],
         query: ''
       },
@@ -215,6 +264,13 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      vendorId: 'vendorId',
+      userPermissions: 'userPermissions'
+    }),
+    hasVendorPermission() {
+      return this.userPermissions.includes(ProductPermissions.vendor)
+    },
     filterMpus: {
       get() {
         return this.filterSkuString
@@ -222,7 +278,8 @@ export default {
       set(newValue) {
         this.filterSkuString = newValue
         if (newValue.trim()) {
-          this.dialogFilterForm.mpus = newValue.trim().split(',')
+          this.dialogFilterForm.mpus = newValue.trim()
+            .split(',')
             .map(item => item.trim())
             .filter(item => !isEmpty(item))
         } else {
@@ -245,20 +302,31 @@ export default {
       return Number.isNaN(price) === false
     },
     handleDialogPromotionQuery() {
+      this.dataLoading = true
       getPromotionByIdApi({ id: this.promotionId }).then(res => {
-        const data = res.data.result
-        this.dialogSkuData = data.promotionSkus
+        if (res.code === 200) {
+          const data = res.data.result
+          this.dialogSkuData = this.parseSkuList(data.promotionSkus)
+        }
       }).catch(err => {
         console.log('handleDialogPromotionQuery:' + err)
+      }).finally(() => {
+        this.dataLoading = false
       })
+    },
+    handleVendorChanged(id) {
+      this.dialogFilterForm.merchantId = id
     },
     handleDialogFilterClear() {
       this.offset = 1
+      this.filterSkuString = ''
+      this.dialogFilterForm.merchantId = null
       this.dialogFilterForm.mpus = []
       this.dialogFilterForm.query = ''
       this.firstCategoryValue = null
       this.secondCategoryValue = null
       this.thirdCategoryValue = null
+      this.dialogSkuData = []
     },
     async getProductsByMpuList(fetchList) {
       let mpuList = []
@@ -277,12 +345,68 @@ export default {
       }
       return mpuList
     },
+    parseSkuList(list) {
+      const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
+      const skuList = []
+      for (const spu of list) {
+        const prod = {
+          id: spu.id,
+          mpu: spu.mpu,
+          image: spu.image,
+          name: spu.name,
+          merchantId: spu.merchantId,
+          floorPrice: spu.floorPrice,
+          brand: spu.brand
+        }
+        if (this.hasPromotion) {
+          prod.discount = spu.discount
+        }
+        if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
+          if (this.useDefaultSku) {
+            const sku = spu.skuList[0]
+            skuList.push({
+              skuId: sku.code,
+              skuIndex: 0,
+              skuNum: spu.skuList.length,
+              skuList: spu.skuList.map(
+                item => ({ skuId: item.code, state: sku.status.toString(), price: centToYuan(item.price) })),
+              state: sku.status.toString(),
+              price: centToYuan(sku.price),
+              ...prod
+            })
+          } else {
+            for (const [index, sku] of spu.skuList.entries()) {
+              skuList.push({
+                skuId: sku.code,
+                skuIndex: index,
+                skuNum: spu.skuList.length,
+                state: sku.status.toString(),
+                price: centToYuan(sku.price),
+                ...prod
+              })
+            }
+          }
+        } else {
+          skuList.push({
+            skuId: spu.skuid,
+            skuIndex: 0,
+            skuNum: 1,
+            state: spu.state,
+            price: spu.price,
+            ...prod
+          })
+        }
+      }
+      return skuList
+    },
     async handleFilterSkuList() {
       this.dataLoading = true
       const mpus = uniq(this.dialogFilterForm.mpus)
-      const products = await this.getProductsByMpuList(mpus)
-      for (const product of products) {
-        const index = this.dialogSkuData.findIndex(item => item.mpu === product.mpu)
+      const spuList = await this.getProductsByMpuList(mpus)
+      const skuList = this.parseSkuList(spuList)
+      for (const product of skuList) {
+        const index = this.dialogSkuData.findIndex(
+          item => item.mpu === product.mpu && item.skuId === product.skuId)
         if (index < 0 && this.isProductValid(product)) {
           this.dialogSkuData.push(product)
         }
@@ -290,45 +414,65 @@ export default {
       this.total = this.dialogSkuData.length
       this.dataLoading = false
     },
-    handleDialogFilterSearch() {
+    getFilterParams() {
+      const params = {}
       const categoryId = this.presetThirdCategory || this.thirdCategoryValue ||
         this.presetSecondCategory || this.secondCategoryValue ||
         this.presetFirstCategory || this.firstCategoryValue
+
+      if (this.dialogFilterForm.query !== '') {
+        params.query = this.dialogFilterForm.query
+      }
+      if (categoryId != null) {
+        params.categoryID = categoryId
+      }
+      if (this.merchantId > 0) {
+        params.merchantId = this.merchantId
+      } else {
+        if (this.hasVendorPermission) {
+          if (!isEmpty(this.dialogFilterForm.merchantId)) {
+            params.merchantId = Number.parseInt(this.dialogFilterForm.merchantId)
+          }
+        } else {
+          params.merchantId = this.vendorId
+        }
+      }
+      if (this.dialogFilterForm.minPrice > productMinPrice) {
+        params.minPrice = this.dialogFilterForm.minPrice
+      }
+      if (this.dialogFilterForm.maxPrice !== productMaxPrice &&
+        this.dialogFilterForm.maxPrice > this.dialogFilterForm.minPrice) {
+        params.maxPrice = this.dialogFilterForm.maxPrice
+      }
+      return params
+    },
+    async handleDialogFilterSearch() {
+      const filterParams = this.getFilterParams()
       if (this.dialogFilterForm.mpus.length > 0) {
         this.handleFilterSkuList()
-      } else if (this.dialogFilterForm.query !== '' || categoryId !== null) {
+      } else if (!isEmpty(filterParams)) {
+        let list = []
+        let total = 0
         const params = {
           offset: this.offset,
           limit: this.limit,
-          state: 1
-        }
-        if (this.dialogFilterForm.query !== '') {
-          params.query = this.dialogFilterForm.query
-        }
-        if (categoryId != null) {
-          params.categoryID = categoryId
-        }
-        if (this.merchantId > 0) {
-          params.merchantId = this.merchantId
+          state: 1,
+          ...filterParams
         }
         this.dataLoading = true
-        searchProductsApi(params).then(response => {
-          const data = response.data.result
-          if (data.total > 0) {
-            this.dialogSkuData = data.list.filter(item => {
-              return this.isProductValid(item)
-            })
-          } else {
-            this.dialogSkuData = []
+        try {
+          const { code, data } = await searchProductsApi(params)
+          if (code === 200) {
+            total = data.result.total
+            list = data.result.list
           }
-          this.total = data.total
-        }).catch(error => {
-          console.log('getProductInfo:' + error)
-          this.dialogSkuData = []
-          this.total = 0
-        }).finally(() => {
+        } catch (e) {
+          console.warn('Select product error:' + e)
+        } finally {
+          this.total = total
+          this.dialogSkuData = this.parseSkuList(list)
           this.dataLoading = false
-        })
+        }
       } else {
         this.dialogSkuData = []
         this.total = 0
@@ -338,7 +482,7 @@ export default {
       this.dialogSelectedItems = []
       if (row) {
         const selectItem = {
-          skuid: row.skuid,
+          skuId: row.skuId,
           mpu: row.mpu,
           price: row.price,
           floorPrice: row.floorPrice,
@@ -357,7 +501,7 @@ export default {
       if (val.length > 0) {
         this.dialogSelectedItems = val.map(item => {
           const selectItem = {
-            skuid: item.skuid,
+            skuId: item.skuId,
             mpu: item.mpu,
             price: item.price,
             floorPrice: item.floorPrice,

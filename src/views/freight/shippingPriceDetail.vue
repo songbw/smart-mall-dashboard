@@ -318,7 +318,7 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        }).then(async() => {
+        }).then(async () => {
           try {
             this.dataLoading = true
             const { code } = await deleteShippingPriceRegionApi({ id: regionId })

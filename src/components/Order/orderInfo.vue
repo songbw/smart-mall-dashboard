@@ -144,7 +144,7 @@ export default {
     }
   },
   watch: {
-    merchantId: function(val, oldVal) {
+    merchantId: function (val, oldVal) {
       this.getMerchantName()
     }
   },

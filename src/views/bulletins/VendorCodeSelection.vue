@@ -59,7 +59,7 @@ export default {
     },
     vendorList: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     }

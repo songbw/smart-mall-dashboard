@@ -446,7 +446,7 @@ export default {
     }
   },
   watch: {
-    pageId: function(val, old) {
+    pageId: function (val, old) {
       if (val >= 0 && val !== old) {
         this.setFormData()
       }
@@ -566,7 +566,7 @@ export default {
     onSubmit() {
       if (this.hasEditPermission) {
         const pageID = this.pageInfo.id
-        this.$refs.ruleForm.validate(async(valid) => {
+        this.$refs.ruleForm.validate(async (valid) => {
           if (valid) {
             if (pageID === -1) {
               this.createPage()

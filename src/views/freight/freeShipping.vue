@@ -212,7 +212,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           await deleteFreeShippingApi({ id })
           this.$message({ message: '包邮模板删除成功！', type: 'success' })

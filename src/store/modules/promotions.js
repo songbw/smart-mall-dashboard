@@ -53,7 +53,9 @@ const mutations = {
   },
   RESET_DATA: state => {
     state.promotion = { ...promotionTemplate }
-    state.promotion.promotionTypeId = state.promotionTypeId >= 0 ? state.promotionTypeId : null
+    state.promotion.promotionTypeId = state.promotionTypeId >= 0
+      ? state.promotionTypeId
+      : null
     state.promotion.promotionSkus = []
     state.promotion.promotionSchedules = []
   },
@@ -80,12 +82,14 @@ const mutations = {
     if (state.promotion.promotionSchedules === null) {
       state.promotion.promotionSchedules = []
     } else {
-      state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
+      state.promotion.promotionSchedules = sortBy(
+        state.promotion.promotionSchedules, ['schedule'])
     }
   },
   SET_SKU_PROMOTION: (state, params) => {
     const { mpu, ...rest } = params
-    const index = state.promotion.promotionSkus.findIndex(item => item.mpu === mpu)
+    const index = state.promotion.promotionSkus.findIndex(
+      item => item.mpu === mpu)
     if (index >= 0) {
       const sku = state.promotion.promotionSkus[index]
       state.promotion.promotionSkus[index] = { ...sku, ...rest }
@@ -108,7 +112,8 @@ const mutations = {
   },
   DELETE_SKUS: (state, mpus) => {
     const current = state.promotion.promotionSkus
-    state.promotion.promotionSkus = current.filter(item => !mpus.includes(item.mpu))
+    state.promotion.promotionSkus = current.filter(
+      item => !mpus.includes(item.mpu))
   },
   SET_TYPE_LIST: (state, types) => {
     state.promotionTypes = types
@@ -118,10 +123,12 @@ const mutations = {
   },
   ADD_SCHEDULE: (state, params) => {
     state.promotion.promotionSchedules.push(params)
-    state.promotion.promotionSchedules = sortBy(state.promotion.promotionSchedules, ['schedule'])
+    state.promotion.promotionSchedules = sortBy(
+      state.promotion.promotionSchedules, ['schedule'])
   },
   UPDATE_SCHEDULE: (state, params) => {
-    const found = state.promotion.promotionSchedules.find(item => item.id === params.id)
+    const found = state.promotion.promotionSchedules.find(
+      item => item.id === params.id)
     if (found) {
       found.schedule = params.schedule
       found.startTime = params.startTime
@@ -130,7 +137,8 @@ const mutations = {
   },
   DELETE_SCHEDULE: (state, id) => {
     const schedules = state.promotion.promotionSchedules
-    state.promotion.promotionSchedules = schedules.filter(item => item.id !== id)
+    state.promotion.promotionSchedules = schedules.filter(
+      item => item.id !== id)
   },
   SET_CONFLICTED_MPUS: (state, mpus) => {
     state.conflictedMpus = [...mpus]
@@ -200,7 +208,8 @@ const actions = {
   async createType({ commit, state }, params) {
     const { data } = await createPromotionTypeApi(params)
     const id = data.id
-    const list = state.promotionTypes.concat([{ id: id, typeName: params.typeName }])
+    const list = state.promotionTypes.concat(
+      [{ id: id, typeName: params.typeName }])
     commit('SET_TYPE_LIST', list)
   },
   async updateType({ commit, state }, params) {
@@ -212,7 +221,8 @@ const actions = {
   },
   async deleteType({ commit, state }, params) {
     await deletePromotionTypeApi(params)
-    const list = state.promotionTypes.filter(type => type.id !== params.promotionTypeId)
+    const list = state.promotionTypes.filter(
+      type => type.id !== params.promotionTypeId)
     commit('SET_TYPE_LIST', list)
   },
   async addScheduleTime({ commit }, params) {
@@ -261,7 +271,8 @@ const actions = {
       if (newRes.code === 200) {
         newId = newRes.data.promotionId
         let schedules = []
-        if (srcPromotion.dailySchedule && Array.isArray(srcPromotion.promotionSchedules)) {
+        if (srcPromotion.dailySchedule &&
+          Array.isArray(srcPromotion.promotionSchedules)) {
           schedules = srcPromotion.promotionSchedules.map(item => ({
             promotionId: newId,
             schedule: item.schedule,
@@ -276,19 +287,23 @@ const actions = {
           }
         }
         const findNewScheduleId = scheduleId => {
-          const scheduleItem = srcPromotion.promotionSchedules.find(item => item.id === scheduleId)
+          const scheduleItem = srcPromotion.promotionSchedules.find(
+            item => item.id === scheduleId)
           const schedule = scheduleItem ? scheduleItem.schedule : null
-          const newItem = schedule ? schedules.find(item => item.schedule === schedule) : null
+          const newItem = schedule ? schedules.find(
+            item => item.schedule === schedule) : null
           return newItem ? newItem.scheduleId : null
         }
-        if (Array.isArray(srcPromotion.promotionSkus) && srcPromotion.promotionSkus.length > 0) {
+        if (Array.isArray(srcPromotion.promotionSkus) &&
+          srcPromotion.promotionSkus.length > 0) {
           const content = {
             id: newId,
             promotionSkus: srcPromotion.promotionSkus.map(item => ({
               skuid: item.skuid,
               mpu: item.mpu,
               discount: item.discount,
-              scheduleId: srcPromotion.dailySchedule ? findNewScheduleId(item.scheduleId) : -1,
+              scheduleId: srcPromotion.dailySchedule ? findNewScheduleId(
+                item.scheduleId) : -1,
               name: item.name,
               brand: item.brand,
               price: item.price,

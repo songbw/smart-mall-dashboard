@@ -215,7 +215,7 @@
       <el-form-item class="form-item" label="优惠券链接" prop="url">
         <coupon-url
           :app-id="couponAppId"
-          :merchant-id="formData.supplierMerchantId"
+          :merchant-id="formData.supplierMerchantId || 0"
           :first-class-category="formData.category"
           :read-only="viewOnly"
           :url="formData.url"
@@ -392,12 +392,12 @@
         </span>
       </el-form-item>
       <el-form-item v-if="formData.rules.scenario.type === 1" label="活动商品" prop="couponMpus">
-        <span>已关联{{ formData.rules.scenario.couponMpus.length }}个商品(至多关联400个商品)</span>
+        <span>已关联{{ couponSkuList.length }}个商品(至多关联400个商品)</span>
         <coupon-goods
           key="include"
-          :merchant-id="formData.supplierMerchantId"
+          :merchant-id="formData.supplierMerchantId || 0"
           :first-class-category="formData.category"
-          :mpu-list="formData.rules.scenario.couponMpus"
+          :mpu-list="couponSkuList"
           :view-only="viewOnly || disableScenarioType"
           @contentAdd="handleAddCouponMpus"
           @contentDelete="handleDeleteCouponMpus"
@@ -409,7 +409,7 @@
         <coupon-goods
           key="exclude"
           :mpu-list="formData.rules.scenario.excludeMpus"
-          :merchant-id="formData.supplierMerchantId"
+          :merchant-id="formData.supplierMerchantId || 0"
           :view-only="viewOnly"
           @contentAdd="handleAddExcludeMpus"
           @contentDelete="handleDeleteExcludeMpus"
@@ -438,7 +438,7 @@
           <p>已排除{{ formData.rules.scenario.excludeMpus.length }}个商品(排除商品数量至多为100个)</p>
           <coupon-goods
             key="exclude"
-            :merchant-id="formData.supplierMerchantId"
+            :merchant-id="formData.supplierMerchantId || 0"
             :first-class-category="formData.category"
             :mpu-list="formData.rules.scenario.excludeMpus"
             :view-only="viewOnly"
@@ -538,6 +538,10 @@ import {
 } from './constants'
 import { CouponPermissions } from '@/utils/role-permissions'
 
+const changeCouponVendor = false
+const vendorPlatformId = 0
+const vendorPlatformName = '运营平台'
+
 export default {
   name: 'CustomCoupon',
   components: { CouponGoods, CouponCategory, ImageUpload, CouponUrl },
@@ -566,7 +570,7 @@ export default {
       typeOptions: CouponTypeOptions,
       collectOptions: CouponCollectOptions,
       customerOptions: CustomerTypeOptions,
-      selectVendorId: null,
+      selectVendorId: '0',
       vendorLoading: false,
       vendorOptions: [],
       dataLoading: false,
@@ -587,10 +591,11 @@ export default {
       disableScenarioType: false,
       selectCategoryId: '0',
       couponImageSet: false,
+      couponSkuList: [],
       formData: {
         name: '',
-        supplierMerchantId: null,
-        supplierMerchantName: null,
+        supplierMerchantId: vendorPlatformId,
+        supplierMerchantName: vendorPlatformName,
         releaseStartDate: null,
         releaseEndDate: null,
         releaseTotal: 1,
@@ -630,8 +635,10 @@ export default {
           },
           scenario: {
             type: 1,
-            couponMpus: [],
+            couponMpus: [], // ['11111']
+            couponSkus: [], // [{mpu: '1111', skuId: '2222'}]
             excludeMpus: [],
+            excludeSkus: [],
             categories: [],
             brands: []
           },
@@ -861,6 +868,12 @@ export default {
               }
             }
           }
+          if (this.formData.rules.couponRules.type === 4) {
+            // 礼包券，只能选择商品
+            if (option.value !== 1) {
+              disabled = true
+            }
+          }
           item.disabled = disabled
           return item
         })
@@ -900,20 +913,28 @@ export default {
     },
     async getVendorList() {
       try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
-        this.vendorLoading = true
-        const data = await getVendorListApi(params)
-        const vendorList = data.rows.map(row => {
-          return {
-            value: row.company.id.toString(),
-            label: row.company.name
+        if (changeCouponVendor) {
+          const params = {
+            page: 1,
+            limit: 1000,
+            status: vendor_status_approved
           }
-        })
-        this.vendorOptions = [{ value: '0', label: '运营平台' }].concat(vendorList)
+          this.vendorLoading = true
+          const data = await getVendorListApi(params)
+          const vendorList = data.rows.map(row => {
+            return {
+              value: row.company.id.toString(),
+              label: row.company.name
+            }
+          })
+          this.vendorOptions = [
+            { value: vendorPlatformId.toString(), label: vendorPlatformName }
+          ].concat(vendorList)
+        } else {
+          this.vendorOptions = [
+            { value: vendorPlatformId.toString(), label: vendorPlatformName }
+          ]
+        }
       } catch (e) {
         console.warn('Coupon get vendor list error:' + e)
       } finally {
@@ -935,7 +956,7 @@ export default {
       const item = this.couponTags.find(tag => tag.id === tagId)
       return item ? item.name : ''
     },
-    backupCouponData() {
+    parseCouponData() {
       this.formData.name = this.couponData.name
       if (this.couponData.supplierMerchantId !== null) {
         this.selectVendorId = this.couponData.supplierMerchantId
@@ -998,13 +1019,31 @@ export default {
       this.formData.rules.scenario.type = this.couponData.rules.scenario.type
       if (Array.isArray(this.couponData.rules.scenario.couponMpus)) {
         const items = this.couponData.rules.scenario.couponMpus.filter(mpu => !isEmpty(mpu))
-        this.couponData.rules.scenario.couponMpus = [...items]
-        this.formData.rules.scenario.couponMpus = [...items]
+        this.couponData.rules.scenario.couponMpus = [].concat(items)
+        this.formData.rules.scenario.couponMpus = [].concat(items)
+      }
+      if (Array.isArray(this.couponData.rules.scenario.couponSkus)) {
+        const items = this.couponData.rules.scenario.couponSkus.filter(mpu => !isEmpty(mpu))
+        this.couponData.rules.scenario.couponSkus = [].concat(items)
+        this.formData.rules.scenario.couponSkus = [].concat(items)
+      }
+      for (const mpu of this.formData.rules.scenario.couponMpus) {
+        const skus = this.formData.rules.scenario.couponSkus.filter(item => item.mpu === mpu)
+        if (skus.length > 0) {
+          this.couponSkuList = this.couponSkuList.concat(skus)
+        } else {
+          this.couponSkuList.push({ mpu, skuId: null })
+        }
       }
       if (Array.isArray(this.couponData.rules.scenario.excludeMpus)) {
         const items = this.couponData.rules.scenario.excludeMpus.filter(mpu => !isEmpty(mpu))
-        this.couponData.rules.scenario.excludeMpus = [...items]
-        this.formData.rules.scenario.excludeMpus = [...items]
+        this.couponData.rules.scenario.excludeMpus = [].concat(items)
+        this.formData.rules.scenario.excludeMpus = [].concat(items)
+      }
+      if (Array.isArray(this.couponData.rules.scenario.excludeSkus)) {
+        const items = this.couponData.rules.scenario.excludeSkus.filter(mpu => !isEmpty(mpu))
+        this.couponData.rules.scenario.excludeSkus = [].concat(items)
+        this.formData.rules.scenario.excludeSkus = [].concat(items)
       }
       if (Array.isArray(this.couponData.rules.scenario.categories)) {
         const items = this.couponData.rules.scenario.categories.filter(category => !isEmpty(category))
@@ -1030,7 +1069,7 @@ export default {
           if (!Number.isNaN(category)) {
             this.couponData.category = category
           }
-          this.backupCouponData()
+          this.parseCouponData()
           this.couponDataLoaded = true
         }
       } catch (e) {
@@ -1057,18 +1096,35 @@ export default {
     handleDeleteExcludeDate(index) {
       this.formData.excludeDates.splice(index, 1)
     },
+    findIndexSkuList(skuList, toFind) {
+      for (const [index, sku] of skuList.entries()) {
+        if (sku.mpu === toFind.mpu) {
+          if (sku.skuId === null || toFind.skuId === null || sku.skuId === toFind.skuId) {
+            return index
+          }
+        }
+      }
+      return -1
+    },
     handleAddCouponMpus(mpus) {
-      const filterMpus = filter(mpus, mpu => !includes(this.formData.rules.scenario.couponMpus, mpu))
-      if (this.formData.rules.scenario.couponMpus.length + filterMpus.length <= 400) {
-        this.formData.rules.scenario.couponMpus = concat(this.formData.rules.scenario.couponMpus, filterMpus)
+      const filterMpus = mpus.filter(item => this.findIndexSkuList(this.couponSkuList, item) < 0)
+      if (this.couponSkuList.length + filterMpus.length <= 400) {
+        const mpuList = filterMpus.map(item => item.mpu)
+        this.formData.rules.scenario.couponMpus = concat(this.formData.rules.scenario.couponMpus, mpuList)
+        this.formData.rules.scenario.couponSkus = concat(this.formData.rules.scenario.couponSkus, filterMpus)
+        this.couponSkuList = concat(this.couponSkuList, filterMpus)
       } else {
         this.$message.warning('请重新选择活动商品，最多支持400个')
       }
       this.$refs['couponForm'].validateField(['couponMpus'])
     },
     handleDeleteCouponMpus(mpus) {
-      const currents = this.formData.rules.scenario.couponMpus
-      this.formData.rules.scenario.couponMpus = currents.filter(mpu => !mpus.includes(mpu))
+      const currentSkuList = this.couponSkuList
+      this.couponSkuList = currentSkuList.filter(item => this.findIndexSkuList(mpus, item) < 0)
+      this.formData.rules.scenario.couponMpus = this.couponSkuList.map(item => item.mpu)
+      const currentSkus = this.formData.rules.scenario.couponSkus
+      this.formData.rules.scenario.couponSkus = currentSkus.filter(
+        item => this.findIndexSkuList(mpus, item) < 0)
       this.$refs['couponForm'].validateField(['couponMpus'])
     },
     handleAddExcludeMpus(mpus) {
@@ -1091,7 +1147,6 @@ export default {
       }
     },
     handleSetCategory(index, value) {
-      console.debug('index:' + index + ' value:' + value)
       if (value) {
         if (includes(this.formData.rules.scenario.categories, value)) {
           this.$message.warning('此类别已添加，请选择其它类别')
@@ -1114,14 +1169,17 @@ export default {
             break
           case 2: // 全场类
             data.rules.scenario.couponMpus = []
+            data.rules.scenario.couponSkus = []
             data.rules.scenario.categories = []
             break
           case 3: // 特定类别类
             data.rules.scenario.couponMpus = []
+            data.rules.scenario.couponSkus = []
             data.rules.scenario.categories = data.rules.scenario.categories.filter(category => category !== -1)
             break
           case 4: // 特定服务类
             data.rules.scenario.couponMpus = []
+            data.rules.scenario.couponSkus = []
             data.rules.scenario.excludeMpus = []
             data.rules.scenario.categories = []
             break
@@ -1296,6 +1354,7 @@ export default {
         if (!isEmpty(mpu)) {
           this.formData.rules.scenario.type = 1
           this.formData.rules.scenario.couponMpus = [mpu]
+          this.formData.rules.scenario.couponSkus = []
           if (data.meta && data.meta.commodityImage && !this.couponImageSet) {
             this.formData.imageUrl = data.meta.commodityImage
           }

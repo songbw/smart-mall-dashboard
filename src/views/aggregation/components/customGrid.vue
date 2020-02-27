@@ -95,7 +95,7 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
-    gridInfo: function() {
+    gridInfo: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === gridType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {

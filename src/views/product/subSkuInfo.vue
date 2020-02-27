@@ -56,7 +56,7 @@ export default {
     },
     subSku: {
       type: Object,
-      default: function() {
+      default: function () {
         return {}
       }
     }

@@ -176,6 +176,7 @@
     </div>
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
+      :use-default-sku="true"
       @onSelectionCancelled="onGoodsSelectionCancelled"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
@@ -251,7 +252,7 @@ export default {
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
-    goodsInfo: function() {
+    goodsInfo: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === goodsType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {

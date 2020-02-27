@@ -6,7 +6,7 @@
     :show-close="false"
     title="导入商品"
     top="5vh"
-    width="60%"
+    width="70%"
   >
     <input
       ref="excel-upload-input"
@@ -71,7 +71,7 @@
       </el-table-column>
       <el-table-column v-if="productCreation" label="商品SKU" align="center" width="150">
         <template slot-scope="scope">
-          <span>{{ scope.row.skuid }}</span>
+          <span>{{ scope.row.skuId }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品名" align="center">
@@ -181,6 +181,11 @@ const PromotionHeaders = [
 ]
 
 const SkuHeaders = [
+  { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)' },
+  { field: 'skuId', label: '商品SKU', type: 'string', template: '10001234(必填项)' }
+]
+
+const MpuHeaders = [
   { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)' }
 ]
 
@@ -215,6 +220,10 @@ export default {
       default: false
     },
     productPromotion: {
+      type: Boolean,
+      default: false
+    },
+    productSku: {
       type: Boolean,
       default: false
     },
@@ -347,8 +356,10 @@ export default {
         return PromotionHeaders
       } else if (this.updateState) {
         return UpdateStateHeaders
-      } else {
+      } else if (this.productSku) {
         return SkuHeaders
+      } else {
+        return MpuHeaders
       }
     },
     handleTemplate() {
@@ -438,8 +449,10 @@ export default {
         this.parsePromotionData(results)
       } else if (this.updateState) {
         this.parseUpdateStateSkuData(results)
+      } else if (this.productSku) {
+        this.parseSkuData(results)
       } else {
-        this.searchSkuData(results)
+        this.searchMpuData(results)
       }
     },
     parseValue(type, value) {
@@ -579,6 +592,57 @@ export default {
       }
       return mpuList
     },
+    parseSkuList(list, useDefaultSku) {
+      const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
+      const skuList = []
+      for (const spu of list) {
+        const prod = {
+          id: spu.id,
+          mpu: spu.mpu,
+          image: spu.image,
+          name: spu.name,
+          merchantId: spu.merchantId,
+          floorPrice: spu.floorPrice,
+          brand: spu.brand
+        }
+        if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
+          if (useDefaultSku) {
+            const sku = spu.skuList[0]
+            skuList.push({
+              skuId: sku.code,
+              skuIndex: 0,
+              skuNum: spu.skuList.length,
+              skuList: spu.skuList.map(
+                item => ({ skuId: item.code, state: sku.status.toString(), price: centToYuan(item.price) })),
+              state: sku.status.toString(),
+              price: centToYuan(sku.price),
+              ...prod
+            })
+          } else {
+            for (const [index, sku] of spu.skuList.entries()) {
+              skuList.push({
+                skuId: sku.code,
+                skuIndex: index,
+                skuNum: spu.skuList.length,
+                state: sku.status.toString(),
+                price: centToYuan(sku.price),
+                ...prod
+              })
+            }
+          }
+        } else {
+          skuList.push({
+            skuId: spu.skuid,
+            skuIndex: 0,
+            skuNum: 1,
+            state: spu.state,
+            price: spu.price,
+            ...prod
+          })
+        }
+      }
+      return skuList
+    },
     async parseUpdateSkuData(results) {
       const importHeaders = this.hasSalePricePermission
         ? UpdateHeaders : UpdateHeaders.filter(item => item.field !== 'price')
@@ -667,11 +731,12 @@ export default {
       })
       const filterSkus = uniqBy(skus.filter(item => 'mpu' in item && !isEmpty(item.mpu)), 'mpu')
       const mpuList = await this.getProductsByMpuList(filterSkus.map(item => item.mpu))
-      const validMpuList = mpuList.filter(item => this.isSearchProductValid(item))
-      for (const product of validMpuList) {
+      const skuList = this.parseSkuList(mpuList, true)
+      const validSpuList = skuList.filter(item => this.isSearchProductValid(item))
+      for (const product of validSpuList) {
         const promotion = filterSkus.find(item => item.mpu === product.mpu)
         const item = {
-          skuid: product.skuid,
+          skuId: product.skuId,
           mpu: product.mpu,
           price: product.price,
           name: product.name,
@@ -698,13 +763,15 @@ export default {
       msg += `无效商品为${filterSkus.length - parsedSkus.length}个。`
       this.$message.info(msg)
     },
-    async searchSkuData(results) {
-      const parsedMpuList = uniq(results.map(item => this.parseValue(SkuHeaders[0].type, item[SkuHeaders[0].label])))
+    async parseSkuData(results) {},
+    async searchMpuData(results) {
+      const parsedMpuList = uniq(results.map(item => this.parseValue(MpuHeaders[0].type, item[MpuHeaders[0].label])))
       const mpuList = await this.getProductsByMpuList(parsedMpuList)
-      const fetchedSkus = mpuList
+      const skuList = this.parseSkuList(mpuList, true)
+      const fetchedSkus = skuList
         .filter(item => this.isSearchProductValid(item))
         .map(product => ({
-          skuid: product.skuid,
+          skuId: product.skuId,
           mpu: product.mpu,
           price: product.price,
           name: product.name,

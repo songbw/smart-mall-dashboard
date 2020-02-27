@@ -4,7 +4,7 @@ import { getCosStsApi } from '@/api/app'
 const COS = require('cos-js-sdk-v5')
 
 const cos = new COS({
-  getAuthorization: function(options, callback) {
+  getAuthorization: function (options, callback) {
     getCosStsApi().then(data => {
       callback({
         TmpSecretId: data.credentials && data.credentials.tmpSecretId,

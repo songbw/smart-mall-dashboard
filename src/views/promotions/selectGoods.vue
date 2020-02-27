@@ -117,21 +117,21 @@
           type="selection"
           width="55"
         />
-        <el-table-column label="商品MPU" align="center" width="150">
+        <el-table-column label="商品MPU" align="center" width="100">
           <template slot-scope="scope">
             <el-link :href="'/goods/viewProduct/' + scope.row.mpu" target="_blank" type="primary">
               {{ scope.row.mpu }}
             </el-link>
           </template>
         </el-table-column>
+        <el-table-column label="商品SKU" align="center" width="140">
+          <template slot-scope="scope">
+            <span>{{ scope.row.skuid }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="商品名" align="center">
           <template slot-scope="scope">
             <span>{{ scope.row.name }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="商品状态" align="center">
-          <template slot-scope="scope">
-            <span>{{ scope.row.state | productState }}</span>
           </template>
         </el-table-column>
         <el-table-column label="商品价格(元)" align="center" width="120">
@@ -142,7 +142,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="促销价格(元)" align="center" width="250">
+        <el-table-column label="促销价格(元)" align="center" width="200">
           <template slot-scope="scope">
             <template v-if="scope.row.editDiscount">
               <el-input-number
@@ -154,6 +154,7 @@
                 :max="scope.row.price + 1"
                 step-strictly
                 size="mini"
+                style="width: 100px"
                 @input="value => handleSetSecKillPrice(value, scope.row)"
                 @blur="event => handleConfirmEditDiscount(scope.row)"
               />
@@ -245,6 +246,7 @@
       />
       <goods-selection-dialog
         :dialog-visible="dialogSelectionVisible"
+        :use-default-sku="true"
         @onSelectionCancelled="onGoodsSelectionCancelled"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
@@ -612,7 +614,7 @@ export default {
         const discount = 'discount' in sku ? sku.discount : 0
         if (found < 0) {
           const addItem = {
-            skuid: sku.skuid,
+            skuid: sku.skuId,
             mpu: sku.mpu,
             discount,
             scheduleId: this.scheduleId

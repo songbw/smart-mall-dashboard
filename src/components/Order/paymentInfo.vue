@@ -162,7 +162,7 @@ export default {
     }
   },
   watch: {
-    paymentNo: function(val, oldVal) {
+    paymentNo: function (val, oldVal) {
       if (val !== oldVal && isEmpty(val) === false) {
         this.getPayInfoList()
       }

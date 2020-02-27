@@ -112,7 +112,7 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
-    promotionData: function() {
+    promotionData: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === promotionListType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
@@ -122,7 +122,7 @@ export default {
         }
       }
     },
-    promotionList: function() {
+    promotionList: function () {
       return this.promotionData.list
     },
     showTitle: {

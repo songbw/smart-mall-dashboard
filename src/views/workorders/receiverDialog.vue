@@ -186,17 +186,17 @@ export default {
     }
   },
   watch: {
-    returnAddressId: function(val, old) {
+    returnAddressId: function (val, old) {
       if (val >= 0 && val !== old && this.isReturnAddress && this.dialogVisible) {
         this.getReturnAddressData(val)
       }
     },
-    subOrderId: function(val, old) {
+    subOrderId: function (val, old) {
       if (!isEmpty(val)) {
         this.getOrderData(val)
       }
     },
-    dialogVisible: function(val, old) {
+    dialogVisible: function (val, old) {
       if (val && val !== old && this.provinceList.length === 0) {
         this.getProvinceList()
       }

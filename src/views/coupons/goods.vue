@@ -52,6 +52,11 @@
           </el-link>
         </template>
       </el-table-column>
+      <el-table-column label="商品SKU" align="center" width="150">
+        <template slot-scope="scope">
+          {{ scope.row.skuId }}
+        </template>
+      </el-table-column>
       <el-table-column label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
@@ -71,7 +76,7 @@
               size="mini"
               circle
               :disabled="viewOnly"
-              @click="handleDeleteRow(scope.row.mpu)"
+              @click="handleDeleteRow(scope.$index)"
             />
           </el-tooltip>
         </template>
@@ -102,14 +107,13 @@
 
 <script>
 import concat from 'lodash/concat'
-import difference from 'lodash/difference'
+import uniqBy from 'lodash/uniqBy'
 import filter from 'lodash/filter'
-import includes from 'lodash/includes'
-import findIndex from 'lodash/findIndex'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import Pagination from '@/components/Pagination'
 import { getProductsByMpuListApi } from '@/api/products'
+import { parseSkuList } from './utils'
 
 export default {
   name: 'CouponGoods',
@@ -117,7 +121,7 @@ export default {
   props: {
     mpuList: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     },
@@ -148,7 +152,7 @@ export default {
     }
   },
   watch: {
-    mpuList: function(newList, oldList) {
+    mpuList: function (newList, oldList) {
       this.handleFetchSkuInfo(newList)
     }
   },
@@ -170,13 +174,15 @@ export default {
       this.skuPageList = this.skuInfoList.slice(begin, end)
     },
     async handleFetchSkuInfo(mpuList) {
-      this.skuInfoList = filter(this.skuInfoList, item => includes(mpuList, item.mpu))
-      const fetchList = filter(mpuList, mpu => findIndex(this.skuInfoList, item => item.mpu === mpu) < 0)
+      this.skuInfoList = filter(this.skuInfoList, item => this.findIndexSkuList(mpuList, item) >= 0)
+      const fetchList = filter(mpuList, mpu => this.findIndexSkuList(this.skuInfoList, mpu) < 0)
+      let skuInfoList = []
       if (fetchList.length > 0) {
         this.dataLoading = true
-        for (let begin = 0; begin < fetchList.length; begin += 50) {
+        const fetchMpuList = fetchList.map(item => item.mpu)
+        for (let begin = 0; begin < fetchMpuList.length; begin += 50) {
           const params = {
-            mpuIdList: fetchList.slice(begin, begin + 50).join(',')
+            mpuIdList: fetchMpuList.slice(begin, begin + 50).join(',')
           }
           try {
             if (!this.pageMounted) {
@@ -184,25 +190,16 @@ export default {
             }
             const response = await getProductsByMpuListApi(params)
             const data = response.data.result
-            if (data.length > 0) {
-              data.forEach(product => {
-                if (this.isProductValid(product)) {
-                  const item = {
-                    skuid: product.skuid,
-                    mpu: product.mpu,
-                    price: product.price,
-                    imagePath: product.image,
-                    name: product.name,
-                    intro: ''
-                  }
-                  this.skuInfoList.push(item)
-                }
-              })
+            if (Array.isArray(data) && data.length > 0) {
+              const skuList = parseSkuList(data)
+              skuInfoList = concat(skuInfoList, skuList)
             }
           } catch (err) {
             console.warn('Coupon Goods: search error:' + err)
           }
         }
+        const filteredSkuList = skuInfoList.filter(item => this.findIndexSkuList(mpuList, item) >= 0)
+        this.skuInfoList = concat(this.skuInfoList, filteredSkuList)
         this.dataLoading = false
       }
       this.updatePageList()
@@ -212,12 +209,12 @@ export default {
     },
     handleDeleteSelection() {
       if (this.selectedItems.length > 0) {
-        this.$emit('contentDelete', this.selectedItems.map(item => item.mpu))
+        this.$emit('contentDelete', this.selectedItems.map(item => ({ mpu: item.mpu, skuId: item.skuId })))
         this.$refs.skuTable.clearSelection()
       }
     },
-    handleDeleteRow(mpu) {
-      this.$emit('contentDelete', [mpu])
+    handleDeleteRow(index) {
+      this.$emit('contentDelete', [this.skuInfoList[index]])
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
@@ -233,17 +230,22 @@ export default {
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
     },
-    addContentSkus(skus) {
-      const mpus = skus.map(item => item.mpu)
-      const filterMpus = difference(mpus, this.mpuList)
-      if (filterMpus.length > 0) {
-        if (mpus.length === filterMpus.length) {
-          this.skuInfoList = concat(this.skuInfoList, skus)
-        } else {
-          const filterInfoList = filter(skus, item => includes(filterMpus, item.mpu))
-          this.skuInfoList = concat(this.skuInfoList, filterInfoList)
+    findIndexSkuList(skuList, toFind) {
+      for (const [index, sku] of skuList.entries()) {
+        if (sku.mpu === toFind.mpu) {
+          if (sku.skuId === null || toFind.skuId === null || sku.skuId === toFind.skuId) {
+            return index
+          }
         }
-        this.$emit('contentAdd', filterMpus)
+      }
+      return -1
+    },
+    addContentSkus(skus) {
+      const uniqSkuList = uniqBy(skus, item => item.mpu + item.skuId)
+      const filterMpus = uniqSkuList.filter(item => this.findIndexSkuList(this.mpuList, item) < 0)
+      if (filterMpus.length > 0) {
+        this.skuInfoList = concat(this.skuInfoList, filterMpus)
+        this.$emit('contentAdd', filterMpus.map(item => ({ mpu: item.mpu, skuId: item.skuId })))
         this.offset = 1
       }
     },
@@ -252,14 +254,14 @@ export default {
     },
     handleExportGoods() {
       import('@/utils/Export2Excel').then(excel => {
-        const tHeader = ['商品MPU']
-        const filterVal = ['mpu']
+        const tHeader = ['商品MPU', '商品SKU']
+        const filterVal = ['mpu', 'skuId']
         const list = this.skuInfoList
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: `商品列表`
+          filename: `优惠券商品列表`
         })
       })
     }

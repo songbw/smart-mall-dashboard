@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
-export function cosUploadFile(uploadName, uploadFile, onProgress, onFileFinish) {
+export function cosUploadFile(
+  uploadName, uploadFile, onProgress, onFileFinish) {
   Vue.$cos.uploadFiles({
     files: [{
       Bucket: 'iwallet-1258175138',

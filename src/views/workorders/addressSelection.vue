@@ -65,7 +65,7 @@ export default {
     },
     addressList: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     }

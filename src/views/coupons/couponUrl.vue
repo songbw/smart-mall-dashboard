@@ -28,6 +28,7 @@
         :preset-first-category="firstClassCategory"
         :dialog-visible="dialogSelectionVisible"
         :single-selection="true"
+        :use-default-sku="true"
         @onSelectionCancelled="onGoodsSelectionCancelled"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
@@ -115,7 +116,7 @@ export default {
         if (this.url && this.url.startsWith('aggregation://')) {
           return '聚合页ID:' + this.url.substring('aggregation://'.length)
         } else if (this.url && this.url.startsWith('route://commodity')) {
-          return '商品SkuID:' + this.url.substring('route://commodity/'.length)
+          return '商品MPU:' + this.url.substring('route://commodity/'.length)
         } else {
           return ''
         }

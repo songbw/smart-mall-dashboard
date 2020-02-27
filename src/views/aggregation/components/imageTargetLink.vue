@@ -36,6 +36,7 @@
       </el-button>
       <goods-selection-dialog
         :dialog-visible="dialogSelectionVisible"
+        :use-default-sku="true"
         @onSelectionCancelled="onGoodsSelectionCancelled"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
@@ -245,7 +246,7 @@ export default {
     }
   },
   watch: {
-    targetIndex: function(newValue, oldValue) {
+    targetIndex: function (newValue, oldValue) {
       this.originalProp = {
         type: this.targetType,
         name: this.targetName,

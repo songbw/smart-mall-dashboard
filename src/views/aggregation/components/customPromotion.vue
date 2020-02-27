@@ -291,7 +291,7 @@ export default {
         return this.promotionData.list
       }
     },
-    promotionData: function() {
+    promotionData: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === promotionType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
@@ -526,13 +526,7 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item => {
-          if ('mpu' in item) {
-            return this.skuData.findIndex(sku => sku.mpu === item.mpu)
-          } else {
-            return this.skuData.findIndex(sku => sku.skuid === item.skuid)
-          }
-        })
+        this.selectedItems = val.map(item => this.skuData.findIndex(sku => sku.mpu === item.mpu))
       } else {
         this.selectedItems = []
       }

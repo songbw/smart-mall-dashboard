@@ -146,42 +146,55 @@
       ref="productsTable"
       v-loading="listLoading"
       :data="productsData"
+      :span-method="productSpanMethod"
       border
       fit
       style="width: 100%;"
       @selection-change="handleSelectionChange"
     >
       <el-table-column
+        column-key="selection"
         type="selection"
         align="center"
         width="55"
       />
-      <el-table-column label="商品SKU" align="center" width="120">
+      <el-table-column column-key="mpu" label="商品MPU" align="center" width="120">
         <template slot-scope="scope">
           <router-link
             :to="{ name: 'ShowProduct', params: { id: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ scope.row.skuid }}
+            <span>{{ scope.row.mpu }}</span>
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column label="商品MPU" align="center" width="120">
-        <template slot-scope="scope">
-          <span>{{ scope.row.mpu }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="商品图" align="center" width="140">
+      <el-table-column column-key="name" label="商品图" align="center" width="140">
         <template slot-scope="scope">
           <img :src="scope.row.image" class="thumb-image" alt="">
         </template>
       </el-table-column>
-      <el-table-column label="商品名" align="center">
+      <el-table-column column-key="name" label="商品名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="销售价格(元)" align="center" width="160">
+      <el-table-column
+        v-if="hasVendorPermission"
+        column-key="merchant"
+        label="供应商"
+        align="center"
+        width="120"
+      >
+        <template slot-scope="scope">
+          <span>{{ getVendorName(scope.row.merchantId) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column column-key="sku" label="商品SKU" align="center" width="140">
+        <template slot-scope="scope">
+          {{ scope.row.skuId }}
+        </template>
+      </el-table-column>
+      <el-table-column column-key="price" label="销售价格(元)" align="center" width="160">
         <template slot-scope="scope">
           <template v-if="scope.row.editPrice">
             <el-input-number
@@ -226,17 +239,13 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasVendorPermission" label="供应商" align="center" width="120">
-        <template slot-scope="scope">
-          <span>{{ getVendorName(scope.row.merchantId) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" align="center" width="80">
+      <el-table-column column-key="state" label="状态" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.state | productState }}</span>
         </template>
       </el-table-column>
       <el-table-column
+        column-key="ops"
         label="操作"
         align="center"
         width="150"
@@ -676,20 +685,61 @@ export default {
       if (this.listState !== product_state_all) {
         params.state = this.listState
       }
-
+      let total = 0
+      let list = []
       try {
         this.listLoading = true
-        const { data } = await getProductListApi(params)
-        this.productsTotal = data.result.total
-        this.productsData = data.result.list
-        this.productsData.forEach(product => {
-          this.$set(product, 'editPrice', false)
-          this.$set(product, 'originalPrice', product.price)
-        })
+        const { code, data } = await getProductListApi(params)
+        if (code === 200) {
+          total = data.result.total
+          list = data.result.list
+        }
       } catch (e) {
         console.warn(`Get products list error:${e}`)
       } finally {
+        this.productsTotal = total
+        this.setProductList(list)
         this.listLoading = false
+      }
+    },
+    setProductList(list) {
+      const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
+      this.productsData = []
+      for (const spu of list) {
+        const prod = {
+          id: spu.id,
+          mpu: spu.mpu,
+          image: spu.image,
+          name: spu.name,
+          merchantId: spu.merchantId
+        }
+        if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
+          for (const [index, sku] of spu.skuList.entries()) {
+            this.productsData.push({
+              skuId: sku.code,
+              skuIndex: index,
+              skuNum: spu.skuList.length,
+              state: sku.status.toString(),
+              price: centToYuan(sku.price),
+              sprice: centToYuan(sku.sprice),
+              editPrice: false,
+              originalPrice: centToYuan(sku.price),
+              ...prod
+            })
+          }
+        } else {
+          this.productsData.push({
+            skuId: spu.skuid,
+            skuIndex: 0,
+            skuNum: 1,
+            state: spu.state,
+            price: spu.price,
+            sprice: spu.sprice,
+            editPrice: false,
+            originalPrice: spu.price,
+            ...prod
+          })
+        }
       }
     },
     getFilterParams() {
@@ -729,18 +779,20 @@ export default {
       return { ...params }
     },
     async getFilterProducts(params) {
+      let total = 0
+      let list = []
       try {
         this.listLoading = true
-        const { data } = await searchProductsApi(params)
-        this.productsTotal = data.result.total
-        this.productsData = data.result.list
-        this.productsData.forEach(product => {
-          this.$set(product, 'editPrice', false)
-          this.$set(product, 'originalPrice', product.price)
-        })
+        const { code, data } = await searchProductsApi(params)
+        if (code === 200) {
+          total = data.result.total
+          list = data.result.list
+        }
       } catch (e) {
         console.warn(`Get filter products list error:${e}`)
       } finally {
+        this.productsTotal = total
+        this.setProductList(list)
         this.listLoading = false
       }
     },
@@ -958,13 +1010,22 @@ export default {
     handleSelectionChange(selection) {
       this.productSelection = selection
     },
-    async onUpdateStateConfirmed(skus) {
+    productSpanMethod({ row, column, rowIndex, columnIndex }) {
+      const notSpanColumnKeys = ['price', 'sku', 'state']
+      if (!notSpanColumnKeys.includes(column.columnKey) && row.skuNum > 1) {
+        return {
+          rowspan: row.skuIndex === 0 ? row.skuNum : 0,
+          colspan: row.skuIndex === 0 ? 1 : 0
+        }
+      }
+    },
+    async onUpdateStateConfirmed(spuList) {
       this.dialogUpdateStateVisible = false
       try {
         this.listLoading = true
-        for (let i = 0; i < skus.length; i += 100) {
-          const skuList = skus.slice(i, i + 100)
-          await batchUpdateStateApi(skuList)
+        for (let i = 0; i < spuList.length; i += 100) {
+          const spuSlice = spuList.slice(i, i + 100)
+          await batchUpdateStateApi(spuSlice)
         }
       } catch (e) {
         console.warn('Products update product price error:' + e)
@@ -1060,17 +1121,17 @@ export default {
     handleVendorChanged(vendorId) {
       this.listVendor = vendorId
     },
-    async onGoodsImportConfirmed(skus) {
+    async onGoodsImportConfirmed(spuList) {
       this.dialogImportVisible = false
-      if (skus.length > 0) {
+      if (spuList.length > 0) {
         const loading = this.$loading({
           lock: true,
           text: '正在创建商品...',
           spinner: 'el-icon-loading'
         })
-        for (const sku of skus) {
+        for (const spu of spuList) {
           try {
-            await createProductApi(sku)
+            await createProductApi(spu)
           } catch (e) {
             console.warn('Good import creation error:' + e)
           }
@@ -1082,19 +1143,19 @@ export default {
     onGoodsImportCancelled() {
       this.dialogImportVisible = false
     },
-    async onGoodsUpdateConfirmed(skus) {
+    async onGoodsUpdateConfirmed(spuList) {
       this.dialogUpdateVisible = false
-      if (skus.length > 0) {
+      if (spuList.length > 0) {
         const loading = this.$loading({
           lock: true,
           text: '正在更新商品...',
           spinner: 'el-icon-loading'
         })
         const maxNum = 100
-        for (let begin = 0; begin < skus.length; begin += maxNum) {
-          const skuSlice = skus.slice(begin, begin + maxNum)
+        for (let begin = 0; begin < spuList.length; begin += maxNum) {
+          const spuSlice = spuList.slice(begin, begin + maxNum)
           try {
-            await batchUpdateProductsApi(skuSlice)
+            await batchUpdateProductsApi(spuSlice)
           } catch (e) {
             console.warn('Batch update products error:' + e)
           }

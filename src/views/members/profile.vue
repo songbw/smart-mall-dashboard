@@ -379,7 +379,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           let res = null
           if (this.memberBalance !== null) {

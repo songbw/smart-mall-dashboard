@@ -35,7 +35,15 @@ const actions = {
       return { status: company.status, id: company.id }
     } catch (_) {
       commit('SET_VENDOR_PROFILE',
-        { id: -1, name: '', address: '', industry: '', licenseUrl: '', status: 0, comments: '' }
+        {
+          id: -1,
+          name: '',
+          address: '',
+          industry: '',
+          licenseUrl: '',
+          status: 0,
+          comments: ''
+        }
       )
       return { status: 0, id: -1 }
     }

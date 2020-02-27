@@ -83,7 +83,7 @@ export default {
   props: {
     gridInfo: {
       type: Object,
-      default: function() {
+      default: function () {
         return {
           count: 1,
           grids: [

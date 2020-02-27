@@ -286,7 +286,7 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
-    comboInfo: function() {
+    comboInfo: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === comboType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {

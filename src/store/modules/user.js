@@ -47,7 +47,8 @@ const mutations = {
     if (isEmpty(permissions)) {
       state.permissions = []
     } else {
-      state.permissions = permissions.split(',').filter(item => isEmpty(item.trim()) === false)
+      state.permissions = permissions.split(',')
+        .filter(item => isEmpty(item.trim()) === false)
     }
   }
 }
@@ -86,14 +87,16 @@ const actions = {
     const name = params.username.trim()
     const phone = params.phone
     const code = params.code
-    const data = await registerApi({ name, phone, password: params.password.trim(), code })
+    const data = await registerApi(
+      { name, phone, password: params.password.trim(), code })
     return data.token
   },
   async passwordNew({ commit }, params) {
     const name = params.username.trim()
     const phone = params.phone
     const code = params.code
-    const data = await passwordNewApi({ name, phone, password: params.password.trim(), code })
+    const data = await passwordNewApi(
+      { name, phone, password: params.password.trim(), code })
     return data.id
   },
   async passwordChange({ commit }, params) {

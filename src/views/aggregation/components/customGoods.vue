@@ -87,11 +87,7 @@
 import { mapGetters } from 'vuex'
 import isNumber from 'lodash/isNumber'
 import GoodsFloor from './goodsFloor'
-import {
-  goodsType,
-  goodsSettings,
-  goodPropOptions
-} from './templateType'
+import { goodPropOptions, goodsSettings, goodsType } from './templateType'
 
 export default {
   name: 'CustomGoods',
@@ -111,7 +107,7 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
-    goodsInfo: function() {
+    goodsInfo: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === goodsType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
@@ -305,7 +301,7 @@ export default {
     onGoodsFloorContentChanged(floorIndex, params) {
       const floor = {}
       floor.skus = this.goodsList[floorIndex].skus.concat([])
-      floor.skus[params.index].intro = params.intro
+      floor.skus[params.index] = { ...floor.skus[params.index], intro: params.intro }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentSort(floorIndex, params) {

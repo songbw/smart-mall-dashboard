@@ -151,7 +151,7 @@ export default {
   props: {
     skuList: {
       type: Array,
-      default: function() {
+      default: function () {
         return []
       }
     }
@@ -175,7 +175,7 @@ export default {
     }
   },
   watch: {
-    skuList: function(val, oldVal) {
+    skuList: function (val, oldVal) {
       if (val.length > 0) {
         this.getLogisticsInfo()
       }

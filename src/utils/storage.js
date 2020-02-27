@@ -5,7 +5,7 @@ const secret = 'fc-mall-9527'
 const simpleCrypto = new SimpleCrypto(secret)
 const storageMap = new Map()
 
-const storageSetItem = async function(key, value) {
+const storageSetItem = async function (key, value) {
   if (value !== null) {
     await localForage.removeItem(key)
     await localForage.setItem(key, simpleCrypto.encrypt(value))
@@ -13,7 +13,7 @@ const storageSetItem = async function(key, value) {
   }
 }
 
-const storageGetItem = async function(key) {
+const storageGetItem = async function (key) {
   if (storageMap.has(key)) {
     return storageMap.get(key)
   } else {
@@ -22,7 +22,7 @@ const storageGetItem = async function(key) {
   }
 }
 
-const storageRemoveItem = async function(key) {
+const storageRemoveItem = async function (key) {
   await localForage.removeItem(key)
   storageMap.delete(key)
 }

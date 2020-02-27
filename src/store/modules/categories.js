@@ -8,9 +8,11 @@ import {
 } from '@/api/categories'
 
 const findCategoryByRelationID = (categoryTree, relation) => {
-  const parentCategory = categoryTree.find(item => item.categoryId === relation.parentId)
+  const parentCategory = categoryTree.find(
+    item => item.categoryId === relation.parentId)
   if (parentCategory) {
-    return parentCategory.subs.find(item => item.categoryId === relation.categoryId)
+    return parentCategory.subs.find(
+      item => item.categoryId === relation.categoryId)
   }
   return null
 }
@@ -24,7 +26,8 @@ const deleteCategoryFromTree = (tree, category) => {
 const deleteCategoryFromParent = (tree, category) => {
   const parent = tree.find(item => item.categoryId === category.parentId)
   if (parent) {
-    const index = parent.subs.findIndex(item => item.categoryId === category.categoryId)
+    const index = parent.subs.findIndex(
+      item => item.categoryId === category.categoryId)
     if (index >= 0) {
       parent.subs.splice(index, 1)
       parent.subTotal--
@@ -59,11 +62,13 @@ const mutations = {
     let category = null
     switch (classId) {
       case '1': {
-        category = state.categoriesTree.find(item => item.categoryId === categoryId)
+        category = state.categoriesTree.find(
+          item => item.categoryId === categoryId)
         break
       }
       case '2': {
-        category = state.secondClassTree.find(item => item.categoryId === categoryId)
+        category = state.secondClassTree.find(
+          item => item.categoryId === categoryId)
         break
       }
       case '3': {
@@ -98,7 +103,8 @@ const mutations = {
           category.subs = []
           category.subTotal = 0
         }
-        const parent = state.categoriesTree.find(item => item.categoryId === category.parentId)
+        const parent = state.categoriesTree.find(
+          item => item.categoryId === category.parentId)
         if (parent) {
           parent.subs.push(category)
           parent.subTotal++
@@ -107,7 +113,8 @@ const mutations = {
         break
       }
       case '3': {
-        const parent = state.secondClassTree.find(item => item.categoryId === category.parentId)
+        const parent = state.secondClassTree.find(
+          item => item.categoryId === category.parentId)
         if (parent) {
           parent.subs.push(category)
           parent.subTotal++
@@ -166,7 +173,8 @@ const actions = {
             break
           }
           case '2': {
-            const first = firstClassList.find(category => category.categoryId === item.parentId)
+            const first = firstClassList.find(
+              category => category.categoryId === item.parentId)
             if (first) {
               first.subs.push(item)
               secondClassList.push(item)
@@ -177,7 +185,8 @@ const actions = {
             break
           }
           case '3': {
-            const second = secondClassList.find(category => category.categoryId === item.parentId)
+            const second = secondClassList.find(
+              category => category.categoryId === item.parentId)
             if (second) {
               second.subs.push(item)
               delete item.subs

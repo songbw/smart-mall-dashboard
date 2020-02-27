@@ -333,7 +333,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         try {
           const { code, msg } = await rechargeMemberBalanceApi({
             id: this.rechargeId, amount: amount * 100, username: this.userName

@@ -18,8 +18,9 @@ function generateArray(table) {
       if (cellValue !== '' && cellValue == +cellValue) cellValue = +cellValue
 
       //Skip ranges
-      ranges.forEach(function(range) {
-        if (R >= range.s.r && R <= range.e.r && outRow.length >= range.s.c && outRow.length <= range.e.c) {
+      ranges.forEach(function (range) {
+        if (R >= range.s.r && R <= range.e.r && outRow.length >= range.s.c &&
+          outRow.length <= range.e.c) {
           for (var i = 0; i <= range.e.c - range.s.c; ++i) outRow.push(null)
         }
       })
@@ -150,14 +151,14 @@ export function export_table_to_excel(id) {
 }
 
 export function export_json_to_excel({
-                                       multiHeader = [],
-                                       header,
-                                       data,
-                                       filename,
-                                       merges = [],
-                                       autoWidth = true,
-                                       bookType = 'xlsx'
-                                     } = {}) {
+  multiHeader = [],
+  header,
+  data,
+  filename,
+  merges = [],
+  autoWidth = true,
+  bookType = 'xlsx'
+} = {}) {
   /* original data */
   filename = filename || 'excel-list'
   data = [...data]

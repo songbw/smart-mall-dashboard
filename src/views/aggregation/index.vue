@@ -408,7 +408,7 @@ export default {
     }
   },
   watch: {
-    appId: function(value, old) {
+    appId: function (value, old) {
       this.queryOffset = 1
       this.currentGroup = '-1'
       this.prepareAggregationData()

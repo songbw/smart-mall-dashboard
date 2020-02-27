@@ -65,7 +65,10 @@ const cloneList = (list, type) => {
         if (urlResetTypes.includes(floor.titleTargetType)) {
           const { skus, ...title } = floor
           const newTitle = {
-            ...title, titleTargetType: 'blank', titleTargetUrl: 'about:blank', titleTargetName: '无链接'
+            ...title,
+            titleTargetType: 'blank',
+            titleTargetUrl: 'about:blank',
+            titleTargetName: '无链接'
           }
           return { skus, ...newTitle }
         } else {
@@ -110,7 +113,12 @@ const cloneSettings = (settings, type) => {
         const { text, ...rest } = title
         return {
           title: {
-            text: { ...text, linkType: 'blank', linkTitle: '无链接', linkUrl: 'about:blank' },
+            text: {
+              ...text,
+              linkType: 'blank',
+              linkTitle: '无链接',
+              linkUrl: 'about:blank'
+            },
             ...rest
           },
           marginBottom
@@ -205,7 +213,8 @@ const cloneTemplate = (srcAppId, dstAppId, template) => {
 
 const isProductValid = (product) => {
   const price = Number.parseFloat(product.price)
-  return !Number.isNaN(price) && price > 0 && Number.parseInt(product.state) === product_state_on_sale
+  return !Number.isNaN(price) && price > 0 && Number.parseInt(product.state) ===
+    product_state_on_sale
 }
 
 async function filterOnSaleMpuList(mpuList) {
@@ -219,7 +228,8 @@ async function filterOnSaleMpuList(mpuList) {
         const { code, data } = await getProductsByMpuListApi(params)
         if (code === 200 && data.result.length > 0) {
           onSaleList = onSaleList.concat(
-            data.result.filter(item => isProductValid(item)).map(item => item.mpu)
+            data.result.filter(item => isProductValid(item))
+              .map(item => item.mpu)
           )
         }
       } catch (err) {
@@ -244,7 +254,8 @@ async function reviseList(list, type) {
       for (const listItem of list) {
         const { skus, ...rest } = listItem
         if (Array.isArray(skus)) {
-          const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu))
+          const onSaleList = await filterOnSaleMpuList(
+            skus.map(item => item.mpu))
           newList.push({
             skus: skus.filter(item => onSaleList.includes(item.mpu)),
             ...rest
@@ -269,7 +280,15 @@ async function reviseTemplate(template) {
 }
 
 const templateKeys = [
-  'id', 'status', 'name', 'homePage', 'effectiveDate', 'backgroundColor', 'header', 'groupId', 'appId'
+  'id',
+  'status',
+  'name',
+  'homePage',
+  'effectiveDate',
+  'backgroundColor',
+  'header',
+  'groupId',
+  'appId'
 ]
 
 const template = {
@@ -322,14 +341,26 @@ const mutations = {
           const { list, settings } = data
           const newList = list.map(floor => ({
             title: floor.title,
-            titleImageUrl: 'titleImageUrl' in floor ? floor.titleImageUrl : null,
-            skuBackgroundColor: 'skuBackgroundColor' in floor ? floor.skuBackgroundColor : null,
-            titleTargetType: 'titleTargetType' in floor ? floor.titleTargetType : 'blank',
-            titleTargetUrl: 'titleTargetUrl' in floor ? floor.titleTargetUrl : 'about:blank',
-            titleTargetName: 'titleTargetName' in floor ? floor.titleTargetName : '无链接',
+            titleImageUrl: 'titleImageUrl' in floor
+              ? floor.titleImageUrl
+              : null,
+            skuBackgroundColor: 'skuBackgroundColor' in floor
+              ? floor.skuBackgroundColor
+              : null,
+            titleTargetType: 'titleTargetType' in floor
+              ? floor.titleTargetType
+              : 'blank',
+            titleTargetUrl: 'titleTargetUrl' in floor
+              ? floor.titleTargetUrl
+              : 'about:blank',
+            titleTargetName: 'titleTargetName' in floor
+              ? floor.titleTargetName
+              : '无链接',
             skus: floor.skus
           }))
-          settings.showFloorTitle = 'showFloorTitle' in settings ? settings.showFloorTitle : true
+          settings.showFloorTitle = 'showFloorTitle' in settings
+            ? settings.showFloorTitle
+            : true
           settings.marginTop = 'marginTop' in settings ? settings.marginTop : 0
           return { data: { list: newList, settings }, ...rest }
         } else {
@@ -546,7 +577,8 @@ const actions = {
         const content = JSON.parse(data.result.content)
         await updateAggregationContentApi({
           id: cloneId,
-          content: JSON.stringify(content.map(item => cloneTemplate(data.result.appId, params.appId, item)))
+          content: JSON.stringify(content.map(
+            item => cloneTemplate(data.result.appId, params.appId, item)))
         })
         return cloneId
       }

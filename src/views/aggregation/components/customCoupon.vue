@@ -187,7 +187,7 @@ export default {
     pageAppId() {
       return this.pageInfo.appId
     },
-    couponData: function() {
+    couponData: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === couponType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {

@@ -166,6 +166,7 @@
     </el-table>
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
+      :use-default-sku="true"
       @onSelectionCancelled="onGoodsSelectionCancelled"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
@@ -241,7 +242,7 @@ export default {
         return this.horizontalGoodData.list
       }
     },
-    horizontalGoodData: function() {
+    horizontalGoodData: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === horizontalGoodType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
@@ -384,13 +385,7 @@ export default {
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selectedItems = val.map(item => {
-          if ('mpu' in item) {
-            return this.skuData.findIndex(sku => sku.mpu === item.mpu)
-          } else {
-            return this.skuData.findIndex(sku => sku.skuid === item.skuid)
-          }
-        })
+        this.selectedItems = val.map(item => this.skuData.findIndex(sku => sku.mpu === item.mpu))
       } else {
         this.selectedItems = []
       }
