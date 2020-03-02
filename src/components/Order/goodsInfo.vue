@@ -65,14 +65,9 @@
                 <span>{{ scope.row.num }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="减活动价格(元)" align="center" width="140">
+            <el-table-column label="价格(元)" align="center" width="140">
               <template slot-scope="scope">
                 <span>{{ scope.row.unitPrice }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="支付价格(元)" align="center" width="120">
-              <template slot-scope="scope">
-                <span>{{ scope.row.salePrice }}</span>
               </template>
             </el-table-column>
             <el-table-column label="活动减价(元)" align="center" width="120">
@@ -85,6 +80,11 @@
                 >
                   查看活动
                 </router-link>
+              </template>
+            </el-table-column>
+            <el-table-column label="支付总额(元)" align="center" width="120">
+              <template slot-scope="scope">
+                <span>{{ scope.row | amountFilter }}</span>
               </template>
             </el-table-column>
             <el-table-column label="优惠券减价(元)" align="center" width="140">
@@ -141,6 +141,21 @@ export default {
         return ''
       } else {
         return (yuan / 100).toFixed(2)
+      }
+    },
+    amountFilter: sku => {
+      const price = Number.parseFloat(sku.unitPrice)
+      const num = Number.parseInt(sku.num)
+      if (isNaN(price) || isNaN(num)) {
+        return ''
+      } else {
+        const amount = price * 100 * num // yun to cent
+        const couponDiscount = Number.parseFloat(sku.skuCouponDiscount)
+        if (isNaN(couponDiscount) || couponDiscount < 0) {
+          return (amount / 100).toFixed(2)
+        } else {
+          return ((amount - couponDiscount) / 100).toFixed(2)
+        }
       }
     },
     statusFilter: status => {
