@@ -13,13 +13,13 @@
     "svgo": "svgo -f src/icons/svg"
   },
   "dependencies": {
-    "axios": "^0.19.1",
+    "axios": "^0.19.2",
     "core-js": "^3.6.4",
-    "cos-js-sdk-v5": "^0.5.22",
+    "cos-js-sdk-v5": "^0.5.23",
     "echarts": "^4.6.0",
     "element-ui": "^2.13.0",
     "file-saver": "^2.0.2",
-    "google-libphonenumber": "^3.2.6",
+    "google-libphonenumber": "^3.2.7",
     "localforage": "^1.7.3",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",

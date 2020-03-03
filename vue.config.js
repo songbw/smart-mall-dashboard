@@ -73,7 +73,7 @@ module.exports = {
           {
             name: 'axios',
             var: 'axios',
-            version: '0.19.1',
+            version: '0.19.2',
             path: 'dist/axios.min.js'
           },
           {
@@ -97,13 +97,13 @@ module.exports = {
           {
             name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '3.2.6',
+            version: '3.2.7',
             path: 'dist/libphonenumber.min.js'
           },
           {
             name: 'cos-js-sdk-v5',
             var: 'COS',
-            version: '0.5.22',
+            version: '0.5.23',
             path: 'dist/cos-js-sdk-v5.min.js'
           },
           {
