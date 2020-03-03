@@ -63,12 +63,12 @@
         align="center"
         width="55"
       />
-      <el-table-column label="提货券编码" align="center">
+      <el-table-column label="提货券编码" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.card }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="提货券密码" align="center">
+      <el-table-column label="提货券密码" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.password }}</span>
         </template>
@@ -83,14 +83,11 @@
           <span>{{ scope.row.openId }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="激活时间" align="center" width="180">
+      <el-table-column label="提货券时间" align="center" width="220">
         <template slot-scope="scope">
-          <span>{{ scope.row.activateTime | timeFormat }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="使用时间" align="center" width="180">
-        <template slot-scope="scope">
-          <span>{{ scope.row.consumedTime | timeFormat }}</span>
+          <div v-if="scope.row.activateTime">激活：{{ scope.row.activateTime | timeFormat }}</div>
+          <div v-if="scope.row.endTime">过期：{{ scope.row.endTime | timeFormat }}</div>
+          <div v-if="scope.row.consumedTime">使用：{{ scope.row.consumedTime | timeFormat }}</div>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" width="100">

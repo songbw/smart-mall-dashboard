@@ -1,6 +1,6 @@
 <template>
   <div v-loading="dataLoading" class="app-container">
-    <el-form ref="couponForm" :model="formData" :rules="viewOnly ? {} : formRules" label-width="120px">
+    <el-form ref="couponForm" :model="formData" :rules="formRules" label-width="120px">
       <el-divider content-position="left"><span class="divider-text">基础信息</span></el-divider>
       <el-form-item label="优惠券供应商" prop="supplierMerchantId">
         <span v-if="viewOnly">{{ formData.supplierMerchantName }}</span>
@@ -507,6 +507,9 @@
         <el-button v-if="!viewOnly" v-loading="inSubmitting" type="primary" @click="handleSubmit">
           {{ createCoupon ? '创建' : '保存' }}
         </el-button>
+        <el-button v-if="viewOnly" type="info" @click="handleViewUsage">
+          领取记录
+        </el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -575,7 +578,7 @@ export default {
       vendorOptions: [],
       dataLoading: false,
       createCoupon: false,
-      viewOnly: false,
+      viewOnly: true,
       couponDataLoaded: false,
       couponId: -1,
       inSubmitting: false,
@@ -648,7 +651,7 @@ export default {
       formRules: {
         supplierMerchantId: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value === null) {
+            if (!this.viewOnly && value === null) {
               callback(new Error('请选择的优惠券供应商'))
             } else {
               callback()
@@ -657,7 +660,7 @@ export default {
         }],
         name: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (isEmpty(value)) {
+            if (!this.viewOnly && isEmpty(value)) {
               callback(new Error('请输入有效的优惠券名称'))
             } else {
               callback()
@@ -666,7 +669,7 @@ export default {
         }],
         code: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.autoCode) {
+            if (this.autoCode || this.viewOnly) {
               callback()
             } else {
               if (isEmpty(this.formData.rules.code)) {
@@ -679,87 +682,103 @@ export default {
         }],
         releaseStartDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value && this.formData.releaseEndDate &&
-              moment(value).isAfter(this.formData.releaseEndDate)) {
-              callback(new Error('开始时间必须早于结束时间'))
+            if (this.viewOnly) {
+              callback()
             } else {
-              if (value) {
-                const now = moment()
-                if (moment(value).isBefore(now)) {
-                  callback(new Error('开始时间必须晚于当前时间'))
-                } else {
-                  callback()
-                }
+              if (value && this.formData.releaseEndDate &&
+                moment(value).isAfter(this.formData.releaseEndDate)) {
+                callback(new Error('开始时间必须早于结束时间'))
               } else {
-                callback(new Error('请选择上线的开始日期和时间'))
+                if (value) {
+                  const now = moment()
+                  if (moment(value).isBefore(now)) {
+                    callback(new Error('开始时间必须晚于当前时间'))
+                  } else {
+                    callback()
+                  }
+                } else {
+                  callback(new Error('请选择上线的开始日期和时间'))
+                }
               }
             }
           }
         }],
         releaseEndDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            const now = moment()
-            const startDate = moment(this.formData.releaseStartDate).add(1, 'hours')
-            if (value && this.formData.releaseStartDate &&
-              moment(value).isBefore(startDate)) {
-              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
-            } else if (value && moment(value).isBefore(now)) {
-              callback(new Error('结束时间必须晚于当前时间'))
+            if (this.viewOnly) {
+              callback()
             } else {
-              if (value) {
-                callback()
+              const now = moment()
+              const startDate = moment(this.formData.releaseStartDate).add(1, 'hours')
+              if (value && this.formData.releaseStartDate &&
+                moment(value).isBefore(startDate)) {
+                callback(new Error('结束时间必须晚于开始时间至少一个小时'))
+              } else if (value && moment(value).isBefore(now)) {
+                callback(new Error('结束时间必须晚于当前时间'))
               } else {
-                callback(new Error('请选择上线的结束日期和时间'))
+                if (value) {
+                  callback()
+                } else {
+                  callback(new Error('请选择上线的结束日期和时间'))
+                }
               }
             }
           }
         }],
         effectiveStartDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value && this.formData.effectiveEndDate &&
-              moment(value).isAfter(this.formData.effectiveEndDate)) {
-              callback(new Error('开始时间必须早于结束时间'))
+            if (this.viewOnly) {
+              callback()
             } else {
-              if (value) {
-                const now = moment()
-                if (moment(value).isBefore(now)) {
-                  callback(new Error('开始时间必须晚于当前时间'))
-                } else if (this.formData.releaseStartDate &&
-                  moment(value).isBefore(this.formData.releaseStartDate)) {
-                  callback(new Error('有效开始时间必须晚于上线开始时间'))
-                } else {
-                  callback()
-                }
+              if (value && this.formData.effectiveEndDate &&
+                moment(value).isAfter(this.formData.effectiveEndDate)) {
+                callback(new Error('开始时间必须早于结束时间'))
               } else {
-                callback(new Error('请选择有效期的开始日期和时间'))
+                if (value) {
+                  const now = moment()
+                  if (moment(value).isBefore(now)) {
+                    callback(new Error('开始时间必须晚于当前时间'))
+                  } else if (this.formData.releaseStartDate &&
+                    moment(value).isBefore(this.formData.releaseStartDate)) {
+                    callback(new Error('有效开始时间必须晚于上线开始时间'))
+                  } else {
+                    callback()
+                  }
+                } else {
+                  callback(new Error('请选择有效期的开始日期和时间'))
+                }
               }
             }
           }
         }],
         effectiveEndDate: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            const now = moment()
-            const startDate = moment(this.formData.effectiveStartDate).add(1, 'hours')
-            if (value && this.formData.effectiveStartDate &&
-              moment(value).isBefore(startDate)) {
-              callback(new Error('结束时间必须晚于开始时间至少一个小时'))
-            } else if (value && moment(value).isBefore(now)) {
-              callback(new Error('结束时间必须晚于当前时间'))
-            } else if (value && this.formData.releaseEndDate &&
-              moment(value).isBefore(this.formData.releaseEndDate)) {
-              callback(new Error('结束时间必须晚于上线结束时间'))
+            if (this.viewOnly) {
+              callback()
             } else {
-              if (value) {
-                callback()
+              const now = moment()
+              const startDate = moment(this.formData.effectiveStartDate).add(1, 'hours')
+              if (value && this.formData.effectiveStartDate &&
+                moment(value).isBefore(startDate)) {
+                callback(new Error('结束时间必须晚于开始时间至少一个小时'))
+              } else if (value && moment(value).isBefore(now)) {
+                callback(new Error('结束时间必须晚于当前时间'))
+              } else if (value && this.formData.releaseEndDate &&
+                moment(value).isBefore(this.formData.releaseEndDate)) {
+                callback(new Error('结束时间必须晚于上线结束时间'))
               } else {
-                callback(new Error('请选择有效期的结束日期和时间'))
+                if (value) {
+                  callback()
+                } else {
+                  callback(new Error('请选择有效期的结束日期和时间'))
+                }
               }
             }
           }
         }],
         releaseTotal: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value > 0) {
+            if (this.viewOnly || value > 0) {
               callback()
             } else {
               callback(new Error('请输入有效的发放总数'))
@@ -768,7 +787,7 @@ export default {
         }],
         category: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.selectCategoryId !== '') {
+            if (this.viewOnly || this.selectCategoryId !== '') {
               callback()
             } else {
               // Check type 全场类
@@ -784,7 +803,8 @@ export default {
         couponMpus: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
             // Check type 全场类
-            if (this.formData.rules.scenario.type === 1 &&
+            if (!this.viewOnly &&
+              this.formData.rules.scenario.type === 1 &&
               this.formData.rules.scenario.couponMpus.length === 0) {
               callback(new Error('请选择此优惠券的活动商品'))
             } else {
@@ -797,7 +817,7 @@ export default {
             // Check type 全场类
             const categories = this.formData.rules.scenario.categories
               .filter(category => category !== -1)
-            if (this.formData.rules.scenario.type === 3 && categories.length === 0) {
+            if (!this.viewOnly && this.formData.rules.scenario.type === 3 && categories.length === 0) {
               callback(new Error('请选择此优惠券的活动类别'))
             } else {
               callback()
@@ -806,7 +826,8 @@ export default {
         }],
         url: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value.startsWith('aggregation://') ||
+            if (this.viewOnly ||
+              value.startsWith('aggregation://') ||
               value.startsWith('route://') ||
               value.startsWith('about:blank') ||
               validateURL(value)) {
@@ -1422,6 +1443,13 @@ export default {
         fields.push('effectiveEndDate')
       }
       this.$refs['couponForm'].validateField(fields)
+    },
+    handleViewUsage() {
+      const id = this.couponData.id
+      this.$router.push({
+        name: 'CouponUsages',
+        params: { id }
+      })
     }
   }
 }

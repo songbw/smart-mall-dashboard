@@ -110,6 +110,9 @@
         <el-button v-if="!viewOnly" v-loading="dataLoading" type="primary" @click="handleSubmit">
           {{ createBarterCard ? '创建' : '保存' }}
         </el-button>
+        <el-button v-if="viewOnly" type="info" @click="handleViewTickets">
+          提货券记录
+        </el-button>
       </el-form-item>
     </el-form>
     <coupon-selection
@@ -434,6 +437,13 @@ export default {
             this.handleUpdateBarterCard()
           }
         }
+      })
+    },
+    handleViewTickets() {
+      const id = this.barterCardId
+      this.$router.push({
+        name: 'BarterCardTickets',
+        params: { id }
       })
     }
   }
