@@ -278,6 +278,11 @@
               <span>{{ scope.row.skuId }}</span>
             </template>
           </el-table-column>
+          <el-table-column v-if="couldRefreshInventory" label="品种库存" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.inventory }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="销售价(元)" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.price | centFilter }}</span>
@@ -508,7 +513,8 @@ import {
   updateProductApi,
   searchProductsApi,
   getDetailInfoByMpuApi,
-  updateSubSkuApi
+  updateSubSkuApi,
+  getInventoryBySkuCodesApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -786,6 +792,9 @@ export default {
     couldUpdateInventory() {
       return this.productForm.merchantId !== vendorYiyatong && this.productForm.merchantId !== vendorAoyi
     },
+    couldRefreshInventory() {
+      return this.opType !== OP_CREATE && this.productForm.merchantId === vendorYiyatong
+    },
     floorPrice: {
       get() {
         if (this.productForm.floorPrice >= 0) {
@@ -880,6 +889,26 @@ export default {
         }
       }
     },
+    async getInventoryBySkuCodes(skuList) {
+      try {
+        const codeList = skuList.map(item => item.code)
+        const params = {
+          codes: codeList.join(',')
+        }
+        const { code, data } = await getInventoryBySkuCodesApi(params)
+        if (code === 200) {
+          for (const skuItem of data.skuInvList) {
+            const find = skuList.find(item => item.code === skuItem.code)
+            if (find) {
+              find.inventory = skuItem.inventoryCount
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Get inventory by sku codes error:' + e)
+      }
+      return skuList
+    },
     async getDetailInfo(mpu) {
       try {
         const { code, data } = await getDetailInfoByMpuApi({ mpu })
@@ -892,6 +921,11 @@ export default {
             prod.imagesUrl = ''
           }
           prod.introduction = decode(prod.introduction)
+          if (prod.merchantId === vendorYiyatong &&
+            Array.isArray(prod.skuList) &&
+            prod.skuList.length > 0) {
+            prod.skuList = await this.getInventoryBySkuCodes(prod.skuList)
+          }
           return prod
         }
       } catch (e) {
