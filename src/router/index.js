@@ -424,8 +424,20 @@ export const constantRoutes = [
         }
       },
       {
-        path: 'profile/:id',
+        path: 'memberProfile/:id',
         name: 'MemberProfile',
+        component: () => import('@/views/members/profile'),
+        meta: {
+          title: '会员详情',
+          icon: 'member-profile',
+          group: 'members',
+          roles: [role_admin_name, role_watcher_name]
+        },
+        hidden: true
+      },
+      {
+        path: 'openIdProfile/:openId',
+        name: 'OpenIdProfile',
         component: () => import('@/views/members/profile'),
         meta: {
           title: '会员详情',
@@ -444,8 +456,7 @@ export const constantRoutes = [
           icon: 'balances',
           group: 'members',
           roles: [role_admin_name, role_watcher_name]
-        },
-        hidden: process.env.VUE_APP_HOST !== 'WX-MALL'
+        }
       }
     ]
   },

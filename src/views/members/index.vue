@@ -1,5 +1,13 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="queryAppId" type="card" @tab-click="onAppIdChanged">
+      <el-tab-pane
+        v-for="item in appIdOptions"
+        :key="item.appId"
+        :label="item.name"
+        :name="item.appId"
+      />
+    </el-tabs>
     <el-form inline @submit.prevent.native="() => {}">
       <el-form-item label="会员名">
         <el-input
@@ -117,10 +125,20 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
+      platformAppList: 'platformAppList',
+      validAppList: 'validAppList',
       listQuery: 'membersQuery'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(MemberPermissions.view)
+    },
+    queryAppId: {
+      get() {
+        return this.listQuery.appId
+      },
+      set(value) {
+        this.$store.commit('members/SET_MEMBERS_QUERY', { appId: value })
+      }
     },
     queryName: {
       get() {
@@ -153,10 +171,20 @@ export default {
       set(value) {
         this.$store.commit('members/SET_MEMBERS_QUERY', { pageSize: value })
       }
+    },
+    appIdOptions() {
+      if (this.showAllAppIdList) {
+        return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+      } else {
+        return this.validAppList
+      }
+    },
+    showAllAppIdList() {
+      return this.validAppList.length === this.platformAppList.length
     }
   },
   created() {
-    this.getMemberList()
+    this.prepareData()
   },
   beforeRouteLeave(to, from, next) {
     const toGroup = to.meta.group || ''
@@ -166,6 +194,22 @@ export default {
     next()
   },
   methods: {
+    async prepareData() {
+      await this.getAppPlatformList()
+      await this.getMemberList()
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+        if (!this.showAllAppIdList) {
+          this.queryAppId = this.validAppList.length > 0 ? this.validAppList[0].appId : 'invalid'
+        }
+      } catch (e) {
+        console.warn('Order get app list error:' + e)
+      }
+    },
     async getMemberList() {
       if (this.hasViewPermission) {
         try {
@@ -178,6 +222,9 @@ export default {
           }
           if (!isEmpty(this.queryTelephone)) {
             params.telephone = this.queryTelephone
+          }
+          if (this.queryAppId !== 'all') {
+            params.appId = this.queryAppId
           }
           this.listLoading = true
           const { data } = await getMemberListApi(params)
@@ -200,6 +247,12 @@ export default {
     },
     handleViewMember(id) {
       this.$router.push({ name: 'MemberProfile', params: { id }})
+    },
+    onAppIdChanged(platform) {
+      if (this.queryAppId !== platform.appId) {
+        this.queryPageNo = 1
+        this.getMemberList()
+      }
     }
   }
 }

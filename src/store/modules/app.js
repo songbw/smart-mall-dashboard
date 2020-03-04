@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty'
 import { getCosUrlApi } from '@/api/app'
-import { storage_platform_id } from '@/utils/constants'
+import { storage_platform_id, wuxi_app_id } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
 import { getAppPlatformListApi } from '@/api/products'
 import { getProfileApi } from '@/api/vendor'
@@ -25,7 +25,7 @@ const state = {
     opened: true
   },
   ready: false,
-  platformId: '11', // For WuXi Mall
+  platformId: wuxi_app_id, // For WuXi Mall
   needSettings: true,
   cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
   platformList: [],

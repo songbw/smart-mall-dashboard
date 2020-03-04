@@ -12,9 +12,7 @@ const isDev = process.env.NODE_ENV === 'development'
 const moment = require('moment')
 process.env.VUE_APP_VERSION = require('./package.json').version + '.' + moment().format('MMDD-HHmm')
 
-const nameGatSn = process.env.VUE_APP_HOST === 'GAT-SN' ? defaultSettings.titleGatSn : ''
-const nameGatZy = process.env.VUE_APP_HOST === 'GAT-ZY' ? defaultSettings.titleGatZy : ''
-const name = nameGatSn || nameGatZy || defaultSettings.title || 'Smart Mall Dashboard' // page title
+const name = defaultSettings.title || 'Smart Mall Dashboard' // page title
 process.env.VUE_APP_NAME = name
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/

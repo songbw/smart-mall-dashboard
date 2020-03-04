@@ -1,5 +1,13 @@
 <template>
   <div class="app-container">
+    <el-tabs v-model="queryAppId" type="card" @tab-click="onAppIdChanged">
+      <el-tab-pane
+        v-for="item in appIdOptions"
+        :key="item.appId"
+        :label="item.name"
+        :name="item.appId"
+      />
+    </el-tabs>
     <el-form inline @submit.prevent.native="() => {}">
       <el-form-item label="会员电话">
         <el-input
@@ -154,6 +162,7 @@ import {
 import { MemberPermissions } from '@/utils/role-permissions'
 import BalancesImport from './balances-import'
 import { couldRecharge } from './constants'
+import { wuxi_app_id } from '@/utils/constants'
 
 const validateDates = (start, end) => {
   const format = 'YYYY-MM-DD'
@@ -226,6 +235,8 @@ export default {
     ...mapGetters({
       userName: 'userName',
       userPermissions: 'userPermissions',
+      platformAppList: 'platformAppList',
+      validAppList: 'validAppList',
       listQuery: 'balancesQuery'
     }),
     hasBalanceViewPermission() {
@@ -236,6 +247,17 @@ export default {
     },
     hasBalanceExportPermission() {
       return this.userPermissions.includes(MemberPermissions.balanceExport)
+    },
+    appIdOptions() {
+      return this.validAppList
+    },
+    queryAppId: {
+      get() {
+        return this.listQuery.appId
+      },
+      set(value) {
+        this.$store.commit('members/SET_BALANCES_QUERY', { appId: value })
+      }
     },
     queryTelephone: {
       get() {
@@ -263,7 +285,7 @@ export default {
     }
   },
   created() {
-    this.getAllMemberBalances()
+    this.initData()
   },
   beforeRouteLeave(to, from, next) {
     const toGroup = to.meta.group || ''
@@ -273,7 +295,37 @@ export default {
     next()
   },
   methods: {
+    async initData() {
+      await this.getAppPlatformList()
+      await this.getAllMemberBalances()
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+        const appIdList = this.validAppList.map(item => item.appId)
+        if (this.queryAppId === null || !appIdList.includes(this.queryAppId)) {
+          const hasWuxi = this.validAppList.find(item => item.appId === wuxi_app_id)
+          if (hasWuxi) {
+            this.queryAppId = wuxi_app_id
+          } else {
+            this.queryAppId = this.validAppList.length > 0 ? this.validAppList[0].appId : 'invalid'
+          }
+        }
+      } catch (e) {
+        console.warn('Order get app list error:' + e)
+      }
+    },
     async getAllMemberBalances() {
+      if (this.queryAppId === wuxi_app_id) {
+        await this.getWuxiBalances()
+      } else {
+        this.balanceTotal = 0
+        this.balanceList = []
+      }
+    },
+    async getWuxiBalances() {
       if (this.hasBalanceViewPermission) {
         try {
           this.balancesLoading = true
@@ -309,7 +361,7 @@ export default {
     async getMemberId(openId) {
       let memberId = null
       try {
-        const { code, data } = await getMemberProfileByOpenIdApi({ openId, iAppId: process.env.VUE_APP_ID })
+        const { code, data } = await getMemberProfileByOpenIdApi({ openId, iAppId: this.queryAppId })
         if (code === 200 && data.user !== null) {
           memberId = data.user.id
         }
@@ -416,6 +468,12 @@ export default {
           this.handleExportBalances()
         }
       })
+    },
+    onAppIdChanged(platform) {
+      if (this.queryAppId !== platform.appId) {
+        this.queryPageNo = 1
+        this.getAllMemberBalances()
+      }
     }
   }
 }

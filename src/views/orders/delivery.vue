@@ -185,18 +185,14 @@ import ImportDialog from './ImportDialog'
 import { OrderPermissions } from '@/utils/role-permissions'
 import trim from 'lodash/trim'
 
-const shouldShowAoyiId = process.env.VUE_APP_HOST === 'GAT-SN' // aoyiId is Suning Order Id
-
 export default {
   name: 'Orders',
   components: { Pagination, OrderProduct, ImportDialog, ExpressSelection },
   filters: {
     orderIdFilter: order => {
-      if (shouldShowAoyiId) {
-        return order.aoyiId
-      } else {
-        return order.tradeNo ? order.tradeNo.substring(order.tradeNo.length - 8) : ''
-      }
+      return isEmpty(order.aoyiId)
+        ? order.tradeNo ? order.tradeNo.substring(order.tradeNo.length - 8) : ''
+        : order.aoyiId
     },
     orderStatusFilter: status => {
       const find = SubOrderStatusDefinitions.find(option => option.value === status)

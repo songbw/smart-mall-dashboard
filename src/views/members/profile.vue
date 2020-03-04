@@ -143,7 +143,7 @@
         fit
         style="width: 100%; margin-top: 20px"
       >
-        <el-table-column label="收货人姓名" align="center" width="120">
+        <el-table-column label="收货人姓名" align="center" width="200">
           <template slot-scope="scope">
             <span>{{ scope.row.receiverName }}</span>
           </template>
@@ -185,6 +185,7 @@ import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import {
+  getMemberListApi,
   getMemberProfileByIdApi,
   getMemberAddressListApi,
   getMemberBalanceApi,
@@ -196,6 +197,7 @@ import {
 import RechargeBalance from './recharge-balance'
 import { BalanceFlowTypeDefinitions, BalanceFlowStatusDefinitions, couldRecharge } from './constants'
 import { MemberPermissions } from '@/utils/role-permissions'
+import { wuxi_app_id } from '@/utils/constants'
 
 export default {
   name: 'Profile',
@@ -230,7 +232,7 @@ export default {
   },
   data() {
     return {
-      isWuxiMall: process.env.VUE_APP_HOST === 'WX-MALL',
+      isWuxiMall: false,
       loadingProfile: false,
       platformOpenId: null,
       profile: {
@@ -281,33 +283,72 @@ export default {
     }
   },
   created() {
-    const id = this.$route.params.id
-    if (id) {
-      this.getMemberProfile(id)
+    const params = this.$route.params
+    if ('id' in params) {
+      const id = params.id
+      if (id) {
+        this.getMemberProfile(id)
+      }
+    } else if ('openId' in params) {
+      const openId = params.openId
+      if (openId) {
+        this.getMemberByOpenId(openId, params.appId)
+      }
     }
   },
   methods: {
+    async getMemberByOpenId(openId, appId) {
+      try {
+        this.loadingProfile = true
+        const params = {
+          pageNo: 1,
+          pageSize: 10,
+          openId
+        }
+        const { code, data } = await getMemberListApi(params)
+        if (code === 200) {
+          const userList = data.userList.list
+          if (Array.isArray(userList) && userList.length > 0) {
+            if (userList.length > 1 && !isEmpty(appId)) {
+              const profile = userList.find(item => item.iAppId === appId)
+              this.profile = profile || userList[0]
+            } else {
+              this.profile = userList[0]
+            }
+            await this.getMemberInfo()
+          }
+        }
+      } catch (e) {
+        console.warn('Get member by open id error:' + e)
+      } finally {
+        this.loadingProfile = false
+      }
+    },
     async getMemberProfile(id) {
       try {
         this.loadingProfile = true
         const { data } = await getMemberProfileByIdApi({ id })
         if (data && data.user) {
           this.profile = data.user
-          if (this.profile.openId) {
-            this.platformOpenId = process.env.VUE_APP_ID + this.profile.openId
-            if (this.isWuxiMall) {
-              this.getMemberBalance()
-              if (isEmpty(this.profile.telephone) === false) {
-                this.getCardList()
-              }
-            }
-            this.getAddressList()
-          }
+          await this.getMemberInfo()
         }
       } catch (e) {
         console.warn('Get member profile error:' + e)
       } finally {
         this.loadingProfile = false
+      }
+    },
+    async getMemberInfo() {
+      this.isWuxiMall = isEmpty(this.profile.iAppId) ? false : wuxi_app_id === this.profile.iAppId
+      if (!isEmpty(this.profile.openId) && !isEmpty(this.profile.iAppId)) {
+        this.platformOpenId = this.profile.iAppId + this.profile.openId
+        if (this.isWuxiMall) {
+          await this.getMemberBalance()
+          if (isEmpty(this.profile.telephone) === false) {
+            await this.getCardList()
+          }
+        }
+        await this.getAddressList()
       }
     },
     async getMemberBalance() {

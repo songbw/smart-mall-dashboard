@@ -147,7 +147,7 @@
             :to="{ name: 'ViewMainOrder', params: { mainId: scope.row.id }}"
             class="el-link el-link--primary is-underline"
           >
-            {{ scope.row.tradeNo ? scope.row.tradeNo.substring(scope.row.tradeNo.length - 8) : '' }}
+            {{ scope.row | orderIdFilter }}
           </router-link>
         </template>
       </el-table-column>
@@ -388,6 +388,11 @@ export default {
   name: 'Orders',
   components: { Pagination, OrderProduct },
   filters: {
+    orderIdFilter: order => {
+      return isEmpty(order.aoyiId)
+        ? order.tradeNo ? order.tradeNo.substring(order.tradeNo.length - 8) : ''
+        : order.aoyiId
+    },
     OrderStatus: status => {
       const find = SubOrderStatusDefinitions.find(option => option.value === status)
       return find ? find.label : status

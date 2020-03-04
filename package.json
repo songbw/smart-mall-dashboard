@@ -4,9 +4,9 @@
   "description": "A vue admin project for smart mall.",
   "author": "David",
   "scripts": {
-    "build": "vue-cli-service build",
+    "build:test": "vue-cli-service build",
+    "build:rel": "vue-cli-service build --mode release",
     "lint": "eslint --ext .js,.vue src",
-    "build:wx-mall": "vue-cli-service build --mode wx-mall",
     "dev": "vue-cli-service serve",
     "report": "vue-cli-service build --report",
     "preview": "serve -n -d ./dist -l 8080",

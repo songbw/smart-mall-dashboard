@@ -80,7 +80,15 @@
       </el-table-column>
       <el-table-column label="用户OpenID" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.openId }}</span>
+          <router-link
+            v-if="scope.row.openId"
+            :to="{
+              name: 'OpenIdProfile',
+              params: { openId: scope.row.openId.substring(appId.length), appId: appId }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ scope.row.openId }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="提货券时间" align="center" width="220">
@@ -152,6 +160,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
@@ -221,6 +230,11 @@ export default {
       exportTicketStatus: 0,
       importDialogVisible: false
     }
+  },
+  computed: {
+    ...mapGetters({
+      appId: 'platformAppId'
+    })
   },
   created() {
     this.barterCardId = this.$route.params.id

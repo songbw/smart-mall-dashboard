@@ -8,10 +8,7 @@
       style="margin-bottom: 10px"
       description="此优惠券的领取方式为人工分配，需要预先批量生成或导入券码！如已操作，请忽略。"
     />
-    <el-form inline :model="queryData">
-      <el-form-item label="领取用户">
-        <el-input v-model="queryData.userName" placeholder="输入领取用户名" clearable />
-      </el-form-item>
+    <el-form :model="queryData" inline>
       <el-form-item label="使用状态">
         <el-select v-model="queryData.status" style="width: 90px">
           <el-option
@@ -22,8 +19,6 @@
           />
         </el-select>
       </el-form-item>
-    </el-form>
-    <el-form inline :model="queryData">
       <el-form-item label="领取时间">
         <el-date-picker
           v-model="queryData.collectedStartDate"
@@ -42,8 +37,6 @@
           style="width: 150px"
         />
       </el-form-item>
-    </el-form>
-    <el-form inline :model="queryData">
       <el-form-item label="使用时间">
         <el-date-picker
           v-model="queryData.consumedStartDate"
@@ -95,7 +88,15 @@
       </el-table-column>
       <el-table-column label="用户OpenID" align="center" width="300">
         <template slot-scope="scope">
-          <span>{{ scope.row.userOpenId }}</span>
+          <router-link
+            v-if="scope.row.userOpenId"
+            :to="{
+              name: 'OpenIdProfile',
+              params: { openId: scope.row.userOpenId.substring(appId.length), appId: appId }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ scope.row.userOpenId }}
+          </router-link>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" width="100">
@@ -108,7 +109,7 @@
           <span>{{ scope.row.collectedTime | timeFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="消费时间" align="center" width="180">
+      <el-table-column label="使用时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.consumedTime | timeFormat }}</span>
         </template>
