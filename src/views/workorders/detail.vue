@@ -211,14 +211,14 @@
           </div>
         </el-form-item>
         <el-form-item
-          v-if="flowForm.operation === changeGood"
-          label="换货物流"
+          v-if="flowForm.operation === changeGood || flowForm.operation === updateUserLogistics"
+          :label="flowForm.operation === changeGood ? '换货物流' : '退货物流'"
           prop="logisticsInfo"
         >
           <el-button type="primary" size="mini" style="margin-left: 10px" @click="handleShowExpressDialog">
             填写物流
           </el-button>
-          <div v-if="flowForm.logisticsInfo.code">
+          <div v-if="flowForm.logisticsInfo.comCode">
             <el-form inline>
               <el-form-item label="物流公司"><span>{{ flowForm.logisticsInfo.com }}</span></el-form-item>
               <el-form-item label="物流单号"><span>{{ flowForm.logisticsInfo.order }}</span></el-form-item>
@@ -358,6 +358,7 @@ const reject_change = 4
 const change_good = 5
 const reopen_workorder = 6
 const change_receiver = 7
+const update_user_logistics = 9
 const FlowOperations = [
   { value: approve_request, label: '通过申请' },
   { value: agree_refund, label: '同意退款' },
@@ -365,7 +366,8 @@ const FlowOperations = [
   { value: reject_change, label: '拒绝换货' },
   { value: change_good, label: '换货处理' },
   { value: reopen_workorder, label: '重置工单' },
-  { value: change_receiver, label: '修改收货人信息' }
+  { value: change_receiver, label: '修改收货人信息' },
+  { value: update_user_logistics, label: '更新退货物流' }
 ]
 
 const RefundResultStatusOptions = [{
@@ -441,6 +443,7 @@ export default {
       rejectRefund: reject_refund,
       changeGood: change_good,
       changeReceiver: change_receiver,
+      updateUserLogistics: update_user_logistics,
       operationOptions: FlowOperations,
       dataLoading: false,
       province: '',
@@ -467,7 +470,7 @@ export default {
         refund: 0,
         logisticsInfo: {
           com: null,
-          code: null,
+          comCode: null,
           order: null
         },
         receiverAddress: null,
@@ -514,10 +517,11 @@ export default {
         logisticsInfo: [{
           required: true,
           validator: (rule, value, callback) => {
-            if (this.flowForm.operation !== change_good) {
+            if (this.flowForm.operation !== change_good &&
+              this.flowForm.operation !== update_user_logistics) {
               callback()
             } else {
-              if (value.code === null) {
+              if (value.comCode === null) {
                 callback(new Error('请输入正确的物流信息'))
               } else {
                 callback()
@@ -623,7 +627,7 @@ export default {
           ? [change_good, reject_change] : [agree_refund, reject_refund]
       } else if (this.workOrderData.status === work_order_status_working) {
         options = this.workOrderData.typeId === type_change_good
-          ? [change_good, reject_change] : [agree_refund, reject_refund]
+          ? [change_good, reject_change, update_user_logistics] : [agree_refund, reject_refund, update_user_logistics]
       }
       return this.operationOptions.filter(option => options.includes(option.value))
     },
@@ -747,7 +751,7 @@ export default {
       this.expressDialogVisible = false
       this.flowForm.logisticsInfo = {
         com: express.logisticsContent,
-        code: express.comCode,
+        comCode: express.comCode,
         order: express.logisticsId
       }
       this.$refs.flowForm.validateField('logisticsInfo', (_) => {
@@ -795,6 +799,10 @@ export default {
                   return
                 }
                 break
+              case update_user_logistics:
+                status = work_order_status_working
+                comments.logisticsInfo = this.flowForm.logisticsInfo
+                break
               default:
                 this.$message.warning('未知操作，请重新选择处理选项')
                 return
@@ -802,6 +810,9 @@ export default {
             const params = { workOrderId: this.workOrderData.id, operator, status, comments: JSON.stringify(comments) }
             if (operation === agree_refund) {
               params.refund = refund
+            }
+            if (operation === update_user_logistics) {
+              params.expressNo = this.flowForm.logisticsInfo.order
             }
             await createWorkOrderFlowApi(params)
             this.$message.success('处理工单成功！')
