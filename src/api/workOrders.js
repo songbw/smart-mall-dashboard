@@ -15,6 +15,13 @@ export function getWorkOrderByIdApi(params) {
   })
 }
 
+export function getWorkFlowOpsCodeApi() {
+  return Vue.axios('work_orders').request({
+    url: '/workorders/work_flows/commentsCode',
+    method: 'get'
+  })
+}
+
 export function getWorkFlowListApi(params) {
   return Vue.axios('work_orders').request({
     url: '/workorders/work_flows/pages',

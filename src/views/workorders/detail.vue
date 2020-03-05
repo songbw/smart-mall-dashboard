@@ -15,7 +15,7 @@
               </el-button>
               <el-button
                 v-if="hasEditPermission"
-                :disabled="flowOptions.length === 0"
+                :disabled="!couldOperate || (couldOperate && flowOptions.length === 0)"
                 type="primary"
                 @click="handleShowFlowDialog"
               >
@@ -334,7 +334,8 @@ import {
   createWorkOrderFlowApi,
   reopenWorkOrderFlowApi,
   getDefaultReturnAddressApi,
-  getReturnAddressListApi
+  getReturnAddressListApi,
+  getWorkFlowOpsCodeApi
 } from '@/api/workOrders'
 import {
   work_order_status_request,
@@ -351,6 +352,12 @@ import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } f
 import { WorkOrderPermissions } from '@/utils/role-permissions'
 import ReceiverDialog from './receiverDialog'
 
+const vendorYiyatong = 4
+const yiyatong_request_reject = 302
+const yiyatong_request_approve = 303
+const yiyatong_refund_reject = 312
+const yiyatong_refund_approve = 313
+
 const approve_request = 1
 const agree_refund = 2
 const reject_refund = 3
@@ -358,7 +365,8 @@ const reject_change = 4
 const change_good = 5
 const reopen_workorder = 6
 const change_receiver = 7
-const update_user_logistics = 9
+const update_user_logistics = 8
+
 const FlowOperations = [
   { value: approve_request, label: '通过申请' },
   { value: agree_refund, label: '同意退款' },
@@ -379,6 +387,9 @@ const RefundResultStatusOptions = [{
 }, {
   value: 3, label: '超时'
 }]
+
+const FlowOpsCodeList = []
+
 export default {
   name: 'WorkOrderDetail',
   components: {
@@ -432,7 +443,8 @@ export default {
       return find ? find.label : ''
     },
     operationFilter: op => {
-      const find = FlowOperations.find(option => option.value === op)
+      const options = FlowOpsCodeList.length > 0 ? FlowOpsCodeList : FlowOperations
+      const find = options.find(option => option.value === op)
       return find ? find.label : ''
     }
   },
@@ -620,27 +632,105 @@ export default {
     flowOptions() {
       let options = []
       if (this.workOrderData.status === work_order_status_request) {
-        options = this.workOrderData.typeId === type_change_good
-          ? [approve_request, reject_change, change_receiver] : [approve_request, reject_refund, change_receiver]
+        if (this.orderData.merchantId !== vendorYiyatong) {
+          options = this.workOrderData.typeId === type_change_good
+            ? [approve_request, reject_change, change_receiver] : [approve_request, reject_refund, change_receiver]
+        } else {
+          const approve = this.flows.findIndex(item => item.operation === yiyatong_request_approve)
+          const reject = this.flows.findIndex(item => item.operation === yiyatong_request_reject)
+          if (approve >= 0) {
+            options = [approve_request, change_receiver]
+          } else if (reject >= 0) {
+            options = this.workOrderData.typeId === type_change_good
+              ? [reject_change, change_receiver] : [reject_refund, change_receiver]
+          } else {
+            options = [change_receiver]
+          }
+        }
       } else if (this.workOrderData.status === work_order_status_approved) {
-        options = this.workOrderData.typeId === type_change_good
-          ? [change_good, reject_change] : [agree_refund, reject_refund]
+        if (this.orderData.merchantId !== vendorYiyatong) {
+          options = this.workOrderData.typeId === type_change_good
+            ? [change_good, reject_change] : [agree_refund, reject_refund]
+        } else {
+          const approve = this.flows.findIndex(item => item.operation === yiyatong_refund_approve)
+          const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
+          if (approve >= 0) {
+            options = this.workOrderData.typeId === type_change_good
+              ? [change_good] : [agree_refund]
+          } else if (reject >= 0) {
+            options = this.workOrderData.typeId === type_change_good
+              ? [reject_change] : [reject_refund]
+          } else {
+            options = this.workOrderData.typeId === type_change_good
+              ? [change_good, reject_change] : []
+          }
+        }
       } else if (this.workOrderData.status === work_order_status_working) {
-        options = this.workOrderData.typeId === type_change_good
-          ? [change_good, reject_change, update_user_logistics] : [agree_refund, reject_refund, update_user_logistics]
+        if (this.workOrderData.typeId === type_change_good) {
+          options = [change_good, reject_change, update_user_logistics]
+        } else {
+          if (this.orderData.merchantId !== vendorYiyatong) {
+            options = [agree_refund, reject_refund, update_user_logistics]
+          } else {
+            const approve = this.flows.findIndex(item => item.operation === yiyatong_refund_approve)
+            const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
+            if (approve >= 0) {
+              options = [agree_refund]
+            } else if (reject >= 0) {
+              options = [reject_refund]
+            } else {
+              options = [update_user_logistics]
+            }
+          }
+        }
       }
       return this.operationOptions.filter(option => options.includes(option.value))
     },
     maxRefund() {
       const yuan = Number.parseFloat(this.orderData.paymentAmount)
       return Number.isNaN(yuan) ? 1000000 : (yuan / 100)
+    },
+    couldOperate() {
+      if (this.orderData.merchantId !== vendorYiyatong) {
+        return true
+      } else {
+        switch (this.workOrderData.status) {
+          case work_order_status_request:
+            if (this.flows.length > 0) {
+              const responseIndex = this.flows.findIndex(
+                item => item.operation === yiyatong_request_approve ||
+                  item.operation === yiyatong_request_reject)
+              return responseIndex >= 0
+            } else {
+              return false
+            }
+          default:
+            return true
+        }
+      }
     }
   },
   created() {
-    this.getDefaultReturnAddress()
-    this.getWorkOrderData()
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      this.dataLoading = true
+      await this.getFlowOpsCode()
+      await this.getDefaultReturnAddress()
+      await this.getWorkOrderData()
+      this.dataLoading = false
+    },
+    async getFlowOpsCode() {
+      try {
+        const data = await getWorkFlowOpsCodeApi()
+        for (const key of Object.keys(data)) {
+          FlowOpsCodeList.push({ value: parseInt(key), label: data[key] })
+        }
+      } catch (e) {
+        console.warn('Work flow operation code error:' + e)
+      }
+    },
     async getWorkOrderData() {
       try {
         this.dataLoading = true
@@ -670,6 +760,7 @@ export default {
           try {
             flowComment = { ...JSON.parse(row.comments) }
           } catch (e) {
+            console.warn('Parse flow comment error:' + e)
             flowComment = {}
           }
           const remark = flowComment.remark ? flowComment.remark : ''
@@ -682,8 +773,8 @@ export default {
     },
     async getOrderData(subOrderId) {
       try {
-        const { data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
-        if (data.result.list.length > 0) {
+        const { code, data } = await getOrderListApi({ pageIndex: 1, pageSize: 1, subOrderId })
+        if (code === 200 && data.result.list.length > 0) {
           this.orderData = data.result.list[0]
         }
       } catch (e) {
