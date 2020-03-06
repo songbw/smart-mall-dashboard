@@ -662,7 +662,7 @@ export default {
               ? [reject_change] : [reject_refund]
           } else {
             options = this.workOrderData.typeId === type_change_good
-              ? [change_good, reject_change] : []
+              ? [change_good, reject_change] : [agree_refund, reject_refund]
           }
         }
       } else if (this.workOrderData.status === work_order_status_working) {
