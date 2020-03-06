@@ -267,6 +267,14 @@ export default {
       }
     }
   },
+  watch: {
+    appId: function (value, old) {
+      this.queryName = ''
+      this.queryStatus = 0
+      this.queryOffset = 1
+      this.getBarterCardData()
+    }
+  },
   created() {
     this.getBarterCardData()
   },
