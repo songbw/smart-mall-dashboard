@@ -116,7 +116,14 @@
       </el-table-column>
       <el-table-column label="消费订单" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.orderId }}</span>
+          <router-link
+            v-for="orderId in scope.row.orderList"
+            :key="orderId"
+            :to="{ name: 'ViewMainOrder', params: { mainId: orderId }}"
+            class="el-link el-link--primary is-underline"
+          >
+            {{ orderId }}
+          </router-link>
         </template>
       </el-table-column>
     </el-table>
@@ -277,11 +284,16 @@ export default {
         }
         const { code, data } = await getCouponUsageByIdApi(params)
         if (code === 200) {
-          this.couponUsageData = data.result.list
+          this.couponUsageData = data.result.list.map(item => {
+            const orderList = isEmpty(item.orderId) ? [] : item.orderId.split(',')
+            return { ...item, orderList }
+          })
           this.couponUsageTotal = data.result.total
         }
       } catch (e) {
         console.warn('Get coupon usages error: ' + e)
+        this.couponUsageData = []
+        this.couponUsageTotal = 0
       } finally {
         this.dataLoading = false
       }
