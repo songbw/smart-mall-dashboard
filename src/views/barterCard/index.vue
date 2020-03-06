@@ -334,6 +334,22 @@ export default {
         params: { id, readOnly: true }
       })
     },
+    handleCheckBarterCard(id, index) {
+      const that = this
+      const barterCard = this.barterCardList[index]
+      if (Array.isArray(barterCard.couponIds) && barterCard.couponIds.length > 0) {
+        this.handleStartBarterCard(id, index)
+      } else {
+        this.$confirm('未添加有效的优惠券，是否编辑此提货卡？', '警告', {
+          confirmButtonText: '编辑',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          that.handleEditBarterCard(id)
+        }).catch(() => {
+        })
+      }
+    },
     handleStartBarterCard(id) {
       this.$confirm('是否继续发布此提货卡？', '警告', {
         confirmButtonText: '确定',
@@ -392,7 +408,7 @@ export default {
       const id = this.barterCardList[index].id
       switch (cmd) {
         case 'start':
-          this.handleStartBarterCard(id)
+          this.handleCheckBarterCard(id, index)
           break
         case 'view':
           this.handleViewBarterCard(id)
