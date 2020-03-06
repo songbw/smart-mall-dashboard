@@ -43,3 +43,13 @@ export function deleteBrandApi(params) {
     params
   })
 }
+
+export function syncBrandsApi(params) {
+  return Vue.axios('mproducts').request({
+    url: '/mproducts/third/prod/brand/sync',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}

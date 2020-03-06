@@ -66,3 +66,13 @@ export function deleteCategoryApi(params) {
     params
   })
 }
+
+export function syncCategoriesApi(params) {
+  return Vue.axios('mproducts').request({
+    url: '/mproducts/third/prod/category/sync',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}

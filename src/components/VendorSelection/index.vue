@@ -63,7 +63,8 @@ export default {
       }
     },
     handleVendorChanged(id) {
-      this.$emit('changed', id)
+      const find = this.vendorOptions.find(item => item.value === id)
+      this.$emit('changed', id, find ? find.label : '')
     }
   }
 }

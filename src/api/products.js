@@ -158,3 +158,11 @@ export function getInventoryBySkuCodesApi(params) {
     data: params
   })
 }
+
+export function syncProductsApi(params) {
+  return Vue.axios('mproducts').request({
+    url: '/products/third/prod/sync',
+    method: 'post',
+    data: params
+  })
+}
