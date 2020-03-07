@@ -639,12 +639,12 @@ export default {
           const approve = this.flows.findIndex(item => item.operation === yiyatong_request_approve)
           const reject = this.flows.findIndex(item => item.operation === yiyatong_request_reject)
           if (approve >= 0) {
-            options = [approve_request, change_receiver]
+            options = [approve_request]
           } else if (reject >= 0) {
             options = this.workOrderData.typeId === type_change_good
-              ? [reject_change, change_receiver] : [reject_refund, change_receiver]
+              ? [reject_change] : [reject_refund]
           } else {
-            options = [change_receiver]
+            options = []
           }
         }
       } else if (this.workOrderData.status === work_order_status_approved) {
