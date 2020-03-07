@@ -114,7 +114,10 @@ export default {
     }),
     platformNameList() {
       if (isEmpty(this.company.appId)) {
-        return []
+        const excludeAppId = isEmpty(this.company.excludeAppId) ? [] : this.company.excludeAppId.split(',')
+        return this.platformAppList
+          .filter(item => !excludeAppId.includes(item.AppId))
+          .map(item => item.name)
       } else {
         return this.company.appId.split(',')
           .map(appId => {

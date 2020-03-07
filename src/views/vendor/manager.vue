@@ -200,8 +200,23 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="运营平台" prop="appId">
-          <el-checkbox-group v-model="vendorAppId">
+        <el-form-item label="运营平台">
+          <div>
+            <el-tag v-for="name in vendorAppName" :key="name" type="info" style="margin-right: 10px">
+              {{ name }}
+            </el-tag>
+          </div>
+          <el-radio-group v-model="platformType" @change="handlePlatformTypeChanged">
+            <el-radio-button label="all">全部平台</el-radio-button>
+            <el-radio-button label="specific">特定平台</el-radio-button>
+            <el-radio-button label="exclude">排除平台</el-radio-button>
+          </el-radio-group>
+          <el-checkbox-group v-if="platformType === 'specific'" v-model="vendorSpecificAppId">
+            <el-checkbox v-for="platform in platformAppList" :key="platform.appId" :label="platform.appId">
+              {{ platform.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+          <el-checkbox-group v-if="platformType === 'exclude'" v-model="vendorExcludeAppId">
             <el-checkbox v-for="platform in platformAppList" :key="platform.appId" :label="platform.appId">
               {{ platform.name }}
             </el-checkbox>
@@ -341,13 +356,15 @@ export default {
       },
       vendorDialogVisible: false,
       vendorId: -1,
+      platformType: 'all',
       vendorProfile: {
         name: null,
         address: null,
         industry: null,
         invoiceType: null,
         taxpayerType: null,
-        appId: null
+        appId: null,
+        excludeAppId: null
       },
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
@@ -371,17 +388,33 @@ export default {
     hasEditPermission() {
       return this.userPermissions.includes(VendorPermissions.update)
     },
-    vendorAppId: {
+    vendorAppName() {
+      if (this.platformType === 'specific') {
+        return this.vendorSpecificAppId.length > 0 ? this.platformAppList
+          .filter(item => this.vendorSpecificAppId.includes(item.appId))
+          .map(item => item.name) : []
+      } else {
+        return this.platformAppList
+          .filter(item => !this.vendorExcludeAppId.includes(item.appId))
+          .map(item => item.name)
+      }
+    },
+    vendorSpecificAppId: {
       get() {
         const appId = this.vendorProfile.appId
-        if (appId) {
-          return appId.split(',')
-        } else {
-          return []
-        }
+        return isEmpty(appId) ? [] : appId.split(',')
       },
       set(values) {
         this.vendorProfile.appId = values.join(',')
+      }
+    },
+    vendorExcludeAppId: {
+      get() {
+        const excludeAppId = this.vendorProfile.excludeAppId
+        return isEmpty(excludeAppId) ? [] : excludeAppId.split(',')
+      },
+      set(values) {
+        this.vendorProfile.excludeAppId = values.join(',')
       }
     },
     vendorIndustry: {
@@ -533,6 +566,7 @@ export default {
       this.vendorProfile.invoiceType = null
       this.vendorProfile.taxpayerType = null
       this.vendorProfile.appId = null
+      this.vendorProfile.excludeAppId = null
     },
     handleCreateVendor() {
       this.resetVendorForm()
@@ -548,6 +582,14 @@ export default {
       this.vendorProfile.invoiceType = company.invoiceType
       this.vendorProfile.taxpayerType = company.taxpayerType
       this.vendorProfile.appId = company.appId
+      this.vendorProfile.excludeAppId = company.excludeAppId
+      if (!isEmpty(company.appId)) {
+        this.platformType = 'specific'
+      } else if (!isEmpty(company.excludeAppId)) {
+        this.platformType = 'exclude'
+      } else {
+        this.platformType = 'all'
+      }
       this.vendorDialogVisible = true
     },
     handleDialogCancel() {
@@ -609,6 +651,10 @@ export default {
         }
       }
       return null
+    },
+    handlePlatformTypeChanged(_) {
+      this.vendorSpecificAppId = []
+      this.vendorExcludeAppId = []
     }
   }
 }

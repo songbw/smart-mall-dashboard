@@ -9,15 +9,19 @@ const invalidAppIdList = ['09', '10', 'test']
 
 async function getVendorPlatformList() {
   let appIdList = []
+  let excludeAppIdList = []
   try {
     const { company } = await getProfileApi()
     if (!isEmpty(company.appId)) {
       appIdList = company.appId.split(',')
     }
+    if (!isEmpty(company.excludeAppId)) {
+      excludeAppIdList = company.excludeAppId.split(',')
+    }
   } catch (e) {
     console.warn('App store get vendor app list:' + e)
   }
-  return appIdList
+  return { appIdList, excludeAppIdList }
 }
 
 const state = {
@@ -87,10 +91,17 @@ const actions = {
     const { code, data } = await getAppPlatformListApi(
       { pageNo: 1, pageSize: 100 })
     if (code === 200) {
-      const appList = data.list.map(
+      const platformList = data.list.map(
         item => ({ appId: item.appId, name: item.name }))
-      const vendorList = await getVendorPlatformList()
-      commit('SET_PLATFORM_LIST', appList)
+      const { appIdList, excludeAppIdList } = await getVendorPlatformList()
+      let vendorList = []
+      if (appIdList.length > 0) {
+        vendorList = appIdList
+      } else {
+        vendorList = platformList.map(item => item.appId)
+          .filter(appId => !excludeAppIdList.includes(appId))
+      }
+      commit('SET_PLATFORM_LIST', platformList)
       commit('SET_VENDOR_LIST', vendorList)
     }
   },
