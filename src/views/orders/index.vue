@@ -163,7 +163,7 @@
             :image-url="scope.row.image"
             :mpu="scope.row.mpu"
             :name="scope.row.name"
-            :price="scope.row.salePrice"
+            :price="scope.row.unitPrice"
             :sku-id="scope.row.skuId"
             :merchant-name="scope.row.merchantName"
           />
