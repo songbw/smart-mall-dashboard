@@ -44,8 +44,21 @@
         <el-button icon="el-icon-search" type="primary" @click="getOrderList">
           搜索
         </el-button>
+      </el-form-item>
+    </el-form>
+    <el-form inline>
+      <el-form-item>
         <el-button v-if="hasEditPermission" icon="el-icon-coin" type="info" @click="handleBatchDelivery">
           批量发货
+        </el-button>
+        <el-button
+          v-if="hasExportPermission && hasVendorPermission"
+          icon="el-icon-download"
+          type="warning"
+          :loading="exportingDelivery"
+          @click="handleExportDeliverOrders"
+        >
+          导出发货概况
         </el-button>
       </el-form-item>
     </el-form>
@@ -79,7 +92,7 @@
             :image-url="scope.row.image"
             :mpu="scope.row.mpu"
             :name="scope.row.name"
-            :price="scope.row.salePrice"
+            :price="scope.row.unitPrice"
             :sku-id="scope.row.skuId"
             :merchant-name="scope.row.merchantName"
           />
@@ -173,7 +186,10 @@ import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
 import ExpressSelection from '@/components/ExpressSelection'
 import OrderProduct from './OrderProduct'
-import { getOrderListApi } from '@/api/orders'
+import {
+  getOrderListApi,
+  exportVendorDeliverOrdersApi
+} from '@/api/orders'
 import { getVendorListApi } from '@/api/vendor'
 import {
   suborder_status_waiting_deliver,
@@ -216,6 +232,7 @@ export default {
       merchantName: '',
       deliveryDialogVisible: false,
       importDialogVisible: false,
+      exportingDelivery: false,
       deliveryData: {
         orderId: null,
         subOrderId: null,
@@ -237,6 +254,12 @@ export default {
     },
     hasEditPermission() {
       return this.userPermissions.includes(OrderPermissions.update)
+    },
+    hasExportPermission() {
+      return this.userPermissions.includes(OrderPermissions.export)
+    },
+    hasVendorPermission() {
+      return this.userPermissions.includes(OrderPermissions.vendor)
     },
     statusOptions() {
       return SubOrderStatusDefinitions.filter(option =>
@@ -435,6 +458,34 @@ export default {
     onAppIdChanged(platform) {
       if (this.queryAppId !== platform.appId) {
         this.getOrderList()
+      }
+    },
+    downloadBlobData(data, filename) {
+      try {
+        const blob = new Blob([data])
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        console.warn('Download blob data error:' + e)
+      }
+    },
+    async handleExportDeliverOrders() {
+      try {
+        this.exportingDelivery = true
+        const data = await exportVendorDeliverOrdersApi()
+        const now = moment().format('YYYY-MM-DD')
+        const filename = `供应商发货概况-${now}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Export deliver order error:' + e)
+      } finally {
+        this.exportingDelivery = false
       }
     }
   }
