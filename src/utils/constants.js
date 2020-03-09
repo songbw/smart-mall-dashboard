@@ -300,6 +300,9 @@ export const PayTypeOptions = [{
 }, {
   value: 'fcalipay',
   label: '支付宝H5支付'
+}, {
+  value: 'yuncheng',
+  label: '云城支付'
 }]
 
 export const work_order_status_request = 1

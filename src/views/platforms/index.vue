@@ -149,7 +149,8 @@ import {
 import {
   getPayTypeListByAppIdApi,
   bindPayTypeWithPlatformApi,
-  deletePayTypeFromAppIdApi
+  deletePayTypeFromAppIdApi,
+  getAllPayTypeListApi
 } from '@/api/payments'
 import { validateURL } from '@/utils/validate'
 import { PayTypeOptions } from '@/utils/constants'
@@ -222,7 +223,18 @@ export default {
   },
   methods: {
     async prepareData() {
+      await this.getAllPayTypeList()
       await this.getAppPlatformList()
+    },
+    async getAllPayTypeList() {
+      try {
+        const { code, data } = await getAllPayTypeListApi()
+        if (code === 200) {
+          console.info(JSON.stringify(data))
+        }
+      } catch (e) {
+        console.warn('Get all pay type error:' + e)
+      }
     },
     async getPayTypeListByAppId(appId) {
       try {

@@ -243,7 +243,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="exportDialogVisible"
-      :title="exportType === reconciliationType ? '导出结算订单' : '导出订单'"
+      :title="exportDialogTitle"
     >
       <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
         <el-form-item label="开始日期" prop="payStartDate">
@@ -262,35 +262,24 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item v-if="exportType !== invoiceType" label="运营平台" prop="appId">
+        <el-form-item label="运营平台" prop="appId">
           <el-select v-model="exportForm.appId" @change="onExportAppIdChanged">
             <el-option
               v-for="item in appIdOptions"
               :key="item.appId"
               :label="item.name"
               :value="item.appId"
-              :disabled="item.appId === 'all' && (exportType === profitType || exportType === paymentType)"
+              :disabled="item.appId === 'all' &&
+                (exportType === profitType || exportType === paymentType || exportType === invoiceType)"
             >
               <span>{{ item.name }}</span>
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="exportType === paymentType" label="支付类型" prop="payType">
+        <el-form-item v-if="exportType === paymentType || exportType === invoiceType" label="支付类型" prop="payType">
           <el-select v-model="exportForm.payType">
             <el-option
               v-for="item in exportPayTypeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            >
-              <span>{{ item.label }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item v-else-if="exportType === invoiceType" label="发票类型" prop="invoiceType">
-          <el-select v-model="exportForm.invoiceType">
-            <el-option
-              v-for="item in invoiceOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -359,12 +348,6 @@ import {
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
-const wuxiBalanceInvoice = 'wuxi-balance-payment'
-const wuxiCardInvoice = 'wuxi-card-payment'
-const wuxiWoaInvoice = 'wuxi-woa-payment'
-const wuxiKuaiJieInvoice = 'wuxi-kuai-jie'
-const wuxiAliPayInvoice = 'wuxi-ali-pay'
-
 const maxExportMonths = 3
 
 const validateDates = (start, end, amount = 3) => {
@@ -407,22 +390,6 @@ export default {
         value: -1,
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
-      invoiceOptions: [{
-        value: wuxiBalanceInvoice,
-        label: '无锡余额支付'
-      }, {
-        value: wuxiCardInvoice,
-        label: '无锡惠民优选卡支付'
-      }, {
-        value: wuxiWoaInvoice,
-        label: '无锡联机账户支付'
-      }, {
-        value: wuxiKuaiJieInvoice,
-        label: '无锡快捷支付'
-      }, {
-        value: wuxiAliPayInvoice,
-        label: '无锡支付宝支付'
-      }],
       vendorLoading: false,
       vendors: [],
       listLoading: false,
@@ -436,12 +403,12 @@ export default {
       invoiceType: 'export-invoice',
       profitType: 'export-profit',
       exportDialogVisible: false,
+      exportDialogTitle: '',
       exportPayTypeOptions: [],
       exportForm: {
         merchantId: -1,
         payStartDate: null,
         payEndDate: null,
-        invoiceType: null,
         payType: null,
         appId: null
       },
@@ -470,17 +437,9 @@ export default {
         }],
         payType: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.exportType === this.paymentType && value === null) {
+            if ((this.exportType === this.paymentType || this.exportType === this.invoiceType) &&
+              value === null) {
               callback(new Error('请选择合适支付类型'))
-            } else {
-              callback()
-            }
-          }
-        }],
-        invoiceType: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.exportType === this.invoiceType && value === null) {
-              callback(new Error('请选择对应发票类型'))
             } else {
               callback()
             }
@@ -488,7 +447,7 @@ export default {
         }],
         appId: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (this.exportType !== this.invoiceType && value === null) {
+            if (value === null) {
               callback(new Error('请选择对应运营平台'))
             } else {
               callback()
@@ -859,26 +818,31 @@ export default {
       this.getOrderList()
     },
     handleShowExportDialog() {
+      this.exportDialogTitle = '导出流水订单'
       this.exportForm.merchantId = -1
       this.exportType = this.flowType
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
+      this.exportDialogTitle = '导出结算订单'
       this.exportForm.merchantId = -1
       this.exportType = this.reconciliationType
       this.exportDialogVisible = true
     },
     handleShowPaymentExportDialog() {
+      this.exportDialogTitle = '导出支付交易订单'
       this.exportForm.payType = null
       this.exportType = this.paymentType
       this.exportDialogVisible = true
     },
     handleShowInvoiceDialog() {
-      this.exportForm.merchantId = -1
+      this.exportDialogTitle = '导出发票报表'
+      this.exportForm.payType = null
       this.exportType = this.invoiceType
       this.exportDialogVisible = true
     },
     handleShowProfitDialog() {
+      this.exportDialogTitle = '导出分润报表'
       this.exportType = this.profitType
       this.exportDialogVisible = true
     },
@@ -962,35 +926,17 @@ export default {
     async handleExportInvoice() {
       const params = {
         startTime: this.exportForm.payStartDate,
-        endTime: this.exportForm.payEndDate
-      }
-      switch (this.exportForm.invoiceType) {
-        case wuxiBalanceInvoice:
-          params.appId = '11'
-          params.receiptType = 1
-          break
-        case wuxiCardInvoice:
-          params.appId = '11'
-          params.receiptType = 2
-          break
-        case wuxiWoaInvoice:
-          params.appId = '11'
-          params.receiptType = 3
-          break
-        case wuxiKuaiJieInvoice:
-          params.appId = '11'
-          params.receiptType = 4
-          break
-        case wuxiAliPayInvoice:
-          params.appId = '11'
-          params.receiptType = 5
-          break
+        endTime: this.exportForm.payEndDate,
+        appId: this.exportForm.appId,
+        receiptType: this.exportForm.payType
       }
       try {
         const data = await exportInvoiceBillApi(params)
-        const invoiceOption = this.invoiceOptions.find(item => item.value === this.exportForm.invoiceType)
-        const invoiceLabel = invoiceOption ? invoiceOption.label : ''
-        const filename = `${invoiceLabel}-发票报表-${params.startTime}-${params.endTime}.xls`
+        const payOption = PayTypeOptions.find(item => item.value === params.receiptType)
+        const payLabel = payOption ? payOption.label : ''
+        const appOption = this.platformAppList.find(item => item.appId === params.appId)
+        const appLabel = appOption ? appOption.name : ''
+        const filename = `${appLabel}-${payLabel}-发票报表-${params.startTime}-${params.endTime}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -1065,7 +1011,7 @@ export default {
       return []
     },
     async onExportAppIdChanged(value) {
-      if (this.exportType === this.paymentType) {
+      if (this.exportType === this.paymentType || this.exportType === this.invoiceType) {
         this.exportForm.payType = null
         this.exportPayTypeOptions = value !== null ? await this.getPayTypeListByAppId(value) : []
       }
