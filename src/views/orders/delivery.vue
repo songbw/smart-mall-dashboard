@@ -12,6 +12,9 @@
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" maxlength="20" />
       </el-form-item>
+      <el-form-item label="收货人姓名">
+        <el-input v-model="queryName" :clearable="true" placeholder="输入收货人姓名" maxlength="20" />
+      </el-form-item>
       <el-form-item label="订单状态">
         <el-select :value="querySubStatus" @change="onQueryStatusChanged">
           <el-option
@@ -294,6 +297,14 @@ export default {
         this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { mobile: trim(value) })
       }
     },
+    queryName: {
+      get() {
+        return this.orderQuery.receiverName
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { receiverName: trim(value) })
+      }
+    },
     querySubStatus: {
       get() {
         return this.orderQuery.subStatus
@@ -393,7 +404,7 @@ export default {
       const params = {
         subStatus: this.querySubStatus
       }
-      const keys = ['mobile', 'payDateStart', 'payDateEnd']
+      const keys = ['mobile', 'receiverName', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
           params[key] = this.orderQuery[key]

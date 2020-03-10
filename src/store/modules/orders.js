@@ -9,6 +9,7 @@ const queryTemplate = {
   tradeNo: '',
   subOrderId: '',
   mobile: '',
+  receiverName: '',
   payDateStart: null,
   payDateEnd: null,
   completeDateStart: null,
@@ -21,6 +22,7 @@ const queryTemplate = {
 const deliveryQuery = {
   appId: 'all',
   mobile: '',
+  receiverName: '',
   subStatus: suborder_status_waiting_deliver,
   payDateStart: null,
   payDateEnd: null,

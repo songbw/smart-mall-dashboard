@@ -31,6 +31,11 @@
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" maxlength="20" />
       </el-form-item>
+      <el-form-item label="收货人姓名">
+        <el-input v-model="queryName" :clearable="true" placeholder="输入收货人姓名" maxlength="20" />
+      </el-form-item>
+    </el-form>
+    <el-form inline>
       <el-form-item label="订单状态">
         <el-select :value="querySubStatus" @change="onQueryStatusChanged">
           <el-option
@@ -54,7 +59,7 @@
         </el-select>
       </el-form-item>
     </el-form>
-    <el-form :inline="true">
+    <el-form v-if="false" :inline="true">
       <el-form-item label="结算开始日期">
         <el-date-picker
           v-model="queryCompleteStartDate"
@@ -534,6 +539,14 @@ export default {
         this.$store.commit('orders/SET_SEARCH_DATA', { mobile: trim(value) })
       }
     },
+    queryName: {
+      get() {
+        return this.orderQuery.receiverName
+      },
+      set(value) {
+        this.$store.commit('orders/SET_SEARCH_DATA', { receiverName: trim(value) })
+      }
+    },
     querySubStatus: {
       get() {
         return this.orderQuery.subStatus
@@ -655,7 +668,7 @@ export default {
     },
     getSearchParams() {
       const params = {}
-      const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile',
+      const keys = ['aoyiId', 'tradeNo', 'subOrderId', 'mobile', 'receiverName',
         'payDateStart', 'payDateEnd', 'completeDateStart', 'completeDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
