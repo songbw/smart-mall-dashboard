@@ -704,7 +704,8 @@ export default {
             if (this.flows.length > 0) {
               const responseIndex = this.flows.findIndex(
                 item => item.operation === yiyatong_request_approve ||
-                  item.operation === yiyatong_request_reject)
+                  item.operation === yiyatong_request_reject ||
+                  item.operation === yiyatong_request_unknown)
               return responseIndex >= 0
             } else {
               return false
