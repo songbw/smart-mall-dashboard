@@ -355,6 +355,7 @@ import ReceiverDialog from './receiverDialog'
 const vendorYiyatong = 4
 const yiyatong_request_reject = 302
 const yiyatong_request_approve = 303
+const yiyatong_request_unknown = 401
 const yiyatong_refund_reject = 312
 const yiyatong_refund_approve = 313
 
@@ -638,11 +639,15 @@ export default {
         } else {
           const approve = this.flows.findIndex(item => item.operation === yiyatong_request_approve)
           const reject = this.flows.findIndex(item => item.operation === yiyatong_request_reject)
+          const unknown = this.flows.findIndex(item => item.operation === yiyatong_request_unknown)
           if (approve >= 0) {
             options = [approve_request]
           } else if (reject >= 0) {
             options = this.workOrderData.typeId === type_change_good
               ? [reject_change] : [reject_refund]
+          } else if (unknown >= 0) {
+            options = this.workOrderData.typeId === type_change_good
+              ? [approve_request, reject_change] : [approve_request, reject_refund]
           } else {
             options = []
           }
