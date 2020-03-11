@@ -394,8 +394,8 @@
           </div>
           <el-row v-if="thumbnailUrls.length > 0">
             <el-col
-              v-for="(imgUrl, index) in thumbnailUrls"
-              :key="'thumbnail' + index"
+              v-for="(imgUrl, index) in thumbnailUrls.slice(0, 5)"
+              :key="'thumbnail-0-' + index"
               :span="4"
               :offset="index > 0 ? 1 : 0"
             >
@@ -403,6 +403,25 @@
                 :could-edit="!viewImageOnly"
                 :image-url="imgUrl"
                 :index="index"
+                :length="thumbnailUrls.length"
+                :bucket="thumbnailUploadPath"
+                @sortThumbnail="handleSortThumbnail"
+                @deleteThumbnail="handleDeleteThumbnail"
+                @uploadSuccess="handleUploadThumbnailIndexSuccess"
+              />
+            </el-col>
+          </el-row>
+          <el-row v-if="thumbnailUrls.length > 5" style="margin-top: 10px">
+            <el-col
+              v-for="(imgUrl, index) in thumbnailUrls.slice(5)"
+              :key="'thumbnail-1-' + index"
+              :span="4"
+              :offset="index > 0 ? 1 : 0"
+            >
+              <custom-thumbnail
+                :could-edit="!viewImageOnly"
+                :image-url="imgUrl"
+                :index="5 + index"
                 :length="thumbnailUrls.length"
                 :bucket="thumbnailUploadPath"
                 @sortThumbnail="handleSortThumbnail"
@@ -545,6 +564,7 @@ import {
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
 import { validateURL } from '@/utils/validate'
+import { scrollTo } from '@/utils/scroll-to'
 import SubSkuInfo from './subSkuInfo'
 
 const decode = require('unescape')
@@ -643,7 +663,7 @@ export default {
       taxRateOptions: ProductTaxRateOptions,
       typeOptions: ProductTypeOptions,
       vendorAoyi: vendorAoyi,
-      maxThumbnailLength: 5,
+      maxThumbnailLength: 10,
       maxIntroductionLength: 30,
       uploading: false,
       uploadPercent: 0,
@@ -1116,16 +1136,19 @@ export default {
     },
     handlePrevStep() {
       this.activeStep--
+      scrollTo(0, 300)
     },
     handleNextStep() {
       if (this.viewProduct) {
         this.activeStep++
+        scrollTo(0, 300)
       } else {
         if (this.activeStep === 0) {
           this.handleSubmitInfo()
         } else if (this.activeStep === 1) {
           if (this.viewImageOnly) {
             this.activeStep++
+            scrollTo(0, 300)
           } else {
             this.handleUpdateImages()
           }
@@ -1252,6 +1275,7 @@ export default {
             this.productForm.createdAt = prod.createdAt
             this.$message({ message: '创建产品信息成功。', type: 'success' })
             this.activeStep++
+            scrollTo(0, 300)
           } else {
             this.$message.error('创建商品信息失败，请联系管理员！')
           }
@@ -1288,6 +1312,7 @@ export default {
               this.productInfo.skuList[0].price = Math.round(price)
             }
             this.activeStep++
+            scrollTo(0, 300)
           }).catch(error => {
             console.log('updateProductInfo:' + JSON.stringify(error))
             this.$message.error('更新产品信息失败！')
@@ -1296,6 +1321,7 @@ export default {
         })
       } else {
         this.activeStep++
+        scrollTo(0, 300)
       }
     },
     handleRemoveCoverImage() {
