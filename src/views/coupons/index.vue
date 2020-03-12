@@ -51,6 +51,7 @@
         新建优惠券
       </el-button>
       <el-button
+        disabled
         type="info"
         icon="el-icon-scissors"
         class="ops-button"
