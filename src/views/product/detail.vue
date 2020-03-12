@@ -267,7 +267,8 @@
           <el-button
             :disabled="subSkuSoldOutSelection.length === 0"
             type="success"
-            @click="handleSubSkuSelectionOnSale">
+            @click="handleSubSkuSelectionOnSale"
+          >
             上架已选{{ subSkuSoldOutSelection.length }}个品种
           </el-button>
           <el-button
@@ -559,7 +560,8 @@ import {
   searchProductsApi,
   getDetailInfoByMpuApi,
   updateSubSkuApi,
-  getInventoryBySkuCodesApi
+  getInventoryBySkuCodesApi,
+  batchUpdateStateApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -1830,8 +1832,8 @@ export default {
     async updateProductState(state) {
       try {
         this.loading = true
-        const params = { id: this.productInfo.id, state }
-        const { code } = await updateProductApi(params)
+        const params = [{ id: this.productInfo.id, state }]
+        const { code } = await batchUpdateStateApi(params)
         if (code === 200) {
           this.productInfo.state = state
           this.productForm.state = state
