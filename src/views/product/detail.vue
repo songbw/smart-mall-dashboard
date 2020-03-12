@@ -263,11 +263,34 @@
       </el-form-item>
       <el-divider v-if="hasSubSku" content-position="left">商品品种</el-divider>
       <el-form-item v-if="hasSubSku" label-width="0">
+        <el-button-group v-if="hasUpdatePermission">
+          <el-button
+            :disabled="subSkuSoldOutSelection.length === 0"
+            type="success"
+            @click="handleSubSkuSelectionOnSale">
+            上架已选{{ subSkuSoldOutSelection.length }}个品种
+          </el-button>
+          <el-button
+            :disabled="subSkuOnSaleSelection.length === 0"
+            type="warning"
+            @click="handleSubSkuSelectionSoldOut"
+          >
+            下架已选{{ subSkuOnSaleSelection.length }}个品种
+          </el-button>
+        </el-button-group>
         <el-table
+          ref="subSkuTable"
           :data="subSkuList"
           fit
           style="width: 100%;"
+          @selection-change="handleSelectionChange"
         >
+          <el-table-column
+            column-key="selection"
+            type="selection"
+            align="center"
+            width="55"
+          />
           <el-table-column label="品种编码" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.code }}</span>
@@ -501,6 +524,9 @@
             <el-button :disabled="activeStep === 2" type="danger" @click="handleNextStep">
               {{ viewProduct ? '下一步' : '保存并下一步' }}
             </el-button>
+            <el-button :disabled="activeStep < 2" type="success" @click="goBack">
+              完成
+            </el-button>
           </el-button-group>
         </div>
       </el-form-item>
@@ -706,6 +732,8 @@ export default {
       activeStep: 0,
       subSkuDialogVisible: false,
       editSubSku: {},
+      subSkuOnSaleSelection: [],
+      subSkuSoldOutSelection: [],
       productInfo: null,
       productForm: {
         id: null,
@@ -1650,6 +1678,77 @@ export default {
     isReadyForSale(sku) {
       return sku.price > 0
     },
+    handleSubSkuSelectionOnSale() {
+      const subSkuList = this.subSkuSoldOutSelection.filter(item => this.isReadyForSale(item))
+      if (subSkuList.length > 0) {
+        const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
+        const message = spuSoldOut ? '此商品为下架状态，上架将会同时影响整个商品，是否继续？' : '是否继续上架所选商品品种？'
+        this.$confirm(message, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+          let suc = false
+          this.loading = true
+          for (const subSku of subSkuList) {
+            const id = subSku.id
+            const params = {
+              id,
+              status: product_sub_sku_on_sale
+            }
+            const ret = await this.handleUpdateSubSku(params)
+            if (ret) {
+              const find = this.productInfo.skuList.find(item => item.id === id)
+              if (find) find.status = product_sub_sku_on_sale
+              suc = true
+            }
+          }
+          if (suc && spuSoldOut) {
+            await this.updateProductState(product_state_on_sale.toString())
+          }
+        }).catch(() => {
+        }).finally(() => {
+          this.loading = false
+          this.$refs['subSkuTable'].clearSelection()
+        })
+      } else {
+        this.$message.warning('所选商品品种价格不满足上架条件，请仔细检查！')
+        this.$refs['subSkuTable'].clearSelection()
+      }
+    },
+    handleSubSkuSelectionSoldOut() {
+      const onSaleList = this.subSkuList.filter(item => item.status === product_sub_sku_on_sale)
+      const shouldSoldOut = onSaleList.length === this.subSkuOnSaleSelection.length
+      const message = shouldSoldOut ? '下架所选销售中品种，将会同时影响整个商品，是否继续？' : '是否继续下架所选商品品种？'
+      this.$confirm(message, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        let suc = false
+        this.loading = true
+        for (const subSku of this.subSkuOnSaleSelection) {
+          const id = subSku.id
+          const params = {
+            id,
+            status: product_sub_sku_sold_out
+          }
+          const ret = await this.handleUpdateSubSku(params)
+          if (ret) {
+            const find = this.productInfo.skuList.find(item => item.id === id)
+            if (find) find.status = product_sub_sku_sold_out
+            suc = true
+          }
+        }
+        if (suc && shouldSoldOut) {
+          await this.updateProductState(product_state_off_shelves.toString())
+        }
+      }).catch(() => {
+      }).finally(() => {
+        this.loading = false
+        this.$refs['subSkuTable'].clearSelection()
+      })
+    },
     handleSubSkuOnSale(index) {
       if (this.isReadyForSale(this.subSkuList[index])) {
         const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
@@ -1664,14 +1763,17 @@ export default {
             id,
             status: product_sub_sku_on_sale
           }
+          this.loading = true
           const ret = await this.handleUpdateSubSku(params)
           if (ret) {
             this.productInfo.skuList[index].status = product_sub_sku_on_sale
             if (spuSoldOut) {
-              this.updateProductState(product_state_on_sale.toString())
+              await this.updateProductState(product_state_on_sale.toString())
             }
           }
         }).catch(() => {
+        }).finally(() => {
+          this.loading = false
         })
       } else {
         this.$confirm('此商品品种不满足上架条件，是否去修改此商品品种？', '提示', {
@@ -1697,6 +1799,7 @@ export default {
           id,
           status: product_sub_sku_sold_out
         }
+        this.loading = true
         const ret = await this.handleUpdateSubSku(params)
         if (ret) {
           this.productInfo.skuList[index].status = product_sub_sku_sold_out
@@ -1705,6 +1808,8 @@ export default {
           }
         }
       }).catch(() => {
+      }).finally(() => {
+        this.loading = false
       })
     },
     async updateProductPrice(price) {
@@ -1736,6 +1841,10 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    handleSelectionChange(selection) {
+      this.subSkuOnSaleSelection = selection.filter(item => item.status === product_sub_sku_on_sale)
+      this.subSkuSoldOutSelection = selection.filter(item => item.status === product_sub_sku_sold_out)
     },
     goBack() {
       window.history.length > 1
