@@ -19,6 +19,26 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="用户OpenID">
+        <el-input
+          v-model.trim="queryData.userOpenId"
+          placeholder="输入用户OpenID"
+          clearable
+          maxlength="50"
+          style="width: 350px"
+        />
+      </el-form-item>
+      <el-form-item label="用户券码">
+        <el-input
+          v-model.trim="queryData.userCouponCode"
+          placeholder="输入用户领取的优惠券码"
+          clearable
+          maxlength="50"
+          style="width: 250px"
+        />
+      </el-form-item>
+    </el-form>
+    <el-form :model="queryData" inline>
       <el-form-item label="领取时间">
         <el-date-picker
           v-model="queryData.collectedStartDate"
@@ -62,14 +82,14 @@
       </el-form-item>
     </el-form>
     <div style="margin: 10px 0">
-      <el-button :disabled="couponUsageTotal <= 0" type="primary" @click="handleExportUserCode">
+      <el-button :disabled="couponUsageTotal <= 0" type="info" @click="handleExportUserCode">
         导出用户券码
       </el-button>
-      <el-button v-if="needBatchCode" type="info" @click="handleBatchCode">
+      <el-button v-if="needBatchCode" type="warning" @click="handleBatchCode">
         批量生成券码
       </el-button>
       <el-button v-if="false" type="warning" @click="handleImportUserCode">批量导入券码</el-button>
-      <el-button :disabled="!couldRedeem" type="warning" @click="handleShowRedeemDialog">
+      <el-button :disabled="!couldRedeem" type="danger" @click="handleShowRedeemDialog">
         发放优惠券
       </el-button>
     </div>
@@ -206,8 +226,9 @@ export default {
       }].concat(UsageStatusOptions),
       couponId: -1,
       queryData: {
-        userName: '',
         status: 0,
+        userOpenId: '',
+        userCouponCode: '',
         collectedStartDate: null,
         collectedEndDate: null,
         consumedStartDate: null,

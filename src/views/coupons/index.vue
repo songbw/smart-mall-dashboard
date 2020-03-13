@@ -35,6 +35,20 @@
           placeholder="选择结束日期"
         />
       </el-form-item>
+    </el-form>
+    <el-form :inline="true" :model="queryData">
+      <el-form-item label="用户OpenID">
+        <el-input v-model="queryOpenId" placeholder="输入用户OpenID" clearable maxlength="50" style="width: 350px" />
+      </el-form-item>
+      <el-form-item label="用户领取券码">
+        <el-input
+          v-model="queryUserCouponCode"
+          placeholder="输入用户领取的优惠券码"
+          clearable
+          maxlength="50"
+          style="width: 250px"
+        />
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getCouponData">
           搜索
@@ -334,6 +348,22 @@ export default {
         }
       }
     },
+    queryOpenId: {
+      get() {
+        return this.queryData.openId
+      },
+      set(value) {
+        this.$store.commit('coupons/SET_SEARCH_DATA', { openId: value })
+      }
+    },
+    queryUserCouponCode: {
+      get() {
+        return this.queryData.userCouponCode
+      },
+      set(value) {
+        this.$store.commit('coupons/SET_SEARCH_DATA', { userCouponCode: value })
+      }
+    },
     queryOffset: {
       get() {
         return this.queryData.offset
@@ -406,6 +436,14 @@ export default {
       }
       if (this.queryEndDate && this.queryEndDate.trim()) {
         params.releaseEndDate = this.queryEndDate
+        needFilter = true
+      }
+      if (!isEmpty(this.queryOpenId)) {
+        params.openId = this.queryOpenId
+        needFilter = true
+      }
+      if (!isEmpty(this.queryUserCouponCode)) {
+        params.userCouponCode = this.queryUserCouponCode
         needFilter = true
       }
       if (!isEqual(this.queryParams, params)) {

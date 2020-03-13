@@ -8,6 +8,8 @@ const state = {
     type: 0,
     startDate: null,
     endDate: null,
+    openId: '',
+    userCouponCode: '',
     offset: 1,
     limit: 20
   }
