@@ -1677,11 +1677,26 @@ export default {
       }
       return suc
     },
-    isReadyForSale(sku) {
+    isSubSkuReadyForSale(sku) {
       return sku.price > 0
     },
+    isSpuReadyForSale() {
+      const spu = this.productInfo
+      const price = Number.parseFloat(spu.price)
+      const introduction = spu.introductionUrl || spu.introduction
+      return !(Number.isNaN(price) || price < 0 ||
+        isEmpty(spu.image) ||
+        isEmpty(spu.imagesUrl) ||
+        isEmpty(introduction) ||
+        isEmpty(spu.category)
+      )
+    },
     handleSubSkuSelectionOnSale() {
-      const subSkuList = this.subSkuSoldOutSelection.filter(item => this.isReadyForSale(item))
+      if (!this.isSpuReadyForSale()) {
+        this.$message.warning('此商品未满足上架条件，请仔细检查！')
+        return
+      }
+      const subSkuList = this.subSkuSoldOutSelection.filter(item => this.isSubSkuReadyForSale(item))
       if (subSkuList.length > 0) {
         const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
         const message = spuSoldOut ? '此商品为下架状态，上架将会同时影响整个商品，是否继续？' : '是否继续上架所选商品品种？'
@@ -1752,7 +1767,7 @@ export default {
       })
     },
     handleSubSkuOnSale(index) {
-      if (this.isReadyForSale(this.subSkuList[index])) {
+      if (this.isSubSkuReadyForSale(this.subSkuList[index])) {
         const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
         const message = spuSoldOut ? '此商品为下架状态，上架将会同时影响整个商品，是否继续？' : '是否继续上架此商品品种？'
         this.$confirm(message, '警告', {
