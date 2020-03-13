@@ -9,7 +9,7 @@
       />
     </el-tabs>
     <el-form inline @submit.prevent.native="() => {}">
-      <el-form-item label="会员名">
+      <el-form-item label="会员姓名">
         <el-input
           v-model="queryName"
           placeholder="输入会员姓名"
@@ -25,6 +25,26 @@
           style="max-width: 400px;"
           :clearable="true"
           maxlength="20"
+        />
+      </el-form-item>
+    </el-form>
+    <el-form inline @submit.prevent.native="() => {}">
+      <el-form-item label="会员昵称">
+        <el-input
+          v-model="queryNickname"
+          placeholder="输入会员昵称"
+          style="max-width: 400px;"
+          :clearable="true"
+          maxlength="30"
+        />
+      </el-form-item>
+      <el-form-item label="OpenID">
+        <el-input
+          v-model="queryOpenId"
+          placeholder="输入OpenID"
+          style="max-width: 400px;"
+          :clearable="true"
+          maxlength="50"
         />
       </el-form-item>
       <el-form-item>
@@ -156,6 +176,22 @@ export default {
         this.$store.commit('members/SET_MEMBERS_QUERY', { telephone: trim(value) })
       }
     },
+    queryOpenId: {
+      get() {
+        return this.listQuery.openId
+      },
+      set(value) {
+        this.$store.commit('members/SET_MEMBERS_QUERY', { openId: trim(value) })
+      }
+    },
+    queryNickname: {
+      get() {
+        return this.listQuery.nickname
+      },
+      set(value) {
+        this.$store.commit('members/SET_MEMBERS_QUERY', { nickname: trim(value) })
+      }
+    },
     queryPageNo: {
       get() {
         return this.listQuery.pageNo
@@ -223,6 +259,12 @@ export default {
           if (!isEmpty(this.queryTelephone)) {
             params.telephone = this.queryTelephone
           }
+          if (!isEmpty(this.queryOpenId)) {
+            params.openId = this.queryOpenId
+          }
+          if (!isEmpty(this.queryNickname)) {
+            params.nickname = this.queryNickname
+          }
           if (this.queryAppId !== 'all') {
             params.appId = this.queryAppId
           }
@@ -246,7 +288,7 @@ export default {
       this.getMemberList()
     },
     handleViewMember(id) {
-      this.$router.push({ name: 'MemberProfile', params: { id }})
+      this.$router.push({ name: 'MemberProfile', params: { id } })
     },
     onAppIdChanged(platform) {
       if (this.queryAppId !== platform.appId) {

@@ -3,6 +3,8 @@ const state = {
     appId: 'all',
     name: '',
     telephone: '',
+    openId: '',
+    nickname: '',
     pageNo: 1,
     pageSize: 20
   },
@@ -22,6 +24,8 @@ const mutations = {
     state.membersQuery.appId = 'all'
     state.membersQuery.name = ''
     state.membersQuery.telephone = ''
+    state.membersQuery.openId = ''
+    state.membersQuery.nickname = ''
     state.membersQuery.pageNo = 1
     state.membersQuery.pageSize = 20
   },
