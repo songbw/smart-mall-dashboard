@@ -288,7 +288,10 @@ export default {
       this.getMemberList()
     },
     handleViewMember(id) {
-      this.$router.push({ name: 'MemberProfile', params: { id } })
+      this.$router.push({
+        name: 'MemberProfile',
+        params: { id }
+      })
     },
     onAppIdChanged(platform) {
       if (this.queryAppId !== platform.appId) {
