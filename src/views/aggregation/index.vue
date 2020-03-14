@@ -150,7 +150,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="left" :width="hasEditPermission? '350': '100'">
+        <el-table-column label="操作" align="left" :width="hasEditPermission? '400': '100'">
           <template slot-scope="scope">
             <el-button
               v-if="hasViewPermission"
