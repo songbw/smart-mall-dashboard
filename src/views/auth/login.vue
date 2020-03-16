@@ -60,7 +60,7 @@
     <el-footer style="font-size: 12px;text-align: center">
       <div>
         <svg-icon icon-class="copyright" />
-        <span>2018-2019 深圳凤巢信息科技有限公司</span>
+        <span>2018-2020 深圳凤巢信息科技有限公司</span>
       </div>
       <div>
         版本：{{ appVersion }}
