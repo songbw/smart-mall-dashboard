@@ -89,7 +89,7 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.15.5',
+            version: '0.15.6',
             path: 'dist/xlsx.full.min.js'
           },
           {
