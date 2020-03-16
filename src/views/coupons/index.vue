@@ -461,15 +461,21 @@ export default {
     },
     async getFilterData(params) {
       this.dataLoading = true
+      let total = 0
+      let list = []
       try {
-        const { data } = await searchCouponsApi(params)
-        this.couponTotal = data.result.total
-        this.couponData = data.result.list
+        const { code, data } = await searchCouponsApi(params)
+        if (code === 200) {
+          total = data.result.total
+          list = data.result.list
+        }
       } catch (err) {
         console.warn('Search Coupons:' + err)
       } finally {
         this.dataLoading = false
       }
+      this.couponTotal = total
+      this.couponData = list
     },
     handleCreateCoupon() {
       this.$router.push({ name: 'CreateCoupon' })

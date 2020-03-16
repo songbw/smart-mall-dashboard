@@ -30,8 +30,12 @@ export function validPhone(str) {
   if (value === null) {
     return false
   }
-  const number = phoneUtil.parseAndKeepRawInput(value, 'CN')
-  return phoneUtil.isValidNumber(number)
+  try {
+    const number = phoneUtil.parseAndKeepRawInput(value, 'CN')
+    return phoneUtil.isValidNumber(number)
+  } catch (_) {
+    return false
+  }
 }
 
 export function validVerificationCode(str) {
