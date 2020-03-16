@@ -713,13 +713,14 @@ export default {
           name: spu.name,
           merchantId: spu.merchantId
         }
+        const spuState = parseInt(spu.state)
         if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
           for (const [index, sku] of spu.skuList.entries()) {
             this.productsData.push({
               skuId: sku.code,
               skuIndex: index,
               skuNum: spu.skuList.length,
-              state: sku.status.toString(),
+              state: spuState === product_state_on_sale ? sku.status.toString() : product_state_off_shelves.toString(),
               price: centToYuan(sku.price),
               sprice: centToYuan(sku.sprice),
               editPrice: false,
