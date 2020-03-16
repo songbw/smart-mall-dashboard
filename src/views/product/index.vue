@@ -168,7 +168,7 @@
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column column-key="name" label="商品图" align="center" width="140">
+      <el-table-column column-key="image" label="商品图" align="center" width="140">
         <template slot-scope="scope">
           <img :src="scope.row.image" class="thumb-image" alt="">
         </template>

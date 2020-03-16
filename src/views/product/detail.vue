@@ -261,6 +261,16 @@
         <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
         <el-input-number v-else v-model="productForm.comparePrice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
+      <el-divider v-if="hasProperties" content-position="left">商品规格</el-divider>
+      <el-form v-if="hasProperties" label-width="13rem" inline>
+        <el-form-item
+          v-for="prop in productInfo.properties"
+          :key="prop.id"
+          :label="prop.name"
+        >
+          <el-input :value="prop.val" readonly />
+        </el-form-item>
+      </el-form>
       <el-divider v-if="hasSubSku" content-position="left">商品品种</el-divider>
       <el-form-item v-if="hasSubSku" label-width="0">
         <el-button-group v-if="hasUpdatePermission">
@@ -292,6 +302,11 @@
             align="center"
             width="55"
           />
+          <el-table-column label="品种图" align="center" width="120">
+            <template slot-scope="scope">
+              <img v-if="scope.row.goodsLogo" :src="scope.row.goodsLogo" class="thumb-image" alt="">
+            </template>
+          </el-table-column>
           <el-table-column label="品种编码" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.code }}</span>
@@ -320,6 +335,19 @@
           <el-table-column label="建议销售价(元)" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.advisePrice | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="规格" align="center">
+            <template slot-scope="scope">
+              <div v-if="scope.row.propertyList && scope.row.propertyList.length > 0">
+                <el-tag
+                  v-for="prop in scope.row.propertyList"
+                  :key="prop.id"
+                  type="info"
+                >
+                  {{ prop.val }}
+                </el-tag>
+              </div>
             </template>
           </el-table-column>
           <el-table-column label="状态" align="center">
@@ -896,6 +924,11 @@ export default {
     },
     subSkuList() {
       return this.hasSubSku ? this.productInfo.skuList : []
+    },
+    hasProperties() {
+      return this.productInfo &&
+        Array.isArray(this.productInfo.properties) &&
+        this.productInfo.properties.length > 0
     }
   },
   created() {
@@ -1767,6 +1800,10 @@ export default {
       })
     },
     handleSubSkuOnSale(index) {
+      if (!this.isSpuReadyForSale()) {
+        this.$message.warning('此商品未满足上架条件，请仔细检查！')
+        return
+      }
       if (this.isSubSkuReadyForSale(this.subSkuList[index])) {
         const spuSoldOut = this.productInfo.state === product_state_off_shelves.toString()
         const message = spuSoldOut ? '此商品为下架状态，上架将会同时影响整个商品，是否继续？' : '是否继续上架此商品品种？'
@@ -1876,5 +1913,11 @@ export default {
   .image-upload-input {
     display: none;
     z-index: -9999;
+  }
+
+  .thumb-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%
   }
 </style>
