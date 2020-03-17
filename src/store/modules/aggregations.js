@@ -363,6 +363,12 @@ const mutations = {
             : true
           settings.marginTop = 'marginTop' in settings ? settings.marginTop : 0
           return { data: { list: newList, settings }, ...rest }
+        } else if (item.type === aggregationHorizontalGoodType) {
+          const { data, ...rest } = item
+          const { list, settings } = data
+          settings.marginX = 'marginX' in settings ? settings.marginX : 0
+          settings.skuBackgroundColor = 'skuBackgroundColor' in settings ? settings.skuBackgroundColor : null
+          return { data: { list, settings }, ...rest }
         } else {
           return item
         }

@@ -250,7 +250,7 @@ export default {
         return this.horizontalGoodData.list
       }
     },
-    horizontalGoodData: function() {
+    horizontalGoodData: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === horizontalGoodType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
