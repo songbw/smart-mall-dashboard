@@ -661,13 +661,13 @@ export default {
           const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
           if (approve >= 0) {
             options = this.workOrderData.typeId === type_change_good
-              ? [change_good] : [agree_refund]
+              ? [change_good] : [agree_refund, update_user_logistics]
           } else if (reject >= 0) {
             options = this.workOrderData.typeId === type_change_good
-              ? [reject_change] : [reject_refund]
+              ? [reject_change] : [reject_refund, update_user_logistics]
           } else {
             options = this.workOrderData.typeId === type_change_good
-              ? [change_good, reject_change] : [agree_refund, reject_refund]
+              ? [change_good, reject_change] : [agree_refund, reject_refund, update_user_logistics]
           }
         }
       } else if (this.workOrderData.status === work_order_status_working) {
