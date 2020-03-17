@@ -48,6 +48,10 @@
             @targetChanges="handleImageTargetChanges"
           />
         </el-form-item>
+        <el-form-item label="两侧边距">
+          <el-input-number v-model="marginX" :min="0" :max="40" step-strictly />
+          <span>px</span>
+        </el-form-item>
         <el-form-item label="下边距">
           <el-select :value="marginBottom" @change="onMarginBottomChanged">
             <el-option label="0px" value="0" />
@@ -56,6 +60,10 @@
             <el-option label="30px" value="30" />
             <el-option label="40px" value="40" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="商品背景颜色">
+          <el-color-picker v-model="skuBackgroundColor" />
+          <span>{{ skuBackgroundColor }}</span>
         </el-form-item>
       </el-form>
     </el-container>
@@ -242,7 +250,7 @@ export default {
         return this.horizontalGoodData.list
       }
     },
-    horizontalGoodData: function () {
+    horizontalGoodData: function() {
       if (this.pageTemplateList[this.currentTemplateIndex].type === horizontalGoodType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
       } else {
@@ -358,12 +366,30 @@ export default {
         this.changeTitle(title)
       }
     },
+    marginX: {
+      get() {
+        return this.horizontalGoodData.settings.marginX
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.horizontalGoodData.settings, { marginX: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
     marginBottom: {
       get() {
         return this.horizontalGoodData.settings.marginBottom
       },
       set(newValue) {
         const settings = Object.assign({}, this.horizontalGoodData.settings, { marginBottom: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
+    skuBackgroundColor: {
+      get() {
+        return this.horizontalGoodData.settings.skuBackgroundColor
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.horizontalGoodData.settings, { skuBackgroundColor: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     }

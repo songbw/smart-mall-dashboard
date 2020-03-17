@@ -205,5 +205,7 @@ export const horizontalGoodSettings = {
     targetUrl: 'about:blank',
     targetName: '无链接'
   },
+  skuBackgroundColor: '#F8F8F8',
+  marginX: '0',
   marginBottom: '0'
 }
