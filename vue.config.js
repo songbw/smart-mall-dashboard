@@ -77,7 +77,7 @@ module.exports = {
           {
             name: 'echarts',
             var: 'echarts',
-            version: '4.6.0',
+            version: '4.7.0',
             path: 'dist/echarts.min.js'
           },
           {
@@ -95,7 +95,7 @@ module.exports = {
           {
             name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '3.2.7',
+            version: '3.2.8',
             path: 'dist/libphonenumber.min.js'
           },
           {
