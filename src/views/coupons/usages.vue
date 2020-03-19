@@ -141,6 +141,7 @@
             :key="orderId"
             :to="{ name: 'ViewMainOrder', params: { mainId: orderId }}"
             class="el-link el-link--primary is-underline"
+            style="margin: 0 10px"
           >
             {{ orderId }}
           </router-link>

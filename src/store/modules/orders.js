@@ -21,6 +21,7 @@ const queryTemplate = {
 
 const deliveryQuery = {
   appId: 'all',
+  subOrderId: '',
   mobile: '',
   receiverName: '',
   subStatus: suborder_status_waiting_deliver,

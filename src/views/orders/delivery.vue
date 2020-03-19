@@ -8,6 +8,17 @@
         :name="item.appId"
       />
     </el-tabs>
+    <el-form inline>
+      <el-form-item label="子订单编号">
+        <el-input
+          v-model="querySubOrderId"
+          :clearable="true"
+          placeholder="输入子订单编号"
+          maxlength="100"
+          style="width: 600px"
+        />
+      </el-form-item>
+    </el-form>
     <el-form :inline="true">
       <el-form-item label="收货人电话">
         <el-input v-model="queryMobile" :clearable="true" placeholder="输入收货人电话号码" maxlength="20" />
@@ -58,10 +69,19 @@
           v-if="hasExportPermission && hasVendorPermission"
           icon="el-icon-download"
           type="warning"
-          :loading="exportingDelivery"
-          @click="handleExportDeliverOrders"
+          :loading="exportingDailyDelivery"
+          @click="handleExportDailyDeliverOrders"
         >
-          导出发货概况
+          导出每日概况
+        </el-button>
+        <el-button
+          v-if="hasExportPermission && hasVendorPermission"
+          icon="el-icon-download"
+          type="warning"
+          :loading="exportingOrderDelivery"
+          @click="exportDialogVisible = true"
+        >
+          导出发货订单列表
         </el-button>
       </el-form-item>
     </el-form>
@@ -178,6 +198,64 @@
       @cancelled="handleCancelDeliver"
       @confirmed="handleSetDeliver"
     />
+    <el-dialog
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      :visible.sync="exportDialogVisible"
+      title="导出订单发货列表"
+    >
+      <el-form ref="exportForm" :model="exportForm" :rules="exportRules" label-width="7rem">
+        <el-form-item label="开始日期" prop="payDateStart">
+          <el-date-picker
+            v-model="exportForm.payDateStart"
+            placeholder="选择开始日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期" prop="payDateEnd">
+          <el-date-picker
+            v-model="exportForm.payDateEnd"
+            placeholder="选择结束日期"
+            type="date"
+            value-format="yyyy-MM-dd"
+          />
+        </el-form-item>
+        <el-form-item label="运营平台" prop="appId">
+          <el-select v-model="exportForm.appId">
+            <el-option
+              v-for="item in appIdOptions"
+              :key="item.appId"
+              :label="item.name"
+              :value="item.appId"
+            >
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="hasVendorPermission"
+          label="供应商名"
+          prop="merchantId"
+        >
+          <el-select v-model="exportForm.merchantId">
+            <el-option
+              v-for="item in vendorOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span>{{ item.label }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="handleCancelExport">取消</el-button>
+        <el-button type="primary" @click="handleConfirmExport">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -203,6 +281,35 @@ import {
 import ImportDialog from './ImportDialog'
 import { OrderPermissions } from '@/utils/role-permissions'
 import trim from 'lodash/trim'
+import * as excel from '@/utils/Export2Excel'
+
+const maxExportMonths = 3
+
+const ExportOrderHeaders = [
+  { field: 'subOrderId', label: '子订单编号' },
+  { field: 'merchantName', label: '供应商' },
+  { field: 'skuId', label: '商品SKU' },
+  { field: 'name', label: '商品名称' },
+  { field: 'num', label: '购买数量' },
+  { field: 'receiverName', label: '收货人姓名' },
+  { field: 'mobile', label: '收货人电话' },
+  { field: 'provinceName', label: '省' },
+  { field: 'cityName', label: '市' },
+  { field: 'countyName', label: '区' },
+  { field: 'address', label: '详细地址' }
+]
+
+const validateDates = (start, end, amount = 3) => {
+  const format = 'YYYY-MM-DD'
+  if (start && end) {
+    const startDate = moment(start, format)
+    const maxEndDate = moment(start, format).add(amount, 'months')
+    const endDate = moment(end, format)
+    return endDate.isSameOrAfter(startDate) && endDate.isSameOrBefore(maxEndDate)
+  } else {
+    return false
+  }
+}
 
 export default {
   name: 'Orders',
@@ -235,12 +342,53 @@ export default {
       merchantName: '',
       deliveryDialogVisible: false,
       importDialogVisible: false,
-      exportingDelivery: false,
+      exportingDailyDelivery: false,
+      exportDialogVisible: false,
+      exportingOrderDelivery: false,
       deliveryData: {
         orderId: null,
         subOrderId: null,
         subId: null,
         subOrderStatus: null
+      },
+      exportForm: {
+        merchantId: -1,
+        payDateStart: null,
+        payDateEnd: null,
+        appId: 'all'
+      },
+      exportRules: {
+        payDateStart: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            const amount = maxExportMonths
+            if ((value && this.exportForm.payDateEnd === null) ||
+              validateDates(this.exportForm.payDateStart, this.exportForm.payDateEnd, amount)) {
+              callback()
+            } else {
+              callback(new Error(`请选择合适导出的开始日期，区间最多${amount}个月`))
+            }
+          }
+        }],
+        payDateEnd: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            const amount = maxExportMonths
+            if ((value && this.exportForm.payDateStart === null) ||
+              validateDates(this.exportForm.payDateStart, this.exportForm.payDateEnd, amount)) {
+              callback()
+            } else {
+              callback(new Error(`请选择合适导出的结束日期， 区间最多${amount}个月`))
+            }
+          }
+        }],
+        appId: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null) {
+              callback(new Error('请选择对应运营平台'))
+            } else {
+              callback()
+            }
+          }
+        }]
       }
     }
   },
@@ -287,6 +435,14 @@ export default {
       },
       set(value) {
         this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { appId: value })
+      }
+    },
+    querySubOrderId: {
+      get() {
+        return this.orderQuery.subOrderId
+      },
+      set(value) {
+        this.$store.commit('orders/SET_DELIVERY_QUERY_DATA', { subOrderId: trim(value) })
       }
     },
     queryMobile: {
@@ -404,7 +560,7 @@ export default {
       const params = {
         subStatus: this.querySubStatus
       }
-      const keys = ['mobile', 'receiverName', 'payDateStart', 'payDateEnd']
+      const keys = ['subOrderId', 'mobile', 'receiverName', 'payDateStart', 'payDateEnd']
       keys.forEach(key => {
         if (!isEmpty(this.orderQuery[key])) {
           params[key] = this.orderQuery[key]
@@ -486,9 +642,9 @@ export default {
         console.warn('Download blob data error:' + e)
       }
     },
-    async handleExportDeliverOrders() {
+    async handleExportDailyDeliverOrders() {
       try {
-        this.exportingDelivery = true
+        this.exportingDailyDelivery = true
         const data = await exportVendorDeliverOrdersApi()
         const now = moment().format('YYYY-MM-DD')
         const filename = `供应商发货概况-${now}.xls`
@@ -496,7 +652,85 @@ export default {
       } catch (e) {
         console.warn('Export deliver order error:' + e)
       } finally {
-        this.exportingDelivery = false
+        this.exportingDailyDelivery = false
+      }
+    },
+    handleCancelExport() {
+      this.exportDialogVisible = false
+      this.$refs.exportForm.resetFields()
+    },
+    handleConfirmExport() {
+      this.$refs.exportForm.validate(valid => {
+        if (valid) {
+          this.exportDialogVisible = false
+          this.handleExportDeliveryOrders()
+        }
+      })
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v => filterVal.map(j => v[j]))
+    },
+    handleExportToFile(orderList, filename) {
+      const tHeaders = ExportOrderHeaders.map(header => header.label)
+      const tFields = ExportOrderHeaders.map(header => header.field)
+      const data = this.formatJson(tFields, orderList)
+      excel.export_json_to_excel({
+        header: tHeaders,
+        data,
+        filename
+      })
+    },
+    async handleExportDeliveryOrders() {
+      const params = {
+        subStatus: suborder_status_waiting_deliver,
+        payDateStart: this.exportForm.payDateStart,
+        payDateEnd: this.exportForm.payDateEnd,
+        pageIndex: 1,
+        pageSize: 80
+      }
+      if (this.exportForm.appId !== 'all') {
+        params.appId = this.exportForm.appId
+      }
+      if (this.hasVendorPermission) {
+        if (this.exportForm.merchantId > 0) {
+          params.merchantId = this.exportForm.merchantId
+        }
+      } else {
+        params.merchantId = this.vendorId
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        let deliveryList = []
+        let pageIndex = 1
+        let pageTotal = 1
+        do {
+          params.pageIndex = pageIndex
+          const { code, data } = await getOrderListApi(params)
+          if (code === 200) {
+            pageTotal = data.result.pages
+            const resultList = data.result.list.map(item => {
+              const order = {}
+              for (const header of ExportOrderHeaders) {
+                if (header.field in item) {
+                  order[header.field] = item[header.field]
+                }
+              }
+              order.merchantName = this.getVendorName(item.merchantId)
+              return order
+            })
+            deliveryList = deliveryList.concat(resultList)
+          }
+          pageIndex++
+        } while (pageIndex <= pageTotal)
+        const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
+        const appLabel = appOption ? appOption.name + '-' : ''
+        const vendorName = 'merchantId' in params ? this.getVendorName(params.merchantId) : null
+        const vendorLabel = isEmpty(vendorName) ? '' : vendorName + '-'
+        const filename = `${appLabel}${vendorLabel}待发货订单列表-${params.payDateStart}-${params.payDateEnd}`
+        this.handleExportToFile(deliveryList, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的订单数据！')
       }
     }
   }
