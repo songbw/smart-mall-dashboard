@@ -35,7 +35,7 @@
           placeholder="输入会员昵称"
           style="max-width: 400px;"
           :clearable="true"
-          maxlength="30"
+          maxlength="50"
         />
       </el-form-item>
       <el-form-item label="OpenID">
@@ -263,7 +263,7 @@ export default {
             params.openId = this.queryOpenId
           }
           if (!isEmpty(this.queryNickname)) {
-            params.nickname = this.queryNickname
+            params.nickName = this.queryNickname
           }
           if (this.queryAppId !== 'all') {
             params.appId = this.queryAppId
