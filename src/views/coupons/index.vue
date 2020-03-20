@@ -107,7 +107,7 @@
           <span>{{ scope.row.releaseTotal }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="已发放数量" align="center" width="100">
+      <el-table-column label="已发放数量" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.releaseNum }}</span>
         </template>

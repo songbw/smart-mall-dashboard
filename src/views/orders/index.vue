@@ -169,7 +169,7 @@
           />
         </template>
       </el-table-column>
-      <el-table-column align="center" label="收货人" width="160">
+      <el-table-column align="center" label="收货人" width="180">
         <template slot-scope="scope">
           <div>
             <div class="text-item">{{ '姓名：' + scope.row.receiverName }}</div>
@@ -177,7 +177,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订单时间" width="200">
+      <el-table-column align="center" label="订单时间" width="220">
         <template slot-scope="scope">
           <div>
             <div class="text-item">

@@ -119,7 +119,7 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="200">
+      <el-table-column label="操作" align="center" width="250">
         <template slot-scope="scope">
           <el-tooltip :open-delay="1000" content="上移" placement="top">
             <el-button

@@ -133,7 +133,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="订单时间" width="200">
+      <el-table-column align="center" label="订单时间" width="220">
         <template slot-scope="scope">
           <div>
             <div class="text-item">

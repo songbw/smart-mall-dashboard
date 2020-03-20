@@ -142,7 +142,7 @@
           <span>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="全天分时段" align="center" width="100">
+      <el-table-column label="全天分时段" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.dailySchedule ? '是' : '否' }}</span>
         </template>
@@ -152,17 +152,17 @@
           <el-tag>{{ scope.row.status | promotionStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="开始时间" align="center" width="160">
+      <el-table-column label="开始时间" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.startDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" width="160">
+      <el-table-column label="结束时间" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.endDate }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="140">
+      <el-table-column label="操作" align="center" width="160">
         <template slot-scope="scope">
           <el-dropdown v-if="hasEditPermission" placement="bottom" trigger="click" @command="handleOpsAction">
             <el-button type="primary" icon="el-icon-arrow-down">
