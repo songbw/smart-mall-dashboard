@@ -5,6 +5,7 @@
   "author": "David",
   "scripts": {
     "build:test": "vue-cli-service build",
+    "build:test-gat": "vue-cli-service build --mode test-gat",
     "build:rel": "vue-cli-service build --mode release",
     "lint": "eslint --ext .js,.vue src",
     "dev": "vue-cli-service serve",
