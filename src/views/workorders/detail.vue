@@ -640,12 +640,7 @@ export default {
           const approve = this.flows.findIndex(item => item.operation === yiyatong_request_approve)
           const reject = this.flows.findIndex(item => item.operation === yiyatong_request_reject)
           const unknown = this.flows.findIndex(item => item.operation === yiyatong_request_unknown)
-          if (approve >= 0) {
-            options = [approve_request]
-          } else if (reject >= 0) {
-            options = this.workOrderData.typeId === type_change_good
-              ? [reject_change] : [reject_refund]
-          } else if (unknown >= 0) {
+          if (approve >= 0 || reject >= 0 || unknown >= 0) {
             options = this.workOrderData.typeId === type_change_good
               ? [approve_request, reject_change] : [approve_request, reject_refund]
           } else {
