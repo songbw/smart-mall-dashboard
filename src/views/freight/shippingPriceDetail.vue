@@ -10,15 +10,17 @@
     >
       <el-form-item label="模板名称" prop="name">
         <el-input
-          :value="shippingPriceForm.name"
+          v-model="shippingPriceForm.name"
           :readonly="viewOnly"
           class="dialog-form-item"
           style="width: 480px"
-          @input="value => shippingPriceForm.name = value.trim()"
+          maxlength="50"
         />
       </el-form-item>
-      <el-form-item label="是否默认">
-        <span v-if="viewOnly">{{ shippingPriceForm.isDefault ? '是' : '否' }}</span>
+      <el-form-item v-if="!withVendor" label="是否默认">
+        <span v-if="viewOnly || shippingPriceForm.id === -1">
+          {{ shippingPriceForm.isDefault ? '是' : '否' }}
+        </span>
         <el-switch v-else v-model="shippingPriceForm.isDefault" />
         <span style="margin-left: 20px;font-size: 12px">
           <i class="el-icon-warning-outline">
@@ -37,18 +39,15 @@
           </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item v-if="hasVendor" label="所属供应商">
-        <span v-if="viewOnly">
+      <el-form-item v-if="withVendor" label="所属供应商" prop="merchantId">
+        <span v-if="viewOnly || shippingPriceForm.id >= 0">
           {{ vendorName }}
         </span>
-        <el-select v-else v-model="shippingPriceForm.merchantId" v-loading="vendorLoading">
-          <el-option
-            v-for="item in vendorOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+        <vendor-selection
+          v-else
+          :vendor-id="merchantId"
+          @changed="handleVendorChanged"
+        />
       </el-form-item>
       <el-divider />
       <el-form-item label="运费设置" prop="regions">
@@ -152,6 +151,7 @@
 <script>
 import isEmpty from 'lodash/isEmpty'
 import isNumber from 'lodash/isNumber'
+import VendorSelection from '@/components/VendorSelection'
 import {
   createShippingPriceApi,
   updateShippingPriceApi,
@@ -159,8 +159,7 @@ import {
   deleteShippingPriceRegionApi,
   addShippingPriceRegionApi
 } from '@/api/freight'
-import { getVendorListApi } from '@/api/vendor'
-import { vendor_status_approved } from '@/utils/constants'
+import { getVendorProfileByIdApi } from '@/api/vendor'
 import {
   shipping_price_unit_mode,
   ShippingPriceModeOptions,
@@ -175,15 +174,16 @@ const priceTemplate = {
 }
 export default {
   name: 'ShippingPriceDetail',
+  components: { VendorSelection },
   data() {
     return {
-      hasVendor: false,
+      withVendor: false,
       vendorLoading: false,
       modeOptions: ShippingPriceModeOptions,
       regionOptions: RegionList,
       viewOnly: false,
-      vendorList: [],
       dataLoading: false,
+      vendorName: '',
       shippingPriceData: {},
       shippingPriceForm: {
         id: -1,
@@ -203,7 +203,18 @@ export default {
               callback()
             }
           },
-          trigger: 'blur'
+          trigger: 'change'
+        }],
+        merchantId: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (this.withVendor && value === 0) {
+              callback(new Error('请选择供应商'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'change'
         }],
         regions: [{
           required: true,
@@ -227,20 +238,14 @@ export default {
     }
   },
   computed: {
-    vendorOptions() {
-      return [{ value: 0, label: '平台' }].concat(this.vendorList)
-    },
-    vendorName() {
-      if (this.viewOnly) {
-        const vendor = this.vendorOptions.find(option => option.value === this.shippingPriceForm.merchantId)
-        return vendor ? vendor.label : ''
-      } else {
-        return ''
-      }
+    merchantId() {
+      const id = this.shippingPriceForm.merchantId
+      return id > 0 ? id.toString() : null
     }
   },
   created() {
-    if (this.$route.name === 'CreateShippingPrice') {
+    if (this.$route.name === 'CreateShippingPrice' ||
+      this.$route.name === 'CreateVendorShippingPrice') {
       this.shippingPriceForm.regions.push({
         id: -1,
         type: '0',
@@ -248,8 +253,12 @@ export default {
         provinces: [],
         ...priceTemplate
       })
+      if (this.$route.name === 'CreateVendorShippingPrice') {
+        this.withVendor = true
+      }
     } else {
-      if (this.$route.name === 'ViewShippingPrice') {
+      if (this.$route.name === 'ViewShippingPrice' ||
+        this.$route.name === 'ViewVendorShippingPrice') {
         this.viewOnly = true
       }
       const id = this.$route.params.id
@@ -257,30 +266,18 @@ export default {
         this.getShippingPriceDetail(id)
       }
     }
-    if (this.hasVendor) {
-      this.getVendorList()
-    }
   },
   methods: {
-    async getVendorList() {
+    async getVendorName(merchantId) {
       try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
-        this.vendorLoading = true
-        const data = await getVendorListApi(params)
-        this.vendorList = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
+        if (this.merchantId > 0) {
+          const { code, data } = await getVendorProfileByIdApi({ id: merchantId })
+          if (code === 200) {
+            this.vendorName = data.name
           }
-        })
+        }
       } catch (e) {
-        console.warn('Coupon get vendor list error:' + e)
-      } finally {
-        this.vendorLoading = false
+        console.warn('Sub order detail vendor profile error:' + e)
       }
     },
     async getShippingPriceDetail(id) {
@@ -305,10 +302,18 @@ export default {
           })
           this.shippingPriceForm.regions = regions.map(item => ({ ...item }))
           this.shippingPriceData.regions = regions.map(item => ({ ...item }))
+          this.withVendor = this.shippingPriceData.merchantId > 0
+          if (this.withVendor) {
+            await this.getVendorName(this.shippingPriceData.merchantId)
+          }
         }
       } catch (e) {
         console.warn('Get shipping price detail error:' + e)
       }
+    },
+    handleVendorChanged(merchantId) {
+      const id = parseInt(merchantId)
+      this.shippingPriceForm.merchantId = isNaN(id) ? 0 : id
     },
     handleDeleteRegion(index) {
       const region = this.shippingPriceForm.regions[index]
@@ -362,7 +367,14 @@ export default {
         }
       } catch (e) {
         console.warn('Create shipping price error:' + e)
-        this.$message.warning('创建运费模板失败，请联系管理员！')
+        let msg = '创建运费模板失败，请联系管理员！'
+        if (e.response && e.response.data) {
+          const { code } = e.response.data
+          if (code === 420100) {
+            msg = '此供应商已创建运费模板，请删除或者修改对应的模板！'
+          }
+        }
+        this.$message.warning(msg)
       } finally {
         this.dataLoading = false
       }

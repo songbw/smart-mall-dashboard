@@ -1,7 +1,22 @@
 <template>
   <div class="app-container">
+    <el-form v-if="shippingType === vendorType" inline>
+      <el-form-item label="供应商">
+        <vendor-selection
+          :vendor-id="queryMerchantId"
+          @changed="onVendorChanged"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="getShippingPriceList">
+          搜索
+        </el-button>
+      </el-form-item>
+    </el-form>
     <div v-if="hasEditPermission" style="margin-bottom: 10px">
-      <el-button type="primary" @click="gotoCreateShippingPrice">新建运费模板</el-button>
+      <el-button type="primary" @click="gotoCreateShippingPrice">
+        {{ shippingType === mallType ? '新建商城运费模板' : '新建供应商运费模板' }}
+      </el-button>
     </div>
     <el-table
       v-loading="listLoading"
@@ -30,9 +45,14 @@
           <span>{{ scope.row.mode | modeFilter }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="是否默认" align="center" width="120">
+      <el-table-column v-if="shippingType === mallType" label="是否默认" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.isDefault ? '是' : '否' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="shippingType === vendorType" label="供应商" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.vendorName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" width="200">
@@ -85,16 +105,23 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import Pagination from '@/components/Pagination'
+import VendorSelection from '@/components/VendorSelection'
 import {
   getShippingPriceListApi,
+  getVendorShippingPriceListApi,
   deleteShippingPriceApi
 } from '@/api/freight'
+import { getVendorListApi } from '@/api/vendor'
 import { ShippingPriceModeOptions } from './constants'
 import { FreightPermissions } from '@/utils/role-permissions'
+import { vendor_status_approved } from '@/utils/constants'
+
+const mall_shipping_type = 'mall'
+const vendor_shipping_type = 'vendor'
 
 export default {
   name: 'ShippingPrice',
-  components: { Pagination },
+  components: { Pagination, VendorSelection },
   filters: {
     dateFormat: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -108,9 +135,14 @@ export default {
   },
   data() {
     return {
+      mallType: mall_shipping_type,
+      vendorType: vendor_shipping_type,
+      shippingType: mall_shipping_type,
       listLoading: false,
+      vendorList: [],
       shippingPriceTotal: 0,
       shippingPriceList: [],
+      queryMerchantId: null,
       pageNo: 1,
       pageSize: 20
     }
@@ -127,19 +159,74 @@ export default {
     }
   },
   created() {
-    this.getShippingPriceList()
+    if (this.$route.name === 'VendorShippingPrice') {
+      this.shippingType = vendor_shipping_type
+    }
+    this.prepareData()
   },
   methods: {
+    async prepareData() {
+      if (this.shippingType === vendor_shipping_type) {
+        await this.getVendorList()
+      }
+      await this.getShippingPriceList()
+    },
+    async getVendorList() {
+      try {
+        const params = {
+          page: 1,
+          limit: 1000,
+          status: vendor_status_approved
+        }
+        this.listLoading = true
+        const data = await getVendorListApi(params)
+        this.vendorList = data.rows.map(row => {
+          return {
+            value: row.company.id,
+            label: row.company.name
+          }
+        })
+      } catch (e) {
+        console.warn('Coupon get vendor list error:' + e)
+      } finally {
+        this.listLoading = false
+      }
+    },
+    getVendorName(merchantId) {
+      const find = this.vendorList.find(item => item.value === merchantId)
+      return find ? find.label : ''
+    },
+    onVendorChanged(id) {
+      this.pageNo = 1
+      this.queryMerchantId = id
+    },
+    async getShippingPriceListProxy(params) {
+      if (this.shippingType === vendor_shipping_type) {
+        const merchantId = parseInt(this.queryMerchantId)
+        if (!isNaN(merchantId)) {
+          params.merchantId = merchantId
+        }
+        return await getVendorShippingPriceListApi(params)
+      } else {
+        return await getShippingPriceListApi(params)
+      }
+    },
     async getShippingPriceList() {
       if (this.hasViewPermission) {
         try {
           this.listLoading = true
           const params = { pageNo: this.pageNo, pageSize: this.pageSize }
-          const { data } = await getShippingPriceListApi(params)
+          const { data } = await this.getShippingPriceListProxy(params)
           if (data && data.result) {
             const res = data.result
             if (Array.isArray(res.list)) {
-              this.shippingPriceList = res.list
+              this.shippingPriceList = res.list.map(item => {
+                const vendorName = item.merchantId > 0 ? this.getVendorName(item.merchantId) : ''
+                return {
+                  ...item,
+                  vendorName
+                }
+              })
             }
             if (res.pageInfo) {
               this.shippingPriceTotal = res.pageInfo.totalCount
@@ -155,17 +242,22 @@ export default {
       }
     },
     gotoCreateShippingPrice() {
-      this.$router.push({ name: 'CreateShippingPrice' })
+      this.$router.push({
+        name: this.shippingType === vendor_shipping_type ? 'CreateVendorShippingPrice' : 'CreateShippingPrice',
+        params: {
+          withVendor: this.shippingType === vendor_shipping_type
+        }
+      })
     },
     handleView(id) {
       this.$router.push({
-        name: 'ViewShippingPrice',
+        name: this.shippingType === vendor_shipping_type ? 'ViewVendorShippingPrice' : 'ViewShippingPrice',
         params: { id }
       })
     },
     handleEdit(id) {
       this.$router.push({
-        name: 'EditShippingPrice',
+        name: this.shippingType === vendor_shipping_type ? 'EditVendorShippingPrice' : 'EditShippingPrice',
         params: { id }
       })
     },

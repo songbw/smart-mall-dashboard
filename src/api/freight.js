@@ -78,6 +78,14 @@ export function getShippingPriceListApi(params) {
   })
 }
 
+export function getVendorShippingPriceListApi(params) {
+  return Vue.axios('freights').request({
+    url: '/freights/adminShip/findMerchants',
+    method: 'get',
+    params
+  })
+}
+
 export function createShippingPriceApi(params) {
   return Vue.axios('freights').request({
     url: '/freights/adminShip/create',

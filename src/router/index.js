@@ -515,6 +515,33 @@ export const constantRoutes = [
         meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
+        path: 'vendorShippingPrice',
+        name: 'VendorShippingPrice',
+        component: () => import('@/views/freight/shippingPrice'),
+        meta: { title: '商户运费', icon: 'shipping-price' }
+      },
+      {
+        path: 'createVendorShippingPrice',
+        name: 'CreateVendorShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        hidden: true
+      },
+      {
+        path: 'viewVendorShippingPrice/:id',
+        name: 'ViewVendorShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        hidden: true
+      },
+      {
+        path: 'editVendorShippingPrice/:id',
+        name: 'EditVendorShippingPrice',
+        component: () => import('@/views/freight/shippingPriceDetail'),
+        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        hidden: true
+      },
+      {
         path: 'roles',
         name: 'RoleManager',
         component: () => import('@/views/vendor/roleManager'),

@@ -13,6 +13,7 @@ import barterCards from './modules/barterCards'
 import orders from './modules/orders'
 import workOrders from './modules/workOrders'
 import members from './modules/members'
+import freight from './modules/freight'
 
 if (!window.Vuex) Vue.use(Vuex)
 
@@ -31,7 +32,8 @@ const store = new Vuex.Store({
     barterCards,
     orders,
     workOrders,
-    members
+    members,
+    freight
   },
   getters,
   strict: debug

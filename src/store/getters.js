@@ -55,6 +55,7 @@ const getters = {
   orderDeliveryQuery: state => state.orders.deliveryQuery,
   workOrdersQuery: state => state.workOrders.search,
   membersQuery: state => state.members.membersQuery,
-  balancesQuery: state => state.members.balancesQuery
+  balancesQuery: state => state.members.balancesQuery,
+  freightQuery: state => state.freight.query
 }
 export default getters
