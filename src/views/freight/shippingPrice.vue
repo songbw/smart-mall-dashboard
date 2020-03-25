@@ -28,7 +28,10 @@
       <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
           <router-link
-            :to="{ name: 'ViewShippingPrice', params: { id: scope.row.id }}"
+            :to="{
+              name: shippingType === vendorType ? 'ViewVendorShippingPrice' : 'ViewShippingPrice',
+              params: { id: scope.row.id }
+            }"
             class="el-link el-link--primary is-underline"
           >
             {{ scope.row.id }}
