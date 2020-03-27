@@ -873,12 +873,12 @@ export default {
       if (this.exportForm.appId !== 'all') {
         params.appId = this.exportForm.appId
       }
-      if (this.hasVendorPermission) {
+      if (this.isVendorUser) {
+        params.merchantId = this.vendorId
+      } else {
         if (this.exportForm.merchantId > 0) {
           params.merchantId = this.exportForm.merchantId
         }
-      } else {
-        params.merchantId = this.vendorId
       }
       this.$refs.exportForm.resetFields()
       try {
@@ -900,12 +900,12 @@ export default {
       if (this.exportForm.appId !== 'all') {
         params.appId = this.exportForm.appId
       }
-      if (this.hasVendorPermission) {
+      if (this.isVendorUser) {
+        params.merchantId = this.vendorId
+      } else {
         if (this.exportForm.merchantId > 0) {
           params.merchantId = this.exportForm.merchantId
         }
-      } else {
-        params.merchantId = this.vendorId
       }
       this.$refs.exportForm.resetFields()
       try {
