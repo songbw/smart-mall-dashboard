@@ -101,7 +101,7 @@ module.exports = {
           {
             name: 'cos-js-sdk-v5',
             var: 'COS',
-            version: '0.5.23',
+            version: '0.5.24',
             path: 'dist/cos-js-sdk-v5.min.js'
           },
           {
