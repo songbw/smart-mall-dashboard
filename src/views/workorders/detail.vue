@@ -675,11 +675,11 @@ export default {
             const approve = this.flows.findIndex(item => item.operation === yiyatong_refund_approve)
             const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
             if (approve >= 0) {
-              options = [agree_refund]
+              options = [agree_refund, update_user_logistics]
             } else if (reject >= 0) {
-              options = [reject_refund]
+              options = [reject_refund, update_user_logistics]
             } else {
-              options = [update_user_logistics]
+              options = [agree_refund, reject_refund, update_user_logistics]
             }
           }
         }
