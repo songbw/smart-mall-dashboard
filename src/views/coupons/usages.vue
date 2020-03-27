@@ -101,12 +101,12 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="用户券码" align="center" width="220">
+      <el-table-column label="用户券码" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.userCouponCode }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="用户OpenID" align="center" width="300">
+      <el-table-column label="用户OpenID" align="center">
         <template slot-scope="scope">
           <router-link
             v-if="scope.row.userOpenId"
@@ -132,6 +132,12 @@
       <el-table-column label="使用时间" align="center" width="180">
         <template slot-scope="scope">
           <span>{{ scope.row.consumedTime | timeFormat }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效时间" align="center" width="220">
+        <template slot-scope="scope">
+          <div>开始：{{ scope.row.effectiveStartDate | timeFormat }}</div>
+          <div>结束：{{ scope.row.effectiveEndDate | timeFormat }}</div>
         </template>
       </el-table-column>
       <el-table-column label="消费订单" align="center">
