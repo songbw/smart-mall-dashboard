@@ -343,6 +343,8 @@ import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderByOrderListApi } from '@/api/workOrders'
 import { getPayTypeListByAppIdApi } from '@/api/payments'
 import {
+  role_watcher_name,
+  role_admin_name,
   suborder_status_requested_service,
   SubOrderStatusDefinitions,
   vendor_status_approved,
@@ -464,6 +466,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userRole: 'userRole',
       userPermissions: 'userPermissions',
       vendorApproved: 'vendorApproved',
       platformAppList: 'platformAppList',
@@ -471,6 +474,9 @@ export default {
       orderQuery: 'orderQuery',
       vendorId: 'vendorId'
     }),
+    isVendorUser() {
+      return this.userRole !== role_admin_name && this.userRole !== role_watcher_name
+    },
     hasViewPermission() {
       return this.userPermissions.includes(OrderPermissions.view)
     },
@@ -876,8 +882,7 @@ export default {
       }
       this.$refs.exportForm.resetFields()
       try {
-        const data = this.hasVendorPermission
-          ? await exportOrdersApi(params) : await exportVendorOrdersApi(params)
+        const data = this.isVendorUser ? await exportVendorOrdersApi(params) : await exportOrdersApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
         const filename = `${appLabel}订单列表-${params.payStartDate}-${params.payEndDate}.xls`
@@ -904,8 +909,8 @@ export default {
       }
       this.$refs.exportForm.resetFields()
       try {
-        const data = this.hasVendorPermission
-          ? await exportReconciliationApi(params) : await exportVendorReconciliationApi(params)
+        const data = this.isVendorUser
+          ? await exportVendorReconciliationApi(params) : await exportReconciliationApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
         const filename = `${appLabel}结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
