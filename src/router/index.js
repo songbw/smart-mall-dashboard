@@ -518,27 +518,27 @@ export const constantRoutes = [
         path: 'vendorShippingPrice',
         name: 'VendorShippingPrice',
         component: () => import('@/views/freight/shippingPrice'),
-        meta: { title: '商户运费', icon: 'shipping-price' }
+        meta: { title: '商户运费', icon: 'shipping-price', roles: [role_admin_name] }
       },
       {
         path: 'createVendorShippingPrice',
         name: 'CreateVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {
         path: 'viewVendorShippingPrice/:id',
         name: 'ViewVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {
         path: 'editVendorShippingPrice/:id',
         name: 'EditVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price' },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {
