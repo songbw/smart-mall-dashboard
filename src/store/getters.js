@@ -37,6 +37,7 @@ const getters = {
   categoriesLoading: state => state.categories.dataLoading,
   categories: state => state.categories.categoriesTree,
   secondClassCategories: state => state.categories.secondClassTree,
+  thirdClassCategories: state => state.categories.thirdClassList,
   aggregationsQuery: state => state.aggregations.search,
   currentAggregation: state => state.aggregations.aggregation,
   currentAggregationContent: state => state.aggregations.aggregation.content,

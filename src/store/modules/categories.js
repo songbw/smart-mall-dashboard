@@ -41,7 +41,8 @@ const state = {
   dataLoaded: false,
   dataLoading: false,
   categoriesTree: [],
-  secondClassTree: []
+  secondClassTree: [],
+  thirdClassList: []
 }
 
 const mutations = {
@@ -54,6 +55,7 @@ const mutations = {
   SET_ALL_DATA: (state, data) => {
     state.categoriesTree = data.firstClassList
     state.secondClassTree = data.secondClassList
+    state.thirdClassList = data.thirdClassList
   },
   UPDATE_CATEGORY_DATA: (state, params) => {
     const categoryId = params.categoryId
@@ -157,12 +159,13 @@ const actions = {
     commit('SET_DATA_IS_LOADING', true)
     let total = 0
     try {
-      commit('SET_ALL_DATA', { firstClassList: [], secondClassList: [] })
+      commit('SET_ALL_DATA', { firstClassList: [], secondClassList: [], thirdClassList: [] })
 
       const { code, data } = await getAllCategoriesApi()
       const allData = code === 200 ? data.result : []
       const firstClassList = []
       const secondClassList = []
+      const thirdClassList = []
       for (const item of allData) {
         switch (item.categoryClass) {
           case '1': {
@@ -189,6 +192,7 @@ const actions = {
               category => category.categoryId === item.parentId)
             if (second) {
               second.subs.push(item)
+              thirdClassList.push(item)
               delete item.subs
               delete item.subTotal
             }
@@ -206,7 +210,7 @@ const actions = {
       }
       total = firstClassList.length
 
-      commit('SET_ALL_DATA', { firstClassList, secondClassList })
+      commit('SET_ALL_DATA', { firstClassList, secondClassList, thirdClassList })
       commit('SET_DATA_LOADED', true)
     } catch (e) {
       console.warn(`Store categories :${e}`)

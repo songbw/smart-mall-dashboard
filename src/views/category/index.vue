@@ -29,6 +29,15 @@
           刷新所有类别
         </el-button>
       </el-form-item>
+      <el-form-item>
+        <el-button
+          type="info"
+          icon="el-icon-download"
+          @click="handleExport"
+        >
+          导出所有类别
+        </el-button>
+      </el-form-item>
     </el-form>
     <div v-if="hasEditPermission" style="margin-bottom: 10px">
       <el-button type="primary" @click="handleCreateFirstClass">
@@ -191,6 +200,14 @@ import trim from 'lodash/trim'
 import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 import { CategoryPermissions } from '@/utils/role-permissions'
+import * as excel from '@/utils/Export2Excel'
+
+const ExportHeaders = [
+  { field: 'categoryId', label: '三级类别编号' },
+  { field: 'thirdFullName', label: '三级类别全称' },
+  { field: 'secondFullName', label: '二级类别名称' },
+  { field: 'firstFullName', label: '一级类别名称' }
+]
 
 const copyCategory = src => {
   return {
@@ -204,6 +221,10 @@ const copyCategory = src => {
     parentId: src.parentId,
     subTotal: src.subTotal
   }
+}
+
+const formatJson = (filterVal, jsonData) => {
+  return jsonData.map(v => filterVal.map(j => v[j]))
 }
 
 export default {
@@ -264,7 +285,8 @@ export default {
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
       categoryData: 'categories',
-      secondCategoryData: 'secondClassCategories'
+      secondCategoryData: 'secondClassCategories',
+      thirdCategoryData: 'thirdClassCategories'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(CategoryPermissions.view)
@@ -556,6 +578,30 @@ export default {
     },
     onDialogNameInput(value) {
       this.dialogValue.categoryName = trim(value)
+    },
+    handleExport() {
+      const filename = '类别列表'
+      const jsonData = this.thirdCategoryData.map(third => {
+        const second = this.secondCategoryData.find(item => item.categoryId === third.parentId)
+        const first = second ? this.categoryData.find(item => item.categoryId === second.parentId) : null
+        let firstFullName = ''
+        let secondFullName = ''
+        let thirdFullName = third.categoryName
+        if (second && first) {
+          firstFullName = first.categoryName
+          secondFullName = `${first.categoryName}/${second.categoryName}`
+          thirdFullName = `${first.categoryName}/${second.categoryName}/${third.categoryName}`
+        }
+        return { ...third, firstFullName, secondFullName, thirdFullName }
+      })
+      const tHeaders = ExportHeaders.map(header => header.label)
+      const tFields = ExportHeaders.map(header => header.field)
+      const data = formatJson(tFields, jsonData)
+      excel.export_json_to_excel({
+        header: tHeaders,
+        data,
+        filename
+      })
     }
   }
 }
