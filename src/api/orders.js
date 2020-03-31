@@ -172,6 +172,33 @@ export function exportShareProfitApi(params) {
   })
 }
 
+export function exportVendorSettlementApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/export/statistic/settlement',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+export function exportVendorShippingPriceApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/export/statistic/expressfee',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
+export function exportVendorInvoiceBillApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/export/statistic/merchant/receipt',
+    method: 'get',
+    responseType: 'blob',
+    params
+  })
+}
+
 export function reopenOrderApi(params) {
   return Vue.axios('orders').request({
     url: '/orders/order/workorder/goback',

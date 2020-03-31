@@ -133,6 +133,26 @@
         </el-button>
       </el-tooltip>
     </div>
+    <div
+      v-if="hasExportPermission && hasVendorPermission"
+      style="display: flex;justify-content: start;margin-bottom: 12px"
+    >
+      <el-tooltip v-if="hasExportPermission" content="导出所需供应商的货款结算报表" :open-delay="1000">
+        <el-button icon="el-icon-download" type="info" @click="handleShowVendorSettlementDialog">
+          导出供应商货款结算表
+        </el-button>
+      </el-tooltip>
+      <el-tooltip v-if="hasExportPermission && hasVendorPermission" content="导出所有供应商的运费报表" :open-delay="1000">
+        <el-button icon="el-icon-download" type="info" @click="handleShowVendorShippingPriceDialog">
+          导出供应商运费报表
+        </el-button>
+      </el-tooltip>
+      <el-tooltip v-if="hasExportPermission" content="导出所需供应商的发票报表" :open-delay="1000">
+        <el-button icon="el-icon-download" type="info" @click="handleShowVendorInvoiceDialog">
+          导出供应商发票报表
+        </el-button>
+      </el-tooltip>
+    </div>
     <el-table
       ref="ordersTable"
       v-loading="listLoading"
@@ -267,21 +287,23 @@
             value-format="yyyy-MM-dd"
           />
         </el-form-item>
-        <el-form-item label="运营平台" prop="appId">
+        <el-form-item v-if="exportType !== vendorShippingType" label="运营平台" prop="appId">
           <el-select v-model="exportForm.appId" @change="onExportAppIdChanged">
             <el-option
               v-for="item in appIdOptions"
               :key="item.appId"
               :label="item.name"
               :value="item.appId"
-              :disabled="item.appId === 'all' &&
-                (exportType === profitType || exportType === paymentType || exportType === invoiceType)"
             >
               <span>{{ item.name }}</span>
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="exportType === paymentType || exportType === invoiceType" label="支付类型" prop="payType">
+        <el-form-item
+          v-if="showExportDialogPayType"
+          label="支付类型"
+          prop="payType"
+        >
           <el-select v-model="exportForm.payType">
             <el-option
               v-for="item in exportPayTypeOptions"
@@ -294,7 +316,7 @@
           </el-select>
         </el-form-item>
         <el-form-item
-          v-if="hasVendorPermission && (exportType === flowType || exportType === reconciliationType)"
+          v-if="showExportDialogVendor"
           label="供应商名"
           prop="merchantId"
         >
@@ -332,9 +354,12 @@ import {
   exportOrdersApi,
   exportPaymentBillApi,
   exportReconciliationApi,
+  exportShareProfitApi,
+  exportVendorInvoiceBillApi,
   exportVendorOrdersApi,
   exportVendorReconciliationApi,
-  exportShareProfitApi,
+  exportVendorSettlementApi,
+  exportVendorShippingPriceApi,
   getOrderListApi,
   reopenOrderApi,
   updateSubOrderApi
@@ -343,15 +368,15 @@ import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderByOrderListApi } from '@/api/workOrders'
 import { getPayTypeListByAppIdApi } from '@/api/payments'
 import {
-  role_watcher_name,
+  PayTypeOptions,
   role_admin_name,
+  role_watcher_name,
   suborder_status_requested_service,
   SubOrderStatusDefinitions,
   vendor_status_approved,
-  work_order_status_rejected,
   work_order_status_finished,
-  WorkOrderStatusDefinition,
-  PayTypeOptions
+  work_order_status_rejected,
+  WorkOrderStatusDefinition
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
 
@@ -409,11 +434,14 @@ export default {
       exportType: 'export-flow',
       invoiceType: 'export-invoice',
       profitType: 'export-profit',
+      vendorSettlementType: 'export-vendor-settlement',
+      vendorShippingType: 'export-vendor-shipping',
+      vendorInvoiceType: 'export-vendor-invoice',
       exportDialogVisible: false,
       exportDialogTitle: '',
       exportPayTypeOptions: [],
       exportForm: {
-        merchantId: -1,
+        merchantId: null,
         payStartDate: null,
         payEndDate: null,
         payType: null,
@@ -444,8 +472,8 @@ export default {
         }],
         payType: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if ((this.exportType === this.paymentType || this.exportType === this.invoiceType) &&
-              value === null) {
+            if (value === null && (this.exportType === this.paymentType ||
+              this.exportType === this.invoiceType)) {
               callback(new Error('请选择合适支付类型'))
             } else {
               callback()
@@ -454,8 +482,19 @@ export default {
         }],
         appId: [{
           required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value === null) {
+            if (value === null && this.exportType !== this.vendorShippingType) {
               callback(new Error('请选择对应运营平台'))
+            } else {
+              callback()
+            }
+          }
+        }],
+        merchantId: [{
+          required: true, trigger: 'blur', validator: (rule, value, callback) => {
+            if (value === null &&
+              (this.exportType === this.vendorSettlementType ||
+                this.exportType === this.vendorInvoiceType)) {
+              callback(new Error('请选择对应供应商'))
             } else {
               callback()
             }
@@ -493,17 +532,39 @@ export default {
       return this.userPermissions.includes(OrderPermissions.vendor)
     },
     vendorOptions() {
-      return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
+      if (this.exportType === this.vendorSettlementType ||
+        this.exportType === this.vendorInvoiceType) {
+        return this.vendorLoading ? [] : this.vendors
+      } else {
+        return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
+      }
     },
     appIdOptions() {
       if (this.showAllAppIdList) {
-        return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+        if (this.exportType === this.profitType ||
+          this.exportType === this.paymentType ||
+          this.exportType === this.invoiceType) {
+          return this.platformAppList
+        } else {
+          return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
+        }
       } else {
         return this.validAppList
       }
     },
     showAllAppIdList() {
       return this.validAppList.length === this.platformAppList.length
+    },
+    showExportDialogPayType() {
+      return this.exportType === this.paymentType ||
+        this.exportType === this.invoiceType
+    },
+    showExportDialogVendor() {
+      return this.hasVendorPermission &&
+        (this.exportType === this.flowType ||
+          this.exportType === this.reconciliationType ||
+          this.exportType === this.vendorSettlementType ||
+          this.exportType === this.vendorInvoiceType)
     },
     queryAppId: {
       get() {
@@ -839,30 +900,56 @@ export default {
     handleShowExportDialog() {
       this.exportDialogTitle = '导出流水订单'
       this.exportForm.merchantId = -1
+      this.exportForm.appId = 'all'
       this.exportType = this.flowType
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
       this.exportDialogTitle = '导出结算订单'
       this.exportForm.merchantId = -1
+      this.exportForm.appId = 'all'
       this.exportType = this.reconciliationType
       this.exportDialogVisible = true
     },
     handleShowPaymentExportDialog() {
       this.exportDialogTitle = '导出支付交易订单'
+      this.exportForm.appId = null
       this.exportForm.payType = null
       this.exportType = this.paymentType
       this.exportDialogVisible = true
     },
     handleShowInvoiceDialog() {
       this.exportDialogTitle = '导出发票报表'
+      this.exportForm.appId = null
       this.exportForm.payType = null
       this.exportType = this.invoiceType
       this.exportDialogVisible = true
     },
     handleShowProfitDialog() {
       this.exportDialogTitle = '导出分润报表'
+      this.exportForm.appId = null
       this.exportType = this.profitType
+      this.exportDialogVisible = true
+    },
+    handleShowVendorSettlementDialog() {
+      this.exportDialogTitle = '导出货款结算表'
+      this.exportType = this.vendorSettlementType
+      this.exportForm.merchantId = null
+      this.exportForm.appId = 'all'
+      this.exportDialogVisible = true
+    },
+    handleShowVendorShippingPriceDialog() {
+      this.exportDialogTitle = '导出运费报表'
+      this.exportType = this.vendorShippingType
+      this.exportForm.merchantId = null
+      this.exportForm.appId = null
+      this.exportDialogVisible = true
+    },
+    handleShowVendorInvoiceDialog() {
+      this.exportDialogTitle = '导出供应商发票报表'
+      this.exportType = this.vendorInvoiceType
+      this.exportForm.merchantId = null
+      this.exportForm.appId = null
       this.exportDialogVisible = true
     },
     async handleExportOrders() {
@@ -980,10 +1067,75 @@ export default {
         this.$message.warning('未找到有效的结算订单数据！')
       }
     },
+    async handleExportVendorSettlement() {
+      const params = {
+        startTime: this.exportForm.payStartDate,
+        endTime: this.exportForm.payEndDate
+      }
+      if (this.exportForm.appId !== 'all') {
+        params.appIds = this.exportForm.appId
+      }
+      if (this.hasVendorPermission) {
+        params.merchantId = this.exportForm.merchantId
+      } else {
+        params.merchantId = this.vendorId
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportVendorSettlementApi(params)
+        const appOption = this.platformAppList.find(item => item.appId === params.appIds)
+        const appLabel = appOption ? appOption.name + '-' : ''
+        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendorLabel = vendor ? vendor.label + '-' : ''
+        const filename = `${vendorLabel}${appLabel}货款结算报表-${params.startTime}-${params.endTime}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
+    async handleExportVendorShippingPrice() {
+      const params = {
+        startTime: this.exportForm.payStartDate,
+        endTime: this.exportForm.payEndDate
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportVendorShippingPriceApi(params)
+        const filename = `供应商运费报表-${params.startTime}-${params.endTime}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
+    async handleExportVendorInvoice() {
+      const params = {
+        startTime: this.exportForm.payStartDate,
+        endTime: this.exportForm.payEndDate
+      }
+      if (this.exportForm.appId !== 'all') {
+        params.appIds = this.exportForm.appId
+      }
+      if (this.hasVendorPermission) {
+        params.merchantId = this.exportForm.merchantId
+      } else {
+        params.merchantId = this.vendorId
+      }
+      this.$refs.exportForm.resetFields()
+      try {
+        const data = await exportVendorInvoiceBillApi(params)
+        const filename = `供应商发票报表-${params.startTime}-${params.endTime}.xls`
+        this.downloadBlobData(data, filename)
+      } catch (e) {
+        console.warn('Order export error:' + e)
+        this.$message.warning('未找到有效的结算订单数据！')
+      }
+    },
     handleCancelExport() {
       this.exportDialogVisible = false
       this.exportPayTypeOptions = []
-      this.$refs.exportForm.resetFields()
+      this.$refs.exportForm.clearValidate()
     },
     handleConfirmExport() {
       this.$refs.exportForm.validate(valid => {
@@ -1005,6 +1157,15 @@ export default {
               break
             case this.profitType:
               this.handleExportShareProfit()
+              break
+            case this.vendorSettlementType:
+              this.handleExportVendorSettlement()
+              break
+            case this.vendorShippingType:
+              this.handleExportVendorShippingPrice()
+              break
+            case this.vendorInvoiceType:
+              this.handleExportVendorInvoice()
               break
           }
         }
@@ -1029,9 +1190,13 @@ export default {
       return []
     },
     async onExportAppIdChanged(value) {
-      if (this.exportType === this.paymentType || this.exportType === this.invoiceType) {
+      if (this.showExportDialogPayType) {
         this.exportForm.payType = null
-        this.exportPayTypeOptions = value !== null ? await this.getPayTypeListByAppId(value) : []
+        if (value !== null) {
+          this.exportPayTypeOptions = await this.getPayTypeListByAppId(value)
+        } else {
+          this.exportPayTypeOptions = []
+        }
       }
     },
     onAppIdChanged(platform) {
