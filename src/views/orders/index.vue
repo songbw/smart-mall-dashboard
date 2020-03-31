@@ -134,7 +134,7 @@
       </el-tooltip>
     </div>
     <div
-      v-if="hasExportPermission && hasVendorPermission"
+      v-if="hasExportPermission"
       style="display: flex;justify-content: start;margin-bottom: 12px"
     >
       <el-tooltip v-if="hasExportPermission" content="导出所需供应商的货款结算报表" :open-delay="1000">
@@ -549,7 +549,7 @@ export default {
           return [{ appId: 'all', name: '全部' }].concat(this.platformAppList)
         }
       } else {
-        return this.validAppList
+        return this.validAppList.length > 0 ? this.validAppList : [{ appId: 'invalid', name: '无有效平台' }]
       }
     },
     showAllAppIdList() {
@@ -900,14 +900,14 @@ export default {
     handleShowExportDialog() {
       this.exportDialogTitle = '导出流水订单'
       this.exportForm.merchantId = -1
-      this.exportForm.appId = 'all'
+      this.exportForm.appId = this.showAllAppIdList ? 'all' : this.appIdOptions[0].appId
       this.exportType = this.flowType
       this.exportDialogVisible = true
     },
     handleShowReconciliationDialog() {
       this.exportDialogTitle = '导出结算订单'
       this.exportForm.merchantId = -1
-      this.exportForm.appId = 'all'
+      this.exportForm.appId = this.showAllAppIdList ? 'all' : this.appIdOptions[0].appId
       this.exportType = this.reconciliationType
       this.exportDialogVisible = true
     },
@@ -935,7 +935,7 @@ export default {
       this.exportDialogTitle = '导出货款结算表'
       this.exportType = this.vendorSettlementType
       this.exportForm.merchantId = null
-      this.exportForm.appId = 'all'
+      this.exportForm.appId = this.showAllAppIdList ? 'all' : this.appIdOptions[0].appId
       this.exportDialogVisible = true
     },
     handleShowVendorShippingPriceDialog() {
@@ -949,7 +949,7 @@ export default {
       this.exportDialogTitle = '导出供应商发票报表'
       this.exportType = this.vendorInvoiceType
       this.exportForm.merchantId = null
-      this.exportForm.appId = null
+      this.exportForm.appId = this.showAllAppIdList ? 'all' : this.appIdOptions[0].appId
       this.exportDialogVisible = true
     },
     async handleExportOrders() {
