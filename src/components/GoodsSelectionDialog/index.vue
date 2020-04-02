@@ -29,6 +29,33 @@
           @changed="handleVendorChanged"
         />
       </el-form-item>
+      <el-form-item label="供应商子品牌">
+        <el-select v-model="dialogFilterForm.mpuPrefix" clearable>
+          <el-option
+            v-for="item in mpuPrefixOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <el-form v-if="!hasPromotion">
+      <el-form-item label="商品MPU">
+        <el-input
+          v-model="filterMpus"
+          placeholder="商品MPU之间以英文逗号分隔，最多输入50个"
+          maxlength="500"
+          style="width: 80%"
+        />
+      </el-form-item>
+    </el-form>
+    <el-form v-if="hasPromotion" inline>
+      <el-button :loading="dataLoading" type="primary" @click="handleDialogPromotionQuery">
+        获取促销活动商品
+      </el-button>
+    </el-form>
+    <el-form v-else inline :model="dialogFilterForm" @submit.prevent.native="handleDialogFilterSearch">
       <el-form-item label="价格区间">
         <div>
           <el-input-number
@@ -45,24 +72,6 @@
             step-strictly
           />
         </div>
-      </el-form-item>
-    </el-form>
-    <el-form v-if="hasPromotion" inline>
-      <el-button :loading="dataLoading" type="primary" @click="handleDialogPromotionQuery">
-        获取促销活动商品
-      </el-button>
-    </el-form>
-    <el-form v-else inline :model="dialogFilterForm" @submit.prevent.native="handleDialogFilterSearch">
-      <el-form-item label="商品MPU">
-        <span class="el-icon-warning-outline" style="font-size: 12px">以英文逗号分隔</span>
-        <el-input
-          v-model="filterMpus"
-          :rows="3"
-          resize="none"
-          placeholder="商品MPU之间以英文逗号分隔，最多输入50个"
-          type="textarea"
-          label="http"
-        />
       </el-form-item>
       <el-form-item label="商品名">
         <el-input v-model="dialogFilterForm.query" />
@@ -204,6 +213,7 @@ import { ProductPermissions } from '@/utils/role-permissions'
 
 const productMinPrice = 0
 const productMaxPrice = 1000000
+const vendorAoyi = 2
 
 export default {
   name: 'GoodsSelectionDialog',
@@ -247,6 +257,7 @@ export default {
       filterSkuString: '',
       dialogFilterForm: {
         merchantId: null,
+        mpuPrefix: null,
         minPrice: productMinPrice,
         maxPrice: productMaxPrice,
         mpus: [],
@@ -291,6 +302,30 @@ export default {
       get() {
         return this.promotionId >= 0
       }
+    },
+    mpuPrefixOptions() {
+      let vendorId = -1
+      if (this.hasVendorPermission) {
+        if (!isEmpty(this.dialogFilterForm.merchantId)) {
+          vendorId = parseInt(this.dialogFilterForm.merchantId)
+        }
+      } else {
+        vendorId = this.vendorId
+      }
+      if (vendorId === vendorAoyi) {
+        return [{
+          value: '10',
+          label: '奥弋自营'
+        }, {
+          value: '20',
+          label: '苏宁易购'
+        }, {
+          value: '30',
+          label: '唯品会'
+        }]
+      } else {
+        return []
+      }
     }
   },
   methods: {
@@ -316,11 +351,13 @@ export default {
     },
     handleVendorChanged(id) {
       this.dialogFilterForm.merchantId = id
+      this.dialogFilterForm.mpuPrefix = null
     },
     handleDialogFilterClear() {
       this.offset = 1
       this.filterSkuString = ''
       this.dialogFilterForm.merchantId = null
+      this.dialogFilterForm.mpuPrefix = null
       this.dialogFilterForm.mpus = []
       this.dialogFilterForm.query = ''
       this.firstCategoryValue = null
@@ -436,6 +473,9 @@ export default {
         } else {
           params.merchantId = this.vendorId
         }
+      }
+      if (this.dialogFilterForm.mpuPrefix) {
+        params.mpuPrefix = this.dialogFilterForm.mpuPrefix
       }
       if (this.dialogFilterForm.minPrice > productMinPrice) {
         params.minPrice = this.dialogFilterForm.minPrice

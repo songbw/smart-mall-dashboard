@@ -12,7 +12,8 @@ const queryTemplate = {
   vendorId: '',
   firstCategoryId: null,
   secondCategoryId: null,
-  thirdCategoryId: null
+  thirdCategoryId: null,
+  mpuPrefix: null
 }
 
 const state = {

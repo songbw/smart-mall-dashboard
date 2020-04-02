@@ -32,7 +32,7 @@
         </el-form-item>
       </el-form>
       <el-form v-if="showMoreOptions" :inline="true">
-        <el-form-item label="商品品牌">
+        <el-form-item v-if="false" label="商品品牌">
           <el-input v-model="listBrand" :clearable="true" placeholder="输入品牌关键字" maxlength="10" />
         </el-form-item>
         <el-form-item label="商品MPU">
@@ -43,6 +43,16 @@
             :vendor-id="listVendor"
             @changed="handleVendorChanged"
           />
+        </el-form-item>
+        <el-form-item label="供应商子品牌">
+          <el-select :value="listMpuPrefix" clearable @change="handleMpuPrefixChanged">
+            <el-option
+              v-for="item in mpuPrefixOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <el-form v-if="showMoreOptions" :inline="true">
@@ -433,6 +443,8 @@ import ShippingPriceSelection from './shippingPriceSelection'
 import InventoryDialog from './inventoryDialog'
 import ExportDialog from './exportDialog'
 
+const vendorAoyi = 2
+
 export default {
   name: 'Product',
   components: {
@@ -532,6 +544,30 @@ export default {
     hasExportPermission() {
       return this.userPermissions.includes(ProductPermissions.export)
     },
+    mpuPrefixOptions() {
+      let vendorId = -1
+      if (this.hasVendorPermission) {
+        if (!isEmpty(this.listVendor)) {
+          vendorId = parseInt(this.listVendor)
+        }
+      } else {
+        vendorId = this.vendorId
+      }
+      if (vendorId === vendorAoyi) {
+        return [{
+          value: '10',
+          label: '奥弋自营'
+        }, {
+          value: '20',
+          label: '苏宁易购'
+        }, {
+          value: '30',
+          label: '唯品会'
+        }]
+      } else {
+        return []
+      }
+    },
     firstCategoryValue: {
       get() {
         return this.productQuery.firstCategoryId
@@ -624,6 +660,14 @@ export default {
       },
       set(value) {
         this.$store.commit('products/SET_SEARCH_DATA', { vendorId: value })
+      }
+    },
+    listMpuPrefix: {
+      get() {
+        return this.productQuery.mpuPrefix
+      },
+      set(value) {
+        this.$store.commit('products/SET_SEARCH_DATA', { mpuPrefix: value })
       }
     }
   },
@@ -763,6 +807,9 @@ export default {
         }
       } else {
         params.merchantId = this.vendorId
+      }
+      if (!isEmpty(this.listMpuPrefix)) {
+        params.mpuPrefix = this.listMpuPrefix
       }
       const categoryId = this.thirdCategoryValue || this.secondCategoryValue || this.firstCategoryValue
       if (categoryId !== null) {
@@ -1121,6 +1168,10 @@ export default {
     },
     handleVendorChanged(vendorId) {
       this.listVendor = vendorId
+      this.listMpuPrefix = null
+    },
+    handleMpuPrefixChanged(value) {
+      this.listMpuPrefix = value
     },
     async onGoodsImportConfirmed(spuList) {
       this.dialogImportVisible = false
