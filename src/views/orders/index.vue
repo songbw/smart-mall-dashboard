@@ -972,7 +972,9 @@ export default {
         const data = this.isVendorUser ? await exportVendorOrdersApi(params) : await exportOrdersApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
-        const filename = `${appLabel}订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendorLabel = vendor ? vendor.label + '-' : ''
+        const filename = `${vendorLabel}${appLabel}流水订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -1000,7 +1002,9 @@ export default {
           ? await exportVendorReconciliationApi(params) : await exportReconciliationApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
-        const filename = `${appLabel}结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
+        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendorLabel = vendor ? vendor.label + '-' : ''
+        const filename = `${vendorLabel}${appLabel}结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
@@ -1125,7 +1129,11 @@ export default {
       this.$refs.exportForm.resetFields()
       try {
         const data = await exportVendorInvoiceBillApi(params)
-        const filename = `供应商发票报表-${params.startTime}-${params.endTime}.xls`
+        const appOption = this.platformAppList.find(item => item.appId === params.appIds)
+        const appLabel = appOption ? appOption.name + '-' : ''
+        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendorLabel = vendor ? vendor.label + '-' : ''
+        const filename = `${vendorLabel}${appLabel}供应商发票报表-${params.startTime}-${params.endTime}.xls`
         this.downloadBlobData(data, filename)
       } catch (e) {
         console.warn('Order export error:' + e)
