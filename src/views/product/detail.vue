@@ -253,7 +253,7 @@
           <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
         </span>
       </el-form-item>
-      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)">
+      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)" prop="sprice">
         <span v-if="viewProduct"> {{ productForm.sprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
@@ -820,6 +820,19 @@ export default {
                 callback()
               } else {
                 callback(new Error('请输入商品销售价'))
+              }
+            } else {
+              callback()
+            }
+          }, trigger: 'change'
+        }],
+        sprice: [{
+          required: true, validator: (rule, value, callback) => {
+            if (this.hasCostPricePermission && !this.hasSubSku) {
+              if (isNumber(value) && value > 0) {
+                callback()
+              } else {
+                callback(new Error('请输入商品进货价'))
               }
             } else {
               callback()
