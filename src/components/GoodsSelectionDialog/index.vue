@@ -315,7 +315,7 @@ export default {
       if (vendorId === vendorAoyi) {
         return [{
           value: '10',
-          label: '奥弋自营'
+          label: '品牌自营'
         }, {
           value: '20',
           label: '苏宁易购'
