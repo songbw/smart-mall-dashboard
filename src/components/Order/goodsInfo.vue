@@ -121,7 +121,7 @@
 <script>
 import isEmpty from 'lodash/isEmpty'
 import {
-  getLogisticsInfoApi,
+  getExpressByLogisticsId,
   getExpressByThirdSnApi
 } from '@/api/orders'
 import {
@@ -202,17 +202,20 @@ export default {
         if (!sku.fetchedLogistics) {
           sku.fetchedLogistics = true
           if (!isEmpty(sku.logisticsId)) {
-            sku.logisticsTimeline = await this.getExpressByOrderId(sku.subOrderId)
+            sku.logisticsTimeline = await this.getExpressByLogisticsId({
+              logisticId: sku.logisticsId,
+              code: sku.comcode
+            })
           } else if (!isEmpty(sku.thirdOrderSn)) {
             sku.logisticsTimeline = await this.getExpressByThirdSn(sku.thirdOrderSn)
           }
         }
       }
     },
-    async getExpressByOrderId(subOrderId) {
+    async getExpressByLogisticsId(params) {
       let dataList = []
       try {
-        const { code, data } = await getLogisticsInfoApi({ subOrderId })
+        const { code, data } = await getExpressByLogisticsId(params)
         if (code === 200) {
           const query = data.result.data
           dataList = Array.isArray(query) ? query : []

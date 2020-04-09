@@ -751,10 +751,10 @@ export default {
       if (this.queryAppId !== 'all') {
         params.appId = this.queryAppId
       }
-      if (!isEqual(this.queryParams, params)) {
-        this.queryParams = { ...params }
+      if (this.queryParams !== null && !isEqual(this.queryParams, params)) {
         this.queryOffset = 1
       }
+      this.queryParams = { ...params }
       return { ...params, pageIndex: this.queryOffset, pageSize: this.queryLimit }
     },
     async getWorkOrder(idList) {

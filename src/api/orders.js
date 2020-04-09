@@ -225,3 +225,10 @@ export function getExpressByThirdSnApi(params) {
   })
 }
 
+export function getExpressByLogisticsId(params) {
+  return Vue.axios('products').request({
+    url: '/orders/order/workorder/logistics',
+    method: 'get',
+    params
+  })
+}
