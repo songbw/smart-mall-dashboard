@@ -15,7 +15,7 @@
               </el-button>
               <el-button
                 v-if="hasEditPermission"
-                :disabled="!couldOperate || (couldOperate && flowOptions.length === 0)"
+                :disabled="flowOptions.length === 0"
                 type="primary"
                 @click="handleShowFlowDialog"
               >
@@ -112,8 +112,8 @@
               <div v-if="flow.refund">
                 <span>发起退款金额：￥{{ flow.refund }}</span>
               </div>
-              <div v-if="flow.operator">
-                <span>操作员：{{ flow.operator }}</span>
+              <div v-if="flow.operator || flow.operation">
+                <span v-if="flow.operator">操作员：{{ flow.operator }}</span>
                 <span v-if="flow.operation" style="margin-left: 10px">
                   处理方式：{{ flow.operation | operationFilter }}
                 </span>
@@ -353,11 +353,6 @@ import { WorkOrderPermissions } from '@/utils/role-permissions'
 import ReceiverDialog from './receiverDialog'
 
 const vendorYiyatong = 4
-const yiyatong_request_reject = 302
-const yiyatong_request_approve = 303
-const yiyatong_request_unknown = 401
-const yiyatong_refund_reject = 312
-const yiyatong_refund_approve = 313
 
 const approve_request = 1
 const agree_refund = 2
@@ -637,33 +632,16 @@ export default {
           options = this.workOrderData.typeId === type_change_good
             ? [approve_request, reject_change, change_receiver] : [approve_request, reject_refund, change_receiver]
         } else {
-          const approve = this.flows.findIndex(item => item.operation === yiyatong_request_approve)
-          const reject = this.flows.findIndex(item => item.operation === yiyatong_request_reject)
-          const unknown = this.flows.findIndex(item => item.operation === yiyatong_request_unknown)
-          if (approve >= 0 || reject >= 0 || unknown >= 0) {
-            options = this.workOrderData.typeId === type_change_good
-              ? [approve_request, reject_change] : [approve_request, reject_refund]
-          } else {
-            options = []
-          }
+          options = this.workOrderData.typeId === type_change_good
+            ? [approve_request, reject_change] : [approve_request, reject_refund]
         }
       } else if (this.workOrderData.status === work_order_status_approved) {
         if (this.orderData.merchantId !== vendorYiyatong) {
           options = this.workOrderData.typeId === type_change_good
             ? [change_good, reject_change] : [agree_refund, reject_refund]
         } else {
-          const approve = this.flows.findIndex(item => item.operation === yiyatong_refund_approve)
-          const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
-          if (approve >= 0) {
-            options = this.workOrderData.typeId === type_change_good
-              ? [change_good] : [agree_refund, update_user_logistics]
-          } else if (reject >= 0) {
-            options = this.workOrderData.typeId === type_change_good
-              ? [reject_change] : [reject_refund, update_user_logistics]
-          } else {
-            options = this.workOrderData.typeId === type_change_good
-              ? [change_good, reject_change] : [agree_refund, reject_refund, update_user_logistics]
-          }
+          options = this.workOrderData.typeId === type_change_good
+            ? [change_good, reject_change] : [agree_refund, reject_refund, update_user_logistics]
         }
       } else if (this.workOrderData.status === work_order_status_working) {
         if (this.workOrderData.typeId === type_change_good) {
@@ -672,15 +650,7 @@ export default {
           if (this.orderData.merchantId !== vendorYiyatong) {
             options = [agree_refund, reject_refund, update_user_logistics]
           } else {
-            const approve = this.flows.findIndex(item => item.operation === yiyatong_refund_approve)
-            const reject = this.flows.findIndex(item => item.operation === yiyatong_refund_reject)
-            if (approve >= 0) {
-              options = [agree_refund, update_user_logistics]
-            } else if (reject >= 0) {
-              options = [reject_refund, update_user_logistics]
-            } else {
-              options = [agree_refund, reject_refund, update_user_logistics]
-            }
+            options = [agree_refund, reject_refund, update_user_logistics]
           }
         }
       }
@@ -689,26 +659,6 @@ export default {
     maxRefund() {
       const yuan = Number.parseFloat(this.orderData.paymentAmount)
       return Number.isNaN(yuan) ? 1000000 : (yuan / 100)
-    },
-    couldOperate() {
-      if (this.orderData.merchantId !== vendorYiyatong) {
-        return true
-      } else {
-        switch (this.workOrderData.status) {
-          case work_order_status_request:
-            if (this.flows.length > 0) {
-              const responseIndex = this.flows.findIndex(
-                item => item.operation === yiyatong_request_approve ||
-                  item.operation === yiyatong_request_reject ||
-                  item.operation === yiyatong_request_unknown)
-              return responseIndex >= 0
-            } else {
-              return false
-            }
-          default:
-            return true
-        }
-      }
     }
   },
   created() {
