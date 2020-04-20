@@ -5,7 +5,7 @@ import { storageSetItem } from '@/utils/storage'
 import { getAppPlatformListApi } from '@/api/products'
 import { getProfileApi } from '@/api/vendor'
 
-const invalidAppIdList = ['09', '10', 'test']
+const invalidAppIdList = ['test']
 
 async function getVendorPlatformList() {
   let appIdList = []
