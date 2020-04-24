@@ -153,9 +153,9 @@ const CreationHeaders = [
 const UpdateHeaders = [
   { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234(必填项)', changeOnSale: false },
   { field: 'name', label: '商品名称', type: 'string', template: '凤巢测试商品(可填项)', changeOnSale: false },
-  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题(可填项)', changeOnSale: false },
+  { field: 'subTitle', label: '商品副标题', type: 'string', template: '凤巢测试商品副标题(可填项)', changeOnSale: true },
   { field: 'category', label: '商品类别', type: 'string', template: '厨卫清洁/纸制品/手帕纸(可填项)', changeOnSale: true },
-  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌(可填项)', changeOnSale: false },
+  { field: 'brand', label: '商品品牌', type: 'string', template: '凤巢品牌(可填项)', changeOnSale: true },
   { field: 'model', label: '商品型号', type: 'string', template: '(可填项)', changeOnSale: true },
   { field: 'weight', label: '商品重量', type: 'string', template: '(可填项)', changeOnSale: true },
   { field: 'image', label: '商品封面图', type: 'string', template: '(可填项)', changeOnSale: false },
