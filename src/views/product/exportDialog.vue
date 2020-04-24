@@ -34,6 +34,9 @@
               />
             </el-select>
           </el-form-item>
+          <el-form-item label="商品品牌">
+            <el-input v-model.trim="exportForm.brand" maxlength="20" style="width: 50%" />
+          </el-form-item>
         </el-form>
       </el-tab-pane>
       <el-tab-pane v-if="hasSalePricePermission" name="price" label="按价格">
@@ -61,6 +64,7 @@
 import CategorySelection from '@/components/CategorySelection'
 import VendorSelection from '@/components/VendorSelection'
 import { ProductStateOptions } from '@/utils/constants'
+import isEmpty from 'lodash/isEmpty'
 
 export default {
   name: 'ExportDialog',
@@ -91,7 +95,8 @@ export default {
         secondCategoryValue: null,
         thirdCategoryValue: null,
         merchantId: null,
-        state: null
+        state: null,
+        brand: ''
       },
       floorPriceRate: 1.1
     }
@@ -126,6 +131,7 @@ export default {
       this.exportForm.secondCategoryValue = null
       this.exportForm.thirdCategoryValue = null
       this.exportForm.state = null
+      this.exportForm.brand = ''
       this.floorPriceRate = 1.1
     },
     handleDialogCancel() {
@@ -145,7 +151,8 @@ export default {
           state: this.exportForm.state,
           categoryID: this.exportForm.thirdCategoryValue ||
             this.exportForm.secondCategoryValue ||
-            this.exportForm.firstCategoryValue
+            this.exportForm.firstCategoryValue,
+          brand: isEmpty(this.exportForm.brand) ? null : this.exportForm.brand
         })
       }
       this.resetExportForm()
