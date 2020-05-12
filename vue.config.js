@@ -59,7 +59,7 @@ module.exports = {
           {
             name: 'vuex',
             var: 'Vuex',
-            version: '3.2.0',
+            version: '3.4.0',
             path: 'dist/vuex.min.js'
           },
           {
@@ -95,7 +95,7 @@ module.exports = {
           {
             name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '3.2.8',
+            version: '3.2.9',
             path: 'dist/libphonenumber.min.js'
           },
           {
@@ -107,7 +107,7 @@ module.exports = {
           {
             name: 'moment',
             var: 'moment',
-            version: '2.24.0',
+            version: '2.25.3',
             path: 'moment.min.js'
           },
           {
