@@ -63,6 +63,11 @@
               <span>{{ scope.row.actPayFee | centFilter }}</span>
             </template>
           </el-table-column>
+          <el-table-column label="支付卡号" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.cardNo }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="支付状态" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.status === 1 ? '成功' : '异常' }}</span>
