@@ -613,7 +613,22 @@ export default {
       return this.userPermissions.includes(WorkOrderPermissions.reset)
     },
     flowStatusOptions() {
-      return WorkOrderStatus
+      return [{
+        value: work_order_status_approved,
+        label: '审核通过'
+      }, {
+        value: work_order_status_rejected,
+        label: '审核驳回'
+      }, {
+        value: work_order_status_working,
+        label: '更新物流'
+      }, {
+        value: work_order_status_finished,
+        label: '完成换货'
+      }, {
+        value: work_order_status_refunding,
+        label: '发起退款'
+      }]
     },
     couldReopenWorkOrder() {
       let noRefund = isEmpty(this.workOrderData.refundTime)
