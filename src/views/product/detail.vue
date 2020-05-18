@@ -223,6 +223,10 @@
         />
       </el-form-item>
       <el-divider content-position="left">商品价格</el-divider>
+      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)" prop="sprice">
+        <span v-if="viewProduct"> {{ productForm.sprice }}</span>
+        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
+      </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
         <span v-if="viewProduct"> {{ productForm.price }}</span>
         <el-input-number
@@ -252,10 +256,6 @@
         <span style="font-size: 12px;margin-left: 10px;">
           <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
         </span>
-      </el-form-item>
-      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)" prop="sprice">
-        <span v-if="viewProduct"> {{ productForm.sprice }}</span>
-        <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
         <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
@@ -322,14 +322,14 @@
               <span>{{ scope.row.inventory }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="销售价(元)" align="center">
-            <template slot-scope="scope">
-              <span>{{ scope.row.price | centFilter }}</span>
-            </template>
-          </el-table-column>
           <el-table-column label="进货价(元)" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.sprice | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="销售价(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.price | centFilter }}</span>
             </template>
           </el-table-column>
           <el-table-column label="建议销售价(元)" align="center">
@@ -817,7 +817,12 @@ export default {
           required: true, validator: (rule, value, callback) => {
             if (this.hasSalePricePermission) {
               if (isNumber(value) && value > 0) {
-                callback()
+                const sprice = this.productForm.sprice
+                if (isNumber(sprice) && sprice > 0 && value > sprice * 1.05) {
+                  callback()
+                } else {
+                  callback(new Error(`商品销售价必需大于(进货价*1.05)：${(sprice * 1.05).toFixed(2)}元`))
+                }
               } else {
                 callback(new Error('请输入商品销售价'))
               }

@@ -70,7 +70,12 @@ export default {
         price: [{
           required: true, validator: (rule, value, callback) => {
             if (isNumber(value) && value > 0) {
-              callback()
+              const sprice = parseFloat(this.subSku.sprice)
+              if (sprice > 0 && value * 100 > sprice) {
+                callback()
+              } else {
+                callback(new Error(`商品销售价必需大于(进货价*1.05)：${(sprice * 1.05 / 100).toFixed(2)}元`))
+              }
             } else {
               callback(new Error('请输入销售价'))
             }
