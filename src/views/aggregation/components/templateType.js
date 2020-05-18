@@ -104,6 +104,8 @@ export const promotionSettings = {
     targetUrl: 'about:blank',
     targetName: '无链接'
   },
+  skuBackgroundColor: null,
+  marginX: 0,
   marginBottom: '0'
 }
 
@@ -189,6 +191,8 @@ export const promotionListSettings = {
     hasImage: false,
     imageUrl: ''
   },
+  skuBackgroundColor: null,
+  marginX: 0,
   marginBottom: '0'
 }
 

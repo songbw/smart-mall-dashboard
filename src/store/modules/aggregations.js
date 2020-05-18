@@ -369,6 +369,18 @@ const mutations = {
           settings.marginX = 'marginX' in settings ? settings.marginX : 0
           settings.skuBackgroundColor = 'skuBackgroundColor' in settings ? settings.skuBackgroundColor : null
           return { data: { list, settings }, ...rest }
+        } else if (item.type === aggregationPromotionListType) {
+          const { data, ...rest } = item
+          const { list, settings } = data
+          settings.skuBackgroundColor = 'skuBackgroundColor' in settings ? settings.skuBackgroundColor : null
+          settings.marginX = 'marginX' in settings ? settings.marginX : 0
+          return { data: { list, settings }, ...rest }
+        } else if (item.type === aggregationPromotionType) {
+          const { data, ...rest } = item
+          const { list, settings } = data
+          settings.skuBackgroundColor = 'skuBackgroundColor' in settings ? settings.skuBackgroundColor : null
+          settings.marginX = 'marginX' in settings ? settings.marginX : 0
+          return { data: { list, settings }, ...rest }
         } else {
           return item
         }

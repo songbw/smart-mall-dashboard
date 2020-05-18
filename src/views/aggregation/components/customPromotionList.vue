@@ -68,6 +68,14 @@
           @success="handleUploadImageSuccess"
         />
       </el-form-item>
+      <el-form-item label="商品背景颜色">
+        <el-color-picker v-model="skuBackgroundColor" />
+        <span>{{ skuBackgroundColor }}</span>
+      </el-form-item>
+      <el-form-item label="两侧边距">
+        <el-input-number v-model="marginX" :min="0" :max="40" step-strictly />
+        <span>px</span>
+      </el-form-item>
       <el-form-item label="下边距">
         <el-select v-model="marginBottom">
           <el-option label="0px" value="0" />
@@ -196,6 +204,24 @@ export default {
       set(newValue) {
         const title = Object.assign({}, this.promotionData.settings.title, { imageUrl: newValue })
         this.changeTitle(title)
+      }
+    },
+    skuBackgroundColor: {
+      get() {
+        return this.promotionData.settings.skuBackgroundColor
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.promotionData.settings, { skuBackgroundColor: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
+    },
+    marginX: {
+      get() {
+        return this.promotionData.settings.marginX
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.promotionData.settings, { marginX: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
     },
     marginBottom: {
