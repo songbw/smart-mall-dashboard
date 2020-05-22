@@ -53,7 +53,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.1.6',
+            version: '3.2.0',
             path: 'dist/vue-router.min.js'
           },
           {
@@ -65,7 +65,7 @@ module.exports = {
           {
             name: 'element-ui',
             var: 'ELEMENT',
-            version: '2.13.1',
+            version: '2.13.2',
             path: 'lib/index.js'
           },
           {
@@ -107,7 +107,7 @@ module.exports = {
           {
             name: 'moment',
             var: 'moment',
-            version: '2.25.3',
+            version: '2.26.0',
             path: 'moment.min.js'
           },
           {
