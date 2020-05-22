@@ -223,8 +223,8 @@
         />
       </el-form-item>
       <el-divider content-position="left">商品价格</el-divider>
-      <el-form-item v-if="hasCostPricePermission && !hasSubSku" label="进货价格(元)" prop="sprice">
-        <span v-if="viewProduct"> {{ productForm.sprice }}</span>
+      <el-form-item v-if="hasCostPricePermission" label="进货价格(元)" prop="sprice">
+        <span v-if="viewProduct || hasSubSku"> {{ mpuSprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
@@ -246,7 +246,7 @@
       <el-form-item v-if="hasSalePricePermission" label="销售底价(元)">
         <span style="margin-right: 10px"> {{ floorPrice }}</span>
         <el-input-number
-          v-if="!viewProduct"
+          v-if="editFloorPrice && !viewProduct"
           v-model="productForm.floorPrice"
           :precision="2"
           :step="1"
@@ -254,7 +254,7 @@
           :max="1000000"
         />
         <span style="font-size: 12px;margin-left: 10px;">
-          <i class="el-icon-warning-outline">基于进货价、供应商发票类型以及商品税率</i>
+          <i class="el-icon-warning-outline">计算方式：一般纳税人等于进货价，小规模纳税人等于进货价*（ 1 + 13% - 3%）</i>
         </span>
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
@@ -603,13 +603,13 @@ import {
   ProductStateOptions,
   product_default_tax_rate,
   ProductTaxRateOptions,
-  vendor_invoice_type_special,
   ProductTypeOptions,
   product_sub_sku_sold_out,
   product_sub_sku_on_sale,
   ProductSubSkuStatusOptions,
   product_state_on_sale,
-  product_state_off_shelves
+  product_state_off_shelves,
+  vendor_taxpayer_type_small_scale
 } from '@/utils/constants'
 import {
   getMerchantFreeShippingApi,
@@ -719,6 +719,7 @@ export default {
       taxRateOptions: ProductTaxRateOptions,
       typeOptions: ProductTypeOptions,
       vendorAoyi: vendorAoyi,
+      editFloorPrice: false,
       maxThumbnailLength: 10,
       maxIntroductionLength: 30,
       uploading: false,
@@ -816,12 +817,13 @@ export default {
         price: [{
           required: true, validator: (rule, value, callback) => {
             if (this.hasSalePricePermission) {
-              if (isNumber(value) && value > 0) {
-                const sprice = this.productForm.sprice
-                if (isNumber(sprice) && sprice > 0 && value > sprice * 1.05) {
+              const price = convertToNumber(value)
+              if (!isNaN(price)) {
+                const floorPrice = this.floorPrice
+                if (price >= floorPrice) {
                   callback()
                 } else {
-                  callback(new Error(`商品销售价必需大于(进货价*1.05)：${(sprice * 1.05).toFixed(2)}元`))
+                  callback(new Error(`商品销售价必需大于底价：${floorPrice}元`))
                 }
               } else {
                 callback(new Error('请输入商品销售价'))
@@ -893,19 +895,20 @@ export default {
     },
     floorPrice: {
       get() {
-        if (this.productForm.floorPrice >= 0) {
+        if (this.editFloorPrice && this.productForm.floorPrice > 0) {
           return this.productForm.floorPrice
         } else {
-          if (this.productForm.merchantId !== null && this.productForm.sprice > 0) {
+          const sprice = convertToNumber(this.mpuSprice)
+          const taxRate = 0.03
+          if (this.productForm.merchantId !== null && sprice > 0) {
             const vendor = this.productVendors.find(item => item.value === this.productForm.merchantId.toString())
-            const taxRate = floatToFixed(Number.parseFloat(this.productForm.taxRate), 2)
-            if (vendor !== null && taxRate >= 0) {
-              const invoiceType = vendor.invoiceType
-              const value = this.productForm.sprice *
-                (invoiceType === vendor_invoice_type_special ? (1.13 - taxRate) : 1.13)
+            if (vendor !== null) {
+              const taxpayerType = vendor.taxpayerType
+              const rate = taxpayerType === vendor_taxpayer_type_small_scale ? (1.13 - taxRate) : 1
+              const value = sprice * rate
               return floatToFixed(value, 2)
             } else {
-              return this.productForm.sprice
+              return sprice
             }
           } else {
             return 0
@@ -942,6 +945,18 @@ export default {
     },
     subSkuList() {
       return this.hasSubSku ? this.productInfo.skuList : []
+    },
+    spriceFromSubSku() {
+      let sprice = 0
+      for (const subSku of this.productInfo.skuList) {
+        if (subSku.sprice > sprice) {
+          sprice = subSku.sprice
+        }
+      }
+      return floatToFixed(sprice / 100, 2)
+    },
+    mpuSprice() {
+      return this.hasSubSku ? this.spriceFromSubSku : this.productForm.sprice
     },
     hasProperties() {
       return this.productInfo &&
@@ -1337,7 +1352,7 @@ export default {
         if (this.autoSku) {
           params.skuid = ''
         }
-        if (!(params.floorPrice > 0)) {
+        if (!(params.floorPrice > 0) && this.editFloorPrice) {
           params.floorPrice = this.floorPrice
         }
         const res = await createProductApi(params)

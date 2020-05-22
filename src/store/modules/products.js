@@ -58,7 +58,8 @@ const actions = {
         return {
           value: row.company.id.toString(),
           label: row.company.name,
-          invoiceType: row.company.invoiceType
+          invoiceType: row.company.invoiceType,
+          taxpayerType: row.company.taxpayerType
         }
       })
       commit('SET_VENDOR_OPTIONS', vendors)
