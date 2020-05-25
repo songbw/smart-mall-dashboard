@@ -12,6 +12,7 @@ export const role_admin_name = 'admin'
 export const role_watcher_name = 'watcher'
 
 export const wuxi_app_id = '11'
+export const default_app_id = process.env.VUE_APP_PLATFORM_ID || wuxi_app_id
 
 export const vendor_status_init = 0
 export const vendor_status_editing = 1
