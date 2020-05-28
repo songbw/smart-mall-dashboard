@@ -53,7 +53,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.2.0',
+            version: '3.2.1',
             path: 'dist/vue-router.min.js'
           },
           {
@@ -77,7 +77,7 @@ module.exports = {
           {
             name: 'echarts',
             var: 'echarts',
-            version: '4.7.0',
+            version: '4.8.0',
             path: 'dist/echarts.min.js'
           },
           {
