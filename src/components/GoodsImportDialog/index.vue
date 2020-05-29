@@ -763,7 +763,8 @@ export default {
       msg += `无效商品为${filterSkus.length - parsedSkus.length}个。`
       this.$message.info(msg)
     },
-    async parseSkuData(results) {},
+    async parseSkuData(results) {
+    },
     async searchMpuData(results) {
       const parsedMpuList = uniq(results.map(item => this.parseValue(MpuHeaders[0].type, item[MpuHeaders[0].label])))
       const mpuList = await this.getProductsByMpuList(parsedMpuList)
@@ -779,11 +780,16 @@ export default {
           imagePath: product.image,
           intro: ''
         }))
-      this.parsedSkuList = fetchedSkus
-      this.excelResults = fetchedSkus
+      const sortedList = []
+      for (const mpu of parsedMpuList) {
+        const find = fetchedSkus.find(item => item.mpu === mpu)
+        if (find) sortedList.push(find)
+      }
+      this.parsedSkuList = sortedList
+      this.excelResults = sortedList
       this.loading = false
-      let msg = `成功导入${fetchedSkus.length}个商品，`
-      msg += `无效商品为${results.length - fetchedSkus.length}个。`
+      let msg = `成功导入${sortedList.length}个商品，`
+      msg += `无效商品为${results.length - sortedList.length}个。`
       this.$message.info(msg)
     }
   }
