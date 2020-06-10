@@ -53,7 +53,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.2.1',
+            version: '3.3.2',
             path: 'dist/vue-router.min.js'
           },
           {
@@ -113,7 +113,7 @@ module.exports = {
           {
             name: 'localforage',
             var: 'localforage',
-            version: '1.7.3',
+            version: '1.7.4',
             path: 'dist/localforage.min.js'
           },
           {
