@@ -681,6 +681,9 @@ export default {
             options = [agree_refund, reject_refund, update_user_logistics]
           }
         }
+      } else if (this.workOrderData.status === work_order_status_finished &&
+        this.orderData.merchantId === vendorYiyatong) {
+        options = [update_user_logistics]
       }
       return this.operationOptions.filter(option => options.includes(option.value))
     },
