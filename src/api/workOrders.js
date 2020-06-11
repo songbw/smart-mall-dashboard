@@ -100,3 +100,10 @@ export function getWorkOrderByOrderListApi(params) {
     data: params
   })
 }
+
+export function resendYiyatongWorkOrder(params) {
+  return Vue.axios('work_orders').request({
+    url: `/workorders/work_flows/yiyatong/${params.id}`,
+    method: 'post'
+  })
+}

@@ -7,6 +7,13 @@
             <span class="card-header-text">售后信息</span>
             <div>
               <el-button
+                v-if="couldResendForYiyatong"
+                type="warning"
+                @click="handleResendForYiyatong"
+              >
+                重发怡亚通工单
+              </el-button>
+              <el-button
                 v-if="couldReopenWorkOrder"
                 type="danger"
                 @click="handleReopenWorkOrder"
@@ -335,7 +342,8 @@ import {
   reopenWorkOrderFlowApi,
   getDefaultReturnAddressApi,
   getReturnAddressListApi,
-  getWorkFlowOpsCodeApi
+  getWorkFlowOpsCodeApi,
+  resendYiyatongWorkOrder
 } from '@/api/workOrders'
 import {
   work_order_status_request,
@@ -630,6 +638,11 @@ export default {
         label: '发起退款'
       }]
     },
+    couldResendForYiyatong() {
+      return this.hasResetPermission &&
+        this.orderData.merchantId === vendorYiyatong &&
+        this.workOrderData.status === work_order_status_finished
+    },
     couldReopenWorkOrder() {
       let noRefund = isEmpty(this.workOrderData.refundTime)
       if (!noRefund) {
@@ -873,12 +886,33 @@ export default {
             }
             await createWorkOrderFlowApi(params)
             this.$message.success('处理工单成功！')
-            this.getWorkOrderData()
+            await this.getWorkOrderData()
           } catch (e) {
             console.warn('Work order create flow error:' + e)
             this.$message.error('处理工单失败，请稍后重试！')
           }
         }
+      })
+    },
+    handleResendForYiyatong() {
+      this.$confirm('是否继续重新发生怡亚通工单？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          this.dataLoading = true
+          const { code } = await resendYiyatongWorkOrder({ id: this.workOrderData.id })
+          if (code === 200) {
+            this.$message.success('重新发送怡亚通工单成功！')
+          }
+        } catch (e) {
+          console.warn('Resend yiyatong order error:' + e)
+        } finally {
+          this.dataLoading = false
+        }
+        await this.getWorkOrderData()
+      }).catch(() => {
       })
     },
     handleReopenWorkOrder() {
