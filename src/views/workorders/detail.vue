@@ -640,8 +640,7 @@ export default {
     },
     couldResendForYiyatong() {
       return this.hasResetPermission &&
-        this.orderData.merchantId === vendorYiyatong &&
-        this.workOrderData.status === work_order_status_finished
+        this.orderData.merchantId === vendorYiyatong
     },
     couldReopenWorkOrder() {
       let noRefund = isEmpty(this.workOrderData.refundTime)
