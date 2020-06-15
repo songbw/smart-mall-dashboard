@@ -53,7 +53,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.3.2',
+            version: '3.3.4',
             path: 'dist/vue-router.min.js'
           },
           {
