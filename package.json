@@ -17,14 +17,14 @@
   "dependencies": {
     "axios": "^0.19.2",
     "core-js": "^3.6.5",
-    "cos-js-sdk-v5": "^0.5.26",
+    "cos-js-sdk-v5": "^0.5.27",
     "echarts": "^4.8.0",
     "element-ui": "^2.13.2",
     "file-saver": "^2.0.2",
     "google-libphonenumber": "^3.2.10",
     "localforage": "^1.7.4",
     "lodash": "^4.17.15",
-    "moment": "^2.26.0",
+    "moment": "^2.27.0",
     "nanoid": "^2.1.11",
     "nprogress": "^0.2.0",
     "password-validator": "^5.0.3",
@@ -41,8 +41,8 @@
     "vue-qriously": "^1.1.1",
     "vue-router": "^3.3.4",
     "vue-scrollto": "^2.18.1",
-    "vuex": "^3.4.0",
-    "xlsx": "^0.15.6"
+    "vuex": "^3.5.1",
+    "xlsx": "^0.16.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.4.4",

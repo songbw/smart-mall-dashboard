@@ -59,7 +59,7 @@ module.exports = {
           {
             name: 'vuex',
             var: 'Vuex',
-            version: '3.4.0',
+            version: '3.5.1',
             path: 'dist/vuex.min.js'
           },
           {
@@ -89,7 +89,7 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.15.6',
+            version: '0.16.3',
             path: 'dist/xlsx.full.min.js'
           },
           {
@@ -101,13 +101,13 @@ module.exports = {
           {
             name: 'cos-js-sdk-v5',
             var: 'COS',
-            version: '0.5.26',
+            version: '0.5.27',
             path: 'dist/cos-js-sdk-v5.min.js'
           },
           {
             name: 'moment',
             var: 'moment',
-            version: '2.26.0',
+            version: '2.27.0',
             path: 'moment.min.js'
           },
           {
