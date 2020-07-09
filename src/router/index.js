@@ -394,15 +394,24 @@ export const constantRoutes = [
   {
     path: '/statistics',
     component: Layout,
-    redirect: '/statistics/index',
     name: 'StatisticsManager',
     meta: { title: '统计', icon: 'statistics', roles: [role_admin_name] },
     children: [
       {
-        path: 'index',
-        name: 'UserBehaviors',
-        component: () => import('@/views/statistics/behaviors'),
-        meta: { title: '行为分析', icon: 'behaviors' }
+        path: 'http://tongji.baidu.com/web/welcome/ico?s=e5999c4dd415c039d4682ccd929d3374',
+        meta: { title: '无锡市民卡', icon: 'link' }
+      },
+      {
+        path: 'http://tongji.baidu.com/web/welcome/ico?s=5cb98b7dc7f3fe90a73f9363f6c4d67f',
+        meta: { title: '最珠海', icon: 'link' }
+      },
+      {
+        path: 'http://tongji.baidu.com/web/welcome/ico?s=489c1d4ef77566d573266c21b816cbca',
+        meta: { title: '关爱通', icon: 'link' }
+      },
+      {
+        path: 'http://tongji.baidu.com/web/welcome/ico?s=013c2a67e96a8b835c219320ff617fac',
+        meta: { title: '万科云城', icon: 'link' }
       }
     ]
   },
