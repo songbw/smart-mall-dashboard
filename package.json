@@ -23,7 +23,7 @@
     "file-saver": "^2.0.2",
     "google-libphonenumber": "^3.2.10",
     "localforage": "^1.7.4",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "nanoid": "^2.1.11",
     "nprogress": "^0.2.0",
