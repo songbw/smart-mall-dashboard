@@ -89,7 +89,7 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.16.3',
+            version: '0.16.4',
             path: 'dist/xlsx.full.min.js'
           },
           {
@@ -113,7 +113,7 @@ module.exports = {
           {
             name: 'localforage',
             var: 'localforage',
-            version: '1.7.4',
+            version: '1.8.0',
             path: 'dist/localforage.min.js'
           },
           {
