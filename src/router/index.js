@@ -221,7 +221,6 @@ export const constantRoutes = [
     meta: {
       title: '营销',
       icon: 'marketing',
-      roles: [role_admin_name],
       needSettings: true
     },
     children: [

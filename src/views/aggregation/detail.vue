@@ -53,17 +53,25 @@ export default {
   },
   methods: {
     async getPageInfo() {
+      let suc = false
       try {
         const id = Number.parseInt(this.$route.params.id)
         if (!Number.isNaN(id) && id !== -1) {
           this.gettingInfo = true
-          await this.$store.dispatch('aggregations/getPageById', { id: id })
-          this.pageId = id
+          const pageId = await this.$store.dispatch('aggregations/getPageById', { id: id })
+          if (pageId >= 0) {
+            this.pageId = id
+            suc = true
+          }
         }
       } catch (e) {
         console.log('getPageInfo' + e)
       }
       this.gettingInfo = false
+      if (!suc) {
+        this.$message.warning('获取聚合页内容失败，请联系管理员！')
+        this.gotoPageList()
+      }
     },
     handleCreatePage(id) {
       this.pageId = id

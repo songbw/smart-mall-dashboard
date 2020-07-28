@@ -481,6 +481,9 @@ export default {
       if (params.groupId === -1) {
         params.groupId = 0
       }
+      if (params.homePage === null) {
+        params.homePage = false
+      }
       this.$store.dispatch('aggregations/createPage', params).then((id) => {
         this.pageForm.id = id
         this.$emit('createPage', id)

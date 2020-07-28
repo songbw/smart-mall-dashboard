@@ -7,6 +7,7 @@
           :key="item.name"
           :label="item.name"
           :value="item.type"
+          :disabled="item.disabled"
         >
           <el-popover :title="item.name" placement="right" trigger="hover">
             <el-card :body-style="{ padding: '0px' }">
@@ -36,7 +37,7 @@
             <el-table-column label="Type" width="100">
               <template slot-scope="scope">
                 <span>{{ templateName(scope.row.type) }}</span>
-                <img :src="templateImageUrl(scope.row.type)" class="aside-image">
+                <img :src="templateImageUrl(scope.row.type)" class="aside-image" alt="">
               </template>
             </el-table-column>
             <el-table-column label="Operations">
@@ -158,6 +159,10 @@ import {
   horizontalGoodType,
   horizontalGoodSettings
 } from './templateType'
+import {
+  CouponPermissions,
+  PromotionPermissions
+} from '@/utils/role-permissions'
 
 const bannerImage = require('@/assets/images/banner.png')
 const serviceImage = require('@/assets/images/icon-grid.png')
@@ -195,76 +200,91 @@ export default {
       comboType: comboType,
       promotionListType: promotionListType,
       horizontalGoodType: horizontalGoodType,
-      options: [
-        {
-          type: bannerType,
-          name: '轮播',
-          tipTitle: '轮播模块功能说明',
-          image: bannerImage
-        },
-        {
-          type: serviceType,
-          name: '图标服务',
-          tipTitle: '图标服务模块功能说明',
-          image: serviceImage
-        },
-        {
-          type: gridType,
-          name: '宫格',
-          tipTitle: '宫格服务模块功能说明',
-          image: gridImage
-        },
-        {
-          type: promotionListType,
-          name: '促销列表',
-          tipTitle: '促销活动列表服务模块功能说明',
-          image: promotionImage
-        },
-        {
-          type: goodsType,
-          name: '商品楼层',
-          tipTitle: '商品楼层服务模块功能说明',
-          image: goodsImage
-        },
-        {
-          type: horizontalGoodType,
-          name: '横向商品',
-          tipTitle: '横向商品服务模块功能说明',
-          image: goodsImage
-        },
-        {
-          type: hotZoneType,
-          name: '图片热区',
-          tipTitle: '图片热区模块功能说明',
-          image: hotZoneImage
-        },
-        {
-          type: couponType,
-          name: '优惠券活动',
-          tipTitle: '优惠券活动模块功能说明',
-          image: couponImage
-        },
-        {
-          type: comboType,
-          name: '左右组合',
-          tipTitle: '左右组合活动模块功能说明',
-          image: comboImage
-        },
-        {
-          type: promotionType,
-          name: '单个促销',
-          tipTitle: '促销活动服务模块功能说明',
-          image: promotionImage
-        }
-      ],
       currentTemplateTipTitle: ''
     }
   },
   computed: {
     ...mapGetters({
+      userPermissions: 'userPermissions',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
-    })
+    }),
+    hasPromotionPermission() {
+      return this.userPermissions.includes(PromotionPermissions.view)
+    },
+    hasCouponPermission() {
+      return this.userPermissions.includes(CouponPermissions.view)
+    },
+    options: {
+      get() {
+        return [
+          {
+            type: bannerType,
+            name: '轮播',
+            tipTitle: '轮播模块功能说明',
+            image: bannerImage
+          },
+          {
+            type: serviceType,
+            name: '图标服务',
+            tipTitle: '图标服务模块功能说明',
+            image: serviceImage
+          },
+          {
+            type: gridType,
+            name: '宫格',
+            tipTitle: '宫格服务模块功能说明',
+            image: gridImage
+          },
+          {
+            type: promotionListType,
+            name: '促销列表',
+            tipTitle: '促销活动列表服务模块功能说明',
+            image: promotionImage,
+            disabled: !this.hasPromotionPermission
+          },
+          {
+            type: goodsType,
+            name: '商品楼层',
+            tipTitle: '商品楼层服务模块功能说明',
+            image: goodsImage
+          },
+          {
+            type: horizontalGoodType,
+            name: '横向商品',
+            tipTitle: '横向商品服务模块功能说明',
+            image: goodsImage
+          },
+          {
+            type: hotZoneType,
+            name: '图片热区',
+            tipTitle: '图片热区模块功能说明',
+            image: hotZoneImage
+          },
+          {
+            type: couponType,
+            name: '优惠券活动',
+            tipTitle: '优惠券活动模块功能说明',
+            image: couponImage,
+            disabled: !this.hasCouponPermission
+          },
+          {
+            type: comboType,
+            name: '左右组合',
+            tipTitle: '左右组合活动模块功能说明',
+            image: comboImage,
+            disabled: !this.hasPromotionPermission
+          },
+          {
+            type: promotionType,
+            name: '单个促销',
+            tipTitle: '促销活动服务模块功能说明',
+            image: promotionImage,
+            disabled: !this.hasPromotionPermission
+          }
+        ]
+      }
+    }
   },
   methods: {
     templateName(type) {
@@ -400,25 +420,25 @@ export default {
 </script>
 
 <style scoped>
-  .aside-image {
-    object-fit: contain;
-    width: 100%;
-  }
+.aside-image {
+  object-fit: contain;
+  width: 100%;
+}
 
-  .show-border {
-    border: 1px solid #eee;
-  }
+.show-border {
+  border: 1px solid #eee;
+}
 
-  .footer-container {
-    display: flex;
-    margin: 10px 0;
-    flex-direction: row;
-    justify-content: center;
-  }
+.footer-container {
+  display: flex;
+  margin: 10px 0;
+  flex-direction: row;
+  justify-content: center;
+}
 
-  .thumb-image {
-    object-fit: contain;
-    width: 128px;
-    height: 128px;
-  }
+.thumb-image {
+  object-fit: contain;
+  width: 128px;
+  height: 128px;
+}
 </style>

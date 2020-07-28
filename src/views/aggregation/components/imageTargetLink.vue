@@ -6,6 +6,7 @@
         :key="item.value"
         :label="item.label"
         :value="item.value"
+        :disabled="item.disabled"
       />
     </el-select>
     <div v-if="displayType === 'aggregation'">
@@ -65,6 +66,8 @@ import AggregationSelectionDialog from '@/components/AggregationSelectionDialog'
 import PromotionSelection from './promotionSelection'
 import PreviewDialog from './previewDialog'
 import { validateURL } from '@/utils/validate'
+import { PromotionPermissions } from '@/utils/role-permissions'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'ImageTargetLink',
@@ -104,28 +107,6 @@ export default {
       }
     }
     return {
-      typeOptions: [{
-        value: 'blank',
-        label: '无链接'
-      }, {
-        value: 'aggregation',
-        label: '聚合页'
-      }, {
-        value: 'promotion',
-        label: '促销活动页'
-      }, {
-        value: 'commodity',
-        label: '商品'
-      }, {
-        value: 'category',
-        label: '商品分类'
-      }, {
-        value: 'coupon',
-        label: '领券中心'
-      }, {
-        value: 'external',
-        label: '外部链接'
-      }],
       dialogAggregationVisible: false,
       dialogSelectionVisible: false,
       dialogPromotionVisible: false,
@@ -145,6 +126,39 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      userPermissions: 'userPermissions'
+    }),
+    hasPromotionPermission() {
+      return this.userPermissions.includes(PromotionPermissions.view)
+    },
+    typeOptions: {
+      get() {
+        return [{
+          value: 'blank',
+          label: '无链接'
+        }, {
+          value: 'aggregation',
+          label: '聚合页'
+        }, {
+          value: 'promotion',
+          label: '促销活动页',
+          disabled: !this.hasPromotionPermission
+        }, {
+          value: 'commodity',
+          label: '商品'
+        }, {
+          value: 'category',
+          label: '商品分类'
+        }, {
+          value: 'coupon',
+          label: '领券中心'
+        }, {
+          value: 'external',
+          label: '外部链接'
+        }]
+      }
+    },
     displayType: {
       get() {
         return this.targetType
