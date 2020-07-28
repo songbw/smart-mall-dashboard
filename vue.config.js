@@ -121,6 +121,12 @@ module.exports = {
             var: 'NProgress',
             version: '0.2.0',
             path: 'nprogress.min.js'
+          },
+          {
+            name: 'simple-crypto-js',
+            var: 'SimpleCrypto',
+            version: '3.0.0',
+            path: 'dist/SimpleCrypto.min.js'
           }
         ],
         prodUrl: 'https://cdn.jsdelivr.net/npm/:name@:version/:path'
