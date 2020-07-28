@@ -113,7 +113,7 @@ module.exports = {
           {
             name: 'localforage',
             var: 'localforage',
-            version: '1.8.0',
+            version: '1.8.1',
             path: 'dist/localforage.min.js'
           },
           {
