@@ -521,7 +521,8 @@ const actions = {
   async getPageById({ commit, rootGetters }, params) {
     const merchantId = rootGetters.vendorApproved ? rootGetters.vendorId : -1
     const { code, data } = await getAggregationByIdApi(params)
-    if (code === 200 && data.result && 'merchantId' in data.result && data.result.merchantId === merchantId) {
+    if (code === 200 && data.result && 'merchantId' in data.result &&
+      (merchantId === 0 || data.result.merchantId === merchantId)) {
       const page = {}
       templateKeys.forEach(key => {
         if (key in data.result) {
