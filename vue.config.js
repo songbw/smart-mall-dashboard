@@ -53,7 +53,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.3.4',
+            version: '3.4.3',
             path: 'dist/vue-router.min.js'
           },
           {
@@ -89,13 +89,13 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.16.4',
+            version: '0.16.6',
             path: 'dist/xlsx.full.min.js'
           },
           {
             name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '3.2.10',
+            version: '3.2.11',
             path: 'dist/libphonenumber.min.js'
           },
           {
@@ -113,7 +113,7 @@ module.exports = {
           {
             name: 'localforage',
             var: 'localforage',
-            version: '1.8.1',
+            version: '1.9.0',
             path: 'dist/localforage.min.js'
           },
           {
