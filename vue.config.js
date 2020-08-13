@@ -2,7 +2,6 @@
 const path = require('path')
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin')
 const WebpackCdnPlugin = require('webpack-cdn-plugin')
-const defaultSettings = require('./src/settings.js')
 
 function resolve(dir) {
   return path.join(__dirname, dir)
@@ -11,9 +10,7 @@ function resolve(dir) {
 const isDev = process.env.NODE_ENV === 'development'
 const moment = require('moment')
 process.env.VUE_APP_VERSION = require('./package.json').version + '.' + moment().format('MMDD-HHmm')
-
-const name = defaultSettings.title || 'Smart Mall Dashboard' // page title
-process.env.VUE_APP_NAME = name
+process.env.VUE_APP_NAME = process.env.ENV_TITLE || 'Smart Mall Dashboard' // page title
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {
@@ -32,7 +29,7 @@ module.exports = {
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.
-    name: name,
+    name: process.env.VUE_APP_NAME,
     resolve: {
       alias: {
         '@': resolve('src')
