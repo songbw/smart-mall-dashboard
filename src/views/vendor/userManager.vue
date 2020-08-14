@@ -7,18 +7,6 @@
       <el-form-item label="电话号码">
         <el-input v-model="queryPhone" placeholder="输入电话号码" clearable />
       </el-form-item>
-    </el-form>
-    <el-form inline>
-      <el-form-item label="用户角色">
-        <el-select v-model="queryRoleId" placeholder="请选择角色" clearable>
-          <el-option
-            v-for="item in roleOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="公司名称">
         <vendor-selection
           :vendor-id="queryCompanyId"
@@ -67,7 +55,7 @@
       <el-table-column label="公司名称" align="center">
         <template slot-scope="scope">
           <span class="el-link el-link--primary is-underline" @click="handleViewVendorInfo(scope.$index)">
-            {{ scope.row.company ? scope.row.company.name: '未填写公司' }}
+            {{ scope.row.company ? scope.row.company.name : '未填写公司' }}
           </span>
         </template>
       </el-table-column>
@@ -76,7 +64,7 @@
           <span>{{ scope.row.createTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="400">
+      <el-table-column v-if="hasEditPermission" label="操作" align="center" width="320">
         <template slot-scope="scope">
           <el-button
             type="warning"
@@ -87,14 +75,6 @@
           </el-button>
           <el-button size="mini" type="info" @click="handleEditUserPhone(scope.$index)">
             修改电话
-          </el-button>
-          <el-button
-            :disabled="scope.row.role === 'admin'"
-            size="mini"
-            type="success"
-            @click="handleEditUserRole(scope.$index)"
-          >
-            修改角色
           </el-button>
           <el-button
             :disabled="scope.row.role === 'admin'"
@@ -264,7 +244,10 @@ import {
   deleteVendorUserApi,
   getVendorRolesApi
 } from '@/api/vendor'
-import { vendor_status_approved } from '@/utils/constants'
+import {
+  role_vendor_name,
+  vendor_status_approved
+} from '@/utils/constants'
 import { validUserName, validPhone } from '@/utils/validate'
 import { VendorPermissions } from '@/utils/role-permissions'
 
@@ -646,6 +629,8 @@ export default {
         const { list } = await getVendorRolesApi()
         if (Array.isArray(list) && list.length > 0) {
           this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: item.description }))
+          const vendorRole = this.roleOptions.find(item => item.value === role_vendor_name)
+          this.queryRoleId = vendorRole ? vendorRole.id : -1
         }
       } catch (e) {
         console.warn('Get vendor role list error:' + e)

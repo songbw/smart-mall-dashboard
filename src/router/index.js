@@ -548,11 +548,55 @@ export const constantRoutes = [
         component: () => import('@/views/freight/shippingPriceDetail'),
         meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
+      }
+    ]
+  },
+  {
+    path: '/renterManager',
+    component: Layout,
+    redirect: '/renterManager/manager',
+    name: 'RenterMain',
+    meta: {
+      title: '租户',
+      icon: 'renter',
+      roles: [role_admin_name]
+    },
+    children: [
+      {
+        path: 'manager',
+        name: 'RenterManager',
+        component: () => import('@/views/renter/index'),
+        meta: { title: '租户公司', icon: 'renter', roles: [role_admin_name] }
+      },
+      {
+        path: 'renterAdmin',
+        name: 'RenterAdminManager',
+        component: () => import('@/views/renter/userManager'),
+        meta: { title: '租户管理员', icon: 'user-manager', roles: [role_admin_name] }
+      }
+    ]
+  },
+  {
+    path: '/settings',
+    component: Layout,
+    redirect: '/settings/platformAdmin',
+    name: 'SettingsMain',
+    meta: {
+      title: '设置',
+      icon: 'settings',
+      roles: [role_admin_name]
+    },
+    children: [
+      {
+        path: 'platformAdmin',
+        name: 'PlatformAdmin',
+        component: () => import('@/views/settings/platformAdmin'),
+        meta: { title: '平台管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
         path: 'roles',
         name: 'RoleManager',
-        component: () => import('@/views/vendor/roleManager'),
+        component: () => import('@/views/role/roleManager'),
         meta: { title: '角色管理', icon: 'permissions', roles: [role_admin_name] }
       }
     ]
