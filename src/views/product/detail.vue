@@ -115,9 +115,9 @@
         <span v-if="viewProduct"> {{ productForm.upc }}</span>
         <el-input v-else v-model="productForm.upc" maxlength="30" />
       </el-form-item>
-      <el-form-item label="销售单位">
+      <el-form-item label="销售单位" prop="saleunit">
         <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
-        <el-input v-else v-model="productForm.saleunit" maxlength="10" />
+        <el-input v-else v-model="productForm.saleunit" maxlength="10" placeholder="比如：个、台、袋、箱等" />
       </el-form-item>
       <el-form-item v-if="couldUpdateInventory" label="商品库存">
         <span v-if="viewProduct"> {{ productForm.inventory }}</span>
@@ -710,6 +710,12 @@ export default {
           case 'category':
             callback(new Error('请选择商品类别'))
             break
+          case 'saleunit':
+            callback(new Error('请填写销售单位'))
+            break
+          case 'taxRate':
+            callback(new Error('请选择商品税率'))
+            break
         }
       } else {
         callback()
@@ -814,6 +820,9 @@ export default {
         category: [{
           required: true, validator: validateValue, trigger: 'change'
         }],
+        saleunit: [{
+          required: true, validator: validateValue, trigger: 'change'
+        }],
         price: [{
           required: true, validator: (rule, value, callback) => {
             if (this.hasSalePricePermission) {
@@ -845,6 +854,9 @@ export default {
               callback()
             }
           }, trigger: 'change'
+        }],
+        taxRate: [{
+          required: true, validator: validateValue, trigger: 'change'
         }]
       }
     }
@@ -1943,14 +1955,14 @@ export default {
 </script>
 
 <style scoped>
-  .image-upload-input {
-    display: none;
-    z-index: -9999;
-  }
+.image-upload-input {
+  display: none;
+  z-index: -9999;
+}
 
-  .thumb-image {
-    object-fit: contain;
-    width: 100%;
-    height: 100%
-  }
+.thumb-image {
+  object-fit: contain;
+  width: 100%;
+  height: 100%
+}
 </style>
