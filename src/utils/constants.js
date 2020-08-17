@@ -304,6 +304,12 @@ export const PayTypeOptions = [{
 }, {
   value: 'yuncheng',
   label: '云城支付'
+}, {
+  value: 'huiyu',
+  label: '惠余支付'
+}, {
+  value: 'fcalijssdk',
+  label: '支付宝SDK支付'
 }]
 
 export const work_order_status_request = 1
