@@ -92,7 +92,7 @@ module.exports = {
           {
             name: 'google-libphonenumber',
             var: 'libphonenumber',
-            version: '3.2.11',
+            version: '3.2.12',
             path: 'dist/libphonenumber.min.js'
           },
           {
