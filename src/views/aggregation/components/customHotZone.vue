@@ -47,8 +47,7 @@ import hotzone from 'vue-hotzone'
 import ImageUpload from '@/components/ImageUpload'
 import { hotZoneType, hotZoneSettings } from './templateType'
 import ImageTargetLink from './imageTargetLink'
-
-const generate = require('nanoid/generate')
+import { getDigitalId } from '@/utils'
 
 export default {
   name: 'CustomHotZone',
@@ -144,8 +143,7 @@ export default {
       this.$store.commit('aggregations/DELETE_ITEM_IN_CONTENT', index)
     },
     handleUploadImageSuccess(imageUrl) {
-      const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-      const imageKey = generate(noLookalikes, 21)
+      const imageKey = getDigitalId(16)
       this.$store.commit('aggregations/SET_CONTENT_SETTINGS', { imageUrl, imageKey })
     },
     handleImageTargetChanges(target) {

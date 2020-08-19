@@ -36,8 +36,7 @@
 import moment from 'moment'
 import { cosUploadFile } from '@/utils/cos'
 import { max_upload_image_size } from '@/utils/constants'
-
-const generate = require('nanoid/generate')
+import { getDigitalId } from '@/utils'
 
 export default {
   name: 'ImageUpload',
@@ -94,8 +93,7 @@ export default {
     }
   },
   created() {
-    const noLookalikes = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
-    this.refName = 'image-input-' + generate(noLookalikes, 8)
+    this.refName = 'image-input-' + getDigitalId(16)
   },
   methods: {
     handleFileChange(e) {

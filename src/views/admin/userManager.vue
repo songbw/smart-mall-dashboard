@@ -7,7 +7,7 @@
       <el-form-item label="电话号码">
         <el-input v-model="queryPhone" placeholder="输入电话号码" clearable />
       </el-form-item>
-      <el-form-item label="公司名称">
+      <el-form-item v-if="queryVendorRole || queryRenterRole" label="公司名称">
         <vendor-selection
           :vendor-id="queryCompanyId"
           @changed="value => queryCompanyId = value"
@@ -37,7 +37,7 @@
           <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="登录名" align="center" width="160">
+      <el-table-column label="登录名" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.loginName }}</span>
         </template>
@@ -52,7 +52,7 @@
           <span>{{ getRoleDescription(scope.row.role) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="公司名称" align="center">
+      <el-table-column label="所属公司" align="center">
         <template slot-scope="scope">
           <span class="el-link el-link--primary is-underline" @click="handleViewVendorInfo(scope.$index)">
             {{ scope.row.company ? scope.row.company.name : '未填写公司' }}
@@ -232,9 +232,9 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
-import Pagination from '@/components/Pagination'
-import VendorSelection from '@/components/VendorSelection'
-import VendorDetail from './detail'
+import Pagination from '@/components/Pagination/index'
+import VendorSelection from '@/components/VendorSelection/index'
+import VendorDetail from '../vendor/detail'
 import {
   getVendorUserListApi,
   getVendorListApi,
@@ -245,6 +245,8 @@ import {
   getVendorRolesApi
 } from '@/api/vendor'
 import {
+  role_admin_name,
+  role_renter_name,
   role_vendor_name,
   vendor_status_approved
 } from '@/utils/constants'
@@ -294,6 +296,10 @@ export default {
     }
     return {
       dataLoading: false,
+      routerName: '',
+      vendorRoleId: -1,
+      renterRoleId: -1,
+      adminRoleId: -1,
       queryName: '',
       queryPhone: '',
       queryRoleId: null,
@@ -386,21 +392,34 @@ export default {
   },
   computed: {
     ...mapGetters({
-      userPermissions: 'userPermissions',
-      queryData: 'couponQuery'
+      userPermissions: 'userPermissions'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(VendorPermissions.userView)
     },
     hasEditPermission() {
       return this.userPermissions.includes(VendorPermissions.userUpdate)
+    },
+    queryVendorRole() {
+      return this.routerName === 'VendorAdminManager'
+    },
+    queryRenterRole() {
+      return this.routerName === 'RenterAdminManager'
+    },
+    queryAdminRole() {
+      return this.routerName === 'PlatformAdminManager'
     }
   },
   created() {
-    this.getUsersData()
-    this.getVendorList()
+    this.initData()
   },
   methods: {
+    async initData() {
+      this.routerName = this.$route.name
+      await this.getVendorRoleList()
+      await this.getVendorList()
+      await this.getUsersData()
+    },
     getUsersData() {
       if (this.hasViewPermission) {
         this.handleGetUsersData()
@@ -409,13 +428,17 @@ export default {
       }
     },
     async handleGetUsersData() {
+      let list = []
+      let total = 0
+      if (this.queryRoleId === null) {
+        this.$message.warning('获取管理员角色失败，请联系管理员！')
+        return
+      }
       try {
-        if (this.roleOptions.length === 0) {
-          await this.getVendorRoleList()
-        }
         const params = {
           page: this.queryOffset,
-          limit: this.queryLimit
+          limit: this.queryLimit,
+          roleId: this.queryRoleId
         }
         if (!isEmpty(this.queryPhone)) {
           params.phone = this.queryPhone
@@ -423,23 +446,20 @@ export default {
         if (!isEmpty(this.queryName)) {
           params.name = this.queryName
         }
-        if (this.queryRoleId !== null) {
-          params.roleId = this.queryRoleId
-        }
         if (this.queryCompanyId !== null) {
           params.companyId = this.queryCompanyId
         }
         this.dataLoading = true
         const data = await getVendorUserListApi(params)
-        this.userData = data.rows
-        this.userTotal = data.total
+        list = data.rows
+        total = data.total
       } catch (e) {
         console.warn('Get vendor user list error:' + e)
-        this.userData = []
-        this.userTotal = 0
       } finally {
         this.dataLoading = false
       }
+      this.userData = list
+      this.userTotal = total
     },
     handleViewVendorInfo(index) {
       if (this.userData[index].company) {
@@ -469,9 +489,6 @@ export default {
       }
     },
     handleEditUserVendor(index) {
-      if (this.vendorOptions.length === 0) {
-        this.getVendorList()
-      }
       this.vendorEditDialogVisible = true
       this.vendorForm.companyId = null
       this.vendorForm.userId = this.userData[index].id
@@ -543,7 +560,7 @@ export default {
       try {
         const valid = await this.$refs.userForm.validate()
         if (valid) {
-          this.handleStartCreateUser()
+          await this.handleStartCreateUser()
         }
       } catch (e) {
         console.log(`handleUserDialogConfirm:${e}`)
@@ -554,7 +571,7 @@ export default {
         const params = {
           loginName: this.userForm.loginName,
           password: this.userForm.password,
-          roleId: 2 // Vendor role
+          roleId: this.queryRoleId
         }
         if (!isEmpty(this.userForm.phone)) {
           params.phone = this.userForm.phone
@@ -629,8 +646,16 @@ export default {
         const { list } = await getVendorRolesApi()
         if (Array.isArray(list) && list.length > 0) {
           this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: item.description }))
-          const vendorRole = this.roleOptions.find(item => item.value === role_vendor_name)
-          this.queryRoleId = vendorRole ? vendorRole.id : -1
+          if (this.queryVendorRole) {
+            const vendorRole = this.roleOptions.find(item => item.value === role_vendor_name)
+            this.queryRoleId = vendorRole ? vendorRole.id : null
+          } else if (this.queryRenterRole) {
+            const renterRole = this.roleOptions.find(item => item.value === role_renter_name)
+            this.queryRoleId = renterRole ? renterRole.id : null
+          } else if (this.queryAdminRole) {
+            const adminRole = this.roleOptions.find(item => item.value === role_admin_name)
+            this.queryRoleId = adminRole ? adminRole.id : null
+          }
         }
       } catch (e) {
         console.warn('Get vendor role list error:' + e)

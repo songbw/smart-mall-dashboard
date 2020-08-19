@@ -10,6 +10,7 @@ export const storage_platform_id = 'app_id'
 export const role_vendor_name = 'vendor'
 export const role_admin_name = 'admin'
 export const role_watcher_name = 'watcher'
+export const role_renter_name = 'renter'
 
 export const wuxi_app_id = '11'
 export const default_app_id = process.env.VUE_APP_PLATFORM_ID || wuxi_app_id
@@ -31,7 +32,7 @@ export const VendorStatusOptions = [{
   label: '审核已通过'
 }, {
   value: vendor_status_rejected,
-  label: '审核有问题'
+  label: '审核已驳回'
 }, {
   value: vendor_status_locked,
   label: '已冻结'

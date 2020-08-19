@@ -198,3 +198,76 @@ export function updateRolePermissionApi(params) {
     }
   })
 }
+
+export function getRenterListApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/pages`,
+    method: 'get',
+    params
+  })
+}
+
+export function createRenterApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/new`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function updateRenterApi(params) {
+  const { renterId, ...data } = params
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/${renterId}`,
+    method: 'put',
+    data
+  })
+}
+
+export function updateRenterStatusApi(params) {
+  const { renterId, status } = params
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/${renterId}/status`,
+    method: 'put',
+    data: { status }
+  })
+}
+
+export function getRenterByIdApi(id) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/info/${id}`,
+    method: 'get'
+  })
+}
+
+export function getAppConfigListApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/appConfig/list`,
+    method: 'get',
+    params
+  })
+}
+
+export function createAppConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/appConfig`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function getAlipayConfigListApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/alipayConfig/list`,
+    method: 'get',
+    params
+  })
+}
+
+export function getWechatPayConfigListApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/wechatConfig/list`,
+    method: 'get',
+    params
+  })
+}

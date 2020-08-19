@@ -511,15 +511,15 @@ export const constantRoutes = [
     },
     children: [
       {
-        path: 'manager',
+        path: 'vendorManager',
         name: 'VendorManager',
         component: () => import('@/views/vendor/manager'),
         meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name] }
       },
       {
-        path: 'users',
-        name: 'UserManager',
-        component: () => import('@/views/vendor/userManager'),
+        path: 'adminManager',
+        name: 'VendorAdminManager',
+        component: () => import('@/views/admin/userManager'),
         meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
@@ -563,15 +563,22 @@ export const constantRoutes = [
     },
     children: [
       {
-        path: 'manager',
+        path: 'renterManager',
         name: 'RenterManager',
         component: () => import('@/views/renter/index'),
         meta: { title: '租户公司', icon: 'renter', roles: [role_admin_name] }
       },
       {
-        path: 'renterAdmin',
+        path: 'renterDetail/:renterId',
+        name: 'RenterDetail',
+        component: () => import('@/views/renter/renterInfo'),
+        meta: { title: '租户详情', icon: 'renter', roles: [role_admin_name] },
+        hidden: true
+      },
+      {
+        path: 'adminManager',
         name: 'RenterAdminManager',
-        component: () => import('@/views/renter/userManager'),
+        component: () => import('@/views/admin/userManager'),
         meta: { title: '租户管理员', icon: 'user-manager', roles: [role_admin_name] }
       }
     ]
@@ -588,9 +595,9 @@ export const constantRoutes = [
     },
     children: [
       {
-        path: 'platformAdmin',
-        name: 'PlatformAdmin',
-        component: () => import('@/views/settings/platformAdmin'),
+        path: 'platformAdminManager',
+        name: 'PlatformAdminManager',
+        component: () => import('@/views/admin/userManager'),
         meta: { title: '平台管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
