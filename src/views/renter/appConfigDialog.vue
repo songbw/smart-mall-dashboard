@@ -15,7 +15,7 @@
       label-width="12rem"
     >
       <el-form-item label="运营端AppID" prop="appId">
-        <el-input v-model.trim="formData.appId" maxlength="30" />
+        <el-input v-model.trim="formData.appId" :readonly="appConfig !== null" maxlength="30" />
       </el-form-item>
       <el-form-item label="运营端名称" prop="appName">
         <el-input v-model.trim="formData.appName" maxlength="30" />
@@ -27,12 +27,13 @@
         <el-select
           v-model="formData.alipayId"
           placeholder="请选择支付方式"
+          clearable
         >
           <el-option
             v-for="item in alipayOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+            :key="item.alipayId"
+            :label="item.remark"
+            :value="item.alipayId"
           />
         </el-select>
       </el-form-item>
@@ -40,12 +41,13 @@
         <el-select
           v-model="formData.wechatId"
           placeholder="请选择支付方式"
+          clearable
         >
           <el-option
             v-for="item in wepayOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+            :key="item.wechatId"
+            :label="item.remark"
+            :value="item.wechatId"
           />
         </el-select>
       </el-form-item>

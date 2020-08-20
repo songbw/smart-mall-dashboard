@@ -256,6 +256,46 @@ export function createAppConfigApi(params) {
   })
 }
 
+export function updateAppConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/appConfig/${params.appId}`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function createAlipayConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/alipayInfo`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function updateAlipayConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/alipayInfo/${params.alipayId}`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function createWechatPayConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/wechatInfo`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function updateWechatPayConfigApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/wechatInfo/${params.wechatId}`,
+    method: 'post',
+    data: params
+  })
+}
+
 export function getAlipayConfigListApi(params) {
   return Vue.axios('vendor').request({
     url: `/vendors/renter/alipayConfig/list`,

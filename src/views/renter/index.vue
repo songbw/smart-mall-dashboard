@@ -22,7 +22,7 @@
     </el-form>
     <div v-if="hasEditPermission" style="margin-bottom: 20px">
       <el-button type="primary" icon="el-icon-plus" @click="onCreateClicked">
-        创建新商户
+        新建新租户
       </el-button>
     </div>
     <el-table
