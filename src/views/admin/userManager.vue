@@ -10,6 +10,7 @@
       <el-form-item v-if="queryVendorRole || queryRenterRole" label="公司名称">
         <vendor-selection
           :vendor-id="queryCompanyId"
+          :company-type="queryVendorRole ? 'vendor' : 'renter'"
           @changed="value => queryCompanyId = value"
         />
       </el-form-item>
@@ -21,7 +22,7 @@
     </el-form>
     <div style="margin-bottom: 20px">
       <el-button v-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
-        创建新用户
+        新建管理员
       </el-button>
     </div>
     <el-table
@@ -54,9 +55,7 @@
       </el-table-column>
       <el-table-column label="所属公司" align="center">
         <template slot-scope="scope">
-          <span class="el-link el-link--primary is-underline" @click="handleViewVendorInfo(scope.$index)">
-            {{ scope.row.company ? scope.row.company.name : '未填写公司' }}
-          </span>
+          <span> {{ scope.row.company ? scope.row.company.name : '未填写公司' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="注册时间" align="center" width="180">
@@ -93,11 +92,6 @@
       :limit.sync="queryLimit"
       @pagination="getUsersData"
     />
-    <vendor-detail
-      :dialog-visible="vendorInfoDialogVisible"
-      :company="currentVendor"
-      @onConfirmed="vendorInfoDialogVisible = false"
-    />
     <el-dialog
       :close-on-click-modal="false"
       :close-on-press-escape="false"
@@ -110,14 +104,11 @@
           <span>{{ vendorForm.loginName }}</span>
         </el-form-item>
         <el-form-item label="企业列表" prop="companyId">
-          <el-select :value="vendorForm.companyId" placeholder="请选择企业名称" @change="onVendorSelected">
-            <el-option
-              v-for="item in vendorOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <vendor-selection
+            :vendor-id="vendorForm.companyId"
+            :company-type="queryVendorRole ? 'vendor' : 'renter'"
+            @changed="onVendorSelected"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -130,7 +121,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="userDialogVisible"
-      title="创建商户管理员"
+      title="新建管理员"
     >
       <el-form
         ref="userForm"
@@ -234,10 +225,8 @@ import isEmpty from 'lodash/isEmpty'
 import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination/index'
 import VendorSelection from '@/components/VendorSelection/index'
-import VendorDetail from '../vendor/detail'
 import {
   getVendorUserListApi,
-  getVendorListApi,
   setUserVendorApi,
   createVendorUserApi,
   updateVendorUserApi,
@@ -247,8 +236,7 @@ import {
 import {
   role_admin_name,
   role_renter_name,
-  role_vendor_name,
-  vendor_status_approved
+  role_vendor_name
 } from '@/utils/constants'
 import { validUserName, validPhone } from '@/utils/validate'
 import { VendorPermissions } from '@/utils/role-permissions'
@@ -262,7 +250,7 @@ export default {
       return momentDate.isValid() ? momentDate.format(format) : date
     }
   },
-  components: { Pagination, VendorDetail, VendorSelection },
+  components: { Pagination, VendorSelection },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (validUserName(value) === false) {
@@ -288,7 +276,7 @@ export default {
       }
     }
     const validatePhone = (rule, value, callback) => {
-      if (!isEmpty(value) && validPhone(value) === false) {
+      if (isEmpty(value) || validPhone(value) === false) {
         callback(new Error('请输入正确的手机号码'))
       } else {
         callback()
@@ -308,17 +296,6 @@ export default {
       queryLimit: 20,
       userData: [],
       userTotal: 0,
-      vendorInfoDialogVisible: false,
-      currentVendor: {
-        name: '',
-        licenceUrl: null,
-        address: '',
-        industry: '',
-        createTime: null,
-        updateTime: null,
-        comments: '',
-        status: 0
-      },
       userDialogVisible: false,
       vendorLoading: false,
       vendorEditDialogVisible: false,
@@ -349,7 +326,7 @@ export default {
         loginName: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }],
         confirm: [{ required: true, trigger: 'blur', validator: validateConfirm }],
-        phone: [{ required: false, trigger: 'blur', validator: validatePhone }]
+        phone: [{ required: true, trigger: 'blur', validator: validatePhone }]
       },
       phoneEditDialogVisible: false,
       phoneForm: {
@@ -368,7 +345,6 @@ export default {
           }
         }]
       },
-      vendorOptions: [],
       roleEditDialogVisible: false,
       roleOptions: [],
       roleLoading: false,
@@ -417,7 +393,6 @@ export default {
     async initData() {
       this.routerName = this.$route.name
       await this.getVendorRoleList()
-      await this.getVendorList()
       await this.getUsersData()
     },
     getUsersData() {
@@ -461,33 +436,6 @@ export default {
       this.userData = list
       this.userTotal = total
     },
-    handleViewVendorInfo(index) {
-      if (this.userData[index].company) {
-        this.currentVendor = this.userData[index].company
-        this.vendorInfoDialogVisible = true
-      }
-    },
-    async getVendorList() {
-      try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
-        this.vendorLoading = true
-        const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
-          }
-        })
-      } catch (e) {
-        console.warn('Vendor user manager get vendor list error:' + e)
-      } finally {
-        this.vendorLoading = false
-      }
-    },
     handleEditUserVendor(index) {
       this.vendorEditDialogVisible = true
       this.vendorForm.companyId = null
@@ -526,8 +474,7 @@ export default {
       if (this.vendorForm.companyId !== null && this.vendorForm.userId !== null) {
         this.vendorEditDialogVisible = false
         try {
-          const name = this.vendorOptions.find(item => item.value === this.vendorForm.companyId).label
-          await this.$confirm(`将此用户添加为公司${name}的管理员, 是否继续?`, '警告', {
+          await this.$confirm(`将此用户添加为此公司的管理员, 是否继续?`, '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'

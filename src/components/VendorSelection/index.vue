@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { getVendorListApi } from '@/api/vendor'
+import { getRenterListApi, getVendorListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
 
 export default {
@@ -28,6 +28,10 @@ export default {
     vendorId: {
       type: String,
       default: ''
+    },
+    companyType: {
+      type: String,
+      default: 'vendor'
     }
   },
   data() {
@@ -41,7 +45,11 @@ export default {
   },
   methods: {
     async prepareVendorData() {
-      await this.getAllVendors()
+      if (this.companyType === 'vendor') {
+        await this.getAllVendors()
+      } else {
+        await this.getAllRenters()
+      }
     },
     async getAllVendors() {
       try {
@@ -56,6 +64,28 @@ export default {
           value: item.company.id.toString(),
           label: item.company.name
         }))
+      } catch (e) {
+        console.warn(`Vendor Selection: ${e}`)
+      } finally {
+        this.dataLoading = false
+      }
+    },
+    async getAllRenters() {
+      try {
+        this.dataLoading = true
+        const params = {
+          page: 1,
+          limit: 1000,
+          status: vendor_status_approved
+        }
+        const { code, data } = await getRenterListApi(params)
+        if (code === 200) {
+          this.vendorOptions = data.rows.map(item => ({
+            value: item.companyId.toString(),
+            label: item.renterName,
+            renterId: item.renterId
+          }))
+        }
       } catch (e) {
         console.warn(`Vendor Selection: ${e}`)
       } finally {
