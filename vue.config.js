@@ -25,7 +25,7 @@ module.exports = {
   outputDir: 'dist',
   assetsDir: 'static',
   lintOnSave: isDev,
-  transpileDependencies: ['password-validator', 'url-regex', 'vue-hotzone', 'ip-regex'],
+  transpileDependencies: ['password-validator', 'url-regex', 'vue-hotzone', 'ip-regex', 'nanoid'],
   productionSourceMap: false,
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
@@ -75,7 +75,7 @@ module.exports = {
           {
             name: 'echarts',
             var: 'echarts',
-            version: '4.8.0',
+            version: '4.9.0',
             path: 'dist/echarts.min.js'
           },
           {
