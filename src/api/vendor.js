@@ -311,3 +311,11 @@ export function getWechatPayConfigListApi(params) {
     params
   })
 }
+
+export function getCompanyListOfRenterApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/company/pages`,
+    method: 'get',
+    params
+  })
+}

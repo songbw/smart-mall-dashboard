@@ -2,7 +2,7 @@
   <el-select
     filterable
     clearable
-    placeholder="请输入供应商关键字"
+    placeholder="请输入名称关键字"
     :loading="dataLoading"
     :value="vendorId"
     @change="handleVendorChanged"

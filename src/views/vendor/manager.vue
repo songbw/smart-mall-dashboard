@@ -238,7 +238,7 @@ import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import VendorDetail from './detail'
 import {
-  getVendorListApi,
+  getCompanyListOfRenterApi,
   deleteVendorApi,
   lockVendorApi,
   unlockVendorApi,
@@ -453,11 +453,13 @@ export default {
     },
     async getVendorData() {
       if (this.hasViewPermission) {
+        let list = []
+        let total = 0
         try {
           this.dataLoading = true
           const params = {
-            page: this.queryOffset,
-            limit: this.queryLimit
+            pageIndex: this.queryOffset,
+            pageSize: this.queryLimit
           }
           if (this.queryStatus > 0) {
             params.status = this.queryStatus
@@ -465,14 +467,18 @@ export default {
           if (!isEmpty(this.queryName)) {
             params.name = this.queryName
           }
-          const data = await getVendorListApi(params)
-          this.vendorData = data.rows
-          this.vendorTotal = data.total
+          const { code, data } = await getCompanyListOfRenterApi(params)
+          if (code === 200) {
+            list = data.rows
+            total = data.total
+          }
         } catch (e) {
           console.warn(`Vendor Manager: ${e}`)
         } finally {
           this.dataLoading = false
         }
+        this.vendorData = list
+        this.vendorTotal = total
       } else {
         this.$message.warning('没有查看商户的权限，请联系管理员！')
       }

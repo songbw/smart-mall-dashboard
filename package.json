@@ -1,6 +1,6 @@
 {
   "name": "small-mall-dashboard",
-  "version": "3.6.0",
+  "version": "4.0.1",
   "description": "A vue admin project for smart mall.",
   "author": "David",
   "scripts": {
