@@ -16,7 +16,7 @@
     "es5-check": "are-you-es5 check -r ."
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.20.0",
     "core-js": "^3.6.5",
     "cos-js-sdk-v5": "^0.5.27",
     "echarts": "^4.9.0",

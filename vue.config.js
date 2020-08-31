@@ -69,7 +69,7 @@ module.exports = {
           {
             name: 'axios',
             var: 'axios',
-            version: '0.19.2',
+            version: '0.20.0',
             path: 'dist/axios.min.js'
           },
           {
