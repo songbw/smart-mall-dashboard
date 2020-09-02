@@ -32,11 +32,6 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="编号" align="left">
-        <template slot-scope="scope">
-          <span>{{ scope.row.renterId }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="名称" align="left">
         <template slot-scope="scope">
           <span>{{ scope.row.renterName }}</span>
@@ -98,6 +93,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusApproved"
+            :disabled="scope.row.renterId === platformRenterId"
             type="danger"
             size="mini"
             @click="onLockClicked(scope.$index)"
@@ -133,8 +129,10 @@
 <script>
 import Pagination from '@/components/Pagination'
 import {
+  platform_renter_id,
   vendor_status_approved,
-  vendor_status_locked, vendor_status_rejected,
+  vendor_status_locked,
+  vendor_status_rejected,
   vendor_status_reviewing,
   VendorInvoiceOptions,
   VendorStatusOptions,
@@ -149,6 +147,8 @@ import {
 import isEmpty from 'lodash/isEmpty'
 import moment from 'moment'
 import RenterFormDialog from '@/views/renter/renterFormDialog'
+import { mapGetters } from 'vuex'
+import { RenterPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'RenterManagement',
@@ -182,6 +182,7 @@ export default {
   },
   data() {
     return {
+      platformRenterId: platform_renter_id,
       statusReviewing: vendor_status_reviewing,
       statusApproved: vendor_status_approved,
       statusRejected: vendor_status_rejected,
@@ -202,11 +203,14 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      userPermissions: 'userPermissions'
+    }),
     hasViewPermission() {
-      return true
+      return this.userPermissions.includes(RenterPermissions.view)
     },
     hasEditPermission() {
-      return true
+      return this.userPermissions.includes(RenterPermissions.update)
     }
   },
   created() {

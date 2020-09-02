@@ -319,3 +319,26 @@ export function getCompanyListOfRenterApi(params) {
     params
   })
 }
+
+export function addCompanyToRenterApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/company`,
+    method: 'post',
+    data: params
+  })
+}
+
+export function delCompanyFromRenterApi(params) {
+  return Vue.axios('vendor').request({
+    url: `/vendors/renter/company`,
+    method: 'delete',
+    params
+  })
+}
+
+export function getRenterProfileApi() {
+  return Vue.axios('vendor').request({
+    url: '/vendors/renter/profile',
+    method: 'get'
+  })
+}

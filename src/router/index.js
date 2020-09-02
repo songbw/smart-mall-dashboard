@@ -4,7 +4,7 @@ import Layout from '@/layout'
 import {
   role_vendor_name,
   role_admin_name,
-  role_watcher_name
+  role_watcher_name, role_renter_name
 } from '@/utils/constants'
 
 if (!window.VueRouter) Vue.use(VueRouter)
@@ -475,31 +475,6 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/vendorInfo',
-    component: Layout,
-    redirect: '/vendorInfo/profile',
-    name: 'VendorInfo',
-    meta: {
-      title: '商户',
-      icon: 'vendor',
-      roles: [role_vendor_name]
-    },
-    children: [
-      {
-        path: 'profile',
-        name: 'VendorProfile',
-        component: () => import('@/views/vendor/profile'),
-        meta: { title: '公司信息', icon: 'vendor-info', roles: [role_vendor_name] }
-      },
-      {
-        path: 'user',
-        name: 'UserInfo',
-        component: () => import('@/views/vendor/userInfo'),
-        meta: { title: '管理员', icon: 'user', roles: [role_vendor_name] }
-      }
-    ]
-  },
-  {
     path: '/vendorManager',
     component: Layout,
     redirect: '/vendorManager/manager',
@@ -507,47 +482,72 @@ export const constantRoutes = [
     meta: {
       title: '商户',
       icon: 'vendor',
-      roles: [role_admin_name]
+      roles: [role_admin_name, role_renter_name]
     },
     children: [
       {
         path: 'vendorManager',
         name: 'VendorManager',
         component: () => import('@/views/vendor/manager'),
-        meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name] }
+        meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name, role_renter_name] }
       },
       {
         path: 'adminManager',
         name: 'VendorAdminManager',
         component: () => import('@/views/admin/userManager'),
-        meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
+        meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name, role_renter_name] }
       },
       {
         path: 'vendorShippingPrice',
         name: 'VendorShippingPrice',
         component: () => import('@/views/freight/shippingPrice'),
-        meta: { title: '商户运费', icon: 'shipping-price', roles: [role_admin_name] }
+        meta: { title: '商户运费', icon: 'shipping-price', roles: [role_admin_name, role_renter_name] }
       },
       {
         path: 'createVendorShippingPrice',
         name: 'CreateVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name, role_renter_name] },
         hidden: true
       },
       {
         path: 'viewVendorShippingPrice/:id',
         name: 'ViewVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name, role_renter_name] },
         hidden: true
       },
       {
         path: 'editVendorShippingPrice/:id',
         name: 'EditVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name, role_renter_name] },
         hidden: true
+      }
+    ]
+  },
+  {
+    path: '/companyInfo',
+    component: Layout,
+    redirect: '/companyInfo/profile',
+    name: 'CompanyInfo',
+    meta: {
+      title: '企业',
+      icon: 'vendor',
+      roles: [role_vendor_name, role_renter_name]
+    },
+    children: [
+      {
+        path: 'profile',
+        name: 'CompanyProfile',
+        component: () => import('@/views/vendor/profile'),
+        meta: { title: '公司信息', icon: 'vendor-info', roles: [role_vendor_name, role_renter_name] }
+      },
+      {
+        path: 'user',
+        name: 'UserInfo',
+        component: () => import('@/views/vendor/userInfo'),
+        meta: { title: '管理员', icon: 'user', roles: [role_vendor_name, role_renter_name] }
       }
     ]
   },

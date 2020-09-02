@@ -10,7 +10,7 @@
       <el-form-item v-if="queryVendorRole || queryRenterRole" label="公司名称">
         <vendor-selection
           :vendor-id="queryCompanyId"
-          :company-type="queryVendorRole ? 'vendor' : 'renter'"
+          :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
           @changed="value => queryCompanyId = value"
         />
       </el-form-item>
@@ -76,7 +76,7 @@
             修改电话
           </el-button>
           <el-button
-            :disabled="scope.row.role === 'admin'"
+            :disabled="scope.row.role === platformAdminRole"
             size="mini"
             type="danger"
             @click="handleDeleteUser(scope.$index)"
@@ -106,7 +106,7 @@
         <el-form-item label="企业列表" prop="companyId">
           <vendor-selection
             :vendor-id="vendorForm.companyId"
-            :company-type="queryVendorRole ? 'vendor' : 'renter'"
+            :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
             @changed="onVendorSelected"
           />
         </el-form-item>
@@ -283,6 +283,9 @@ export default {
       }
     }
     return {
+      platformAdminRole: role_admin_name,
+      renterAdminRole: role_renter_name,
+      vendorAdminRole: role_vendor_name,
       dataLoading: false,
       routerName: '',
       vendorRoleId: -1,

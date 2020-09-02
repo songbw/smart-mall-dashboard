@@ -14,6 +14,16 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item v-if="hasViewRenterPermission" label="租户" class="form-item">
+        <el-select v-model="queryRenterId" clearable>
+          <el-option
+            v-for="item in renterList"
+            :key="item.renterId"
+            :label="item.renterName"
+            :value="item.renterId"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="getVendorData">
           搜索
@@ -31,43 +41,47 @@
       :data="vendorData"
       border
       fit
-      stripe
-      highlight-current-row
       style="width: 100%;"
     >
       <el-table-column label="编号" align="center" width="80">
         <template slot-scope="scope">
-          <span>{{ scope.row.company.id }}</span>
+          <span>{{ scope.row.companyId }}</span>
         </template>
       </el-table-column>
       <el-table-column label="名称" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.company.name }}</span>
+          <span>{{ scope.row.companyName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" width="120">
         <template slot-scope="scope">
-          <el-tag>{{ scope.row.company.status | vendorStatus }}</el-tag>
+          <el-tag>{{ scope.row.status | vendorStatus }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="发票类型" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.company.invoiceType | vendorInvoice }}</span>
+          <span>{{ scope.row.invoiceType | vendorInvoice }}</span>
         </template>
       </el-table-column>
       <el-table-column label="纳税人类型" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.company.taxpayerType | vendorTaxpayer }}</span>
+          <span>{{ scope.row.taxpayerType | vendorTaxpayer }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建日期" align="center" width="180">
+        <template slot-scope="scope">
+          <span>{{ scope.row.createTime | dateFormat }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="left" :width="hasEditPermission ? '360' : '100'">
         <template slot-scope="scope">
           <el-button
+            v-if="hasViewRenterPermission"
             type="default"
             size="mini"
             @click="handleViewVendor(scope.$index)"
           >
-            查看
+            租户设置
           </el-button>
           <el-button
             type="primary"
@@ -77,7 +91,7 @@
             编辑
           </el-button>
           <el-button
-            v-if="hasEditPermission && scope.row.company.status === statusReviewing"
+            v-if="hasEditPermission && scope.row.status === statusReviewing"
             type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -85,7 +99,7 @@
             批准
           </el-button>
           <el-button
-            v-if="hasEditPermission && scope.row.company.status === statusReviewing"
+            v-if="hasEditPermission && scope.row.status === statusReviewing"
             type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -94,8 +108,8 @@
           </el-button>
           <el-button
             v-if="hasEditPermission &&
-              scope.row.company.status !== statusApproved &&
-              scope.row.company.status !== statusLocked"
+              scope.row.status !== statusApproved &&
+              scope.row.status !== statusLocked"
             type="warning"
             size="mini"
             @click="handleDeleteVendor(scope.$index)"
@@ -103,7 +117,7 @@
             删除
           </el-button>
           <el-button
-            v-if="hasEditPermission && scope.row.company.status === statusApproved"
+            v-if="hasEditPermission && scope.row.status === statusApproved"
             type="danger"
             size="mini"
             @click="handleLockVendor(scope.$index)"
@@ -111,7 +125,7 @@
             冻结
           </el-button>
           <el-button
-            v-if="hasEditPermission && scope.row.company.status === statusLocked"
+            v-if="hasEditPermission && scope.row.status === statusLocked"
             type="success"
             size="mini"
             @click="handleUnlockVendor(scope.$index)"
@@ -127,11 +141,11 @@
       :limit.sync="queryLimit"
       @pagination="getVendorData"
     />
-    <vendor-detail
-      :dialog-visible="detailVisible"
-      :company="currentVendor.company"
-      :users="currentVendor.users || []"
-      @onConfirmed="detailVisible = false"
+    <vendor-renter
+      :dialog-visible="renterDialogVisible"
+      :company="currentVendor"
+      :renter-list="renterList"
+      @onConfirmed="onRenterDialogConfirmed"
     />
     <el-dialog
       :close-on-click-modal="false"
@@ -185,43 +199,6 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="商户行业" prop="industry">
-          <el-select
-            v-model="vendorIndustry"
-            multiple
-            placeholder="请选择行业类型"
-            class="item-input"
-          >
-            <el-option
-              v-for="item in industryOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="运营平台">
-          <div>
-            <el-tag v-for="name in vendorAppName" :key="name" type="info" style="margin-right: 10px">
-              {{ name }}
-            </el-tag>
-          </div>
-          <el-radio-group v-model="platformType" @change="handlePlatformTypeChanged">
-            <el-radio-button label="all">全部平台</el-radio-button>
-            <el-radio-button label="specific">特定平台</el-radio-button>
-            <el-radio-button label="exclude">排除平台</el-radio-button>
-          </el-radio-group>
-          <el-checkbox-group v-if="platformType === 'specific'" v-model="vendorSpecificAppId">
-            <el-checkbox v-for="platform in platformAppList" :key="platform.appId" :label="platform.appId">
-              {{ platform.name }}
-            </el-checkbox>
-          </el-checkbox-group>
-          <el-checkbox-group v-if="platformType === 'exclude'" v-model="vendorExcludeAppId">
-            <el-checkbox v-for="platform in platformAppList" :key="platform.appId" :label="platform.appId">
-              {{ platform.name }}
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleDialogCancel">取消</el-button>
@@ -236,7 +213,7 @@ import { mapGetters } from 'vuex'
 import moment from 'moment'
 import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
-import VendorDetail from './detail'
+import VendorRenter from './detail'
 import {
   getCompanyListOfRenterApi,
   deleteVendorApi,
@@ -244,7 +221,10 @@ import {
   unlockVendorApi,
   reviewVendorProfileApi,
   createVendorProfileApi,
-  updateVendorProfileApi
+  updateVendorProfileApi,
+  getRenterListApi,
+  addCompanyToRenterApi,
+  delCompanyFromRenterApi
 } from '@/api/vendor'
 import {
   vendor_status_reviewing,
@@ -253,14 +233,18 @@ import {
   vendor_status_locked,
   VendorStatusOptions,
   VendorInvoiceOptions,
-  VendorTaxpayerOptions
+  VendorTaxpayerOptions,
+  vendor_invoice_type_normal,
+  vendor_taxpayer_type_general
 } from '@/utils/constants'
-import { IndustryDefinitions } from './constants'
-import { VendorPermissions } from '@/utils/role-permissions'
+import {
+  VendorPermissions,
+  RenterPermissions
+} from '@/utils/role-permissions'
 
 export default {
   name: 'VendorManager',
-  components: { Pagination, VendorDetail },
+  components: { VendorRenter, Pagination },
   filters: {
     vendorStatus: (status) => {
       const item = VendorStatusOptions.find(vendor => vendor.value === status)
@@ -317,20 +301,6 @@ export default {
         callback(new Error('请选择纳税人类型'))
       }
     }
-    const validateAppId = (rule, value, callback) => {
-      if (!isEmpty(value)) {
-        callback()
-      } else {
-        callback(new Error('请选择运营平台'))
-      }
-    }
-    const validateIndustry = (rule, value, callback) => {
-      if (!isEmpty(value)) {
-        callback()
-      } else {
-        callback(new Error('请选择商户类型'))
-      }
-    }
     return {
       statusReviewing: vendor_status_reviewing,
       statusApproved: vendor_status_approved,
@@ -339,45 +309,41 @@ export default {
         value: -1,
         label: '全部'
       }].concat(VendorStatusOptions),
-      industryOptions: IndustryDefinitions,
       invoiceOptions: VendorInvoiceOptions,
       taxpayerOptions: VendorTaxpayerOptions,
-      detailVisible: false,
+      renterDialogVisible: false,
       dataLoading: false,
+      renterList: [],
       vendorData: [],
       vendorTotal: 0,
       queryName: '',
       queryStatus: -1,
+      queryRenterId: '',
       queryOffset: 1,
       queryLimit: 20,
-      currentVendor: {
-        company: {},
-        users: []
-      },
+      currentVendor: null,
       vendorDialogVisible: false,
       vendorId: -1,
-      platformType: 'all',
       vendorProfile: {
         name: null,
         address: null,
-        industry: null,
-        invoiceType: null,
-        taxpayerType: null,
-        appId: null,
-        excludeAppId: null
+        industry: '',
+        invoiceType: vendor_invoice_type_normal,
+        taxpayerType: vendor_taxpayer_type_general,
+        appId: '',
+        excludeAppId: ''
       },
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
         address: [{ required: true, trigger: 'blur', validator: validateAddress }],
         invoiceType: [{ required: true, trigger: 'blur', validator: validateInvoice }],
-        taxpayerType: [{ required: true, trigger: 'blur', validator: validateTaxpayer }],
-        appId: [{ required: true, trigger: 'blur', validator: validateAppId }],
-        industry: [{ required: true, trigger: 'blur', validator: validateIndustry }]
+        taxpayerType: [{ required: true, trigger: 'blur', validator: validateTaxpayer }]
       }
     }
   },
   computed: {
     ...mapGetters({
+      renterId: 'renterId',
       userPermissions: 'userPermissions',
       queryData: 'couponQuery',
       platformAppList: 'platformAppList'
@@ -388,47 +354,8 @@ export default {
     hasEditPermission() {
       return this.userPermissions.includes(VendorPermissions.update)
     },
-    vendorAppName() {
-      if (this.platformType === 'specific') {
-        return this.vendorSpecificAppId.length > 0 ? this.platformAppList
-          .filter(item => this.vendorSpecificAppId.includes(item.appId))
-          .map(item => item.name) : []
-      } else {
-        return this.platformAppList
-          .filter(item => !this.vendorExcludeAppId.includes(item.appId))
-          .map(item => item.name)
-      }
-    },
-    vendorSpecificAppId: {
-      get() {
-        const appId = this.vendorProfile.appId
-        return isEmpty(appId) ? [] : appId.split(',')
-      },
-      set(values) {
-        this.vendorProfile.appId = values.join(',')
-      }
-    },
-    vendorExcludeAppId: {
-      get() {
-        const excludeAppId = this.vendorProfile.excludeAppId
-        return isEmpty(excludeAppId) ? [] : excludeAppId.split(',')
-      },
-      set(values) {
-        this.vendorProfile.excludeAppId = values.join(',')
-      }
-    },
-    vendorIndustry: {
-      get() {
-        const industry = this.vendorProfile.industry
-        if (industry) {
-          return industry.split(';')
-        } else {
-          return []
-        }
-      },
-      set(values) {
-        this.vendorProfile.industry = values.join(';')
-      }
+    hasViewRenterPermission() {
+      return this.userPermissions.includes(RenterPermissions.view)
     }
   },
   created() {
@@ -436,19 +363,29 @@ export default {
   },
   methods: {
     async prepareData() {
-      await this.getAppPlatformList()
+      await this.getRenterList()
       await this.getVendorData()
     },
-    async getAppPlatformList() {
-      try {
-        this.dataLoading = true
-        if (this.platformAppList.length === 0) {
-          await this.$store.dispatch('app/getPlatformList')
+    async getRenterList() {
+      if (this.hasViewRenterPermission) {
+        let list = []
+        try {
+          this.dataLoading = true
+          const params = {
+            pageIndex: 1,
+            pageSize: 1000,
+            status: vendor_status_approved
+          }
+          const { code, data } = await getRenterListApi(params)
+          if (code === 200) {
+            list = data.rows
+          }
+        } catch (e) {
+          console.warn(`Get renter list error: ${e}`)
+        } finally {
+          this.dataLoading = false
         }
-      } catch (e) {
-        console.warn('Get platform list error:' + e)
-      } finally {
-        this.dataLoading = false
+        this.renterList = list
       }
     },
     async getVendorData() {
@@ -466,6 +403,9 @@ export default {
           }
           if (!isEmpty(this.queryName)) {
             params.name = this.queryName
+          }
+          if (!isEmpty(this.queryRenterId)) {
+            params.renterId = this.queryRenterId
           }
           const { code, data } = await getCompanyListOfRenterApi(params)
           if (code === 200) {
@@ -485,17 +425,17 @@ export default {
     },
     handleViewVendor(index) {
       this.currentVendor = this.vendorData[index]
-      this.detailVisible = true
+      this.renterDialogVisible = true
     },
     async handleApproveVendor(index) {
       try {
-        const name = this.vendorData[index].company.name
+        const name = this.vendorData[index].companyName
         await this.$confirm(`批准公司：${name}，此公司将可以进行发布商品等操作, 是否继续?`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.handleReviewVendor(this.vendorData[index].company.id, vendor_status_approved, 'Approved')
+        await this.handleReviewVendor(this.vendorData[index].companyId, vendor_status_approved, 'Approved')
       } catch (e) {
         console.warn('Vendor manager approve:' + e)
       }
@@ -506,7 +446,7 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消'
         })
-        this.handleReviewVendor(this.vendorData[index].company.id, vendor_status_rejected, value)
+        await this.handleReviewVendor(this.vendorData[index].companyId, vendor_status_rejected, value)
       } catch (e) {
         console.warn('Vendor manager reject:' + e)
       }
@@ -514,50 +454,49 @@ export default {
     async handleReviewVendor(id, status, comments) {
       try {
         await reviewVendorProfileApi({ id, status, comments })
-        this.$message.success('更新企业信息成功！')
-        this.getVendorData()
+        await this.getVendorData()
       } catch (_) {
         this.$message.warning('更新企业信息失败，请稍后重试！')
       }
     },
     async handleDeleteVendor(index) {
       try {
-        const name = this.vendorData[index].company.name
+        const name = this.vendorData[index].companyName
         await this.$confirm(`删除公司：${name}，此公司将需要重新申请审核, 是否继续?`, '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await deleteVendorApi({ id: this.vendorData[index].company.id })
-        this.getVendorData()
+        await deleteVendorApi({ id: this.vendorData[index].companyId })
+        await this.getVendorData()
       } catch (e) {
         console.warn('Vendor manager delete:' + e)
       }
     },
     async handleLockVendor(index) {
       try {
-        const name = this.vendorData[index].company.name
+        const name = this.vendorData[index].companyName
         await this.$confirm(`冻结公司：${name}，此公司的管理员将无法登录, 是否继续?`, '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await lockVendorApi({ id: this.vendorData[index].company.id })
-        this.getVendorData()
+        await lockVendorApi({ id: this.vendorData[index].companyId })
+        await this.getVendorData()
       } catch (e) {
         console.warn('Vendor manager delete:' + e)
       }
     },
     async handleUnlockVendor(index) {
       try {
-        const name = this.vendorData[index].company.name
+        const name = this.vendorData[index].companyName
         await this.$confirm(`恢复公司：${name}， 此公司需要重新批准审核, 是否继续?`, '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await unlockVendorApi({ id: this.vendorData[index].company.id })
-        this.getVendorData()
+        await unlockVendorApi({ id: this.vendorData[index].companyId })
+        await this.getVendorData()
       } catch (e) {
         console.warn('Vendor manager delete:' + e)
       }
@@ -569,10 +508,10 @@ export default {
       this.vendorProfile.name = ''
       this.vendorProfile.address = ''
       this.vendorProfile.industry = ''
-      this.vendorProfile.invoiceType = null
-      this.vendorProfile.taxpayerType = null
-      this.vendorProfile.appId = null
-      this.vendorProfile.excludeAppId = null
+      this.vendorProfile.invoiceType = vendor_invoice_type_normal
+      this.vendorProfile.taxpayerType = vendor_taxpayer_type_general
+      this.vendorProfile.appId = ''
+      this.vendorProfile.excludeAppId = ''
     },
     handleCreateVendor() {
       this.resetVendorForm()
@@ -580,22 +519,15 @@ export default {
       this.vendorDialogVisible = true
     },
     handleEditVendor(index) {
-      const company = this.vendorData[index].company
-      this.vendorId = company.id
-      this.vendorProfile.name = company.name
-      this.vendorProfile.address = company.address
-      this.vendorProfile.industry = company.industry
-      this.vendorProfile.invoiceType = company.invoiceType
-      this.vendorProfile.taxpayerType = company.taxpayerType
-      this.vendorProfile.appId = company.appId
-      this.vendorProfile.excludeAppId = company.excludeAppId
-      if (!isEmpty(company.appId)) {
-        this.platformType = 'specific'
-      } else if (!isEmpty(company.excludeAppId)) {
-        this.platformType = 'exclude'
-      } else {
-        this.platformType = 'all'
-      }
+      const vendor = this.vendorData[index]
+      this.vendorId = vendor.companyId
+      this.vendorProfile.name = vendor.companyName
+      this.vendorProfile.address = vendor.address
+      this.vendorProfile.industry = vendor.industry
+      this.vendorProfile.invoiceType = vendor.invoiceType
+      this.vendorProfile.taxpayerType = vendor.taxpayerType
+      this.vendorProfile.appId = vendor.appId
+      this.vendorProfile.excludeAppId = vendor.excludeAppId
       this.vendorDialogVisible = true
     },
     handleDialogCancel() {
@@ -607,9 +539,9 @@ export default {
       this.$refs.vendorForm.validate(async (valid) => {
         if (valid) {
           if (this.vendorId >= 0) {
-            this.confirmUpdateVendor()
+            await this.confirmUpdateVendor()
           } else {
-            this.confirmCreateVendor()
+            await this.confirmCreateVendor()
           }
         }
       })
@@ -618,9 +550,9 @@ export default {
       try {
         const { id } = await createVendorProfileApi(this.vendorProfile)
         await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
+        await addCompanyToRenterApi({ companyId: id, renterId: this.renterId })
         this.vendorDialogVisible = false
-        this.getVendorData()
-        this.$message.success('商户创建成功！')
+        await this.getVendorData()
       } catch (e) {
         console.warn('Create vendor profile error:' + e)
         const msg = this.getErrorMessage(e)
@@ -633,8 +565,7 @@ export default {
       try {
         await updateVendorProfileApi({ id: this.vendorId, ...this.vendorProfile })
         this.vendorDialogVisible = false
-        this.getVendorData()
-        this.$message.success('商户更新成功！')
+        await this.getVendorData()
       } catch (e) {
         console.warn('Update vendor profile error:' + e)
         const msg = this.getErrorMessage(e)
@@ -658,9 +589,62 @@ export default {
       }
       return null
     },
-    handlePlatformTypeChanged(_) {
-      this.vendorSpecificAppId = []
-      this.vendorExcludeAppId = []
+    async handleAddCompanyToRenter(params) {
+      const { companyId, companyName, renterName, renterId } = params
+      this.$confirm(`将商户：${companyName} 添加到租户：${renterName}， 是否继续?`, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          this.dataLoading = true
+          const { code } = await addCompanyToRenterApi({ companyId, renterId })
+          if (code === 200) {
+            await this.getVendorData()
+          }
+        } catch (e) {
+          console.warn('Add company to renter error:' + e)
+          this.$message.warning('添加商户失败，请联系管理员！')
+        } finally {
+          this.dataLoading = false
+        }
+      }).catch(e => {
+        console.debug(e)
+      })
+    },
+    async handleDelCompanyToRenter(params) {
+      const { companyId, companyName, renterName, renterId } = params
+      this.$confirm(`将商户：${companyName} 从租户：${renterName} 中移除， 是否继续?`, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          this.dataLoading = true
+          const { code } = await delCompanyFromRenterApi({ companyId, renterId })
+          if (code === 200) {
+            await this.getVendorData()
+          }
+        } catch (e) {
+          console.warn('Del company to renter error:' + e)
+          this.$message.warning('移除商户失败，请联系管理员！')
+        } finally {
+          this.dataLoading = false
+        }
+      }).catch(e => {
+        console.debug(e)
+      })
+    },
+    onRenterDialogConfirmed(opData) {
+      this.renterDialogVisible = false
+      if (opData) {
+        const { type, ...data } = opData
+        if (type === 'add') {
+          this.handleAddCompanyToRenter(data)
+        } else {
+          this.handleDelCompanyToRenter(data)
+        }
+      }
     }
   }
 }

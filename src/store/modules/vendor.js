@@ -1,5 +1,6 @@
 import {
   getProfileApi,
+  getRenterProfileApi,
   createProfileApi,
   updateProfileApi,
   submitProfileApi
@@ -14,6 +15,9 @@ const state = {
     licenseUrl: '',
     status: 0, // 0:未创建 1:编辑中 2:神话中 3:审核通过 4:审核有问题
     comments: ''
+  },
+  renter: {
+    id: -2
   }
 }
 
@@ -24,6 +28,10 @@ const mutations = {
         state.profile[key] = data[key]
       }
     })
+  },
+  SET_RENTER_PROFILE: (state, data) => {
+    const { renterId } = data
+    state.renter.id = renterId
   }
 }
 
@@ -46,6 +54,17 @@ const actions = {
         }
       )
       return { status: 0, id: -1 }
+    }
+  },
+  async getRenterProfile({ commit }) {
+    try {
+      const { code, data } = await getRenterProfileApi()
+      if (code === 200) {
+        commit('SET_RENTER_PROFILE', data)
+      }
+      return { renterId: data.renterId }
+    } catch (_) {
+      return { renterId: -1 }
     }
   },
   async createProfile({ commit, dispatch }, params) {

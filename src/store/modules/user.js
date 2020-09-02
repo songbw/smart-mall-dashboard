@@ -31,25 +31,20 @@ const state = {
 }
 
 const mutations = {
-  SET_TOKEN: (state, token) => {
-    state.token = token
-  },
-  SET_NAME: (state, name) => {
-    state.name = name
-  },
-  SET_PHONE: (state, phone) => {
-    state.phone = phone
-  },
-  SET_ROLE: (state, role) => {
-    state.role = role
-  },
-  SET_PERMISSIONS: (state, permissions) => {
-    if (isEmpty(permissions)) {
-      state.permissions = []
-    } else {
-      state.permissions = permissions.split(',')
-        .filter(item => isEmpty(item.trim()) === false)
-    }
+  SET_USER: (state, user) => {
+    Object.keys(user).forEach(key => {
+      if (key !== 'permissions') {
+        state[key] = user[key]
+      } else {
+        const permissions = user['permissions']
+        if (isEmpty(permissions)) {
+          state.permissions = []
+        } else {
+          state.permissions = permissions.split(',')
+            .filter(item => isEmpty(item.trim()) === false)
+        }
+      }
+    })
   }
 }
 
@@ -59,10 +54,13 @@ const actions = {
     const password = userInfo.password.trim()
     const data = await loginApi({ name: username, password: password })
     const phone = data.phone || ''
-    commit('SET_NAME', username)
-    commit('SET_TOKEN', data.token)
-    commit('SET_PHONE', phone)
-    commit('SET_ROLE', '')
+    const user = {
+      name: username,
+      token: data.token,
+      phone: phone,
+      role: ''
+    }
+    commit('SET_USER', user)
     const reset = isEmpty(phone) === false && data.loginCount === 0
     if (reset === false) {
       await storageSetItem(storage_key_token, data.token)
@@ -75,12 +73,15 @@ const actions = {
   },
   async twoFactorAuth({ commit }, params) {
     const data = await twoFactorAuthApi(params)
-    commit('SET_TOKEN', data.token)
-    commit('SET_ROLE', data.role)
-    commit('SET_PERMISSIONS', data.permissions)
-    await storageSetItem(storage_key_token, data.token)
-    await storageSetItem(storage_key_role, data.role)
-    await storageSetItem(storage_key_permissions, data.permissions)
+    const user = {
+      token: data.token,
+      role: data.role,
+      permissions: data.permissions || ''
+    }
+    commit('SET_USER', user)
+    await storageSetItem(storage_key_token, user.token)
+    await storageSetItem(storage_key_role, user.role)
+    await storageSetItem(storage_key_permissions, user.permissions)
     return data.role
   },
   async register({ commit }, params) {
@@ -113,10 +114,13 @@ const actions = {
   },
   async getRole({ commit, state }) {
     const data = await getRoleApi()
-    commit('SET_ROLE', data.role)
-    commit('SET_PERMISSIONS', data.permissions)
-    await storageSetItem(storage_key_role, data.role)
-    await storageSetItem(storage_key_permissions, data.permissions)
+    const user = {
+      role: data.role,
+      permissions: data.permissions || ''
+    }
+    commit('SET_USER', user)
+    await storageSetItem(storage_key_role, user.role)
+    await storageSetItem(storage_key_permissions, user.permissions)
     return data.role
   },
   async logout({ commit, dispatch }) {
@@ -130,10 +134,13 @@ const actions = {
   },
   // remove token
   async resetUser({ commit, dispatch }) {
-    commit('SET_TOKEN', '')
-    commit('SET_ROLE', '')
-    commit('SET_NAME', '')
-    commit('SET_PHONE', '')
+    commit('SET_USER', {
+      token: '',
+      role: '',
+      name: '',
+      phone: '',
+      permissions: []
+    })
     await dispatch('resetStorage')
   },
   async resetStorage() {

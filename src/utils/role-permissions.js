@@ -89,3 +89,10 @@ export const AppPlatformPermissions = {
   update: 'appplatform:update',
   view: 'appplatform:view'
 }
+
+export const RenterPermissions = {
+  update: 'renter:update',
+  view: 'renter:view',
+  userUpdate: 'renteruser:update',
+  userView: 'renteruser:view'
+}

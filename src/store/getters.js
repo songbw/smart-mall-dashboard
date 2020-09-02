@@ -31,6 +31,8 @@ const getters = {
   },
   vendorId: state => state.vendor.profile.status === vendor_status_approved
     ? state.vendor.profile.id : -1,
+  renterId: state => state.vendor.profile.status === vendor_status_approved
+    ? state.vendor.renter.renterId : -1,
   productQuery: state => state.products.search,
   productVendors: state => state.products.vendors,
   categoriesLoaded: state => state.categories.dataLoaded,

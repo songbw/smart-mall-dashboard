@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-container>
       <el-header>
-        <h3>当前商户的状态<span><el-tag>{{ statusLabel }}</el-tag></span></h3>
+        <h3>商户状态<span style="margin-left: 24px"><el-tag>{{ statusLabel }}</el-tag></span></h3>
       </el-header>
       <el-main>
         <el-form
@@ -31,22 +31,6 @@
               maxlength="50"
             />
           </el-form-item>
-          <el-form-item label="商户行业" prop="industry">
-            <el-select
-              v-model="vendorIndustry"
-              :disabled="couldEdit === false"
-              multiple
-              placeholder="请选择行业类型"
-              class="item-input"
-            >
-              <el-option
-                v-for="item in industryOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
           <el-form-item v-if="vendorStatus === statusRejected" label="审核意见">
             <span>{{ vendorComment }}</span>
           </el-form-item>
@@ -70,11 +54,11 @@
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
-import { IndustryDefinitions, VendorStatus } from './constants'
 import {
   vendor_status_init,
   vendor_status_rejected
 } from '@/utils/constants'
+import { VendorStatus } from './constants'
 
 export default {
   name: 'VendorProfile',
@@ -93,26 +77,17 @@ export default {
         callback(new Error('请输入商户地址'))
       }
     }
-    const validateIndustry = (rule, value, callback) => {
-      if (this.vendorIndustry && this.vendorIndustry.length > 0) {
-        callback()
-      } else {
-        callback(new Error('请选择商户类型'))
-      }
-    }
     return {
       statusRejected: vendor_status_rejected,
-      industryOptions: IndustryDefinitions,
       profile: {
         name: null,
         address: null,
-        industry: null
+        industry: ''
       },
       loading: false,
       vendorRules: {
         name: [{ required: true, trigger: 'blur', validator: validateName }],
-        address: [{ required: true, trigger: 'blur', validator: validateAddress }],
-        industry: [{ required: true, trigger: 'change', validator: validateIndustry }]
+        address: [{ required: true, trigger: 'blur', validator: validateAddress }]
       }
     }
   },
@@ -177,19 +152,6 @@ export default {
       },
       set(value) {
         this.profile.address = value
-      }
-    },
-    vendorIndustry: {
-      get() {
-        const industry = this.profile.industry != null ? this.profile.industry : this.vendorProfile.industry
-        if (industry) {
-          return industry.split(';')
-        } else {
-          return []
-        }
-      },
-      set(values) {
-        this.profile.industry = values.join(';')
       }
     }
   },

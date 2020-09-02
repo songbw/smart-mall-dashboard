@@ -15,9 +15,9 @@ import {
   storage_key_permissions,
   storage_merchant_id,
   storage_platform_id,
+  storage_renter_id,
   role_admin_name,
-  role_watcher_name,
-  vendor_status_approved
+  vendor_status_approved, platform_renter_id, role_renter_name
 } from '@/utils/constants'
 
 import {
@@ -34,34 +34,39 @@ export default {
     async initApp() {
       try {
         await localForage.ready()
+        const userData = {}
         const token = await storageGetItem(storage_key_token)
-        if (!isEmpty(token)) {
-          this.$store.commit('user/SET_TOKEN', token)
-        }
+        userData.token = token === null ? '' : token
+
         const name = await storageGetItem(storage_key_name)
-        if (!isEmpty(name)) {
-          this.$store.commit('user/SET_NAME', name)
-        }
+        userData.name = name === null ? '' : name
+
         const phone = await storageGetItem(storage_key_phone)
-        if (!isEmpty(phone)) {
-          this.$store.commit('user/SET_PHONE', phone)
-        }
+        userData.phone = phone === null ? '' : phone
+
         const role = await storageGetItem(storage_key_role)
-        if (!isEmpty(role)) {
-          this.$store.commit('user/SET_ROLE', role)
-        }
+        userData.role = role === null ? '' : role
+
         const permissions = await storageGetItem(storage_key_permissions)
-        if (!isEmpty(permissions)) {
-          this.$store.commit('user/SET_PERMISSIONS', permissions)
-        }
+        userData.permissions = permissions !== null ? permissions : ''
+        this.$store.commit('user/SET_USER', userData)
+
         const appId = await storageGetItem(storage_platform_id)
-        if (!isEmpty(appId)) {
+        if (appId !== null) {
           this.$store.commit('app/SET_PLATFORM_ID', appId)
         }
-        if (role_admin_name === role || role_watcher_name === role) {
-          this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
+        if (role_admin_name === role) {
+          this.$store.commit('vendor/SET_VENDOR_PROFILE', {
+            id: 0,
+            renterId: 0,
+            status: vendor_status_approved
+          })
           await storageSetItem(storage_merchant_id, 0)
+          await storageSetItem(storage_renter_id, platform_renter_id)
         } else if (!isEmpty(token)) {
+          if (role === role_renter_name) {
+            await this.getRenterProfile()
+          }
           await this.getVendorProfile()
         }
 
@@ -80,6 +85,14 @@ export default {
         }
       } catch (e) {
         console.warn('App init vendor profile error:' + e)
+      }
+    },
+    async getRenterProfile() {
+      try {
+        const { renterId } = await this.$store.dispatch('vendor/getRenterProfile')
+        await storageSetItem(storage_renter_id, renterId)
+      } catch (e) {
+        console.warn('App init renter profile error:' + e)
       }
     }
   }

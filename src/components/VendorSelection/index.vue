@@ -19,8 +19,10 @@
 </template>
 
 <script>
-import { getRenterListApi, getVendorListApi } from '@/api/vendor'
+import { getCompanyListOfRenterApi, getRenterListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
+import { mapGetters } from 'vuex'
+import { RenterPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'VendorSelection',
@@ -38,6 +40,15 @@ export default {
     return {
       dataLoading: false,
       vendorOptions: []
+    }
+  },
+  computed: {
+    ...mapGetters({
+      renterId: 'renterId',
+      userPermissions: 'userPermissions'
+    }),
+    hasRenterPermission() {
+      return this.userPermissions.includes(RenterPermissions.view)
     }
   },
   created() {
@@ -59,11 +70,16 @@ export default {
           limit: 1000,
           status: vendor_status_approved
         }
-        const data = await getVendorListApi(params)
-        this.vendorOptions = data.rows.map(item => ({
-          value: item.company.id.toString(),
-          label: item.company.name
-        }))
+        if (!this.hasRenterPermission) {
+          params.renterId = this.renterId
+        }
+        const { code, data } = await getCompanyListOfRenterApi(params)
+        if (code === 200) {
+          this.vendorOptions = data.rows.map(item => ({
+            value: item.companyId.toString(),
+            label: item.companyName
+          }))
+        }
       } catch (e) {
         console.warn(`Vendor Selection: ${e}`)
       } finally {

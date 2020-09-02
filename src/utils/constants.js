@@ -5,6 +5,7 @@ export const storage_key_phone = 'user_phone'
 export const storage_key_role = 'user_role'
 export const storage_key_permissions = 'user_permissions'
 export const storage_merchant_id = 'merchant_id'
+export const storage_renter_id = 'renter_id'
 export const storage_platform_id = 'app_id'
 
 export const role_vendor_name = 'vendor'
@@ -12,6 +13,7 @@ export const role_admin_name = 'admin'
 export const role_watcher_name = 'watcher'
 export const role_renter_name = 'renter'
 
+export const platform_renter_id = '0'
 export const wuxi_app_id = '11'
 export const default_app_id = process.env.VUE_APP_PLATFORM_ID || wuxi_app_id
 
