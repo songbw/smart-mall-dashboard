@@ -411,6 +411,10 @@ export const constantRoutes = [
       {
         path: 'http://tongji.baidu.com/web/welcome/ico?s=013c2a67e96a8b835c219320ff617fac',
         meta: { title: '万科云城', icon: 'link' }
+      },
+      {
+        path: 'https://tongji.baidu.com/web/welcome/ico?s=5eff62f2be27f69f4f6fd5dc9ffb3617',
+        meta: { title: '灵锡', icon: 'link' }
       }
     ]
   },
