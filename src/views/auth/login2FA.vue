@@ -67,9 +67,12 @@ import {
   validVerificationCode
 } from '@/utils/validate'
 import {
+  platform_renter_id,
   role_admin_name,
+  role_renter_name,
   role_watcher_name,
   storage_merchant_id,
+  storage_renter_id,
   vendor_status_approved
 } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
@@ -162,6 +165,15 @@ export default {
         console.warn('Login vendor profile error:' + e)
       }
     },
+    async getRenterProfile() {
+      try {
+        const { companyId, renterId } = await this.$store.dispatch('vendor/getRenterProfile')
+        await storageSetItem(storage_merchant_id, companyId)
+        await storageSetItem(storage_renter_id, renterId)
+      } catch (e) {
+        console.warn('Login renter profile error:' + e)
+      }
+    },
     handleSubmit() {
       this.$refs.twoFactorForm.validate(async valid => {
         if (valid) {
@@ -171,8 +183,13 @@ export default {
             if (role_admin_name === role || role_watcher_name === role) {
               this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
               await storageSetItem(storage_merchant_id, 0)
+              await storageSetItem(storage_renter_id, platform_renter_id)
             } else {
-              await this.getVendorProfile()
+              if (role_renter_name === role) {
+                await this.getRenterProfile()
+              } else {
+                await this.getVendorProfile()
+              }
             }
             await this.$router.replace({ path: '/' })
           } catch (e) {

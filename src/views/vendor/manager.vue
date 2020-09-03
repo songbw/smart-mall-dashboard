@@ -404,8 +404,12 @@ export default {
           if (!isEmpty(this.queryName)) {
             params.name = this.queryName
           }
-          if (!isEmpty(this.queryRenterId)) {
-            params.renterId = this.queryRenterId
+          if (this.hasViewRenterPermission) {
+            if (!isEmpty(this.queryRenterId)) {
+              params.renterId = this.queryRenterId
+            }
+          } else {
+            params.renterId = this.renterId
           }
           const { code, data } = await getCompanyListOfRenterApi(params)
           if (code === 200) {

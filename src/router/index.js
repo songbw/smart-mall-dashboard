@@ -4,7 +4,7 @@ import Layout from '@/layout'
 import {
   role_vendor_name,
   role_admin_name,
-  role_watcher_name, role_renter_name
+  role_renter_name
 } from '@/utils/constants'
 
 if (!window.VueRouter) Vue.use(VueRouter)
@@ -435,7 +435,7 @@ export const constantRoutes = [
       title: '会员',
       icon: 'members',
       group: 'members',
-      roles: [role_admin_name, role_watcher_name]
+      roles: [role_admin_name, role_renter_name]
     },
     children: [
       {
@@ -446,7 +446,7 @@ export const constantRoutes = [
           title: '会员管理',
           icon: 'members-manager',
           group: 'members',
-          roles: [role_admin_name, role_watcher_name]
+          roles: [role_admin_name, role_renter_name]
         }
       },
       {
@@ -457,7 +457,7 @@ export const constantRoutes = [
           title: '会员详情',
           icon: 'member-profile',
           group: 'members',
-          roles: [role_admin_name, role_watcher_name]
+          roles: [role_admin_name, role_renter_name]
         },
         hidden: true
       },
@@ -469,7 +469,7 @@ export const constantRoutes = [
           title: '会员详情',
           icon: 'member-profile',
           group: 'members',
-          roles: [role_admin_name, role_watcher_name]
+          roles: [role_admin_name, role_renter_name]
         },
         hidden: true
       },
@@ -481,7 +481,7 @@ export const constantRoutes = [
           title: '余额管理',
           icon: 'balances',
           group: 'members',
-          roles: [role_admin_name, role_watcher_name]
+          roles: [role_admin_name, role_renter_name]
         }
       }
     ]
@@ -541,7 +541,7 @@ export const constantRoutes = [
   {
     path: '/companyInfo',
     component: Layout,
-    redirect: '/companyInfo/profile',
+    redirect: '/companyInfo/user',
     name: 'CompanyInfo',
     meta: {
       title: '企业',
@@ -550,16 +550,22 @@ export const constantRoutes = [
     },
     children: [
       {
-        path: 'profile',
-        name: 'CompanyProfile',
-        component: () => import('@/views/vendor/profile'),
-        meta: { title: '公司信息', icon: 'vendor-info', roles: [role_vendor_name, role_renter_name] }
-      },
-      {
         path: 'user',
         name: 'UserInfo',
         component: () => import('@/views/vendor/userInfo'),
         meta: { title: '管理员', icon: 'user', roles: [role_vendor_name, role_renter_name] }
+      },
+      {
+        path: 'vendorInfo',
+        name: 'CompanyProfile',
+        component: () => import('@/views/vendor/profile'),
+        meta: { title: '商户信息', icon: 'vendor-info', roles: [role_vendor_name] }
+      },
+      {
+        path: 'renterInfo',
+        name: 'RenterProfile',
+        component: () => import('@/views/renter/renterInfo'),
+        meta: { title: '租户信息', icon: 'vendor-info', roles: [role_renter_name] }
       }
     ]
   },

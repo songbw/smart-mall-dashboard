@@ -13,9 +13,6 @@
       </div>
       <div v-if="appReady">
         <app-main />
-        <right-panel v-if="needAppSettings">
-          <settings />
-        </right-panel>
       </div>
       <page-loading v-else />
     </div>
@@ -26,12 +23,11 @@
 import { mapGetters } from 'vuex'
 import RightPanel from '@/components/RightPanel'
 import PageLoading from '@/components/PageLoading'
-import { NavBar, Sidebar, AppMain, Settings } from './components'
+import { NavBar, Sidebar, AppMain } from './components'
 
 export default {
   name: 'Layout',
   components: {
-    Settings,
     RightPanel,
     NavBar,
     Sidebar,
@@ -52,18 +48,6 @@ export default {
       return {
         hideSidebar: !this.sidebar.opened,
         openSidebar: this.sidebar.opened
-      }
-    }
-  },
-  created() {
-    this.getAppPlatformList()
-  },
-  methods: {
-    async getAppPlatformList() {
-      try {
-        await this.$store.dispatch('app/getPlatformList')
-      } catch (e) {
-        console.warn('Get platform list error:' + e)
       }
     }
   }

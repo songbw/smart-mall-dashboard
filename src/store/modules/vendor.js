@@ -30,8 +30,10 @@ const mutations = {
     })
   },
   SET_RENTER_PROFILE: (state, data) => {
-    const { renterId } = data
-    state.renter.id = renterId
+    state.profile.id = data.companyId
+    state.profile.name = data.renterName
+    state.profile.status = data.status
+    state.renter.id = data.renterId
   }
 }
 
@@ -62,9 +64,9 @@ const actions = {
       if (code === 200) {
         commit('SET_RENTER_PROFILE', data)
       }
-      return { renterId: data.renterId }
+      return { status: data.status, companyId: data.companyId, renterId: data.renterId }
     } catch (_) {
-      return { renterId: -1 }
+      return { status: 0, companyId: -1, renterId: -1 }
     }
   },
   async createProfile({ commit, dispatch }, params) {

@@ -165,6 +165,8 @@ import AppConfigDialog from '@/views/renter/appConfigDialog'
 import AlipayConfigDialog from '@/views/renter/alipayConfigDialog'
 import { getDigitalId } from '@/utils'
 import WechatConfigDialog from '@/views/renter/wechatConfigDialog'
+import { mapGetters } from 'vuex'
+import { RenterPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'RenterInfo',
@@ -221,12 +223,25 @@ export default {
       wechatPayConfigList: []
     }
   },
+  computed: {
+    ...mapGetters({
+      userRenterId: 'renterId',
+      userPermissions: 'userPermissions'
+    }),
+    hasViewRenterPermission() {
+      return this.userPermissions.includes(RenterPermissions.view)
+    }
+  },
   created() {
     this.initData()
   },
   methods: {
     async initData() {
-      this.renterId = this.$route.params.renterId
+      if (this.hasViewRenterPermission) {
+        this.renterId = this.$route.params.renterId
+      } else {
+        this.renterId = this.userRenterId
+      }
       await this.getRenterData()
       await this.getAlipayConfigList()
       await this.getWechatPayConfigList()

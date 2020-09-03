@@ -66,8 +66,9 @@ export default {
         } else if (!isEmpty(token)) {
           if (role === role_renter_name) {
             await this.getRenterProfile()
+          } else {
+            await this.getVendorProfile()
           }
-          await this.getVendorProfile()
         }
 
         this.$store.commit('app/SET_READY')
@@ -89,7 +90,8 @@ export default {
     },
     async getRenterProfile() {
       try {
-        const { renterId } = await this.$store.dispatch('vendor/getRenterProfile')
+        const { companyId, renterId } = await this.$store.dispatch('vendor/getRenterProfile')
+        await storageSetItem(storage_merchant_id, companyId)
         await storageSetItem(storage_renter_id, renterId)
       } catch (e) {
         console.warn('App init renter profile error:' + e)
