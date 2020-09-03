@@ -21,14 +21,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import RightPanel from '@/components/RightPanel'
 import PageLoading from '@/components/PageLoading'
 import { NavBar, Sidebar, AppMain } from './components'
 
 export default {
   name: 'Layout',
   components: {
-    RightPanel,
     NavBar,
     Sidebar,
     AppMain,

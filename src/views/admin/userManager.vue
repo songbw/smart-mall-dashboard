@@ -158,6 +158,13 @@
             placeholder="输入手机号码"
           />
         </el-form-item>
+        <el-form-item label="企业列表" prop="companyId">
+          <vendor-selection
+            :vendor-id="userForm.companyId"
+            :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
+            @changed="onUserVendorSelected"
+          />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleUserDialogCancel">取消</el-button>
@@ -239,7 +246,7 @@ import {
   role_vendor_name
 } from '@/utils/constants'
 import { validUserName, validPhone } from '@/utils/validate'
-import { VendorPermissions } from '@/utils/role-permissions'
+import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
 
 export default {
   name: 'UserManager',
@@ -282,6 +289,13 @@ export default {
         callback()
       }
     }
+    const validateCompany = (rule, value, callback) => {
+      if (value === null || value === '') {
+        callback(new Error('请选择对应的企业'))
+      } else {
+        callback()
+      }
+    }
     return {
       platformAdminRole: role_admin_name,
       renterAdminRole: role_renter_name,
@@ -308,28 +322,22 @@ export default {
         companyId: null
       },
       vendorRules: {
-        companyId: [{
-          required: true, trigger: 'blur', validator: (rule, value, callback) => {
-            if (value === null) {
-              callback(new Error('请选择对应的企业'))
-            } else {
-              callback()
-            }
-          }
-        }]
+        companyId: [{ required: true, trigger: 'change', validator: validateCompany }]
       },
       userForm: {
         userId: null,
         loginName: '',
         phone: '',
         password: '',
-        confirm: ''
+        confirm: '',
+        companyId: null
       },
       userRules: {
-        loginName: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
-        confirm: [{ required: true, trigger: 'blur', validator: validateConfirm }],
-        phone: [{ required: true, trigger: 'blur', validator: validatePhone }]
+        loginName: [{ required: true, trigger: 'change', validator: validateUsername }],
+        password: [{ required: true, trigger: 'change', validator: validatePassword }],
+        confirm: [{ required: true, trigger: 'change', validator: validateConfirm }],
+        phone: [{ required: true, trigger: 'change', validator: validatePhone }],
+        companyId: [{ required: true, trigger: 'change', validator: validateCompany }]
       },
       phoneEditDialogVisible: false,
       phoneForm: {
@@ -371,6 +379,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      renterId: 'renterId',
       userPermissions: 'userPermissions'
     }),
     hasViewPermission() {
@@ -378,6 +387,9 @@ export default {
     },
     hasEditPermission() {
       return this.userPermissions.includes(VendorPermissions.userUpdate)
+    },
+    hasRenterPermission() {
+      return this.userPermissions.includes(RenterPermissions.view)
     },
     queryVendorRole() {
       return this.routerName === 'VendorAdminManager'
@@ -417,6 +429,9 @@ export default {
           page: this.queryOffset,
           limit: this.queryLimit,
           roleId: this.queryRoleId
+        }
+        if (this.queryVendorRole && !this.hasRenterPermission) {
+          params.renterId = this.renterId
         }
         if (!isEmpty(this.queryPhone)) {
           params.phone = this.queryPhone
@@ -482,12 +497,15 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
+          this.dataLoading = true
           await setUserVendorApi({ userId: this.vendorForm.userId, companyId: this.vendorForm.companyId })
           this.getUsersData()
           this.$message.success('修改用户企业成功！')
         } catch (e) {
           console.warn('Vendor user manager set company error:' + e)
           this.$message.error('修改用户企业失败，请联系管理员！')
+        } finally {
+          this.dataLoading = false
         }
       }
     },
@@ -501,6 +519,9 @@ export default {
     },
     onLoginNameChanged(value) {
       this.userForm.loginName = trim(value)
+    },
+    onUserVendorSelected(value) {
+      this.userForm.companyId = value
     },
     handleUserDialogCancel() {
       this.$refs.userForm.clearValidate()
@@ -518,6 +539,8 @@ export default {
     },
     async handleStartCreateUser() {
       try {
+        this.dataLoading = true
+        this.userDialogVisible = false
         const params = {
           loginName: this.userForm.loginName,
           password: this.userForm.password,
@@ -526,8 +549,8 @@ export default {
         if (!isEmpty(this.userForm.phone)) {
           params.phone = this.userForm.phone
         }
-        await createVendorUserApi(params)
-        this.userDialogVisible = false
+        const user = await createVendorUserApi(params)
+        await setUserVendorApi({ userId: user.id, companyId: this.userForm.companyId })
         this.getUsersData()
       } catch (e) {
         console.warn('Create user error: ' + e)
@@ -535,6 +558,8 @@ export default {
         if (msg) {
           this.$message.error(msg)
         }
+      } finally {
+        this.dataLoading = false
       }
     },
     getErrorMessage(error) {
