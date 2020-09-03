@@ -406,7 +406,15 @@ export const constantRoutes = [
       },
       {
         path: 'http://tongji.baidu.com/web/welcome/ico?s=489c1d4ef77566d573266c21b816cbca',
-        meta: { title: '关爱通', icon: 'link' }
+        meta: { title: '关爱通自营', icon: 'link' }
+      },
+      {
+        path: 'https://tongji.baidu.com/web/welcome/ico?s=03a0d710c71e9da54f17e6e0544e5030',
+        meta: { title: '关爱通苏宁', icon: 'link' }
+      },
+      {
+        path: 'https://tongji.baidu.com/web/welcome/ico?s=b4c5eb949e4363a0438053b58ed73643',
+        meta: { title: '关爱通唯品会', icon: 'link' }
       },
       {
         path: 'http://tongji.baidu.com/web/welcome/ico?s=013c2a67e96a8b835c219320ff617fac',
