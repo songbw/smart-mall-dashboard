@@ -40,9 +40,24 @@
       </el-form-item>
     </el-form>
     <div v-if="hasEditPermission" style="margin-bottom: 10px">
-      <el-button type="primary" @click="handleCreateFirstClass">
-        新建一级类别
-      </el-button>
+      <el-form inline>
+        <el-form-item>
+          <el-select v-model="currentAppId" placeholder="请选择运营平台" clearable @change="onAppIdChanged">
+            <el-option
+              v-for="item in appOptions"
+              :key="item.appId"
+              :label="item.name"
+              :value="item.appId"
+            />
+          </el-select>
+          <span style="margin-left: 12px"><i class="el-icon-warning-outline" />选择运营平台可修改对应类别属性</span>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleCreateFirstClass">
+            新建一级类别
+          </el-button>
+        </el-form-item>
+      </el-form>
     </div>
     <el-container>
       <el-aside>
@@ -57,29 +72,44 @@
         <el-header class="custom-header">
           <span v-if="topCategoryHeaderTitle">
             {{ topCategoryHeaderTitle }}
-            <el-tag v-if="currentSelectedTopCategory">{{ topCategoryShowState }}</el-tag>
+            <el-tag v-if="topCategoryShowState">{{ topCategoryShowState }}</el-tag>
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
               {{ hasEditPermission ? '编辑' : '查看' }}
             </el-button>
             <el-button
+              v-if="hasEditPermission"
               type="info"
               size="mini"
-              icon="el-icon-plus"
               @click="handleCreateSubClass"
             >
               创建子类别
             </el-button>
             <el-button
-              v-if="currentSelectedTopCategory.idate"
+              v-if="hasEditPermission && currentSelectedTopCategory.idate"
               :disabled="currentSelectedTopCategory.subTotal > 0"
               type="danger"
               size="mini"
-              icon="el-icon-delete"
               @click="handleDelete(currentSelectedTopCategory)"
             >
               删除
+            </el-button>
+            <el-button
+              v-if="appIdSelected && topCategoryInAppId === null"
+              type="warning"
+              size="mini"
+              @click="handleAddCategoryToAppId(currentSelectedTopCategory)"
+            >
+              添加到运营端
+            </el-button>
+            <el-button
+              v-if="appIdSelected && topCategoryInAppId !== null"
+              type="warning"
+              size="mini"
+              @click="handleDeleteCategoryFromAppId(currentSelectedTopCategory)"
+            >
+              从运营端移除
             </el-button>
           </el-button-group>
         </el-header>
@@ -107,7 +137,9 @@
             </el-table-column>
             <el-table-column label="显示状态" align="center" width="120">
               <template slot-scope="scope">
-                <el-tag>{{ scope.row.isShow ? '显示' : '隐藏' }}</el-tag>
+                <el-tag>
+                  {{ appIdSelected ? scope.row.appIdData ? scope.row.showStatus : '未添加' : scope.row.showStatus }}
+                </el-tag>
               </template>
             </el-table-column>
             <el-table-column label="类别排序" align="center" width="120">
@@ -115,7 +147,7 @@
                 <span>{{ scope.row.sortOrder }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="160">
+            <el-table-column label="操作" align="center" width="260">
               <template slot-scope="scope">
                 <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
                   {{ hasEditPermission ? '编辑' : '查看' }}
@@ -127,6 +159,22 @@
                   @click="handleDelete(scope.row)"
                 >
                   删除
+                </el-button>
+                <el-button
+                  v-if="appIdSelected && scope.row.appIdData === null"
+                  type="warning"
+                  size="mini"
+                  @click="handleAddCategoryToAppId(scope.row)"
+                >
+                  添加到运营端
+                </el-button>
+                <el-button
+                  v-if="appIdSelected && scope.row.appIdData !== null"
+                  type="warning"
+                  size="mini"
+                  @click="handleDeleteCategoryFromAppId(scope.row)"
+                >
+                  从运营端移除
                 </el-button>
               </template>
             </el-table-column>
@@ -165,13 +213,13 @@
         <el-form-item label="类别级别">
           <el-input v-model="dialogValue.categoryClass" readonly class="dialog-form-item" />
         </el-form-item>
-        <el-form-item label="是否显示">
+        <el-form-item v-if="dialogValue.appIdData" label="是否显示">
           <el-switch v-model="dialogValue.isShow" :disabled="!hasEditPermission" />
         </el-form-item>
-        <el-form-item label="类别排序">
+        <el-form-item v-if="dialogValue.appIdData" label="类别排序">
           <el-input v-if="!hasEditPermission" v-model="dialogValue.sortOrder" readonly class="dialog-form-item" />
           <el-input-number v-else v-model="dialogValue.sortOrder" />
-          <div style="font-size: 13px;margin-left: 4rem">数值越小优先级越高</div>
+          <span style="font-size: 12px;margin-left: 12px">数值越小优先级越高</span>
         </el-form-item>
         <el-form-item v-if="dialogValue.categoryClass === '3'" label="类别图标">
           <image-upload
@@ -201,6 +249,7 @@ import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 import { CategoryPermissions } from '@/utils/role-permissions'
 import * as excel from '@/utils/Export2Excel'
+import { role_vendor_name } from '@/utils/constants'
 
 const ExportHeaders = [
   { field: 'categoryId', label: '三级类别编号' },
@@ -209,8 +258,8 @@ const ExportHeaders = [
   { field: 'firstFullName', label: '一级类别名称' }
 ]
 
-const copyCategory = src => {
-  return {
+const copyCategory = (src, appIdList) => {
+  const data = {
     categoryId: src.categoryId,
     categoryName: src.categoryName,
     categoryClass: src.categoryClass,
@@ -219,8 +268,17 @@ const copyCategory = src => {
     isShow: src.isShow === false, // false means SHOWING
     idate: src.idate, // null means preset
     parentId: src.parentId,
-    subTotal: src.subTotal
+    subTotal: src.subTotal,
+    appIdData: null
   }
+  const appIdData = appIdList.find(item => item.categoryId === src.categoryId)
+  if (appIdData) {
+    data.appIdData = appIdData
+    data.isShow = appIdData.isShow === false
+    data.sortOrder = appIdData.sortOrder
+  }
+  data.showStatus = data.isShow ? '显示' : '隐藏'
+  return data
 }
 
 const formatJson = (filterVal, jsonData) => {
@@ -251,9 +309,10 @@ export default {
         categoryClass: '0',
         categoryName: '',
         categoryIcon: null,
-        sortOrder: 0,
-        isShow: null,
-        idate: null
+        sortOrder: 50,
+        isShow: false,
+        idate: null,
+        appIdData: null
       },
       originalValue: {
         categoryName: null,
@@ -276,23 +335,34 @@ export default {
       topCategoryHeaderTitle: '',
       searchCategoriesData: [],
       editCategory: true,
-      dialogLoading: false
+      dialogLoading: false,
+      currentAppId: ''
     }
   },
   computed: {
     ...mapGetters({
+      userRole: 'userRole',
       userPermissions: 'userPermissions',
       categoriesLoaded: 'categoriesLoaded',
       categoriesLoading: 'categoriesLoading',
       categoryData: 'categories',
       secondCategoryData: 'secondClassCategories',
-      thirdCategoryData: 'thirdClassCategories'
+      thirdCategoryData: 'thirdClassCategories',
+      appIdCategories: 'appIdCategories',
+      platformAppList: 'platformAppList',
+      validAppList: 'validAppList'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(CategoryPermissions.view)
     },
     hasEditPermission() {
       return this.userPermissions.includes(CategoryPermissions.update)
+    },
+    appOptions() {
+      return this.userRole === role_vendor_name ? this.validAppList : this.platformAppList
+    },
+    appIdSelected() {
+      return !isEmpty(this.currentAppId)
     },
     filterName: {
       get() {
@@ -306,9 +376,9 @@ export default {
       if (this.categoriesLoaded && this.hasViewPermission) {
         const topList = this.categoryData.map(item => {
           const subs = item.subs.map(sub => {
-            return copyCategory(sub)
+            return copyCategory(sub, this.appIdCategories)
           })
-          const copyItem = copyCategory(item)
+          const copyItem = copyCategory(item, this.appIdCategories)
           return { ...copyItem, subs: sortBy(subs, ['sortOrder']) }
         })
         return sortBy(topList, ['sortOrder'])
@@ -316,9 +386,12 @@ export default {
         return []
       }
     },
+    topCategoryInAppId() {
+      return this.currentSelectedTopCategory ? this.currentSelectedTopCategory.appIdData : null
+    },
     topCategoryShowState() {
-      if (this.currentSelectedTopCategory !== null) {
-        return this.currentSelectedTopCategory.isShow ? '显示' : '隐藏'
+      if (this.currentSelectedTopCategory !== null && !isEmpty(this.currentAppId)) {
+        return this.currentSelectedTopCategory.appIdData ? this.currentSelectedTopCategory.showStatus : '未添加'
       } else {
         return ''
       }
@@ -334,7 +407,7 @@ export default {
           const second = this.secondCategoryData.find(item => item.categoryId === category.categoryId)
           if (second) {
             const subs = second.subs.map(sub => {
-              return copyCategory(sub)
+              return copyCategory(sub, this.appIdCategories)
             })
             return sortBy(subs, ['sortOrder'])
           } else {
@@ -345,9 +418,22 @@ export default {
     }
   },
   created() {
-    this.getAllCategories()
+    this.initData()
   },
   methods: {
+    async initData() {
+      await this.getAppPlatformList()
+      await this.getAllCategories()
+    },
+    async getAppPlatformList() {
+      try {
+        if (this.platformAppList.length === 0) {
+          await this.$store.dispatch('app/getPlatformList')
+        }
+      } catch (e) {
+        console.warn('Category get app list error:' + e)
+      }
+    },
     async getAllCategories() {
       if (this.categoriesLoaded === false && this.categoriesLoading === false) {
         try {
@@ -418,7 +504,20 @@ export default {
         params.categoryClass = this.dialogValue.categoryClass
         try {
           this.dialogLoading = true
-          await this.$store.dispatch('categories/updateCategoryInfo', params)
+          const { isShow, sortOrder, ...rest } = params
+          await this.$store.dispatch('categories/updateCategoryInfo', rest)
+          if ((isShow !== undefined || sortOrder !== undefined) && this.dialogValue.appIdData) {
+            const appIdParams = {
+              id: this.dialogValue.appIdData.id,
+              renterId: this.dialogValue.appIdData.renterId,
+              appId: this.dialogValue.appIdData.appId,
+              categoryId: params.categoryId,
+              isShow: isShow !== undefined ? isShow : this.dialogValue.isShow,
+              sortOrder: sortOrder !== undefined ? sortOrder : this.dialogValue.sortOrder
+            }
+            await this.$store.dispatch('categories/updateCategoriesInAppId', appIdParams)
+            await this.handleRefreshAppIdList()
+          }
           if (params.categoryId === this.currentSelectedTopCategory.categoryId) {
             Object.keys(this.originalValue).forEach(key => {
               if (key in params) {
@@ -538,6 +637,66 @@ export default {
         console.warn('Delete category error:' + e)
       }
     },
+    async handleRefreshAppIdList() {
+      if (isEmpty(this.currentAppId)) {
+        return
+      }
+      const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+      await this.$store.dispatch('categories/getCategoryDataByAppId', {
+        appId: appPlatform.appId, renterId: appPlatform.renterId
+      })
+    },
+    handleAddCategoryToAppId(category) {
+      if (isEmpty(this.currentAppId)) {
+        this.$message.warning('请先选择运营平台')
+        return
+      }
+      const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+      this.$confirm(`是否继续将类别(${category.categoryName})加入到运营平台(${appPlatform.name})？`,
+        '警告',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+        const params = [{
+          renterId: appPlatform.renterId,
+          appId: appPlatform.appId,
+          categoryId: category.categoryId,
+          sortOrder: category.sortOrder,
+          isShow: 1
+        }]
+        await this.$store.dispatch('categories/addCategoriesToAppId', params)
+        await this.handleRefreshAppIdList()
+      }).catch(() => {
+        console.debug('Cancel add category to app id')
+      })
+    },
+    handleDeleteCategoryFromAppId(category) {
+      if (category.appIdData) {
+        const { id } = category.appIdData
+        const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+        this.$confirm(`是否继续将类别(${category.categoryName})从运营平台(${appPlatform.name})删除？`,
+          '警告',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(async () => {
+          await this.$store.dispatch('categories/deleteCategoryFromAppId', { id })
+          await this.handleRefreshAppIdList()
+        }).catch(() => {
+          console.debug('Cancel delete category from app id')
+        })
+      }
+    },
+    onAppIdCategoryClicked(category) {
+      if (category.appIdData) {
+        this.handleDeleteCategoryFromAppId(category)
+      } else {
+        this.handleAddCategoryToAppId(category)
+      }
+    },
     handleUploadImageSuccess(url) {
       this.dialogValue.categoryIcon = url
     },
@@ -550,6 +709,7 @@ export default {
       this.dialogValue.sortOrder = 50
       this.dialogValue.isShow = false
       this.dialogValue.idate = null
+      this.dialogValue.appIdData = null
     },
     handleCreateFirstClass() {
       this.resetDialogValue()
@@ -602,26 +762,36 @@ export default {
         data,
         filename
       })
+    },
+    onAppIdChanged(val) {
+      this.topCategoryHeaderTitle = ''
+      this.currentSelectedTopCategory = null
+      this.firstClassCategoryName = ''
+      if (val) {
+        this.handleRefreshAppIdList()
+      } else {
+        this.$store.commit('categories/SET_APP_ID_LIST', [])
+      }
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .custom-header {
-    font-size: large;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+.custom-header {
+  font-size: large;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .dialog-form-item {
-    width: 80%;
-  }
+.dialog-form-item {
+  width: 80%;
+}
 
-  .category-image {
-    object-fit: contain;
-    width: 100px;
-    height: 100px;
-  }
+.category-image {
+  object-fit: contain;
+  width: 100px;
+  height: 100px;
+}
 </style>

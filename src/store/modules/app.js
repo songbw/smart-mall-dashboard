@@ -1,9 +1,8 @@
 import isEmpty from 'lodash/isEmpty'
 import { getCosUrlApi } from '@/api/app'
-import { storage_platform_id, default_app_id } from '@/utils/constants'
+import { storage_platform_id, default_app_id, role_vendor_name, platform_renter_id } from '@/utils/constants'
 import { storageSetItem } from '@/utils/storage'
-import { getAppPlatformListApi } from '@/api/products'
-import { getProfileApi } from '@/api/vendor'
+import { getProfileApi, getAppConfigListApi } from '@/api/vendor'
 
 const invalidAppIdList = ['test']
 
@@ -87,19 +86,25 @@ const actions = {
       console.warn('Store app cos url error:' + e)
     }
   },
-  async getPlatformList({ commit }) {
-    const { code, data } = await getAppPlatformListApi(
-      { pageNo: 1, pageSize: 100 })
+  async getPlatformList({ commit, rootState }) {
+    let vendorList = []
+    const { user, vendor } = rootState
+    const role = user.role
+    const renterId = vendor.renter.id
+    const { code, data } = await getAppConfigListApi(
+      renterId && renterId !== platform_renter_id ? { renterId } : null
+    )
     if (code === 200) {
-      const platformList = data.list.map(
-        item => ({ appId: item.appId, name: item.name }))
-      const { appIdList, excludeAppIdList } = await getVendorPlatformList()
-      let vendorList = []
-      if (appIdList.length > 0) {
-        vendorList = appIdList
-      } else {
-        vendorList = platformList.map(item => item.appId)
-          .filter(appId => !excludeAppIdList.includes(appId))
+      const platformList = data.map(
+        item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
+      if (role === role_vendor_name) {
+        const { appIdList, excludeAppIdList } = await getVendorPlatformList()
+        if (appIdList.length > 0) {
+          vendorList = appIdList
+        } else {
+          vendorList = platformList.map(item => item.appId)
+            .filter(appId => !excludeAppIdList.includes(appId))
+        }
       }
       commit('SET_PLATFORM_LIST', platformList)
       commit('SET_VENDOR_LIST', vendorList)

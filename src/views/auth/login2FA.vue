@@ -181,7 +181,11 @@ export default {
             this.twoFactorForm.phone = this.userPhone
             const role = await this.$store.dispatch('user/twoFactorAuth', this.twoFactorForm)
             if (role_admin_name === role || role_watcher_name === role) {
-              this.$store.commit('vendor/SET_VENDOR_PROFILE', { id: 0, status: vendor_status_approved })
+              this.$store.commit('vendor/SET_VENDOR_PROFILE', {
+                id: 0,
+                renterId: platform_renter_id,
+                status: vendor_status_approved
+              })
               await storageSetItem(storage_merchant_id, 0)
               await storageSetItem(storage_renter_id, platform_renter_id)
             } else {

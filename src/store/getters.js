@@ -32,7 +32,7 @@ const getters = {
   vendorId: state => state.vendor.profile.status === vendor_status_approved
     ? state.vendor.profile.id : -1,
   renterId: state => state.vendor.profile.status === vendor_status_approved
-    ? state.vendor.renter.id : -1,
+    ? state.vendor.renter.id : '-1',
   productQuery: state => state.products.search,
   productVendors: state => state.products.vendors,
   categoriesLoaded: state => state.categories.dataLoaded,
@@ -40,6 +40,7 @@ const getters = {
   categories: state => state.categories.categoriesTree,
   secondClassCategories: state => state.categories.secondClassTree,
   thirdClassCategories: state => state.categories.thirdClassList,
+  appIdCategories: state => state.categories.appIdList,
   aggregationsQuery: state => state.aggregations.search,
   currentAggregation: state => state.aggregations.aggregation,
   currentAggregationContent: state => state.aggregations.aggregation.content,

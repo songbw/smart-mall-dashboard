@@ -4,7 +4,11 @@ import {
   updateCategoryInfoApi,
   searchCategoryInfoApi,
   createCategoryApi,
-  deleteCategoryApi
+  deleteCategoryApi,
+  getCategoriesByAppIdApi,
+  addCategoriesToAppIdApi,
+  deleteCategoryFromAppIdApi,
+  updateCategoriesInAppIdApi
 } from '@/api/categories'
 
 const findCategoryByRelationID = (categoryTree, relation) => {
@@ -42,7 +46,8 @@ const state = {
   dataLoading: false,
   categoriesTree: [],
   secondClassTree: [],
-  thirdClassList: []
+  thirdClassList: [],
+  appIdList: []
 }
 
 const mutations = {
@@ -150,6 +155,9 @@ const mutations = {
         console.warn('Category unknown class:' + classId)
         break
     }
+  },
+  SET_APP_ID_LIST: (state, data) => {
+    state.appIdList = Array.isArray(data) ? data : []
   }
 }
 
@@ -254,6 +262,67 @@ const actions = {
   async deleteCategory({ commit }, params) {
     await deleteCategoryApi({ id: params.categoryId })
     commit('DELETE_CATEGORY', params)
+  },
+  async getCategoryDataByAppId({ commit }, params) {
+    let list = []
+    try {
+      commit('SET_DATA_IS_LOADING', true)
+      const { code, data } = await getCategoriesByAppIdApi(params)
+      if (code === 200) {
+        list = data
+      }
+    } catch (e) {
+      console.warn('Get category by app id error:' + e)
+    } finally {
+      commit('SET_APP_ID_LIST', list)
+      commit('SET_DATA_IS_LOADING', false)
+    }
+  },
+  async addCategoriesToAppId({ commit }, params) {
+    let ret = false
+    try {
+      commit('SET_DATA_IS_LOADING', true)
+      const { code } = await addCategoriesToAppIdApi(params)
+      if (code === 200) {
+        ret = true
+      }
+    } catch (e) {
+      console.warn('Add category to app id error:' + e)
+    } finally {
+      commit('SET_DATA_IS_LOADING', false)
+    }
+    return ret
+  },
+  async deleteCategoryFromAppId({ commit }, params) {
+    let ret = false
+    try {
+      commit('SET_DATA_IS_LOADING', true)
+      const { code } = await deleteCategoryFromAppIdApi(params)
+      if (code === 200) {
+        ret = true
+      }
+    } catch (e) {
+      console.warn('Delete category from app id error:' + e)
+    } finally {
+      commit('SET_DATA_IS_LOADING', false)
+    }
+    return ret
+  },
+  async updateCategoriesInAppId({ commit }, params) {
+    let ret = false
+    try {
+      commit('SET_DATA_IS_LOADING', true)
+      const { isShow, ...rest } = params
+      const { code } = await updateCategoriesInAppIdApi([{ isShow: isShow ? 0 : 1, ...rest }])
+      if (code === 200) {
+        ret = true
+      }
+    } catch (e) {
+      console.warn('Update category in app id error:' + e)
+    } finally {
+      commit('SET_DATA_IS_LOADING', false)
+    }
+    return ret
   }
 }
 

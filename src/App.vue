@@ -58,7 +58,7 @@ export default {
         if (role_admin_name === role) {
           this.$store.commit('vendor/SET_VENDOR_PROFILE', {
             id: 0,
-            renterId: 0,
+            renterId: platform_renter_id,
             status: vendor_status_approved
           })
           await storageSetItem(storage_merchant_id, 0)

@@ -76,3 +76,37 @@ export function syncCategoriesApi(params) {
     }
   })
 }
+
+export function getCategoriesByAppIdApi(params) {
+  return Vue.axios('categories').request({
+    url: '/products/adminCategory/renter/all',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+
+export function addCategoriesToAppIdApi(params) {
+  return Vue.axios('categories').request({
+    url: '/products/adminCategory/renter',
+    method: 'post',
+    data: params
+  })
+}
+
+export function deleteCategoryFromAppIdApi(params) {
+  return Vue.axios('categories').request({
+    url: '/products/adminCategory/renter',
+    method: 'delete',
+    params
+  })
+}
+
+export function updateCategoriesInAppIdApi(params) {
+  return Vue.axios('categories').request({
+    url: '/products/adminCategory/renter',
+    method: 'put',
+    data: params
+  })
+}

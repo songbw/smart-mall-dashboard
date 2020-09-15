@@ -87,7 +87,7 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.16.6',
+            version: '0.16.7',
             path: 'dist/xlsx.full.min.js'
           },
           {
@@ -105,7 +105,7 @@ module.exports = {
           {
             name: 'moment',
             var: 'moment',
-            version: '2.27.0',
+            version: '2.28.0',
             path: 'moment.min.js'
           },
           {

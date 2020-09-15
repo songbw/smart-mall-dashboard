@@ -17,7 +17,7 @@ const state = {
     comments: ''
   },
   renter: {
-    id: -2
+    id: '-2'
   }
 }
 
@@ -28,6 +28,9 @@ const mutations = {
         state.profile[key] = data[key]
       }
     })
+    if ('renterId' in data) {
+      state.renter.id = data.renterId
+    }
   },
   SET_RENTER_PROFILE: (state, data) => {
     state.profile.id = data.companyId
@@ -55,7 +58,7 @@ const actions = {
           comments: ''
         }
       )
-      return { status: 0, id: -1 }
+      return { status: 0, id: '-1' }
     }
   },
   async getRenterProfile({ commit }) {
