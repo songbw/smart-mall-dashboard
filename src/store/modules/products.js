@@ -1,5 +1,5 @@
 import { product_state_all, vendor_status_approved } from '@/utils/constants'
-import { getVendorListApi } from '@/api/vendor'
+import { getCompanyListOfRenterApi } from '@/api/vendor'
 
 const queryTemplate = {
   offset: 1,
@@ -10,6 +10,7 @@ const queryTemplate = {
   mpu: '',
   state: product_state_all,
   vendorId: '',
+  renterId: '',
   firstCategoryId: null,
   secondCategoryId: null,
   thirdCategoryId: null,
@@ -53,15 +54,19 @@ const actions = {
         status: vendor_status_approved
       }
       this.listLoading = true
-      const data = await getVendorListApi(params)
-      const vendors = data.rows.map(row => {
-        return {
-          value: row.company.id.toString(),
-          label: row.company.name,
-          invoiceType: row.company.invoiceType,
-          taxpayerType: row.company.taxpayerType
-        }
-      })
+      let vendors = []
+      const { code, data } = await getCompanyListOfRenterApi(params)
+      if (code === 200) {
+        vendors = data.rows.map(row => {
+          return {
+            value: row.companyId.toString(),
+            label: row.companyName,
+            invoiceType: row.invoiceType,
+            taxpayerType: row.taxpayerType,
+            renterList: Array.isArray(row.renterList) ? row.renterList : []
+          }
+        })
+      }
       commit('SET_VENDOR_OPTIONS', vendors)
     } catch (e) {
       console.warn('Product get vendor list error:' + e)

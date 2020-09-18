@@ -32,7 +32,7 @@
           @changed="handleMerchantChanged"
         />
         <span v-else>
-          {{ getVendorName(productForm.merchantId) }}
+          {{ productVendor ? productVendor.label : '' }}
         </span>
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
@@ -312,11 +312,6 @@
               <span>{{ scope.row.code }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="品种SKU" align="center">
-            <template slot-scope="scope">
-              <span>{{ scope.row.skuId }}</span>
-            </template>
-          </el-table-column>
           <el-table-column v-if="couldRefreshInventory" label="品种库存" align="center">
             <template slot-scope="scope">
               <span>{{ scope.row.inventory }}</span>
@@ -380,6 +375,62 @@
                 @click="handleSubSkuSoldOut(scope.$index)"
               >
                 下架
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
+      <el-divider v-if="hasMultiRenters" content-position="left">租户价格</el-divider>
+      <el-form-item v-if="hasMultiRenters" label-width="0">
+        <div>
+          <el-button
+            v-if="editProduct"
+            type="info"
+            @click="onAddRenterPriceClicked"
+          >
+            添加租户价格
+          </el-button>
+          <span style="margin-left: 12px">
+            <i class="el-icon-warning-outline" />未添加租户价格，将使用默认价格
+          </span>
+        </div>
+        <el-table
+          :data="renterPriceList"
+          fit
+          style="width: 100%;"
+        >
+          <el-table-column label="租户名称" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.renterName }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="商品SKU" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.skuId }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="销售价格(元)" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.price | centFilter }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="240">
+            <template slot-scope="scope">
+              <el-button
+                :disabled="!editProduct"
+                size="mini"
+                type="warning"
+                @click="handleEditRenterSkuPrice(scope.$index)"
+              >
+                修改价格
+              </el-button>
+              <el-button
+                :disabled="!editProduct"
+                size="mini"
+                type="danger"
+                @click="handleRemoveRenterSkuPrice(scope.$index)"
+              >
+                取消价格
               </el-button>
             </template>
           </el-table-column>
@@ -572,6 +623,16 @@
       @cancelled="subSkuDialogVisible = false"
       @confirmed="handleUpdateSubSkuPrice"
     />
+    <renter-price-dialog
+      :dialog-visible="renterDialogVisible"
+      :renter-id="editRenterId"
+      :sku-id="editRenterSkuId"
+      :renter-price="editRenterPrice"
+      :renter-list="productVendor ? productVendor.renterList : []"
+      :sku-list="hasSubSku ? subSkuList: [{code: productForm.skuid}]"
+      @cancelled="renterDialogVisible = false"
+      @confirmed="onRenterPriceConfirmed"
+    />
   </div>
 </template>
 
@@ -585,11 +646,13 @@ import trim from 'lodash/trim'
 import {
   createProductApi,
   updateProductApi,
-  searchProductsApi,
   getDetailInfoByMpuApi,
   updateSubSkuApi,
   getInventoryBySkuCodesApi,
-  batchUpdateStateApi
+  batchUpdateStateApi,
+  createRenterSkuPriceApi,
+  updateRenterSkuPriceApi,
+  deleteRenterSkuPriceApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -622,6 +685,7 @@ import { cosUploadFiles } from '@/utils/cos'
 import { validateURL } from '@/utils/validate'
 import { scrollTo } from '@/utils/scroll-to'
 import SubSkuInfo from './subSkuInfo'
+import RenterPriceDialog from '@/views/product/renterPriceDialog'
 
 const decode = require('unescape')
 
@@ -643,6 +707,7 @@ const notUpdateKeys = ['mpu', 'introduction', 'createdAt', 'state']
 export default {
   name: 'ProductDetail',
   components: {
+    RenterPriceDialog,
     CustomIntroduction,
     CustomThumbnail,
     CategorySelection,
@@ -772,6 +837,11 @@ export default {
       subSkuOnSaleSelection: [],
       subSkuSoldOutSelection: [],
       productInfo: null,
+      productVendor: null,
+      renterDialogVisible: false,
+      editRenterId: '',
+      editRenterSkuId: '',
+      editRenterPrice: 0,
       productForm: {
         id: null,
         merchantId: null,
@@ -974,6 +1044,26 @@ export default {
       return this.productInfo &&
         Array.isArray(this.productInfo.properties) &&
         this.productInfo.properties.length > 0
+    },
+    hasMultiRenters() {
+      return this.productVendor ? this.productVendor.renterList.length > 0 : false
+    },
+    renterPriceList() {
+      const renterList = this.productVendor ? this.productVendor.renterList : []
+      let priceList = []
+      if (this.hasSubSku) {
+        priceList = this.subSkuList
+          .filter(item => Array.isArray(item.appSkuPriceList) && item.appSkuPriceList.length > 0)
+          .flatMap(item => item.appSkuPriceList)
+      } else {
+        priceList = this.productInfo && Array.isArray(this.productInfo.appSkuPriceList)
+          ? this.productInfo.appSkuPriceList
+          : []
+      }
+      return priceList.map(item => {
+        const find = renterList.find(renter => renter.renterId === item.renterId)
+        return { renterName: find ? find.renterName : item.renterId, ...item }
+      })
     }
   },
   created() {
@@ -992,7 +1082,7 @@ export default {
     async prepareProduct() {
       await this.getVendorList()
       if (this.opType !== OP_CREATE) {
-        this.getProductInfo()
+        await this.getProductInfo()
       }
     },
     async getVendorList() {
@@ -1007,14 +1097,12 @@ export default {
         }
       }
     },
-    getVendorName(vendorId) {
+    getProductVendor(vendorId) {
       if (this.productVendors.length > 0 && vendorId != null) {
         const vendor = this.productVendors.find(option => option.value === vendorId.toString())
-        if (vendor) {
-          return vendor.label
-        } else {
-          return ''
-        }
+        return vendor || null
+      } else {
+        return null
       }
     },
     async getInventoryBySkuCodes(skuList) {
@@ -1041,7 +1129,7 @@ export default {
       try {
         const { code, data } = await getDetailInfoByMpuApi({ mpu })
         if (code === 200) {
-          const prod = data.result
+          const prod = data
           if (prod.introductionUrl === null) {
             prod.introductionUrl = ''
           }
@@ -1061,85 +1149,69 @@ export default {
       }
       return null
     },
-    getProductInfo() {
-      const params = {
-        offset: 1,
-        limit: 1
-      }
-      if (this.$route.params.mpu) {
-        params.mpu = this.$route.params.mpu
-      } else {
-        params.id = this.$route.params.id
-      }
-      if (!this.hasVendorPermission) {
-        params.merchantId = this.vendorId
-      }
-      this.loading = true
-      searchProductsApi(params).then(async response => {
-        const data = response.data.result
-        if (data.total >= 1) {
-          const mpu = data.list[0].mpu
-          this.productInfo = await this.getDetailInfo(mpu)
-          Object.keys(this.productForm).forEach(key => {
-            if (key in this.productInfo) {
-              switch (key) {
-                case 'price':
-                case 'sprice':
-                case 'floorPrice':
-                case 'comparePrice': {
-                  const value = convertToNumber(this.productInfo[key])
-                  this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 2)
-                  break
-                }
-                case 'weight': {
-                  const value = convertToNumber(this.productInfo[key])
-                  this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 3)
-                  break
-                }
-                default:
-                  this.productForm[key] = this.productInfo[key]
+    async getProductInfo() {
+      try {
+        this.loading = true
+        const mpu = this.$route.params.mpu
+        this.productInfo = await this.getDetailInfo(mpu)
+        Object.keys(this.productForm).forEach(key => {
+          if (key in this.productInfo) {
+            switch (key) {
+              case 'price':
+              case 'sprice':
+              case 'floorPrice':
+              case 'comparePrice': {
+                const value = convertToNumber(this.productInfo[key])
+                this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 2)
+                break
               }
-            }
-          })
-          const imageSep = this.productForm.merchantId === vendorYiyatong ? ';' : ':'
-          this.thumbnails = []
-          this.thumbnailUrls = []
-          if (!isEmpty(this.productForm.imagesUrl)) {
-            this.thumbnails = this.productForm.imagesUrl.split(imageSep)
-            this.thumbnailUrls = this.thumbnails.map(
-              img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
-            // Check if has custom cover image
-            if (this.productForm.image !== null && this.productForm.image === this.thumbnailUrls[0]) {
-              this.productForm.image = null
+              case 'weight': {
+                const value = convertToNumber(this.productInfo[key])
+                this.productForm[key] = Number.isNaN(value) ? 0 : floatToFixed(value, 3)
+                break
+              }
+              default:
+                this.productForm[key] = this.productInfo[key]
             }
           }
-          this.hasCoverImage = this.productForm.image !== null
-
-          this.introductions = []
-          this.introductionUrls = []
-
-          if (!isEmpty(this.productForm.introductionUrl)) {
-            this.introductions = this.productForm.introductionUrl.split(imageSep)
-            this.introductionUrls = this.introductions.map(
-              img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
+        })
+        const imageSep = this.productForm.merchantId === vendorYiyatong ? ';' : ':'
+        this.thumbnails = []
+        this.thumbnailUrls = []
+        if (!isEmpty(this.productForm.imagesUrl)) {
+          this.thumbnails = this.productForm.imagesUrl.split(imageSep)
+          this.thumbnailUrls = this.thumbnails.map(
+            img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
+          // Check if has custom cover image
+          if (this.productForm.image !== null && this.productForm.image === this.thumbnailUrls[0]) {
+            this.productForm.image = null
           }
-
-          this.uploadCoverData.pathName = this.productInfo.id + '/CoverU'
-          this.thumbnailUploadPath = this.productInfo.id + '/ZTU'
-          this.uploadThumbnailData.pathName = this.thumbnailUploadPath
-          this.introductionUploadPath = this.productInfo.id + '/XTU'
-          this.uploadIntroductionData.pathName = this.introductionUploadPath
-          this.getCategoryName(this.productForm.category)
-          this.getMerchantFreeShipping(this.productForm.merchantId)
-          this.getMpuShippingPrice(this.productForm.mpu)
-        } else {
-          this.$message.warning('获取商品失败，请联系管理员！')
         }
-      }).catch(error => {
-        console.log('getProductInfo:' + error)
-      }).finally(() => {
+        this.hasCoverImage = this.productForm.image !== null
+
+        this.introductions = []
+        this.introductionUrls = []
+
+        if (!isEmpty(this.productForm.introductionUrl)) {
+          this.introductions = this.productForm.introductionUrl.split(imageSep)
+          this.introductionUrls = this.introductions.map(
+            img => validateURL(img) ? img : this.$store.getters.cosUrl + img)
+        }
+
+        this.uploadCoverData.pathName = this.productInfo.id + '/CoverU'
+        this.thumbnailUploadPath = this.productInfo.id + '/ZTU'
+        this.uploadThumbnailData.pathName = this.thumbnailUploadPath
+        this.introductionUploadPath = this.productInfo.id + '/XTU'
+        this.uploadIntroductionData.pathName = this.introductionUploadPath
+        this.productVendor = this.getProductVendor(this.productForm.merchantId)
+        this.getCategoryName(this.productForm.category)
+        await this.getMerchantFreeShipping(this.productForm.merchantId)
+        await this.getMpuShippingPrice(this.productForm.mpu)
+      } catch (e) {
+        console.warn('Get Product info error:' + e)
+      } finally {
         this.loading = false
-      })
+      }
     },
     async remoteBrandOptions(query) {
       if (isEmpty(query)) {
@@ -1910,6 +1982,76 @@ export default {
       }).finally(() => {
         this.loading = false
       })
+    },
+    onAddRenterPriceClicked() {
+      this.editRenterId = ''
+      this.editRenterSkuId = ''
+      this.editRenterPrice = floatToFixed(this.productForm.price, 2) * 100
+      this.renterDialogVisible = true
+    },
+    handleEditRenterSkuPrice(index) {
+      this.editRenterId = this.renterPriceList[index].renterId
+      this.editRenterSkuId = this.renterPriceList[index].skuId
+      this.editRenterPrice = this.renterPriceList[index].price
+      this.renterDialogVisible = true
+    },
+    handleRemoveRenterSkuPrice(index) {
+      this.$confirm('取消此租户的商品价格，将会使用默认价格，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          this.loading = true
+          const id = this.renterPriceList[index].id
+          const { code } = await deleteRenterSkuPriceApi({ id })
+          if (code === 200) {
+            await this.getProductInfo()
+          }
+        } catch (e) {
+          console.warn('Delete renter price error:' + e)
+        } finally {
+          this.loading = false
+        }
+      }).catch(() => {
+      })
+    },
+    async handleAddRenterPrice(data) {
+      try {
+        this.loading = true
+        const mpu = this.hasSubSku ? this.productForm.skuid : this.productForm.mpu
+        const { code } = await createRenterSkuPriceApi([{ mpu, ...data }])
+        if (code === 200) {
+          await this.getProductInfo()
+        }
+      } catch (e) {
+        console.warn('Add renter price error:' + e)
+      } finally {
+        this.loading = false
+      }
+    },
+    async handleUpdateRenterPrice(data) {
+      try {
+        this.loading = true
+        const { code } = await updateRenterSkuPriceApi([{ ...data }])
+        if (code === 200) {
+          await this.getProductInfo()
+        }
+      } catch (e) {
+        console.warn('Add renter price error:' + e)
+      } finally {
+        this.loading = false
+      }
+    },
+    onRenterPriceConfirmed(data) {
+      const { renterId, skuId, price } = data
+      const found = this.renterPriceList.find(item => item.renterId === renterId && item.skuId === skuId)
+      this.renterDialogVisible = false
+      if (found) {
+        this.handleUpdateRenterPrice({ id: found.id, price })
+      } else {
+        this.handleAddRenterPrice(data)
+      }
     },
     async updateProductPrice(price) {
       try {

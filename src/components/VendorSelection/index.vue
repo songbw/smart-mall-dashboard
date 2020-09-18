@@ -23,11 +23,16 @@ import { getCompanyListOfRenterApi, getRenterListApi } from '@/api/vendor'
 import { vendor_status_approved } from '@/utils/constants'
 import { mapGetters } from 'vuex'
 import { RenterPermissions } from '@/utils/role-permissions'
+import isEmpty from 'lodash/isEmpty'
 
 export default {
   name: 'VendorSelection',
   props: {
     vendorId: {
+      type: String,
+      default: ''
+    },
+    filterRenter: {
       type: String,
       default: ''
     },
@@ -39,7 +44,7 @@ export default {
   data() {
     return {
       dataLoading: false,
-      vendorOptions: []
+      vendorList: []
     }
   },
   computed: {
@@ -49,6 +54,15 @@ export default {
     }),
     hasRenterPermission() {
       return this.userPermissions.includes(RenterPermissions.view)
+    },
+    vendorOptions() {
+      if (this.companyType === 'renter') {
+        return this.vendorList
+      } else {
+        return isEmpty(this.filterRenter)
+          ? this.vendorList
+          : this.vendorList.filter(item => item.renterIdList.includes(this.filterRenter))
+      }
     }
   },
   created() {
@@ -75,9 +89,10 @@ export default {
         }
         const { code, data } = await getCompanyListOfRenterApi(params)
         if (code === 200) {
-          this.vendorOptions = data.rows.map(item => ({
+          this.vendorList = data.rows.map(item => ({
             value: item.companyId.toString(),
-            label: item.companyName
+            label: item.companyName,
+            renterIdList: Array.isArray(item.renterList) ? item.renterList.map(renter => renter.renterId) : []
           }))
         }
       } catch (e) {
@@ -96,7 +111,7 @@ export default {
         }
         const { code, data } = await getRenterListApi(params)
         if (code === 200) {
-          this.vendorOptions = data.rows.map(item => ({
+          this.vendorList = data.rows.map(item => ({
             value: item.companyId.toString(),
             label: item.renterName,
             renterId: item.renterId
@@ -109,8 +124,8 @@ export default {
       }
     },
     handleVendorChanged(id) {
-      const find = this.vendorOptions.find(item => item.value === id)
-      this.$emit('changed', id, find ? find.label : '')
+      const find = this.vendorList.find(item => item.value === id)
+      this.$emit('changed', id, find ? find.label : '', find ? find.renterId : '')
     }
   }
 }

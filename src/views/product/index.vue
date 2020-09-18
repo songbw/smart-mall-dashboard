@@ -18,33 +18,26 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="handleFilter">
-            搜索
-          </el-button>
-          <el-button
-            :icon="showMoreOptions ? 'el-icon-arrow-up': 'el-icon-arrow-down'"
-            type="info"
-            @click="showMoreOptions = !showMoreOptions"
-          >
-            更多选项
-          </el-button>
-        </el-form-item>
       </el-form>
       <el-form v-if="showMoreOptions" :inline="true">
-        <el-form-item v-if="false" label="商品品牌">
-          <el-input v-model="listBrand" :clearable="true" placeholder="输入品牌关键字" maxlength="10" />
-        </el-form-item>
         <el-form-item label="商品MPU">
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
+        </el-form-item>
+        <el-form-item v-if="hasRenterPermission" label="租户名">
+          <vendor-selection
+            :vendor-id="renterCompanyId"
+            company-type="renter"
+            @changed="handleRenterChanged"
+          />
         </el-form-item>
         <el-form-item v-if="hasVendorPermission" label="供应商名">
           <vendor-selection
             :vendor-id="listVendor"
+            :filter-renter="listRenter"
             @changed="handleVendorChanged"
           />
         </el-form-item>
-        <el-form-item label="供应商子品牌">
+        <el-form-item v-if="false" label="供应商子品牌">
           <el-select :value="listMpuPrefix" clearable @change="handleMpuPrefixChanged">
             <el-option
               v-for="item in mpuPrefixOptions"
@@ -63,6 +56,11 @@
             :third-value="thirdCategoryValue"
             @changed="handleCategorySelectionChanged"
           />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" @click="handleFilter">
+            搜索
+          </el-button>
         </el-form-item>
       </el-form>
       <div
@@ -171,7 +169,7 @@
       <el-table-column column-key="mpu" label="商品MPU" align="center" width="120">
         <template slot-scope="scope">
           <router-link
-            :to="{ name: 'ShowProduct', params: { id: scope.row.id }}"
+            :to="{ name: 'ViewProduct', params: { mpu: scope.row.mpu }}"
             class="el-link el-link--primary is-underline"
           >
             <span>{{ scope.row.mpu }}</span>
@@ -506,12 +504,14 @@ export default {
       },
       queryParams: null,
       dialogInventoryVisible: false,
-      dialogExportVisible: false
+      dialogExportVisible: false,
+      renterCompanyId: ''
     }
   },
   computed: {
     ...mapGetters({
       vendorId: 'vendorId',
+      renterId: 'renterId',
       productQuery: 'productQuery',
       productVendors: 'productVendors',
       vendorApproved: 'vendorApproved',
@@ -537,6 +537,9 @@ export default {
     },
     hasStatePermission() {
       return this.userPermissions.includes(ProductPermissions.state)
+    },
+    hasRenterPermission() {
+      return this.userPermissions.includes(ProductPermissions.renter)
     },
     hasVendorPermission() {
       return this.userPermissions.includes(ProductPermissions.vendor)
@@ -654,6 +657,14 @@ export default {
         this.$store.commit('products/SET_SEARCH_DATA', { state: value })
       }
     },
+    listRenter: {
+      get() {
+        return this.productQuery.renterId
+      },
+      set(value) {
+        this.$store.commit('products/SET_SEARCH_DATA', { renterId: value })
+      }
+    },
     listVendor: {
       get() {
         return this.productQuery.vendorId
@@ -684,7 +695,7 @@ export default {
   methods: {
     async prepareList() {
       await this.getVendorList()
-      this.getListData()
+      await this.getListData()
     },
     async getVendorList() {
       if (this.productVendors.length === 0) {
@@ -801,6 +812,13 @@ export default {
       if (!isEmpty(this.listBrand)) {
         params.brand = this.listBrand
       }
+      if (this.hasRenterPermission) {
+        if (!isEmpty(this.listRenter)) {
+          params.renterId = this.listRenter
+        }
+      } else {
+        params.renterId = this.renterId
+      }
       if (this.hasVendorPermission) {
         if (!isEmpty(this.listVendor)) {
           params.merchantId = Number.parseInt(this.listVendor)
@@ -871,17 +889,17 @@ export default {
       })
     },
     handleEditProduct(index) {
-      const id = this.productsData[index].id
+      const mpu = this.productsData[index].mpu
       this.$router.push({
         name: 'EditProduct',
-        params: { id }
+        params: { mpu }
       })
     },
     handleViewProduct(index) {
-      const id = this.productsData[index].id
+      const mpu = this.productsData[index].mpu
       this.$router.push({
-        name: 'ShowProduct',
-        params: { id }
+        name: 'ViewProduct',
+        params: { mpu }
       })
     },
     isReadyForSale(product) {
@@ -1166,6 +1184,12 @@ export default {
     handleStateChanged(state) {
       this.listState = state
     },
+    handleRenterChanged(vendorId, label, renterId) {
+      this.renterCompanyId = vendorId
+      this.listRenter = renterId
+      this.listVendor = ''
+      this.listMpuPrefix = null
+    },
     handleVendorChanged(vendorId) {
       this.listVendor = vendorId
       this.listMpuPrefix = null
@@ -1330,10 +1354,10 @@ export default {
 </script>
 
 <style scoped>
-  .thumb-image {
-    object-fit: contain;
-    width: 100%;
-    height: 100%
-  }
+.thumb-image {
+  object-fit: contain;
+  width: 100%;
+  height: 100%
+}
 </style>
 

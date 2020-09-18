@@ -5,6 +5,7 @@ export const ProductPermissions = {
   salePrice: 'product:salePrice',
   costPrice: 'product:costPrice',
   vendor: 'product:vendor',
+  renter: 'product:renter',
   delete: 'product:delete',
   export: 'product:export',
   view: 'product:view'

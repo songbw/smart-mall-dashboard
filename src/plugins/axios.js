@@ -5,7 +5,7 @@ import isEmpty from 'lodash/isEmpty'
 import store from '@/store'
 import {
   storage_key_token,
-  storage_merchant_id
+  storage_merchant_id, storage_renter_id
 } from '@/utils/constants'
 import { storageGetItem } from '@/utils/storage'
 
@@ -39,14 +39,18 @@ const axiosService = apiKey => {
       async config => {
         try {
           const token = await storageGetItem(storage_key_token)
-          const id = await storageGetItem(storage_merchant_id)
+          const merchantId = await storageGetItem(storage_merchant_id)
+          const renterId = await storageGetItem(storage_renter_id)
           if (!isEmpty(token)) {
             config.headers['Authorization'] = `Bearer ${token}`
           }
-          if (id !== null && id !== -1) {
-            config.headers['Merchant'] = id
+          if (merchantId !== null && merchantId !== -1) {
+            config.headers['Merchant'] = merchantId
           }
-          config.headers['appId'] = 0
+          if (renterId !== null) {
+            config.headers['Renter'] = renterId
+          }
+          config.headers['AppId'] = 0
         } catch (e) {
           console.warn(`Axios request: ${e}`)
         }

@@ -9,11 +9,14 @@ export function getProductListApi(params) {
 }
 
 export function searchProductsApi(params) {
+  const { limit, offset, ...rest } = params
   return Vue.axios('products').request({
-    url: '/products/adminProd/search',
+    url: '/products/adminProd/search/v2',
     method: 'post',
     data: {
-      ...params
+      pageNo: offset,
+      pageSize: limit,
+      ...rest
     }
   })
 }
@@ -72,7 +75,7 @@ export function getProductsByMpuListApi(params) {
 
 export function getDetailInfoByMpuApi(params) {
   return Vue.axios('products').request({
-    url: '/products/prod',
+    url: '/products/adminProd',
     method: 'get',
     params
   })
@@ -164,5 +167,29 @@ export function syncProductsApi(params) {
     url: '/products/third/prod/sync',
     method: 'post',
     data: params
+  })
+}
+
+export function createRenterSkuPriceApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/renter',
+    method: 'post',
+    data: params
+  })
+}
+
+export function updateRenterSkuPriceApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/renter',
+    method: 'put',
+    data: params
+  })
+}
+
+export function deleteRenterSkuPriceApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/renter',
+    method: 'delete',
+    params
   })
 }
