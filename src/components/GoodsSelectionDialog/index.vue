@@ -23,30 +23,19 @@
       </el-form-item>
     </el-form>
     <el-form v-if="!hasPromotion" inline>
-      <el-form-item v-if="hasVendorPermission && merchantId === 0" label="供应商名">
+      <el-form-item v-if="hasVendorPermission" label="供应商名">
         <vendor-selection
           :vendor-id="dialogFilterForm.merchantId"
+          :filter-renter="platformRenterId"
           @changed="handleVendorChanged"
         />
       </el-form-item>
-      <el-form-item label="供应商子品牌">
-        <el-select v-model="dialogFilterForm.mpuPrefix" clearable>
-          <el-option
-            v-for="item in mpuPrefixOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-    </el-form>
-    <el-form v-if="!hasPromotion">
       <el-form-item label="商品MPU">
         <el-input
           v-model="filterMpus"
           placeholder="商品MPU之间以英文逗号分隔，最多输入50个"
           maxlength="500"
-          style="width: 80%"
+          style="width: 500px"
         />
       </el-form-item>
     </el-form>
@@ -255,8 +244,9 @@ export default {
   data() {
     return {
       filterSkuString: '',
+      renterCompanyId: '',
       dialogFilterForm: {
-        merchantId: null,
+        merchantId: '',
         mpuPrefix: null,
         minPrice: productMinPrice,
         maxPrice: productMaxPrice,
@@ -276,11 +266,21 @@ export default {
   },
   computed: {
     ...mapGetters({
+      renterId: 'renterId',
       vendorId: 'vendorId',
+      validAppList: 'validAppList',
+      platformAppId: 'platformAppId',
       userPermissions: 'userPermissions'
     }),
+    hasRenterPermission() {
+      return this.userPermissions.includes(ProductPermissions.renter)
+    },
     hasVendorPermission() {
       return this.userPermissions.includes(ProductPermissions.vendor)
+    },
+    platformRenterId() {
+      const platform = this.validAppList.find(item => item.appId === this.platformAppId)
+      return platform ? platform.renterId : this.renterId
     },
     filterMpus: {
       get() {
@@ -356,7 +356,7 @@ export default {
     handleDialogFilterClear() {
       this.offset = 1
       this.filterSkuString = ''
-      this.dialogFilterForm.merchantId = null
+      this.dialogFilterForm.merchantId = ''
       this.dialogFilterForm.mpuPrefix = null
       this.dialogFilterForm.mpus = []
       this.dialogFilterForm.query = ''
@@ -452,7 +452,9 @@ export default {
       this.dataLoading = false
     },
     getFilterParams() {
-      const params = {}
+      const params = {
+        appId: this.platformAppId
+      }
       const categoryId = this.presetThirdCategory || this.thirdCategoryValue ||
         this.presetSecondCategory || this.secondCategoryValue ||
         this.presetFirstCategory || this.firstCategoryValue
@@ -462,6 +464,11 @@ export default {
       }
       if (categoryId != null) {
         params.categoryID = categoryId
+      }
+      if (this.hasRenterPermission) {
+        params.renterId = this.platformRenterId
+      } else {
+        params.renterId = this.renterId
       }
       if (this.merchantId > 0) {
         params.merchantId = this.merchantId

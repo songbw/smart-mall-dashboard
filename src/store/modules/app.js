@@ -17,7 +17,7 @@ import {
 
 const invalidAppIdList = ['test']
 
-const getVendorAppList = (platformList, vendor) => {
+const getVendorAppIdList = (platformList, vendor) => {
   let appIdList = []
   let excludeAppIdList = []
   if (!isEmpty(vendor.appId)) {
@@ -38,7 +38,7 @@ async function getVendorPlatformList(platformList) {
   let appIdList = []
   try {
     const { company } = await getProfileApi()
-    appIdList = getVendorAppList(platformList, company)
+    appIdList = getVendorAppIdList(platformList, company)
   } catch (e) {
     console.warn('App store get vendor app list:' + e)
   }
@@ -54,7 +54,7 @@ const state = {
   needSettings: true,
   cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
   platformList: [],
-  vendorPlatformList: [], // The app id list of the login user
+  vendorAppIdList: [], // The app id list of the login user
   renterList: [],
   vendorList: []
 }
@@ -77,10 +77,10 @@ const mutations = {
       item => !invalidAppIdList.includes(item.appId))
   },
   SET_VENDOR_APP_LIST: (state, vendorList) => {
-    state.vendorPlatformList = vendorList.filter(
+    state.vendorAppIdList = vendorList.filter(
       appId => !invalidAppIdList.includes(appId))
-    if (!state.vendorPlatformList.includes(state.platformId)) {
-      state.platformId = state.vendorPlatformList[0]
+    if (!state.vendorAppIdList.includes(state.platformId)) {
+      state.platformId = state.vendorAppIdList[0]
     }
   },
   SET_PLATFORM_ID: (state, platformId) => {
@@ -120,7 +120,7 @@ const actions = {
     if (state.platformList.length > 0 && !force) {
       return
     }
-    let vendorList = []
+    let vendorAppIdList = []
     const { user, vendor } = rootState
     const role = user.role
     const renterId = vendor.renter.id
@@ -131,10 +131,12 @@ const actions = {
       const platformList = data.map(
         item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
       if (role === role_vendor_name) {
-        vendorList = await getVendorPlatformList(platformList)
+        vendorAppIdList = await getVendorPlatformList(platformList)
+      } else {
+        vendorAppIdList = platformList.map(item => item.appId)
       }
       commit('SET_PLATFORM_APP_LIST', platformList)
-      commit('SET_VENDOR_APP_LIST', vendorList)
+      commit('SET_VENDOR_APP_LIST', vendorAppIdList)
     }
   },
   async setPlatformId({ commit }, appId) {
@@ -191,7 +193,7 @@ const actions = {
           companyName: item.companyName,
           invoiceType: item.invoiceType,
           taxpayerType: item.taxpayerType,
-          appIdList: getVendorAppList(platformList, item),
+          appIdList: getVendorAppIdList(platformList, item),
           renterIdList: Array.isArray(item.renterList) ? item.renterList.map(renter => renter.renterId) : []
         }))
         commit('SET_VENDOR_LIST', vendorList)
