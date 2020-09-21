@@ -32,7 +32,7 @@
           @changed="handleMerchantChanged"
         />
         <span v-else>
-          {{ productVendor ? productVendor.label : '' }}
+          {{ productVendor ? productVendor.companyName : '' }}
         </span>
       </el-form-item>
       <el-form-item label="商品SKU" prop="skuid">
@@ -934,7 +934,8 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      productVendors: 'productVendors',
+      productVendors: 'vendorList',
+      renterList: 'renterList',
       vendorId: 'vendorId'
     }),
     hasCreatePermission() {
@@ -983,9 +984,8 @@ export default {
           const sprice = convertToNumber(this.mpuSprice)
           const taxRate = 0.03
           if (this.productForm.merchantId !== null && sprice > 0) {
-            const vendor = this.productVendors.find(item => item.value === this.productForm.merchantId.toString())
-            if (vendor !== null) {
-              const taxpayerType = vendor.taxpayerType
+            if (this.productVendor !== null) {
+              const taxpayerType = this.productVendor.taxpayerType
               const rate = taxpayerType === vendor_taxpayer_type_small_scale ? (1.13 - taxRate) : 1
               const value = sprice * rate
               return floatToFixed(value, 2)
@@ -1046,10 +1046,9 @@ export default {
         this.productInfo.properties.length > 0
     },
     hasMultiRenters() {
-      return this.productVendor ? this.productVendor.renterList.length > 0 : false
+      return this.productVendor ? this.productVendor.renterIdList.length > 0 : false
     },
     renterPriceList() {
-      const renterList = this.productVendor ? this.productVendor.renterList : []
       let priceList = []
       if (this.hasSubSku) {
         priceList = this.subSkuList
@@ -1061,7 +1060,7 @@ export default {
           : []
       }
       return priceList.map(item => {
-        const find = renterList.find(renter => renter.renterId === item.renterId)
+        const find = this.renterList.find(renter => renter.renterId === item.renterId)
         return { renterName: find ? find.renterName : item.renterId, ...item }
       })
     }
@@ -1089,7 +1088,8 @@ export default {
       if (this.productVendors.length === 0) {
         try {
           this.loading = true
-          await this.$store.dispatch('products/getVendorList')
+          await this.$store.dispatch('app/getRenterList')
+          await this.$store.dispatch('app/getVendorList')
         } catch (e) {
           console.warn('Product get vendor list error:' + e)
         } finally {
@@ -1099,7 +1099,8 @@ export default {
     },
     getProductVendor(vendorId) {
       if (this.productVendors.length > 0 && vendorId != null) {
-        const vendor = this.productVendors.find(option => option.value === vendorId.toString())
+        const vendor = this.productVendors.find(option => option.companyId === vendorId)
+        vendor.renterList = this.renterList.filter(renter => vendor.renterIdList.includes(renter.renterId))
         return vendor || null
       } else {
         return null
@@ -1204,7 +1205,7 @@ export default {
         this.introductionUploadPath = this.productInfo.id + '/XTU'
         this.uploadIntroductionData.pathName = this.introductionUploadPath
         this.productVendor = this.getProductVendor(this.productForm.merchantId)
-        this.getCategoryName(this.productForm.category)
+        await this.getCategoryName(this.productForm.category)
         await this.getMerchantFreeShipping(this.productForm.merchantId)
         await this.getMpuShippingPrice(this.productForm.mpu)
       } catch (e) {
@@ -1242,8 +1243,9 @@ export default {
       this.productForm.brand = this.brandOptions.find(brand => brand.value === value).label
       this.brandOptions = []
     },
-    getCategoryName(category) {
-      this.$store.dispatch('categories/getDataByID', { id: category }).then(category => {
+    async getCategoryName(categoryId) {
+      try {
+        const category = await this.$store.dispatch('categories/getDataByID', { id: categoryId })
         if (category.length > 0) {
           if (this.categoryName.length > 0) {
             this.categoryName = category[0].categoryName + ` / ` + this.categoryName
@@ -1259,12 +1261,12 @@ export default {
           }
           const parentID = category[0].parentId
           if (parentID !== 0) {
-            this.getCategoryName(parentID)
+            await this.getCategoryName(parentID)
           }
         }
-      }).catch(error => {
-        console.log('getCategoryName:' + error)
-      })
+      } catch (e) {
+        console.warn('Get category name error:' + e)
+      }
     },
     handleCategorySelectionChanged(category) {
       const value = Number.isSafeInteger(category.value) ? category.value : null
@@ -1733,13 +1735,11 @@ export default {
       try {
         this.shippingPriceLoading = true
         const { code, data } = await getMpuShippingPriceApi({ mpu })
-        if (code === 200 && Array.isArray(data.result)) {
-          if (data.result.length > 0) {
-            const shipMpus = data.result.filter(item => item.shipMpuId !== null)
-            this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
-            this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
-            suc = true
-          }
+        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
+          const shipMpus = data.result.filter(item => item.shipMpuId !== null)
+          this.shippingPriceData = shipMpus.length > 0 ? shipMpus[0] : data.result[0]
+          this.mpuShippingPriceId = this.shippingPriceData.shipMpuId
+          suc = true
         }
       } catch (e) {
         console.warn('Product get mpu shipping price error:' + e)

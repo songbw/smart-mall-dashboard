@@ -513,7 +513,7 @@ export default {
       vendorId: 'vendorId',
       renterId: 'renterId',
       productQuery: 'productQuery',
-      productVendors: 'productVendors',
+      productVendors: 'vendorList',
       vendorApproved: 'vendorApproved',
       userPermissions: 'userPermissions'
     }),
@@ -701,7 +701,7 @@ export default {
       if (this.productVendors.length === 0) {
         try {
           this.listLoading = true
-          await this.$store.dispatch('products/getVendorList')
+          await this.$store.dispatch('app/getVendorList')
         } catch (e) {
           console.warn('Product get vendor list error:' + e)
         } finally {
@@ -711,9 +711,9 @@ export default {
     },
     getVendorName(vendorId) {
       if (this.productVendors.length > 0 && vendorId != null) {
-        const vendor = this.productVendors.find(option => option.value === vendorId.toString())
+        const vendor = this.productVendors.find(option => option.companyId.toString() === vendorId.toString())
         if (vendor) {
-          return vendor.label
+          return vendor.companyName
         } else {
           return ''
         }
@@ -726,9 +726,9 @@ export default {
           params.offset = this.listOffset
           params.limit = this.listLimit
           params.order = 'desc'
-          this.getFilterProducts(params)
+          await this.getFilterProducts(params)
         } else {
-          this.getAllProducts()
+          await this.getAllProducts()
         }
       }
     },
@@ -1213,7 +1213,7 @@ export default {
           }
         }
         loading.close()
-        this.getListData()
+        await this.getListData()
       }
     },
     onGoodsImportCancelled() {

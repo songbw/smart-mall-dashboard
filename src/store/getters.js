@@ -13,6 +13,8 @@ const getters = {
   vendorAppList: state => state.app.vendorPlatformList,
   validAppList: state => state.app.platformList.filter(
     item => state.app.vendorPlatformList.includes(item.appId)),
+  renterList: state => state.app.renterList,
+  vendorList: state => state.app.vendorList,
   cosUrl: state => state.app.cosUrl,
   token: state => state.user.token,
   userName: state => state.user.name,
@@ -34,7 +36,6 @@ const getters = {
   renterId: state => state.vendor.profile.status === vendor_status_approved
     ? state.vendor.renter.id : '-1',
   productQuery: state => state.products.search,
-  productVendors: state => state.products.vendors,
   categoriesLoaded: state => state.categories.dataLoaded,
   categoriesLoading: state => state.categories.dataLoading,
   categories: state => state.categories.categoriesTree,

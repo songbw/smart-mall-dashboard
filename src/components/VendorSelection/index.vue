@@ -19,8 +19,6 @@
 </template>
 
 <script>
-import { getCompanyListOfRenterApi, getRenterListApi } from '@/api/vendor'
-import { vendor_status_approved } from '@/utils/constants'
 import { mapGetters } from 'vuex'
 import { RenterPermissions } from '@/utils/role-permissions'
 import isEmpty from 'lodash/isEmpty'
@@ -43,25 +41,35 @@ export default {
   },
   data() {
     return {
-      dataLoading: false,
-      vendorList: []
+      dataLoading: false
     }
   },
   computed: {
     ...mapGetters({
       renterId: 'renterId',
-      userPermissions: 'userPermissions'
+      userPermissions: 'userPermissions',
+      renterList: 'renterList',
+      vendorList: 'vendorList'
     }),
     hasRenterPermission() {
       return this.userPermissions.includes(RenterPermissions.view)
     },
     vendorOptions() {
       if (this.companyType === 'renter') {
-        return this.vendorList
+        return this.renterList.map(item => ({
+          value: item.companyId.toString(),
+          label: item.renterName,
+          renterId: item.renterId
+        }))
       } else {
+        const vendorList = this.vendorList.map(item => ({
+          value: item.companyId.toString(),
+          label: item.companyName,
+          renterIdList: item.renterIdList
+        }))
         return isEmpty(this.filterRenter)
-          ? this.vendorList
-          : this.vendorList.filter(item => item.renterIdList.includes(this.filterRenter))
+          ? vendorList
+          : vendorList.filter(item => item.renterIdList.includes(this.filterRenter))
       }
     }
   },
@@ -70,61 +78,16 @@ export default {
   },
   methods: {
     async prepareVendorData() {
+      this.dataLoading = true
       if (this.companyType === 'vendor') {
-        await this.getAllVendors()
+        await this.$store.dispatch('app/getVendorList')
       } else {
-        await this.getAllRenters()
+        await this.$store.dispatch('app/getRenterList')
       }
-    },
-    async getAllVendors() {
-      try {
-        this.dataLoading = true
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
-        if (!this.hasRenterPermission) {
-          params.renterId = this.renterId
-        }
-        const { code, data } = await getCompanyListOfRenterApi(params)
-        if (code === 200) {
-          this.vendorList = data.rows.map(item => ({
-            value: item.companyId.toString(),
-            label: item.companyName,
-            renterIdList: Array.isArray(item.renterList) ? item.renterList.map(renter => renter.renterId) : []
-          }))
-        }
-      } catch (e) {
-        console.warn(`Vendor Selection: ${e}`)
-      } finally {
-        this.dataLoading = false
-      }
-    },
-    async getAllRenters() {
-      try {
-        this.dataLoading = true
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
-        }
-        const { code, data } = await getRenterListApi(params)
-        if (code === 200) {
-          this.vendorList = data.rows.map(item => ({
-            value: item.companyId.toString(),
-            label: item.renterName,
-            renterId: item.renterId
-          }))
-        }
-      } catch (e) {
-        console.warn(`Vendor Selection: ${e}`)
-      } finally {
-        this.dataLoading = false
-      }
+      this.dataLoading = false
     },
     handleVendorChanged(id) {
-      const find = this.vendorList.find(item => item.value === id)
+      const find = this.vendorOptions.find(item => item.value === id)
       this.$emit('changed', id, find ? find.label : '', find ? find.renterId : '')
     }
   }

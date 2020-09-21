@@ -185,6 +185,7 @@ export const constantRoutes = [
       }
     ]
   },
+  /*
   {
     path: '/operations',
     component: Layout,
@@ -206,6 +207,7 @@ export const constantRoutes = [
       }
     ]
   },
+   */
   {
     path: '/marketing',
     component: Layout,
