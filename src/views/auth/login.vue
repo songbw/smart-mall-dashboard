@@ -224,8 +224,8 @@ export default {
     },
     async getRenterProfile() {
       try {
-        const { companyId, renterId } = await this.$store.dispatch('vendor/getRenterProfile')
-        await storageSetItem(storage_merchant_id, companyId)
+        const { renterId } = await this.$store.dispatch('vendor/getRenterProfile')
+        await storageSetItem(storage_merchant_id, 0)
         await storageSetItem(storage_renter_id, renterId)
       } catch (e) {
         console.warn('Login renter profile error:' + e)
