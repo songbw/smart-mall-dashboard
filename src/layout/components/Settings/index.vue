@@ -13,7 +13,7 @@
         >
           <span slot-scope="{node, data}">
             <el-checkbox
-              v-if="node.isLeaf"
+              v-if="data.isLeaf"
               :value="platformAppId === data.value"
             />
             <span style="margin-left: 12px">{{ node.label }}</span>
@@ -87,7 +87,7 @@ export default {
           const appList = this.validAppList
             .filter(item => item.renterId === renter.renterId)
             .map(item => ({ value: item.appId, label: item.name, isLeaf: true }))
-          return { value: renter.renterId, label: renter.renterName, appList }
+          return { value: renter.renterId, label: renter.renterName, isLeaf: false, appList }
         })
         this.platformOptions = this.validAppList.map(option => ({ selected: false, ...option }))
         this.selectPlatform(this.platformAppId)

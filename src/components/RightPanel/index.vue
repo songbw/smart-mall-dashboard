@@ -36,7 +36,7 @@ export default {
       type: Boolean
     },
     buttonTop: {
-      default: 100,
+      default: 180,
       type: Number
     }
   },

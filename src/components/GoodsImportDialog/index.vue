@@ -17,16 +17,10 @@
     >
     <el-form ref="importForm" :model="formData" :rules="formRules" label-width="160px">
       <el-form-item v-if="needVendor" label="供应商名" prop="merchantId">
-        <el-select :value="formData.merchantId" clearable @change="handleVendorChanged">
-          <el-option
-            v-for="item in productVendors"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          >
-            <span>{{ item.label }}</span>
-          </el-option>
-        </el-select>
+        <vendor-selection
+          :vendor-id="formData.merchantId"
+          @changed="handleVendorChanged"
+        />
       </el-form-item>
       <el-form-item label="文件">
         <el-input :value="formData.fileName" readonly />
@@ -123,6 +117,7 @@ import {
   ProductTaxRateOptions
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
+import VendorSelection from '@/components/VendorSelection'
 
 const floatToFixed = (value, precision) =>
   parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
@@ -196,6 +191,7 @@ const fileExt = filename => {
 
 export default {
   name: 'GoodsImportDialog',
+  components: { VendorSelection },
   filters: {
     promotionPrice: sku => {
       const discount = sku.discount > 0 ? Math.round(sku.discount * 100) : 0
@@ -261,7 +257,6 @@ export default {
     ...mapGetters({
       userPermissions: 'userPermissions',
       vendorId: 'vendorId',
-      productVendors: 'productVendors',
       categoriesLoaded: 'categoriesLoaded',
       categoryData: 'categories'
     }),
@@ -797,8 +792,8 @@ export default {
 </script>
 
 <style scoped>
-  .excel-upload-input {
-    display: none;
-    z-index: -9999;
-  }
+.excel-upload-input {
+  display: none;
+  z-index: -9999;
+}
 </style>

@@ -292,7 +292,8 @@ export const constantRoutes = [
         component: () => import('@/views/coupons/usages'),
         meta: { title: '领取详情', group: 'coupons' },
         hidden: true
-      },
+      }
+      /*
       {
         path: 'barterCards',
         name: 'barterCards',
@@ -320,6 +321,7 @@ export const constantRoutes = [
         meta: { title: '提货券使用详情', group: 'barterCards' },
         hidden: true
       }
+       */
     ]
   },
   {

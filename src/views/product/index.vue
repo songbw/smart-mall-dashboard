@@ -747,7 +747,7 @@ export default {
         const { code, data } = await getProductListApi(params)
         if (code === 200) {
           total = data.result.total
-          list = data.result.list
+          list = Array.isArray(data.result.list) ? data.result.list : []
         }
       } catch (e) {
         console.warn(`Get products list error:${e}`)
@@ -852,7 +852,7 @@ export default {
         const { code, data } = await searchProductsApi(params)
         if (code === 200) {
           total = data.result.total
-          list = data.result.list
+          list = Array.isArray(data.result.list) ? data.result.list : []
         }
       } catch (e) {
         console.warn(`Get filter products list error:${e}`)

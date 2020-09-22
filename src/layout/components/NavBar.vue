@@ -72,6 +72,7 @@ export default {
     },
     async logout() {
       try {
+        this.$store.commit('app/RESET_APP_DATA')
         await this.$store.dispatch('user/logout')
       } catch (e) {
         console.warn(`User logout error:${e}`)

@@ -511,7 +511,7 @@ export default {
           const { code, data } = await searchProductsApi(params)
           if (code === 200) {
             total = data.result.total
-            list = data.result.list
+            list = Array.isArray(data.result.list) ? data.result.list : []
           }
         } catch (e) {
           console.warn('Select product error:' + e)

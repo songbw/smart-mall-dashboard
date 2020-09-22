@@ -14,6 +14,7 @@ import {
   getRenterListApi,
   getCompanyListOfRenterApi
 } from '@/api/vendor'
+import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
 
 const invalidAppIdList = ['test']
 
@@ -94,6 +95,13 @@ const mutations = {
   },
   SET_VENDOR_LIST: (state, list) => {
     state.vendorList = list
+  },
+  RESET_APP_DATA: (state) => {
+    state.platformList = []
+    state.vendorAppIdList = []
+    state.renterList = []
+    state.vendorList = []
+    state.platformId = default_app_id
   }
 }
 
@@ -143,8 +151,13 @@ const actions = {
     await storageSetItem(storage_platform_id, appId)
     commit('SET_PLATFORM_ID', appId)
   },
-  async getRenterList({ commit, state }, force = false) {
+  async getRenterList({ commit, state, rootState }, force = false) {
     if (state.renterList.length > 0 && !force) {
+      return
+    }
+    const { user } = rootState
+    const permissions = user.permissions
+    if (!permissions.includes(RenterPermissions.view)) {
       return
     }
     let renterList = []
@@ -178,7 +191,11 @@ const actions = {
         status: vendor_status_approved
       }
       const platformList = state.platformList
-      const { vendor } = rootState
+      const { user, vendor } = rootState
+      const permissions = user.permissions
+      if (!permissions.includes(VendorPermissions.view)) {
+        return
+      }
       const renterId = vendor.renter.id
       if (renterId !== platform_renter_id) {
         params.renterId = this.renterId

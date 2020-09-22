@@ -10,17 +10,10 @@
   >
     <el-form ref="inventoryForm" :model="formData" :rules="formRules" label-width="160px">
       <el-form-item v-if="hasVendorPermission" label="供应商名" prop="merchantId">
-        <el-select :value="formData.merchantId" clearable @change="handleVendorChanged">
-          <el-option
-            v-for="item in productVendors"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-            :disabled="item.value === vendorAoyi"
-          >
-            <span>{{ item.label }}</span>
-          </el-option>
-        </el-select>
+        <vendor-selection
+          :vendor-id="formData.merchantId"
+          @changed="handleVendorChanged"
+        />
       </el-form-item>
       <el-form-item>
         <el-button :loading="loading" icon="el-icon-search" @click="handleSearch">
@@ -76,6 +69,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
+import VendorSelection from '@/components/VendorSelection'
 import {
   searchProductsApi,
   getProductsByMpuListApi,
@@ -94,7 +88,7 @@ const InventoryHeaders = [
 
 export default {
   name: 'InventoryDialog',
-  components: { Pagination },
+  components: { Pagination, VendorSelection },
   props: {
     dialogVisible: {
       type: Boolean,
@@ -130,8 +124,7 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      vendorId: 'vendorId',
-      productVendors: 'productVendors'
+      vendorId: 'vendorId'
     }),
     hasVendorPermission() {
       return this.userPermissions.includes(ProductPermissions.vendor)
@@ -165,7 +158,7 @@ export default {
         const { code, data } = await searchProductsApi(params)
         if (code === 200) {
           this.total = data.result.total
-          const idList = data.result.list.map(item => item.mpu)
+          const idList = Array.isArray(data.result.list) ? data.result.list.map(item => item.mpu) : []
           const mpuList = await this.getProductsByMpuList(idList)
           if (params.merchantId !== vendorYiyatong) {
             return mpuList.map(item => ({
