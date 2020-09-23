@@ -105,7 +105,7 @@ module.exports = {
           {
             name: 'moment',
             var: 'moment',
-            version: '2.28.0',
+            version: '2.29.0',
             path: 'moment.min.js'
           },
           {
