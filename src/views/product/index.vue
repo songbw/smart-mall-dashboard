@@ -434,12 +434,13 @@ import {
   product_state_on_sale,
   product_state_is_editing,
   product_state_all,
-  ProductStateOptions
+  ProductStateOptions, platform_renter_id
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
 import InventoryDialog from './inventoryDialog'
 import ExportDialog from './exportDialog'
+import { floatToFixed } from '@/utils'
 
 const vendorAoyi = 2
 
@@ -719,6 +720,30 @@ export default {
         }
       }
     },
+    getRenterSpuPrice(spu) {
+      const priceList = spu.appSkuPriceList
+      if (this.renterId === platform_renter_id) {
+        return spu.price
+      }
+      if (Array.isArray(priceList) && priceList.length > 0) {
+        const find = priceList.find(item => item.renterId === this.renterId)
+        return find ? floatToFixed(find.price) : spu.price
+      } else {
+        return spu.price
+      }
+    },
+    getRenterSkuPrice(sku) {
+      const priceList = sku.appSkuPriceList
+      if (this.renterId === platform_renter_id) {
+        return sku.price
+      }
+      if (Array.isArray(priceList) && priceList.length > 0) {
+        const find = priceList.find(item => item.renterId === this.renterId)
+        return find ? find.price : sku.price
+      } else {
+        return sku.price
+      }
+    },
     async getListData() {
       if (this.vendorApproved && this.hasViewPermission) {
         const params = this.getFilterParams()
@@ -776,7 +801,7 @@ export default {
               skuIndex: index,
               skuNum: spu.skuList.length,
               state: spuState === product_state_on_sale ? sku.status.toString() : product_state_off_shelves.toString(),
-              price: centToYuan(sku.price),
+              price: centToYuan(this.getRenterSkuPrice(sku)),
               sprice: centToYuan(sku.sprice),
               editPrice: false,
               originalPrice: centToYuan(sku.price),
@@ -789,7 +814,7 @@ export default {
             skuIndex: 0,
             skuNum: 1,
             state: spu.state,
-            price: spu.price,
+            price: this.getRenterSpuPrice(spu),
             sprice: spu.sprice,
             editPrice: false,
             originalPrice: spu.price,

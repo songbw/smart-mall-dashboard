@@ -15,7 +15,8 @@ export const role_renter_name = 'renter'
 
 export const platform_renter_id = '0'
 export const wuxi_app_id = '11'
-export const default_app_id = ''
+export const invalid_app_id = 'invalid_app_id'
+export const default_app_id = invalid_app_id
 
 export const vendor_status_init = 0
 export const vendor_status_editing = 1

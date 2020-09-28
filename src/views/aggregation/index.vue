@@ -261,6 +261,7 @@ import {
   aggregation_on_sale_status,
   aggregation_off_shelves_status
 } from './constants'
+import { invalid_app_id } from '@/utils/constants'
 
 export default {
   name: 'AggregationPages',
@@ -419,8 +420,10 @@ export default {
   },
   methods: {
     async prepareAggregationData() {
-      await this.getAggregationGroups()
-      await this.getListData()
+      if (this.appId !== invalid_app_id) {
+        await this.getAggregationGroups()
+        await this.getListData()
+      }
     },
     async getAggregationGroups() {
       try {

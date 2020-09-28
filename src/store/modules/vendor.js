@@ -69,7 +69,7 @@ const actions = {
       }
       return { status: data.status, companyId: data.companyId, renterId: data.renterId }
     } catch (_) {
-      return { status: 0, companyId: -1, renterId: -1 }
+      return { status: 0, companyId: -1, renterId: '-1' }
     }
   },
   async createProfile({ commit, dispatch }, params) {

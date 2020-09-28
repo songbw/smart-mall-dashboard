@@ -8,3 +8,7 @@ export function getDigitalId(size) {
   const random = nanoId()
   return nanoSize === size ? random : random + timestamp
 }
+
+export function floatToFixed(value, precision = 2) {
+  return parseFloat((Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
+}
