@@ -51,7 +51,7 @@ module.exports = {
           {
             name: 'vue-router',
             var: 'VueRouter',
-            version: '3.4.5',
+            version: '3.4.6',
             path: 'dist/vue-router.min.js'
           },
           {
@@ -87,7 +87,7 @@ module.exports = {
           {
             name: 'xlsx',
             var: 'XLSX',
-            version: '0.16.7',
+            version: '0.16.8',
             path: 'dist/xlsx.full.min.js'
           },
           {
@@ -105,7 +105,7 @@ module.exports = {
           {
             name: 'moment',
             var: 'moment',
-            version: '2.29.0',
+            version: '2.29.1',
             path: 'moment.min.js'
           },
           {
