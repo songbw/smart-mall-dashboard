@@ -25,8 +25,11 @@ module.exports = {
   outputDir: 'dist',
   assetsDir: 'static',
   lintOnSave: isDev,
-  transpileDependencies: ['password-validator', 'url-regex', 'vue-hotzone', 'ip-regex', 'nanoid'],
-  productionSourceMap: false,
+  transpileDependencies: ['password-validator', 'vue-hotzone', 'ip-regex', 'nanoid'],
+  productionSourceMap: isDev,
+  devServer: {
+    port: 8080
+  },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.

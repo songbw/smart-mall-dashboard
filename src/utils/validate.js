@@ -1,5 +1,6 @@
 import PasswordValidator from 'password-validator'
 import isEmpty from 'lodash/isEmpty'
+import isURL from 'validator/es/lib/isURL'
 
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 
@@ -49,6 +50,5 @@ export function validZipCode(str) {
 }
 
 export function validateURL(url) {
-  const urlRegex = require('url-regex')
-  return urlRegex({ exact: true }).test(url)
+  return !isEmpty(url) && isURL(url)
 }
