@@ -229,6 +229,7 @@ const actions = {
       if (!permissions.includes(VendorPermissions.view)) {
         return
       }
+      commit('SET_DATA_LOADING', { vendorListLoading: true })
       const renterId = vendor.renter.id
       if (renterId !== platform_renter_id) {
         params.renterId = this.renterId
@@ -236,7 +237,6 @@ const actions = {
       if (platformList.length === 0) {
         await dispatch('getPlatformList')
       }
-      commit('SET_DATA_LOADING', { vendorListLoading: true })
       const { code, data } = await getCompanyListOfRenterApi(params)
       if (code === 200) {
         const vendorList = data.rows.map(item => ({

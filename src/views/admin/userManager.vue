@@ -11,7 +11,7 @@
         <vendor-selection
           :vendor-id="queryCompanyId"
           :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
-          @changed="value => queryCompanyId = value"
+          @changed="onVendorChanged"
         />
       </el-form-item>
       <el-form-item>
@@ -66,17 +66,23 @@
       <el-table-column v-if="hasEditPermission" label="操作" align="center" width="320">
         <template slot-scope="scope">
           <el-button
+            :disabled="!scope.row.ownVendor"
             type="warning"
             size="mini"
             @click="handleEditUserVendor(scope.$index)"
           >
             修改公司
           </el-button>
-          <el-button size="mini" type="info" @click="handleEditUserPhone(scope.$index)">
+          <el-button
+            :disabled="!scope.row.ownVendor"
+            size="mini"
+            type="info"
+            @click="handleEditUserPhone(scope.$index)"
+          >
             修改电话
           </el-button>
           <el-button
-            :disabled="scope.row.role === platformAdminRole"
+            :disabled="scope.row.role === platformAdminRole || !scope.row.ownVendor"
             size="mini"
             type="danger"
             @click="handleDeleteUser(scope.$index)"
@@ -241,6 +247,7 @@ import {
   getVendorRolesApi
 } from '@/api/vendor'
 import {
+  platform_renter_id,
   role_admin_name,
   role_renter_name,
   role_vendor_name
@@ -380,7 +387,8 @@ export default {
   computed: {
     ...mapGetters({
       renterId: 'renterId',
-      userPermissions: 'userPermissions'
+      userPermissions: 'userPermissions',
+      vendorList: 'vendorList'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(VendorPermissions.userView)
@@ -408,11 +416,17 @@ export default {
     async initData() {
       this.routerName = this.$route.name
       await this.getVendorRoleList()
+      await this.getVendorList()
       await this.getUsersData()
     },
-    getUsersData() {
+    async getVendorList() {
+      this.dataLoading = true
+      await this.$store.dispatch('app/getVendorList', true)
+      this.dataLoading = false
+    },
+    async getUsersData() {
       if (this.hasViewPermission) {
-        this.handleGetUsersData()
+        await this.handleGetUsersData()
       } else {
         this.$message.warning('没有查看商户管理员的权限，请联系管理员！')
       }
@@ -444,8 +458,18 @@ export default {
         }
         this.dataLoading = true
         const data = await getVendorUserListApi(params)
-        list = data.rows
-        total = data.total
+        if (data && Array.isArray(data.rows)) {
+          list = data.rows.map(item => {
+            const companyId = item.company ? item.company.id : -1
+            const companyInfo = companyId >= 0 ? this.vendorList.find(vendor => vendor.companyId === companyId) : null
+            const hasPlatformRenter = companyInfo && companyInfo.renterIdList
+              ? companyInfo.renterIdList.includes(platform_renter_id)
+              : true
+
+            return { ...item, ownVendor: this.renterId === platform_renter_id ? true : !hasPlatformRenter }
+          })
+          total = data.total
+        }
       } catch (e) {
         console.warn('Get vendor user list error:' + e)
       } finally {
@@ -453,6 +477,9 @@ export default {
       }
       this.userData = list
       this.userTotal = total
+    },
+    onVendorChanged(id) {
+      this.queryCompanyId = isEmpty(id) ? null : id
     },
     handleEditUserVendor(index) {
       this.vendorEditDialogVisible = true
