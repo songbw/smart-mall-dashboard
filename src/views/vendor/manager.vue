@@ -84,6 +84,8 @@
             租户设置
           </el-button>
           <el-button
+            v-if="hasEditPermission"
+            :disabled="!scope.row.ownVendor"
             type="primary"
             size="mini"
             @click="handleEditVendor(scope.$index)"
@@ -92,6 +94,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusReviewing"
+            :disabled="!scope.row.ownVendor"
             type="info"
             size="mini"
             @click="handleApproveVendor(scope.$index)"
@@ -100,6 +103,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusReviewing"
+            :disabled="!scope.row.ownVendor"
             type="warning"
             size="mini"
             @click="handleRejectVendor(scope.$index)"
@@ -110,6 +114,7 @@
             v-if="hasEditPermission &&
               scope.row.status !== statusApproved &&
               scope.row.status !== statusLocked"
+            :disabled="!scope.row.ownVendor"
             type="warning"
             size="mini"
             @click="handleDeleteVendor(scope.$index)"
@@ -118,6 +123,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusApproved"
+            :disabled="!scope.row.ownVendor"
             type="danger"
             size="mini"
             @click="handleLockVendor(scope.$index)"
@@ -126,6 +132,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusLocked"
+            :disabled="!scope.row.ownVendor"
             type="success"
             size="mini"
             @click="handleUnlockVendor(scope.$index)"
@@ -235,7 +242,8 @@ import {
   VendorInvoiceOptions,
   VendorTaxpayerOptions,
   vendor_invoice_type_normal,
-  vendor_taxpayer_type_general
+  vendor_taxpayer_type_general,
+  platform_renter_id
 } from '@/utils/constants'
 import {
   VendorPermissions,
@@ -412,8 +420,12 @@ export default {
             params.renterId = this.renterId
           }
           const { code, data } = await getCompanyListOfRenterApi(params)
-          if (code === 200) {
-            list = data.rows
+          if (code === 200 && Array.isArray(data.rows)) {
+            list = data.rows.map(item => {
+              const hasPlatformRenter = item.renterList &&
+                item.renterList.findIndex(renter => renter.renterId === platform_renter_id) >= 0
+              return { ...item, ownVendor: this.renterId === platform_renter_id ? true : !hasPlatformRenter }
+            })
             total = data.total
           }
         } catch (e) {
