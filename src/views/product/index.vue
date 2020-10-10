@@ -434,7 +434,7 @@ import {
   product_state_on_sale,
   product_state_is_editing,
   product_state_all,
-  ProductStateOptions, platform_renter_id
+  ProductStateOptions, platform_renter_id, role_renter_name
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
@@ -516,7 +516,8 @@ export default {
       productQuery: 'productQuery',
       productVendors: 'vendorList',
       vendorApproved: 'vendorApproved',
-      userPermissions: 'userPermissions'
+      userPermissions: 'userPermissions',
+      userRole: 'userRole'
     }),
     hasViewPermission() {
       return this.userPermissions.includes(ProductPermissions.view)
@@ -547,6 +548,9 @@ export default {
     },
     hasExportPermission() {
       return this.userPermissions.includes(ProductPermissions.export)
+    },
+    isRenterAdmin() {
+      return this.userRole === role_renter_name
     },
     mpuPrefixOptions() {
       let vendorId = -1
@@ -721,25 +725,27 @@ export default {
       }
     },
     getRenterSpuPrice(spu) {
-      const priceList = spu.appSkuPriceList
-      if (this.renterId === platform_renter_id) {
-        return spu.price
-      }
-      if (Array.isArray(priceList) && priceList.length > 0) {
-        const find = priceList.find(item => item.renterId === this.renterId)
-        return find ? floatToFixed(find.price) : spu.price
+      if (this.isRenterAdmin) {
+        const priceList = spu.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? floatToFixed(find.price / 100) : spu.price
+        } else {
+          return spu.price
+        }
       } else {
         return spu.price
       }
     },
     getRenterSkuPrice(sku) {
-      const priceList = sku.appSkuPriceList
-      if (this.renterId === platform_renter_id) {
-        return sku.price
-      }
-      if (Array.isArray(priceList) && priceList.length > 0) {
-        const find = priceList.find(item => item.renterId === this.renterId)
-        return find ? find.price : sku.price
+      if (this.isRenterAdmin) {
+        const priceList = sku.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? find.price : sku.price
+        } else {
+          return sku.price
+        }
       } else {
         return sku.price
       }

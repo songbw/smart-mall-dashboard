@@ -228,7 +228,7 @@
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
-        <span v-if="viewProduct"> {{ productForm.price }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.price }}</span>
         <el-input-number
           v-else
           v-model="productForm.price"
@@ -354,6 +354,7 @@
             <template slot-scope="scope">
               <el-button
                 v-if="!viewProduct"
+                :disabled="!ownProductVendor"
                 size="mini"
                 type="warning"
                 @click="handleEditSubSkuPrice(scope.$index)"
@@ -362,6 +363,7 @@
               </el-button>
               <el-button
                 v-if="scope.row.status !== 1"
+                :disabled="!ownProductVendor"
                 size="mini"
                 type="danger"
                 @click="handleSubSkuOnSale(scope.$index)"
@@ -370,6 +372,7 @@
               </el-button>
               <el-button
                 v-else
+                :disabled="!ownProductVendor"
                 size="mini"
                 type="danger"
                 @click="handleSubSkuSoldOut(scope.$index)"
@@ -380,8 +383,8 @@
           </el-table-column>
         </el-table>
       </el-form-item>
-      <el-divider v-if="hasMultiRenters" content-position="left">租户价格</el-divider>
-      <el-form-item v-if="hasMultiRenters" label-width="0">
+      <el-divider v-if="showRenterPrices" content-position="left">租户价格</el-divider>
+      <el-form-item v-if="showRenterPrices" label-width="0">
         <div>
           <el-button
             v-if="editProduct"
@@ -672,7 +675,7 @@ import {
   ProductSubSkuStatusOptions,
   product_state_on_sale,
   product_state_off_shelves,
-  vendor_taxpayer_type_small_scale
+  vendor_taxpayer_type_small_scale, platform_renter_id, role_renter_name
 } from '@/utils/constants'
 import {
   getMerchantFreeShippingApi,
@@ -934,9 +937,12 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      productVendors: 'vendorList',
+      userRole: 'userRole',
+      vendorList: 'vendorList',
       renterList: 'renterList',
-      vendorId: 'vendorId'
+      vendorId: 'vendorId',
+      renterId: 'renterId',
+      vendorProfile: 'vendorProfile'
     }),
     hasCreatePermission() {
       return this.userPermissions.includes(ProductPermissions.create)
@@ -1045,10 +1051,25 @@ export default {
         Array.isArray(this.productInfo.properties) &&
         this.productInfo.properties.length > 0
     },
-    hasMultiRenters() {
+    ownProductVendor() {
+      if (this.userRole === role_renter_name) {
+        const hasPlatformRenter = this.productVendor
+          ? this.productVendor.renterIdList.includes(platform_renter_id)
+          : false
+        return !hasPlatformRenter
+      } else {
+        // For platform admin and vendor admin, could edit sale price
+        return true
+      }
+    },
+    showRenterPrices() {
+      if (this.userRole === role_renter_name) {
+        return !this.ownProductVendor
+      }
       return this.productVendor ? this.productVendor.renterIdList.length > 0 : false
     },
     renterPriceList() {
+      const isRenterAdmin = this.userRole === role_renter_name
       let priceList = []
       if (this.hasSubSku) {
         priceList = this.subSkuList
@@ -1059,10 +1080,18 @@ export default {
           ? this.productInfo.appSkuPriceList
           : []
       }
-      return priceList.map(item => {
-        const find = this.renterList.find(renter => renter.renterId === item.renterId)
-        return { renterName: find ? find.renterName : item.renterId, ...item }
-      })
+      return priceList
+        .filter(item => isRenterAdmin ? item.renterId === this.renterId : true)
+        .map(item => {
+          let renterName = ''
+          if (isRenterAdmin) {
+            renterName = this.vendorProfile.name
+          } else {
+            const find = this.renterList.find(renter => renter.renterId === item.renterId)
+            renterName = find ? find.renterName : item.renterId
+          }
+          return { renterName, ...item }
+        })
     }
   },
   created() {
@@ -1085,7 +1114,7 @@ export default {
       }
     },
     async getVendorList() {
-      if (this.productVendors.length === 0) {
+      if (this.vendorList.length === 0) {
         try {
           this.loading = true
           await this.$store.dispatch('app/getRenterList')
@@ -1098,8 +1127,8 @@ export default {
       }
     },
     getProductVendor(vendorId) {
-      if (this.productVendors.length > 0 && vendorId != null) {
-        const vendor = this.productVendors.find(option => option.companyId === vendorId)
+      if (this.vendorList.length > 0 && vendorId != null) {
+        const vendor = this.vendorList.find(option => option.companyId === vendorId)
         vendor.renterList = this.renterList.filter(renter => vendor.renterIdList.includes(renter.renterId))
         return vendor || null
       } else {
@@ -1984,7 +2013,7 @@ export default {
       })
     },
     onAddRenterPriceClicked() {
-      this.editRenterId = ''
+      this.editRenterId = this.userRole === role_renter_name ? this.renterId : ''
       this.editRenterSkuId = ''
       this.editRenterPrice = floatToFixed(this.productForm.price, 2) * 100
       this.renterDialogVisible = true
