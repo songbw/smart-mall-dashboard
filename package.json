@@ -40,7 +40,7 @@
     "vue-hotzone": "^1.1.0",
     "vue-qriously": "^1.1.1",
     "vue-router": "^3.4.6",
-    "vue-scrollto": "^2.18.2",
+    "vue-scrollto": "^2.19.1",
     "vuex": "^3.5.1",
     "xlsx": "^0.16.8"
   },
