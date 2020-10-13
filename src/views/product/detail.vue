@@ -56,7 +56,7 @@
         <span>{{ productForm.state | productState }}</span>
       </el-form-item>
       <el-form-item label="商品类型">
-        <span v-if="viewProduct"> {{ productForm.type | typeFilter }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.type | typeFilter }}</span>
         <div v-else>
           <el-radio-group v-model="productForm.type">
             <el-radio
@@ -70,17 +70,17 @@
         </div>
       </el-form-item>
       <el-form-item label="商品名称" prop="name">
-        <span v-if="viewProduct">{{ productForm.name }}</span>
+        <span v-if="viewProduct || !ownProductVendor">{{ productForm.name }}</span>
         <el-input v-else v-model="productForm.name" maxlength="100" />
       </el-form-item>
       <el-form-item label="商品副标题" prop="subTitle">
-        <span v-if="viewProduct">{{ productForm.subTitle }}</span>
+        <span v-if="viewProduct || !ownProductVendor">{{ productForm.subTitle }}</span>
         <el-input v-else v-model="productForm.subTitle" maxlength="100" />
       </el-form-item>
       <el-form-item label="商品品牌" prop="brand">
         <span v-if="productForm.brand" style="margin-right: 10px">{{ productForm.brand }}</span>
         <el-select
-          v-if="!viewProduct"
+          v-if="!viewProduct && ownProductVendor"
           filterable
           remote
           placeholder="请输入商品品牌关键词"
@@ -98,7 +98,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="商品类别" prop="category">
-        <span v-if="viewProduct">{{ categoryName }}</span>
+        <span v-if="viewProduct || !ownProductVendor">{{ categoryName }}</span>
         <category-selection
           v-else
           :first-value="firstCategoryValue"
@@ -108,23 +108,23 @@
         />
       </el-form-item>
       <el-form-item label="商品型号" prop="model">
-        <span v-if="viewProduct"> {{ productForm.model }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.model }}</span>
         <el-input v-else v-model="productForm.model" maxlength="50" />
       </el-form-item>
       <el-form-item label="商品条形码">
-        <span v-if="viewProduct"> {{ productForm.upc }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.upc }}</span>
         <el-input v-else v-model="productForm.upc" maxlength="30" />
       </el-form-item>
       <el-form-item label="销售单位" prop="saleunit">
-        <span v-if="viewProduct"> {{ productForm.saleunit }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.saleunit }}</span>
         <el-input v-else v-model="productForm.saleunit" maxlength="10" placeholder="比如：个、台、袋、箱等" />
       </el-form-item>
       <el-form-item v-if="couldUpdateInventory" label="商品库存">
-        <span v-if="viewProduct"> {{ productForm.inventory }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.inventory }}</span>
         <el-input-number v-else v-model="productForm.inventory" :min="0" :max="100000000" step-strictly />
       </el-form-item>
       <el-form-item label="商品税率" prop="taxRate">
-        <span v-if="viewProduct">
+        <span v-if="viewProduct || !ownProductVendor">
           {{ getTaxRate(productForm.taxRate) }}
         </span>
         <el-select
@@ -141,7 +141,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="对比商品链接" prop="model">
-        <span v-if="viewProduct"> {{ productForm.compareUrl }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.compareUrl }}</span>
         <el-input v-else v-model="productForm.compareUrl" maxlength="100" />
       </el-form-item>
       <el-divider v-if="productForm.merchantId !== vendorAoyi" content-position="left">商品物流</el-divider>
@@ -212,7 +212,7 @@
         </span>
       </el-form-item>
       <el-form-item v-if="productForm.merchantId !== vendorAoyi" label="商品重量(公斤)">
-        <span v-if="viewProduct"> {{ productForm.weight }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.weight }}</span>
         <el-input-number
           v-else
           v-model="productForm.weight"
@@ -224,7 +224,7 @@
       </el-form-item>
       <el-divider content-position="left">商品价格</el-divider>
       <el-form-item v-if="hasCostPricePermission" label="进货价格(元)" prop="sprice">
-        <span v-if="viewProduct || hasSubSku"> {{ mpuSprice }}</span>
+        <span v-if="viewProduct || hasSubSku || !ownProductVendor"> {{ mpuSprice }}</span>
         <el-input-number v-else v-model="productForm.sprice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="销售价格(元)" prop="price">
@@ -258,7 +258,7 @@
         </span>
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
-        <span v-if="viewProduct"> {{ productForm.comparePrice }}</span>
+        <span v-if="viewProduct || !ownProductVendor"> {{ productForm.comparePrice }}</span>
         <el-input-number v-else v-model="productForm.comparePrice" :precision="2" :step="1" :min="0" :max="1000000" />
       </el-form-item>
       <el-divider v-if="hasProperties" content-position="left">商品规格</el-divider>
@@ -383,11 +383,12 @@
           </el-table-column>
         </el-table>
       </el-form-item>
-      <el-divider v-if="showRenterPrices" content-position="left">租户价格</el-divider>
+      <el-divider v-if="showRenterPrices" content-position="left">租户商品价格</el-divider>
       <el-form-item v-if="showRenterPrices" label-width="0">
         <div>
           <el-button
             v-if="editProduct"
+            :disabled="productForm.state !== '1'"
             type="info"
             @click="onAddRenterPriceClicked"
           >
@@ -439,6 +440,66 @@
           </el-table-column>
         </el-table>
       </el-form-item>
+      <el-divider v-if="showRenterPrices" content-position="left">租户商品状态</el-divider>
+      <el-form-item v-if="showRenterPrices" label-width="0">
+        <div>
+          <el-button
+            type="success"
+            :disabled="productForm.state !== '1'"
+            @click="onAddRenterStateClicked"
+          >
+            添加租户状态
+          </el-button>
+          <span style="margin-left: 12px">
+            <i class="el-icon-warning-outline" />
+            商品默认状态为上架时，可以修改租户状态；未添加租户，将使用默认状态
+            <el-tag>{{ productForm.state | productState }}</el-tag>
+          </span>
+        </div>
+        <el-table
+          :data="renterStateList"
+          fit
+          style="width: 100%;"
+        >
+          <el-table-column label="租户名称" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.renterName }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="商品SKU" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.skuId }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="商品状态" align="center">
+            <template slot-scope="scope">
+              <span>{{ scope.row.state | productState }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="240">
+            <template slot-scope="scope">
+              <el-button
+                v-if="scope.row.state !== 1"
+                :disabled="productForm.state !== '1'"
+                size="mini"
+                type="danger"
+                @click="handleRenterSkuOnSale(scope.$index)"
+              >
+                上架
+              </el-button>
+              <el-button
+                v-else
+                :disabled="productForm.state !== '1'"
+                size="mini"
+                type="danger"
+                @click="handleSubSkuSoldOut(scope.$index)"
+              >
+                下架
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form-item>
     </el-form>
     <el-form
       v-if="activeStep === 1"
@@ -455,7 +516,7 @@
           <image-upload
             :image-url="productCover"
             :path-name="uploadCoverData.pathName"
-            :view-only="viewImageOnly"
+            :view-only="viewImageOnly || !ownProductVendor"
             button-size="normal"
             image-width="200px"
             tip="如果未上传，将以第一张主图作为封面图。"
@@ -463,7 +524,7 @@
             @success="handleUploadCoverSuccess"
           />
           <el-button
-            v-if="hasCustomCover && !viewImageOnly"
+            v-if="hasCustomCover && !viewImageOnly && ownProductVendor"
             type="danger"
             icon="el-icon-delete"
             style="margin-top: 10px"
@@ -475,7 +536,7 @@
       </el-form-item>
       <el-form-item label="商品主图">
         <template>
-          <div v-if="!viewImageOnly">
+          <div v-if="!viewImageOnly && ownProductVendor">
             <input
               ref="thumbnailUpload"
               class="image-upload-input"
@@ -506,7 +567,7 @@
               :offset="index > 0 ? 1 : 0"
             >
               <custom-thumbnail
-                :could-edit="!viewImageOnly"
+                :could-edit="!viewImageOnly && ownProductVendor"
                 :image-url="imgUrl"
                 :index="index"
                 :length="thumbnailUrls.length"
@@ -525,7 +586,7 @@
               :offset="index > 0 ? 1 : 0"
             >
               <custom-thumbnail
-                :could-edit="!viewImageOnly"
+                :could-edit="!viewImageOnly && ownProductVendor"
                 :image-url="imgUrl"
                 :index="5 + index"
                 :length="thumbnailUrls.length"
@@ -540,7 +601,7 @@
       </el-form-item>
       <el-form-item label="商品描述图">
         <template>
-          <div v-if="!viewImageOnly">
+          <div v-if="!viewImageOnly && ownProductVendor">
             <el-radio-group v-model="newIntroductionType" style="display: block;margin: 10px 0">
               <el-radio :label="1">正常详情图</el-radio>
               <el-radio :label="2">头部详情图</el-radio>
@@ -570,7 +631,7 @@
           </div>
           <div v-for="(img, index) in introductionUrls" :key="'introduction' + index" style="padding: 14px">
             <custom-introduction
-              :could-edit="!viewImageOnly"
+              :could-edit="!viewImageOnly && ownProductVendor"
               :image-url="img"
               :index="index"
               :length="introductions.length"
@@ -627,14 +688,23 @@
       @confirmed="handleUpdateSubSkuPrice"
     />
     <renter-price-dialog
-      :dialog-visible="renterDialogVisible"
+      :dialog-visible="renterPriceDialogVisible"
       :renter-id="editRenterId"
       :sku-id="editRenterSkuId"
       :renter-price="editRenterPrice"
       :renter-list="productVendor ? productVendor.renterList : []"
       :sku-list="hasSubSku ? subSkuList: [{code: productForm.skuid}]"
-      @cancelled="renterDialogVisible = false"
+      @cancelled="renterPriceDialogVisible = false"
       @confirmed="onRenterPriceConfirmed"
+    />
+    <renter-state-dialog
+      :dialog-visible="renterStateDialogVisible"
+      :renter-id="editRenterId"
+      :sku-id="editRenterSkuId"
+      :renter-list="productVendor ? productVendor.renterList : []"
+      :sku-list="hasSubSku ? subSkuList: [{code: productForm.skuid}]"
+      @cancelled="renterStateDialogVisible = false"
+      @confirmed="onRenterStateConfirmed"
     />
   </div>
 </template>
@@ -655,7 +725,7 @@ import {
   batchUpdateStateApi,
   createRenterSkuPriceApi,
   updateRenterSkuPriceApi,
-  deleteRenterSkuPriceApi
+  deleteRenterSkuPriceApi, updateRenterSkuStateApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -675,7 +745,9 @@ import {
   ProductSubSkuStatusOptions,
   product_state_on_sale,
   product_state_off_shelves,
-  vendor_taxpayer_type_small_scale, platform_renter_id, role_renter_name
+  vendor_taxpayer_type_small_scale,
+  platform_renter_id,
+  role_renter_name
 } from '@/utils/constants'
 import {
   getMerchantFreeShippingApi,
@@ -689,6 +761,7 @@ import { validateURL } from '@/utils/validate'
 import { scrollTo } from '@/utils/scroll-to'
 import SubSkuInfo from './subSkuInfo'
 import RenterPriceDialog from '@/views/product/renterPriceDialog'
+import RenterStateDialog from '@/views/product/renterStateDialog'
 
 const decode = require('unescape')
 
@@ -710,6 +783,7 @@ const notUpdateKeys = ['mpu', 'introduction', 'createdAt', 'state']
 export default {
   name: 'ProductDetail',
   components: {
+    RenterStateDialog,
     RenterPriceDialog,
     CustomIntroduction,
     CustomThumbnail,
@@ -841,7 +915,8 @@ export default {
       subSkuSoldOutSelection: [],
       productInfo: null,
       productVendor: null,
-      renterDialogVisible: false,
+      renterPriceDialogVisible: false,
+      renterStateDialogVisible: false,
       editRenterId: '',
       editRenterSkuId: '',
       editRenterPrice: 0,
@@ -1081,6 +1156,31 @@ export default {
           : []
       }
       return priceList
+        .filter(item => isRenterAdmin ? item.renterId === this.renterId : true)
+        .map(item => {
+          let renterName = ''
+          if (isRenterAdmin) {
+            renterName = this.vendorProfile.name
+          } else {
+            const find = this.renterList.find(renter => renter.renterId === item.renterId)
+            renterName = find ? find.renterName : item.renterId
+          }
+          return { renterName, ...item }
+        })
+    },
+    renterStateList() {
+      const isRenterAdmin = this.userRole === role_renter_name
+      let stateList = []
+      if (this.hasSubSku) {
+        stateList = this.subSkuList
+          .filter(item => Array.isArray(item.appSkuStateList) && item.appSkuStateList.length > 0)
+          .flatMap(item => item.appSkuStateList)
+      } else {
+        stateList = this.productInfo && Array.isArray(this.productInfo.appSkuStateList)
+          ? this.productInfo.appSkuStateList
+          : []
+      }
+      return stateList
         .filter(item => isRenterAdmin ? item.renterId === this.renterId : true)
         .map(item => {
           let renterName = ''
@@ -2016,13 +2116,13 @@ export default {
       this.editRenterId = this.userRole === role_renter_name ? this.renterId : ''
       this.editRenterSkuId = ''
       this.editRenterPrice = floatToFixed(this.productForm.price, 2) * 100
-      this.renterDialogVisible = true
+      this.renterPriceDialogVisible = true
     },
     handleEditRenterSkuPrice(index) {
       this.editRenterId = this.renterPriceList[index].renterId
       this.editRenterSkuId = this.renterPriceList[index].skuId
       this.editRenterPrice = this.renterPriceList[index].price
-      this.renterDialogVisible = true
+      this.renterPriceDialogVisible = true
     },
     handleRemoveRenterSkuPrice(index) {
       this.$confirm('取消此租户的商品价格，将会使用默认价格，是否继续？', '提示', {
@@ -2075,11 +2175,59 @@ export default {
     onRenterPriceConfirmed(data) {
       const { renterId, skuId, price } = data
       const found = this.renterPriceList.find(item => item.renterId === renterId && item.skuId === skuId)
-      this.renterDialogVisible = false
+      this.renterPriceDialogVisible = false
       if (found) {
         this.handleUpdateRenterPrice({ id: found.id, price })
       } else {
         this.handleAddRenterPrice(data)
+      }
+    },
+    onAddRenterStateClicked() {
+      this.editRenterId = this.userRole === role_renter_name ? this.renterId : ''
+      this.editRenterSkuId = ''
+      this.renterStateDialogVisible = true
+    },
+    handleRenterSkuOnSale(index) {
+      const message = '是否继续上架此租户商品？'
+      this.$confirm(message, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const renterState = this.renterStateList[index]
+        try {
+          this.loading = true
+          const { code } = await updateRenterSkuStateApi([{
+            renterId: renterState.renterId,
+            mpu: renterState.mpu,
+            skuId: renterState.skuId,
+            state: 1
+          }])
+          if (code === 200) {
+            await this.getProductInfo()
+          }
+        } catch (e) {
+          console.warn('Add renter price error:' + e)
+        } finally {
+          this.loading = false
+        }
+      }).catch(() => {
+        console.warn('Cancel renter state')
+      })
+    },
+    async onRenterStateConfirmed(data) {
+      this.renterStateDialogVisible = false
+      try {
+        this.loading = true
+        const mpu = this.hasSubSku ? this.productForm.skuid : this.productForm.mpu
+        const { code } = await updateRenterSkuStateApi([{ mpu, ...data }])
+        if (code === 200) {
+          await this.getProductInfo()
+        }
+      } catch (e) {
+        console.warn('Add renter price error:' + e)
+      } finally {
+        this.loading = false
       }
     },
     async updateProductPrice(price) {

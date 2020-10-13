@@ -193,3 +193,11 @@ export function deleteRenterSkuPriceApi(params) {
     params
   })
 }
+
+export function updateRenterSkuStateApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/renter/state',
+    method: 'put',
+    data: params
+  })
+}

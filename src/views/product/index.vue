@@ -149,6 +149,9 @@
           修改已选运费模板
         </el-button>
       </el-form-item>
+      <el-form-item v-if="isRenterAdmin">
+        <span><i class="el-icon-warning-outline" />商品默认状态为供应商设置，租户可以修改供应商已上架商品的状态</span>
+      </el-form-item>
     </el-form>
     <el-table
       ref="productsTable"
@@ -174,6 +177,11 @@
           >
             <span>{{ scope.row.mpu }}</span>
           </router-link>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isRenterAdmin" column-key="mpuState" label="默认状态" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.mpuState | productState }}</span>
         </template>
       </el-table-column>
       <el-table-column column-key="image" label="商品图" align="center" width="140">
@@ -247,7 +255,7 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column column-key="state" label="状态" align="center" width="80">
+      <el-table-column column-key="state" label="SKU状态" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.state | productState }}</span>
         </template>
@@ -275,22 +283,24 @@
               <el-dropdown-item
                 v-if="hasUpdatePermission"
                 :command="`edit:${scope.$index}`"
-                :disabled="isProductOnSale(scope.row.state)"
+                :disabled="isProductOnSale(scope.row.renterState)"
                 icon="el-icon-edit"
                 divided
               >
                 编辑商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-if="hasStatePermission && !isProductOnSale(scope.row.state)"
+                v-if="hasStatePermission && !isProductOnSale(scope.row.renterState)"
+                :disabled="isRenterAdmin && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
                 :command="`start:${scope.$index}`"
                 icon="el-icon-sell"
               >
                 上架商品
               </el-dropdown-item>
               <el-dropdown-item
-                v-else-if="hasStatePermission && isProductOnSale(scope.row.state)"
+                v-else-if="hasStatePermission && isProductOnSale(scope.row.renterState)"
                 :command="`stop:${scope.$index}`"
+                :disabled="isRenterAdmin && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
                 icon="el-icon-sold-out"
               >
                 下架商品
@@ -298,7 +308,7 @@
               <el-dropdown-item
                 v-if="hasDeletePermission"
                 :command="`delete:${scope.$index}`"
-                :disabled="isProductCouldDelete(scope.row) === false || !hasCreatePermission"
+                :disabled="!isOwnVendor(scope.row.merchantId) || isProductCouldDelete(scope.row) === false"
                 icon="el-icon-delete"
                 divided
               >
@@ -422,7 +432,8 @@ import {
   exportProductsApi,
   exportFloorPriceApi,
   batchUpdateProductsApi,
-  batchUpdateStateApi
+  batchUpdateStateApi,
+  updateRenterSkuStateApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import Pagination from '@/components/Pagination'
@@ -434,7 +445,8 @@ import {
   product_state_on_sale,
   product_state_is_editing,
   product_state_all,
-  ProductStateOptions, platform_renter_id, role_renter_name
+  ProductStateOptions,
+  role_renter_name, platform_renter_id
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
@@ -457,7 +469,7 @@ export default {
   },
   filters: {
     productState: state => {
-      const value = Number.parseInt(state)
+      const value = typeof state === 'string' ? Number.parseInt(state) : state
       if (Number.isNaN(value)) {
         return state
       } else {
@@ -724,6 +736,19 @@ export default {
         }
       }
     },
+    getRenterSpuState(spu) {
+      if (this.isRenterAdmin) {
+        const stateList = spu.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : spu.state
+        } else {
+          return spu.state
+        }
+      } else {
+        return spu.state
+      }
+    },
     getRenterSpuPrice(spu) {
       if (this.isRenterAdmin) {
         const priceList = spu.appSkuPriceList
@@ -735,6 +760,22 @@ export default {
         }
       } else {
         return spu.price
+      }
+    },
+    getRenterSkuState(spuState, sku) {
+      const skuState = spuState === product_state_on_sale
+        ? sku.status.toString()
+        : product_state_off_shelves.toString()
+      if (this.isRenterAdmin) {
+        const stateList = sku.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : skuState
+        } else {
+          return skuState
+        }
+      } else {
+        return skuState
       }
     },
     getRenterSkuPrice(sku) {
@@ -792,21 +833,24 @@ export default {
       const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
       this.productsData = []
       for (const spu of list) {
+        const renterState = this.getRenterSpuState(spu)
         const prod = {
           id: spu.id,
+          spu: spu.skuid,
           mpu: spu.mpu,
+          mpuState: spu.state,
           image: spu.image,
           name: spu.name,
-          merchantId: spu.merchantId
+          merchantId: spu.merchantId,
+          renterState
         }
-        const spuState = parseInt(spu.state)
         if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
           for (const [index, sku] of spu.skuList.entries()) {
             this.productsData.push({
               skuId: sku.code,
               skuIndex: index,
               skuNum: spu.skuList.length,
-              state: spuState === product_state_on_sale ? sku.status.toString() : product_state_off_shelves.toString(),
+              state: this.getRenterSkuState(parseInt(renterState), sku),
               price: centToYuan(this.getRenterSkuPrice(sku)),
               sprice: centToYuan(sku.sprice),
               editPrice: false,
@@ -819,7 +863,7 @@ export default {
             skuId: spu.skuid,
             skuIndex: 0,
             skuNum: 1,
-            state: spu.state,
+            state: this.getRenterSpuState(spu),
             price: this.getRenterSpuPrice(spu),
             sprice: spu.sprice,
             editPrice: false,
@@ -903,8 +947,8 @@ export default {
     },
     isProductCouldDelete(product) {
       // Only in editing state could delete
-      const value = Number.parseInt(product.state)
-      return Number.isNaN(value) ? false : value === product_state_is_editing
+      const value = Number.parseInt(product.mpuState)
+      return Number.isNaN(value) || !this.hasCreatePermission ? false : value === product_state_is_editing
     },
     handleFilter() {
       if (this.hasViewPermission) {
@@ -945,6 +989,17 @@ export default {
       )
        */
     },
+    isOwnVendor(vendorId) {
+      if (this.isRenterAdmin) {
+        const productVendor = this.productVendors.find(option => option.companyId.toString() === vendorId.toString())
+        const hasPlatformRenter = productVendor
+          ? productVendor.renterIdList.includes(platform_renter_id)
+          : false
+        return !hasPlatformRenter
+      } else {
+        return true
+      }
+    },
     handleProductOnSale(index) {
       this.$confirm('是否继续上架此商品？', '警告', {
         confirmButtonText: '确定',
@@ -952,15 +1007,29 @@ export default {
         type: 'warning'
       }).then(async () => {
         try {
+          let code = 0
           const id = this.productsData[index].id
-          const params = [{
-            id,
-            state: product_state_on_sale
-          }]
-          const { code } = await batchUpdateStateApi(params)
+          const vendorId = this.productsData[index].merchantId
+          if (this.isOwnVendor(vendorId)) {
+            const params = [{
+              id,
+              state: product_state_on_sale
+            }]
+            const res = await batchUpdateStateApi(params)
+            code = res.code
+          } else {
+            const params = [{
+              renterId: this.renterId,
+              mpu: this.productsData[index].mpu,
+              skuId: this.productsData[index].mpu,
+              state: product_state_on_sale
+            }]
+            const res = await updateRenterSkuStateApi(params)
+            code = res.code
+          }
           if (code === 200) {
             this.$message({ message: '产品上架成功！', type: 'success' })
-            this.getListData()
+            await this.getListData()
           } else {
             this.$confirm('此商品不满足上架条件，是否去修改此商品信息？', '提示', {
               confirmButtonText: '去编辑',
@@ -985,14 +1054,32 @@ export default {
         type: 'warning'
       }).then(async () => {
         try {
+          let code = 0
           const id = that.productsData[index].id
-          const params = [{
-            id,
-            state: product_state_off_shelves
-          }]
-          await batchUpdateStateApi(params)
-          that.$message({ message: '产品下架成功！', type: 'success' })
-          await that.getListData()
+          const vendorId = this.productsData[index].merchantId
+          if (this.isOwnVendor(vendorId)) {
+            const params = [{
+              id,
+              state: product_state_off_shelves
+            }]
+            const res = await batchUpdateStateApi(params)
+            code = res.code
+          } else {
+            const params = [{
+              renterId: this.renterId,
+              mpu: this.productsData[index].mpu,
+              skuId: this.productsData[index].mpu,
+              state: product_state_off_shelves
+            }]
+            const res = await updateRenterSkuStateApi(params)
+            code = res.code
+          }
+          if (code === 200) {
+            that.$message({ message: '产品下架成功！', type: 'success' })
+            await that.getListData()
+          } else {
+            that.$message({ message: '产品下架失败，请联系管理员！', type: 'warning' })
+          }
         } catch (e) {
           console.warn(`Update product state error: ${e}`)
         }
