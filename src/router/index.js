@@ -176,13 +176,14 @@ export const constantRoutes = [
         name: 'Bulletins',
         component: () => import('@/views/bulletins/index'),
         meta: { title: '商品公告', icon: 'bulletins', roles: [role_admin_name] }
-      },
+      } /*,
       {
         path: 'sync',
         name: 'ProductSync',
         component: () => import('@/views/sync/index'),
         meta: { title: '商品同步', icon: 'sync', roles: [role_admin_name] }
       }
+      */
     ]
   },
   /*
