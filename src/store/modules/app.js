@@ -15,6 +15,7 @@ import {
   getCompanyListOfRenterApi
 } from '@/api/vendor'
 import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
+import { uniqBy } from 'lodash'
 
 const invalidAppIdList = ['test']
 
@@ -28,10 +29,9 @@ const getVendorAppIdList = (platformList, vendor) => {
     excludeAppIdList = vendor.excludeAppId.split(',')
   }
   if (appIdList.length > 0) {
-    return appIdList
+    return platformList.filter(item => appIdList.includes(item.appId))
   } else {
-    return platformList.map(item => item.appId)
-      .filter(appId => !excludeAppIdList.includes(appId))
+    return platformList.filter(item => !excludeAppIdList.includes(item.appId))
   }
 }
 
@@ -48,6 +48,7 @@ async function getVendorPlatformList() {
         platformList = [...platformList, ...renterAppList]
       }
     }
+    platformList = uniqBy(platformList, 'appId')
     appIdList = getVendorAppIdList(platformList, company)
   } catch (e) {
     console.warn('App store get vendor app list:' + e)
@@ -169,7 +170,7 @@ const actions = {
       if (role === role_vendor_name) {
         vendorAppIdList = await getVendorPlatformList()
         commit('SET_PLATFORM_APP_LIST', vendorAppIdList)
-        commit('SET_VENDOR_APP_LIST', vendorAppIdList)
+        commit('SET_VENDOR_APP_LIST', vendorAppIdList.map(item => item.appId))
       } else {
         const { code, data } = await getAppConfigListApi(
           renterId && renterId !== platform_renter_id ? { renterId } : null
