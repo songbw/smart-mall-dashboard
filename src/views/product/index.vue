@@ -1207,9 +1207,21 @@ export default {
       this.dialogUpdateStateVisible = false
       try {
         this.listLoading = true
-        for (let i = 0; i < spuList.length; i += 100) {
-          const spuSlice = spuList.slice(i, i + 100)
+        const ownSpuList = spuList.filter(item => !this.isRenterAdmin || this.isOwnVendor(item.merchantId))
+        for (let i = 0; i < ownSpuList.length; i += 100) {
+          const spuSlice = ownSpuList.slice(i, i + 100)
           await batchUpdateStateApi(spuSlice)
+        }
+        if (this.isRenterAdmin) {
+          const otherSpuList = spuList.filter(item => !this.isOwnVendor(item.merchantId))
+          for (let i = 0; i < otherSpuList.length; i += 100) {
+            const spuSlice = otherSpuList.slice(i, i + 100).map(item => ({
+              renterId: this.renterId,
+              skuId: item.mpu,
+              ...item
+            }))
+            await updateRenterSkuStateApi(spuSlice)
+          }
         }
       } catch (e) {
         console.warn('Products update product price error:' + e)
