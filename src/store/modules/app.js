@@ -5,7 +5,7 @@ import {
   default_app_id,
   role_vendor_name,
   platform_renter_id,
-  vendor_status_approved
+  vendor_status_approved, invalid_renter_id
 } from '@/utils/constants'
 import { storageRemoveItem, storageSetItem } from '@/utils/storage'
 import {
@@ -35,10 +35,19 @@ const getVendorAppIdList = (platformList, vendor) => {
   }
 }
 
-async function getVendorPlatformList(platformList) {
+async function getVendorPlatformList() {
   let appIdList = []
+  let platformList = []
   try {
-    const { company } = await getProfileApi()
+    const { company, renterList } = await getProfileApi()
+    for (const renter of renterList.filter(item => item.renterId !== platform_renter_id)) {
+      const { code, data } = await getAppConfigListApi({ renterId: renter.renterId })
+      if (code === 200) {
+        const renterAppList = data.map(
+          item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
+        platformList = [...platformList, ...renterAppList]
+      }
+    }
     appIdList = getVendorAppIdList(platformList, company)
   } catch (e) {
     console.warn('App store get vendor app list:' + e)
@@ -152,24 +161,30 @@ const actions = {
     const { user, vendor } = rootState
     const role = user.role
     const renterId = vendor.renter.id
-    if (renterId === '-1' || renterId === '-2') {
+    if (renterId === invalid_renter_id) {
       return
     }
     commit('SET_DATA_LOADING', { platformLoading: true })
     try {
-      const { code, data } = await getAppConfigListApi(
-        renterId && renterId !== platform_renter_id ? { renterId } : null
-      )
-      if (code === 200) {
-        const platformList = data.map(
-          item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
-        if (role === role_vendor_name) {
-          vendorAppIdList = await getVendorPlatformList(platformList)
-        } else {
-          vendorAppIdList = platformList.map(item => item.appId)
-        }
-        commit('SET_PLATFORM_APP_LIST', platformList)
+      if (role === role_vendor_name) {
+        vendorAppIdList = await getVendorPlatformList()
+        commit('SET_PLATFORM_APP_LIST', vendorAppIdList)
         commit('SET_VENDOR_APP_LIST', vendorAppIdList)
+      } else {
+        const { code, data } = await getAppConfigListApi(
+          renterId && renterId !== platform_renter_id ? { renterId } : null
+        )
+        if (code === 200) {
+          const platformList = data.map(
+            item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
+          if (role === role_vendor_name) {
+            vendorAppIdList = await getVendorPlatformList(platformList)
+          } else {
+            vendorAppIdList = platformList.map(item => item.appId)
+          }
+          commit('SET_PLATFORM_APP_LIST', platformList)
+          commit('SET_VENDOR_APP_LIST', vendorAppIdList)
+        }
       }
     } catch (e) {
       console.warn('App state get platform list error:' + e)

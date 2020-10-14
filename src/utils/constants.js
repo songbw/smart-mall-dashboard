@@ -14,6 +14,8 @@ export const role_watcher_name = 'watcher'
 export const role_renter_name = 'renter'
 
 export const platform_renter_id = '0'
+export const invalid_renter_id = 'invalid_renter_id'
+export const invalid_merchant_id = -1
 export const wuxi_app_id = '11'
 export const invalid_app_id = 'invalid_app_id'
 export const default_app_id = invalid_app_id

@@ -67,6 +67,7 @@ import {
   validVerificationCode
 } from '@/utils/validate'
 import {
+  invalid_renter_id,
   platform_renter_id,
   role_admin_name,
   role_renter_name,
@@ -155,11 +156,13 @@ export default {
     },
     async getVendorProfile() {
       try {
-        const { status, id } = await this.$store.dispatch('vendor/getProfile')
+        const { status, id, renterId } = await this.$store.dispatch('vendor/getProfile')
         if (status === vendor_status_approved) {
           await storageSetItem(storage_merchant_id, id)
+          await storageSetItem(storage_renter_id, renterId)
         } else {
           await storageSetItem(storage_merchant_id, -1)
+          await storageSetItem(storage_renter_id, invalid_renter_id)
         }
       } catch (e) {
         console.warn('Login vendor profile error:' + e)

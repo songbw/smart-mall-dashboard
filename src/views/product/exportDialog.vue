@@ -149,7 +149,7 @@ export default {
         this.$emit('confirmed', {
           merchantId: this.exportForm.merchantId,
           state: this.exportForm.state,
-          categoryID: this.exportForm.thirdCategoryValue ||
+          categoryId: this.exportForm.thirdCategoryValue ||
             this.exportForm.secondCategoryValue ||
             this.exportForm.firstCategoryValue,
           brand: isEmpty(this.exportForm.brand) ? null : this.exportForm.brand

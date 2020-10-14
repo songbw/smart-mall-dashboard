@@ -356,6 +356,7 @@ export default {
           const { renterId } = data
           await updateRenterStatusApi({ renterId, status: vendor_status_approved })
           await this.getRenterList()
+          await this.$store.dispatch('app/getRenterList', true)
         } else {
           this.$message.warning(msg)
         }

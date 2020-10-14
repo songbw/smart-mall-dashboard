@@ -5,6 +5,7 @@ import {
   updateProfileApi,
   submitProfileApi
 } from '@/api/vendor'
+import { invalid_renter_id, platform_renter_id } from '@/utils/constants'
 
 const state = {
   profile: {
@@ -17,7 +18,7 @@ const state = {
     comments: ''
   },
   renter: {
-    id: '-2'
+    id: invalid_renter_id
   }
 }
 
@@ -43,9 +44,15 @@ const mutations = {
 const actions = {
   async getProfile({ commit, state }) {
     try {
-      const { company } = await getProfileApi()
-      commit('SET_VENDOR_PROFILE', company)
-      return { status: company.status, id: company.id }
+      let renterId = invalid_renter_id
+      const { company, renterList } = await getProfileApi()
+      if (Array.isArray(renterList)) {
+        const platformRenter = renterList.find(item => item.renterId === platform_renter_id)
+        const ownRenter = renterList.find(item => item.renterId !== platform_renter_id)
+        renterId = platformRenter ? platform_renter_id : ownRenter ? ownRenter.renterId : invalid_renter_id
+      }
+      commit('SET_VENDOR_PROFILE', { ...company, renterId })
+      return { status: company.status, id: company.id, renterId }
     } catch (_) {
       commit('SET_VENDOR_PROFILE',
         {
@@ -55,10 +62,11 @@ const actions = {
           industry: '',
           licenseUrl: '',
           status: 0,
-          comments: ''
+          comments: '',
+          renterId: invalid_renter_id
         }
       )
-      return { status: 0, id: '-1' }
+      return { status: 0, id: '-1', renterId: invalid_renter_id }
     }
   },
   async getRenterProfile({ commit }) {
@@ -69,7 +77,7 @@ const actions = {
       }
       return { status: data.status, companyId: data.companyId, renterId: data.renterId }
     } catch (_) {
-      return { status: 0, companyId: -1, renterId: '-1' }
+      return { status: 0, companyId: -1, renterId: invalid_renter_id }
     }
   },
   async createProfile({ commit, dispatch }, params) {

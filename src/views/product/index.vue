@@ -87,7 +87,7 @@
             批量创建
           </el-button>
           <el-button
-            v-if="hasUpdatePermission"
+            v-if="hasUpdatePermission && !isRenterAdmin"
             :disabled="!vendorApproved"
             type="warning"
             icon="el-icon-upload2"
@@ -127,7 +127,7 @@
       </div>
     </div>
     <el-form inline>
-      <el-form-item>
+      <el-form-item v-if="!isRenterAdmin">
         <el-button
           v-if="hasUpdatePermission"
           :disabled="productSelection.length === 0"
@@ -138,7 +138,7 @@
           修改已选{{ productSelection.length }}个商品
         </el-button>
       </el-form-item>
-      <el-form-item>
+      <el-form-item v-if="!isRenterAdmin">
         <el-button
           v-if="hasUpdatePermission"
           :disabled="productSelection.length === 0"
@@ -906,7 +906,7 @@ export default {
       }
       const categoryId = this.thirdCategoryValue || this.secondCategoryValue || this.firstCategoryValue
       if (categoryId !== null) {
-        params.categoryID = categoryId
+        params.categoryId = categoryId
       }
       if (this.listState !== product_state_all) {
         params.state = this.listState

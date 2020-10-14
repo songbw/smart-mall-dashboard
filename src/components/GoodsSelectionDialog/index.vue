@@ -463,7 +463,7 @@ export default {
         params.query = this.dialogFilterForm.query
       }
       if (categoryId != null) {
-        params.categoryID = categoryId
+        params.categoryId = categoryId
       }
       if (this.hasRenterPermission) {
         params.renterId = this.platformRenterId

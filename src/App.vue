@@ -17,11 +17,11 @@ import {
   storage_platform_id,
   storage_renter_id,
   role_admin_name,
-  vendor_status_approved, platform_renter_id, role_renter_name
+  vendor_status_approved, platform_renter_id, role_renter_name, invalid_renter_id
 } from '@/utils/constants'
 
 import {
-  storageGetItem,
+  storageGetItem, storageRemoveItem,
   storageSetItem
 } from '@/utils/storage'
 
@@ -77,15 +77,20 @@ export default {
       }
     },
     async getVendorProfile() {
+      let suc = false
       try {
-        const { status, id } = await this.$store.dispatch('vendor/getProfile')
+        const { status, id, renterId } = await this.$store.dispatch('vendor/getProfile')
         if (status === vendor_status_approved) {
+          suc = true
           await storageSetItem(storage_merchant_id, id)
-        } else {
-          await storageSetItem(storage_merchant_id, -1)
+          await storageSetItem(storage_renter_id, renterId)
         }
       } catch (e) {
         console.warn('App init vendor profile error:' + e)
+      }
+      if (!suc) {
+        await storageSetItem(storage_merchant_id, -1)
+        await storageSetItem(storage_renter_id, invalid_renter_id)
       }
     },
     async getRenterProfile() {
@@ -95,6 +100,8 @@ export default {
         await storageSetItem(storage_renter_id, renterId)
       } catch (e) {
         console.warn('App init renter profile error:' + e)
+        await storageRemoveItem(storage_merchant_id)
+        await storageRemoveItem(storage_renter_id)
       }
     }
   }
