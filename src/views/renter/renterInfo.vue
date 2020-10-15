@@ -326,6 +326,14 @@ export default {
         }
       } catch (e) {
         console.warn('Create app config error:' + e)
+        let msg = '系统服务有问题，请联系管理员！'
+        const res = e.response
+        if (res && res.status >= 400 && res.status < 500) {
+          if (res && res.data && res.data.message) {
+            msg = res.data.message
+          }
+        }
+        this.$message.warning(msg)
       } finally {
         this.dataLoading = false
       }
