@@ -105,7 +105,7 @@
             </el-button>
             <el-button
               v-if="appIdSelected && topCategoryInAppId !== null"
-              type="warning"
+              type="danger"
               size="mini"
               @click="handleDeleteCategoryFromAppId(currentSelectedTopCategory)"
             >
@@ -114,6 +114,9 @@
           </el-button-group>
         </el-header>
         <el-main>
+          <div>
+
+          </div>
           <el-table :data="tableCategoriesData" border>
             <el-table-column label="类别编号" align="center">
               <template slot-scope="scope">
@@ -170,7 +173,7 @@
                 </el-button>
                 <el-button
                   v-if="appIdSelected && scope.row.appIdData !== null"
-                  type="warning"
+                  type="danger"
                   size="mini"
                   @click="handleDeleteCategoryFromAppId(scope.row)"
                 >
@@ -645,6 +648,40 @@ export default {
       await this.$store.dispatch('categories/getCategoryDataByAppId', {
         appId: appPlatform.appId, renterId: appPlatform.renterId
       })
+      if (this.currentSelectedTopCategory) {
+        this.currentSelectedTopCategory = copyCategory(this.currentSelectedTopCategory, this.appIdCategories)
+      }
+    },
+    getSubCategoryLisForAppId(category, appPlatform) {
+      const findSubList = (categoryId, categoryList) => categoryList
+        .filter(item => item.parentId === categoryId &&
+          this.appIdCategories.findIndex(option => option.categoryId === item.categoryId) < 0)
+        .map(item => ({
+          renterId: appPlatform.renterId,
+          appId: appPlatform.appId,
+          categoryId: item.categoryId,
+          sortOrder: item.sortOrder,
+          isShow: 0
+        }))
+      let allSubList = [{
+        renterId: appPlatform.renterId,
+        appId: appPlatform.appId,
+        categoryId: category.categoryId,
+        sortOrder: category.sortOrder,
+        isShow: 0
+      }]
+      if (category.categoryClass === '1') {
+        const secondList = findSubList(category.categoryId, this.secondCategoryData)
+        allSubList = allSubList.concat(secondList)
+        for (const second of secondList) {
+          const thirdList = findSubList(second.categoryId, this.thirdCategoryData)
+          allSubList = allSubList.concat(thirdList)
+        }
+      } else if (category.categoryClass === '2') {
+        const thirdList = findSubList(category.categoryId, this.thirdCategoryData)
+        allSubList = allSubList.concat(thirdList)
+      }
+      return allSubList
     },
     handleAddCategoryToAppId(category) {
       if (isEmpty(this.currentAppId)) {
@@ -652,38 +689,56 @@ export default {
         return
       }
       const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
-      this.$confirm(`是否继续将类别(${category.categoryName})加入到运营平台(${appPlatform.name})？`,
+      const subMsg = category.categoryClass === '3' ? '' : '以及所有子类别'
+      this.$confirm(`是否继续将类别(${category.categoryName})${subMsg}加入到运营平台(${appPlatform.name})？`,
         '警告',
         {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         }).then(async () => {
-        const params = [{
-          renterId: appPlatform.renterId,
-          appId: appPlatform.appId,
-          categoryId: category.categoryId,
-          sortOrder: category.sortOrder,
-          isShow: 1
-        }]
+        const params = this.getSubCategoryLisForAppId(category, appPlatform)
         await this.$store.dispatch('categories/addCategoriesToAppId', params)
         await this.handleRefreshAppIdList()
       }).catch(() => {
         console.debug('Cancel add category to app id')
       })
     },
+    getIdLisForAppId(category) {
+      const findSubList = (categoryId, categoryList) => categoryList
+        .filter(item => item.parentId === categoryId)
+        .map(item => {
+          const find = this.appIdCategories.find(option => option.categoryId === item.categoryId)
+          return find ? { id: find.id, categoryId: item.categoryId } : null
+        })
+        .filter(item => item !== null)
+      let allSubList = [{ categoryId: category.categoryId, id: category.appIdData.id }]
+      if (category.categoryClass === '1') {
+        const secondList = findSubList(category.categoryId, this.secondCategoryData)
+        allSubList = allSubList.concat(secondList)
+        for (const second of secondList) {
+          const thirdList = findSubList(second.categoryId, this.thirdCategoryData)
+          allSubList = allSubList.concat(thirdList)
+        }
+      } else if (category.categoryClass === '2') {
+        const thirdList = findSubList(category.categoryId, this.thirdCategoryData)
+        allSubList = allSubList.concat(thirdList)
+      }
+      return allSubList.map(item => item.id)
+    },
     handleDeleteCategoryFromAppId(category) {
       if (category.appIdData) {
-        const { id } = category.appIdData
         const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
-        this.$confirm(`是否继续将类别(${category.categoryName})从运营平台(${appPlatform.name})删除？`,
+        const subMsg = category.categoryClass === '3' ? '' : '以及所有子类别'
+        this.$confirm(`是否继续将类别(${category.categoryName})${subMsg}从运营平台(${appPlatform.name})删除？`,
           '警告',
           {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(async () => {
-          await this.$store.dispatch('categories/deleteCategoryFromAppId', { id })
+          const params = this.getIdLisForAppId(category)
+          await this.$store.dispatch('categories/deleteCategoryFromAppId', params)
           await this.handleRefreshAppIdList()
         }).catch(() => {
           console.debug('Cancel delete category from app id')

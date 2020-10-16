@@ -95,11 +95,11 @@ export function addCategoriesToAppIdApi(params) {
   })
 }
 
-export function deleteCategoryFromAppIdApi(params) {
+export function deleteCategoriesFromAppIdApi(params) {
   return Vue.axios('categories').request({
-    url: '/products/adminCategory/renter',
-    method: 'delete',
-    params
+    url: '/products/adminCategory/renter/batch/delete',
+    method: 'put',
+    data: params
   })
 }
 

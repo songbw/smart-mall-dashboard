@@ -7,7 +7,7 @@ import {
   deleteCategoryApi,
   getCategoriesByAppIdApi,
   addCategoriesToAppIdApi,
-  deleteCategoryFromAppIdApi,
+  deleteCategoriesFromAppIdApi,
   updateCategoriesInAppIdApi
 } from '@/api/categories'
 
@@ -297,7 +297,7 @@ const actions = {
     let ret = false
     try {
       commit('SET_DATA_IS_LOADING', true)
-      const { code } = await deleteCategoryFromAppIdApi(params)
+      const { code } = await deleteCategoriesFromAppIdApi(params)
       if (code === 200) {
         ret = true
       }
