@@ -114,9 +114,6 @@
           </el-button-group>
         </el-header>
         <el-main>
-          <div>
-
-          </div>
           <el-table :data="tableCategoriesData" border>
             <el-table-column label="类别编号" align="center">
               <template slot-scope="scope">
