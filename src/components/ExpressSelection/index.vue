@@ -26,7 +26,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="物流单号" prop="logisticsId">
-        <el-input v-model="deliveryData.logisticsId" placeholder="请输入对应物流公司单号" maxlength="30" />
+        <el-input v-model.trim="deliveryData.logisticsId" placeholder="请输入对应物流公司单号" maxlength="30" />
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
