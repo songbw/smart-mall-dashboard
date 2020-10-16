@@ -114,7 +114,37 @@
           </el-button-group>
         </el-header>
         <el-main>
-          <el-table :data="tableCategoriesData" border>
+          <div style="margin-bottom: 12px">
+            <el-button
+              :disabled="!appIdSelected || addToAppIdList.length === 0"
+              size="mini"
+              type="warning"
+              @click="handleAddSelectionToAppId"
+            >
+              添加所选到运营端
+            </el-button>
+            <el-button
+              :disabled="!appIdSelected || delFromAppIdList.length ===0"
+              size="mini"
+              type="danger"
+              @click="handleDeleteSelectionFromAppId"
+            >
+              从运营端移除所选
+            </el-button>
+          </div>
+          <el-table
+            :data="tableCategoriesData"
+            border
+            fit
+            style="width: 100%;"
+            @selection-change="onSelectionChange"
+          >
+            <el-table-column
+              column-key="selection"
+              type="selection"
+              align="center"
+              width="55"
+            />
             <el-table-column label="类别编号" align="center">
               <template slot-scope="scope">
                 <span>{{ scope.row.categoryId }}</span>
@@ -336,7 +366,9 @@ export default {
       searchCategoriesData: [],
       editCategory: true,
       dialogLoading: false,
-      currentAppId: ''
+      currentAppId: '',
+      addToAppIdList: [],
+      delFromAppIdList: []
     }
   },
   computed: {
@@ -695,10 +727,11 @@ export default {
           type: 'warning'
         }).then(async () => {
         const params = this.getSubCategoryLisForAppId(category, appPlatform)
+          .concat(this.getParentCategoryListForAppId(category))
         await this.$store.dispatch('categories/addCategoriesToAppId', params)
         await this.handleRefreshAppIdList()
-      }).catch(() => {
-        console.debug('Cancel add category to app id')
+      }).catch(e => {
+        console.debug('Cancel add category to app id ' + e)
       })
     },
     getIdLisForAppId(category) {
@@ -819,10 +852,105 @@ export default {
       this.topCategoryHeaderTitle = ''
       this.currentSelectedTopCategory = null
       this.firstClassCategoryName = ''
+      this.addToAppIdList = []
+      this.delFromAppIdList = []
       if (val) {
         this.handleRefreshAppIdList()
       } else {
         this.$store.commit('categories/SET_APP_ID_LIST', [])
+      }
+    },
+    getParentCategoryListForAppId(category) {
+      const list = []
+      if (category) {
+        const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+        let secondCategory = null
+        let firstCategory = null
+        if (category.categoryClass === '3') {
+          secondCategory = this.secondCategoryData.find(item => item.categoryId === category.parentId)
+          firstCategory = secondCategory
+            ? this.categoryData.find(item => item.categoryId === secondCategory.parentId) : null
+        } else if (category.categoryClass === '2') {
+          firstCategory = this.categoryData.find(item => item.categoryId === category.parentId)
+        }
+        const shouldAddCategory = toAddCategory => {
+          const index = this.appIdCategories.findIndex(
+            item => item.categoryId === toAddCategory.categoryId)
+          if (index < 0) {
+            return {
+              renterId: appPlatform.renterId,
+              appId: appPlatform.appId,
+              categoryId: toAddCategory.categoryId,
+              sortOrder: toAddCategory.sortOrder,
+              isShow: 0
+            }
+          } else {
+            return null
+          }
+        }
+        const second = secondCategory ? shouldAddCategory(secondCategory) : null
+        if (second) list.push(second)
+        const first = firstCategory ? shouldAddCategory(firstCategory) : null
+        if (first) list.push(first)
+
+      }
+      return list
+    },
+    onSelectionChange(val) {
+      if (this.appIdSelected) {
+        const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+        this.addToAppIdList = val
+          .filter(item => item.appIdData === null)
+          .map(item => ({
+            renterId: appPlatform.renterId,
+            appId: appPlatform.appId,
+            categoryId: item.categoryId,
+            sortOrder: item.sortOrder,
+            isShow: 0
+          }))
+        if (this.addToAppIdList.length > 0) {
+          this.addToAppIdList = this.addToAppIdList.concat(this.getParentCategoryListForAppId(val[0]))
+        }
+        this.delFromAppIdList = val.filter(item => item.appIdData !== null).map(item => item.appIdData.id)
+      } else {
+        this.addToAppIdList = []
+        this.delFromAppIdList = []
+      }
+    },
+    handleAddSelectionToAppId() {
+      if (this.addToAppIdList.length > 0) {
+        const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+        this.$confirm(`是否继续将所选类别加入到运营平台(${appPlatform.name})？`,
+          '警告',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(async () => {
+          await this.$store.dispatch('categories/addCategoriesToAppId', this.addToAppIdList)
+          await this.handleRefreshAppIdList()
+          this.addToAppIdList = []
+        }).catch(() => {
+          console.debug('Cancel add category to app id')
+        })
+      }
+    },
+    handleDeleteSelectionFromAppId() {
+      if (this.delFromAppIdList.length > 0) {
+        const appPlatform = this.platformAppList.find(item => item.appId === this.currentAppId)
+        this.$confirm(`是否继续将所选类别从运营平台(${appPlatform.name})删除？`,
+          '警告',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(async () => {
+          await this.$store.dispatch('categories/deleteCategoryFromAppId', this.delFromAppIdList)
+          await this.handleRefreshAppIdList()
+          this.delFromAppIdList = []
+        }).catch(() => {
+          console.debug('Cancel delete category from app id')
+        })
       }
     }
   }
