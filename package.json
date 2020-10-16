@@ -21,7 +21,7 @@
     "echarts": "^4.9.0",
     "element-ui": "^2.13.2",
     "file-saver": "^2.0.2",
-    "google-libphonenumber": "^3.2.13",
+    "google-libphonenumber": "^3.2.14",
     "localforage": "^1.9.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
