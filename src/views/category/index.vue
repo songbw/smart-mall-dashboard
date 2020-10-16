@@ -892,7 +892,6 @@ export default {
         if (second) list.push(second)
         const first = firstCategory ? shouldAddCategory(firstCategory) : null
         if (first) list.push(first)
-
       }
       return list
     },
