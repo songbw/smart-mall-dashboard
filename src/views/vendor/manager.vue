@@ -48,7 +48,7 @@
           <span>{{ scope.row.companyId }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="名称" align="center">
+      <el-table-column label="名称" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           <span>{{ scope.row.companyName }}</span>
         </template>
@@ -73,7 +73,7 @@
           <span>{{ scope.row.createTime | dateFormat }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="left" :width="hasEditPermission ? '360' : '100'">
+      <el-table-column label="操作" align="left" :width="hasEditPermission ? '480' : '100'">
         <template slot-scope="scope">
           <el-button
             v-if="hasViewRenterPermission"
@@ -617,6 +617,7 @@ export default {
           const { code } = await addCompanyToRenterApi({ companyId, renterId })
           if (code === 200) {
             await this.getVendorData()
+            await this.$store.dispatch('app/getVendorList', true)
           }
         } catch (e) {
           console.warn('Add company to renter error:' + e)
@@ -640,6 +641,7 @@ export default {
           const { code } = await delCompanyFromRenterApi({ companyId, renterId })
           if (code === 200) {
             await this.getVendorData()
+            await this.$store.dispatch('app/getVendorList', true)
           }
         } catch (e) {
           console.warn('Del company to renter error:' + e)
