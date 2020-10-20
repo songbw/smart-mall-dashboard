@@ -771,15 +771,16 @@ export default {
     },
     async getOrderList() {
       if (this.hasViewPermission) {
+        let orderTotal = 0
+        const orderList = []
         try {
           if (this.vendorApproved) {
             this.listLoading = true
             const params = this.getSearchParams()
             const { code, data } = await getOrderListApi(params)
-            if (code === 200) {
-              this.orderTotal = data.result.total
+            if (code === 200 && data.result && Array.isArray(data.result.list)) {
+              orderTotal = data.result.total
               this.orderData = []
-              const orderList = []
               const queryList = []
               for (const order of data.result.list) {
                 const { subStatus, subOrderId, ...rest } = order
@@ -809,7 +810,6 @@ export default {
                   }
                 }
               }
-              this.orderData = orderList
             }
           }
         } catch (e) {
@@ -817,6 +817,8 @@ export default {
         } finally {
           this.listLoading = false
         }
+        this.orderTotal = orderTotal
+        this.orderData = orderList
       } else {
         this.$message.warning('没有查看订单权限，请联系管理员！')
       }

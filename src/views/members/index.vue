@@ -270,7 +270,7 @@ export default {
           }
           this.listLoading = true
           const { data } = await getMemberListApi(params)
-          if (data.userList) {
+          if (data.userList && Array.isArray(data.userList.list)) {
             this.memberTotal = data.userList.total
             this.memberList = data.userList.list
           }

@@ -361,7 +361,7 @@ export default {
           this.listLoading = true
           const params = this.getSearchParams()
           const data = await getWorkOrderListApi(params)
-          if (data) {
+          if (data && Array.isArray(data.rows)) {
             this.workOrderTotal = data.total
             this.workOrderData = data.rows
             this.workOrderData.forEach(order => {

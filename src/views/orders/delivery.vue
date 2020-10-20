@@ -577,14 +577,16 @@ export default {
     },
     async getOrderList() {
       if (this.hasViewPermission) {
+        let orderTotal = 0
+        let list = []
         try {
           if (this.vendorApproved) {
             this.listLoading = true
             const params = this.getSearchParams()
             const { code, data } = await getOrderListApi(params)
-            if (code === 200) {
-              this.orderTotal = data.result.total
-              this.orderData = data.result.list.map(item => (
+            if (code === 200 && data.result && Array.isArray(data.result.list)) {
+              orderTotal = data.result.total
+              list = data.result.list.map(item => (
                 { ...item, merchantName: this.getVendorName(item.merchantId) }))
             }
           }
@@ -592,7 +594,9 @@ export default {
           console.warn('Orders List error: ' + e)
         } finally {
           this.listLoading = false
+          this.orderData = list
         }
+        this.orderTotal = orderTotal
       } else {
         this.$message.warning('没有查看订单权限，请联系管理员！')
       }
@@ -738,7 +742,7 @@ export default {
 </script>
 
 <style scoped>
-  .text-item {
-    text-align: start
-  }
+.text-item {
+  text-align: start
+}
 </style>
