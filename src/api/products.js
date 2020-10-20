@@ -9,15 +9,18 @@ export function getProductListApi(params) {
 }
 
 export function searchProductsApi(params) {
-  const { limit, offset, ...rest } = params
+  const { limit, offset, query, ...rest } = params
+  const data = {
+    pageNo: offset,
+    pageSize: limit,
+    ...rest
+  }
+  if (query) data.name = query
+
   return Vue.axios('products').request({
     url: '/products/adminProd/search/v2',
     method: 'post',
-    data: {
-      pageNo: offset,
-      pageSize: limit,
-      ...rest
-    }
+    data
   })
 }
 
