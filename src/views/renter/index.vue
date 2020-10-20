@@ -32,6 +32,11 @@
       fit
       style="width: 100%;"
     >
+      <el-table-column label="租户ID" align="left">
+        <template slot-scope="scope">
+          <span>{{ scope.row.renterId !== platformRenterId ? scope.row.renterId : '' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="名称" align="left">
         <template slot-scope="scope">
           <span>{{ scope.row.renterName }}</span>
@@ -60,6 +65,7 @@
       <el-table-column label="操作" align="left" :width="hasEditPermission ? '360' : '100'">
         <template slot-scope="scope">
           <el-button
+            :disabled="scope.row.renterId === platformRenterId"
             type="default"
             size="mini"
             @click="onViewClicked(scope.$index)"
@@ -68,7 +74,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission"
-            :disabled="scope.row.status === statusApproved"
+            :disabled="scope.row.renterId === platformRenterId || scope.row.status === statusApproved"
             type="primary"
             size="mini"
             @click="onEditClicked(scope.$index)"
@@ -77,6 +83,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusReviewing"
+            :disabled="scope.row.renterId === platformRenterId"
             type="info"
             size="mini"
             @click="onApproveClicked(scope.$index)"
@@ -85,6 +92,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusReviewing"
+            :disabled="scope.row.renterId === platformRenterId"
             type="warning"
             size="mini"
             @click="onRejectClicked(scope.$index)"
@@ -102,6 +110,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && (scope.row.status === statusLocked || scope.row.status === statusRejected)"
+            :disabled="scope.row.renterId === platformRenterId"
             type="success"
             size="mini"
             @click="onUnlockClicked(scope.$index)"

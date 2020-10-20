@@ -65,7 +65,14 @@
         </el-table-column>
         <el-table-column width="160">
           <template slot="header">
-            <el-button type="primary" size="mini" @click="onAppCreateClicked">新建运营端</el-button>
+            <el-button
+              :disabled="isPlatformRenter"
+              type="primary"
+              size="mini"
+              @click="onAppCreateClicked"
+            >
+              新建运营端
+            </el-button>
           </template>
           <template slot-scope="scope">
             <el-button type="info" size="mini" @click="onAppEditClicked(scope.$index)">编辑</el-button>
@@ -89,7 +96,14 @@
               <el-table-column property="refundNotifyUrl" label="退款回调地址" show-overflow-tooltip />
               <el-table-column width="160">
                 <template slot="header">
-                  <el-button type="primary" size="mini" @click="onAlipayConfigCreateClicked">新建支付宝配置</el-button>
+                  <el-button
+                    :disabled="isPlatformRenter"
+                    type="primary"
+                    size="mini"
+                    @click="onAlipayConfigCreateClicked"
+                  >
+                    新建支付宝配置
+                  </el-button>
                 </template>
                 <template slot-scope="scope">
                   <el-button type="info" size="mini" @click="onAlipayConfigEditClicked(scope.$index)">编辑</el-button>
@@ -145,6 +159,7 @@
 
 <script>
 import {
+  platform_renter_id,
   VendorInvoiceOptions,
   VendorStatusOptions,
   VendorTaxpayerOptions
@@ -230,6 +245,9 @@ export default {
     }),
     hasViewRenterPermission() {
       return this.userPermissions.includes(RenterPermissions.view)
+    },
+    isPlatformRenter() {
+      return this.renterId === platform_renter_id
     }
   },
   created() {
