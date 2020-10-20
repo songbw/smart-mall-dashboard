@@ -364,7 +364,6 @@ import {
   reopenOrderApi,
   updateSubOrderApi
 } from '@/api/orders'
-import { getVendorListApi } from '@/api/vendor'
 import { getWorkOrderByOrderListApi } from '@/api/workOrders'
 import { getPayTypeListByAppIdApi } from '@/api/payments'
 import {
@@ -373,7 +372,6 @@ import {
   role_watcher_name,
   suborder_status_requested_service,
   SubOrderStatusDefinitions,
-  vendor_status_approved,
   work_order_status_finished,
   work_order_status_rejected,
   WorkOrderStatusDefinition
