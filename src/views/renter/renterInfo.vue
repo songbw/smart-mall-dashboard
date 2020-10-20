@@ -16,11 +16,18 @@
         <el-form-item label="租户名称" class="info-form-item">
           <span>{{ renterData ? renterData.renterName : '' }}</span>
         </el-form-item>
+      </el-form>
+      <el-form
+        inline
+        label-position="right"
+        label-width="10rem"
+        label-suffix="："
+      >
         <el-form-item label="租户电话" class="info-form-item">
           <span>{{ renterData ? renterData.phone : '' }}</span>
         </el-form-item>
-        <el-form-item label="添加日期" prop="taxpayerType" class="info-form-item">
-          <span>{{ (renterData ? renterData.createTime : null) | dateFormat }}</span>
+        <el-form-item label="社会统一信用码" class="info-form-item">
+          <span>{{ renterData ? renterData.uniformCode : '' }}</span>
         </el-form-item>
       </el-form>
       <el-form
@@ -29,17 +36,24 @@
         label-width="10rem"
         label-suffix="："
       >
-        <el-form-item label="社会统一信用码" class="info-form-item">
-          <span>{{ renterData ? renterData.uniformCode : '' }}</span>
-        </el-form-item>
         <el-form-item label="租户地址" prop="address" class="info-form-item">
           <span>{{ renterData ? renterData.address : '' }}</span>
         </el-form-item>
         <el-form-item label="发票类型" prop="invoiceType" class="info-form-item">
           <span>{{ (renterData ? renterData.invoiceType : null) | vendorInvoice }}</span>
         </el-form-item>
+      </el-form>
+      <el-form
+        inline
+        label-position="right"
+        label-width="10rem"
+        label-suffix="："
+      >
         <el-form-item label="纳税人类型" prop="taxpayerType" class="info-form-item">
           <span>{{ (renterData ? renterData.taxpayerType : null) | vendorTaxpayer }}</span>
+        </el-form-item>
+        <el-form-item label="添加日期" prop="taxpayerType" class="info-form-item">
+          <span>{{ (renterData ? renterData.createTime : null) | dateFormat }}</span>
         </el-form-item>
       </el-form>
     </el-card>
@@ -475,6 +489,6 @@ export default {
 
 <style scoped>
 .info-form-item {
-  width: 20%;
+  width: 40%;
 }
 </style>

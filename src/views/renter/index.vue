@@ -32,27 +32,27 @@
       fit
       style="width: 100%;"
     >
-      <el-table-column label="租户ID" align="left">
+      <el-table-column label="租户ID" align="left" show-overflow-tooltip>
         <template slot-scope="scope">
           <span>{{ scope.row.renterId !== platformRenterId ? scope.row.renterId : '' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="名称" align="left">
+      <el-table-column label="名称" align="left" show-overflow-tooltip>
         <template slot-scope="scope">
           <span>{{ scope.row.renterName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="统一社会信用码" align="left">
+      <el-table-column label="统一社会信用码" align="left" show-overflow-tooltip>
         <template slot-scope="scope">
           <span>{{ scope.row.uniformCode }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="发票类型" align="left" width="180">
+      <el-table-column label="发票类型" align="left" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.invoiceType | vendorInvoice }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="纳税人类型" align="left" width="180">
+      <el-table-column label="纳税人类型" align="left" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.taxpayerType | vendorTaxpayer }}</span>
         </template>
@@ -255,8 +255,10 @@ export default {
             params.renterName = this.queryName
           }
           const { code, data } = await getRenterListApi(params)
-          if (code === 200) {
-            list = data.rows
+          if (code === 200 && data.rows && Array.isArray(data.rows)) {
+            const platformRenters = data.rows.filter(item => item.renterId === platform_renter_id)
+            const normalRenters = data.rows.filter(item => item.renterId !== platform_renter_id)
+            list = [...platformRenters, ...normalRenters]
             total = data.total
           }
         } catch (e) {

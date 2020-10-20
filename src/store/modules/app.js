@@ -5,7 +5,8 @@ import {
   default_app_id,
   role_vendor_name,
   platform_renter_id,
-  vendor_status_approved, invalid_renter_id
+  vendor_status_approved,
+  invalid_renter_id
 } from '@/utils/constants'
 import { storageRemoveItem, storageSetItem } from '@/utils/storage'
 import {
@@ -210,8 +211,8 @@ const actions = {
     try {
       commit('SET_DATA_LOADING', { renterListLoading: true })
       const params = {
-        page: 1,
-        limit: 1000,
+        pageIndex: 1,
+        pageSize: 1000,
         status: vendor_status_approved
       }
       const { code, data } = await getRenterListApi(params)
@@ -221,7 +222,9 @@ const actions = {
           renterName: item.renterName,
           renterId: item.renterId
         }))
-        commit('SET_RENTER_LIST', renterList)
+        const platformRenters = renterList.filter(item => item.renterId === platform_renter_id)
+        const normalRenters = renterList.filter(item => item.renterId !== platform_renter_id)
+        commit('SET_RENTER_LIST', [...platformRenters, ...normalRenters])
       }
     } catch (e) {
       console.warn('App get renter list error:' + e)
@@ -235,8 +238,8 @@ const actions = {
     }
     try {
       const params = {
-        page: 1,
-        limit: 1000,
+        pageIndex: 1,
+        pageSize: 1000,
         status: vendor_status_approved
       }
       const platformList = state.platformList

@@ -271,12 +271,10 @@ import {
   getOrderListApi,
   exportVendorDeliverOrdersApi
 } from '@/api/orders'
-import { getVendorListApi } from '@/api/vendor'
 import {
   suborder_status_waiting_deliver,
   suborder_status_delivered,
-  SubOrderStatusDefinitions,
-  vendor_status_approved
+  SubOrderStatusDefinitions
 } from '@/utils/constants'
 import ImportDialog from './ImportDialog'
 import { OrderPermissions } from '@/utils/role-permissions'
@@ -334,7 +332,6 @@ export default {
     return {
       statusDelivered: suborder_status_delivered,
       vendorLoading: false,
-      vendorList: [],
       listLoading: false,
       queryParams: null,
       orderData: [],
@@ -398,6 +395,7 @@ export default {
       vendorApproved: 'vendorApproved',
       platformAppList: 'platformAppList',
       validAppList: 'validAppList',
+      vendorList: 'vendorList',
       orderQuery: 'orderDeliveryQuery'
     }),
     hasViewPermission() {
@@ -417,7 +415,8 @@ export default {
         option.value === suborder_status_waiting_deliver || option.value === suborder_status_delivered)
     },
     vendorOptions() {
-      return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendorList)
+      const options = this.vendorList.map(item => ({ value: item.companyId, label: item.companyName }))
+      return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(options)
     },
     appIdOptions() {
       if (this.showAllAppIdList) {
@@ -526,24 +525,15 @@ export default {
       }
     },
     async getVendorList() {
-      try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
+      if (this.vendorList.length === 0) {
+        try {
+          this.vendorLoading = true
+          await this.$store.dispatch('app/getVendorList')
+        } catch (e) {
+          console.warn('Product get vendor list error:' + e)
+        } finally {
+          this.vendorLoading = false
         }
-        this.vendorLoading = true
-        const data = await getVendorListApi(params)
-        this.vendorList = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
-          }
-        })
-      } catch (e) {
-        console.warn('Orders get vendor list error:' + e)
-      } finally {
-        this.vendorLoading = false
       }
     },
     getVendorName(vendorId) {

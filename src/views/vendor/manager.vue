@@ -58,22 +58,17 @@
           <el-tag>{{ scope.row.status | vendorStatus }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="发票类型" align="center" width="180">
+      <el-table-column label="发票类型" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.invoiceType | vendorInvoice }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="纳税人类型" align="center" width="180">
+      <el-table-column label="纳税人类型" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.taxpayerType | vendorTaxpayer }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建日期" align="center" width="180">
-        <template slot-scope="scope">
-          <span>{{ scope.row.createTime | dateFormat }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="left" :width="hasEditPermission ? '480' : '100'">
+      <el-table-column label="操作" align="left" :width="hasEditPermission ? '380' : '100'">
         <template slot-scope="scope">
           <el-button
             v-if="hasViewRenterPermission"

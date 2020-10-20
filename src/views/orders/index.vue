@@ -511,6 +511,7 @@ export default {
       platformAppList: 'platformAppList',
       validAppList: 'validAppList',
       orderQuery: 'orderQuery',
+      vendorList: 'vendorList',
       vendorId: 'vendorId'
     }),
     isVendorUser() {
@@ -703,25 +704,20 @@ export default {
       }
     },
     async getVendorList() {
-      try {
-        const params = {
-          page: 1,
-          limit: 1000,
-          status: vendor_status_approved
+      if (this.vendorList.length === 0) {
+        try {
+          this.vendorLoading = true
+          await this.$store.dispatch('app/getVendorList')
+        } catch (e) {
+          console.warn('Product get vendor list error:' + e)
+        } finally {
+          this.vendorLoading = false
         }
-        this.vendorLoading = true
-        const data = await getVendorListApi(params)
-        this.vendors = data.rows.map(row => {
-          return {
-            value: row.company.id,
-            label: row.company.name
-          }
-        })
-      } catch (e) {
-        console.warn('Orders get vendor list error:' + e)
-      } finally {
-        this.vendorLoading = false
       }
+      this.vendors = this.vendorList.map(item => ({
+        value: item.companyId,
+        label: item.companyName
+      }))
     },
     getVendorName(vendorId) {
       if (this.vendorOptions.length > 0 && vendorId != null) {
@@ -1220,7 +1216,7 @@ export default {
 </script>
 
 <style scoped>
-  .text-item {
-    text-align: start
-  }
+.text-item {
+  text-align: start
+}
 </style>
