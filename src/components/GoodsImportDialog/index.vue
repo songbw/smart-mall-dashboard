@@ -22,6 +22,16 @@
           @changed="handleVendorChanged"
         />
       </el-form-item>
+      <el-form-item v-if="updateState && hasRenterPermission" label="租户" prop="renterId">
+        <el-checkbox v-model="updateRenterState">特定租户</el-checkbox>
+        <vendor-selection
+          v-if="updateRenterState"
+          :vendor-id="renterCompanyId"
+          company-type="renter"
+          style="margin-left: 12px"
+          @changed="handleRenterChanged"
+        />
+      </el-form-item>
       <el-form-item label="文件">
         <el-input :value="formData.fileName" readonly />
         <span>建议上传大小不超过1M的.xls文件</span>
@@ -116,7 +126,7 @@ import {
   product_state_off_shelves,
   ProductTaxRateOptions
 } from '@/utils/constants'
-import { ProductPermissions } from '@/utils/role-permissions'
+import { ProductPermissions, RenterPermissions } from '@/utils/role-permissions'
 import VendorSelection from '@/components/VendorSelection'
 
 const floatToFixed = (value, precision) =>
@@ -231,6 +241,8 @@ export default {
   data() {
     return {
       loading: false,
+      updateRenterState: false,
+      renterCompanyId: '',
       formRules: {
         merchantId: [{
           required: true,
@@ -242,9 +254,21 @@ export default {
             }
           },
           trigger: 'blur'
+        }],
+        renterId: [{
+          required: true,
+          validator: (rule, value, callback) => {
+            if (value === null && this.updateRenterState) {
+              callback(new Error('请选择租户'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
         }]
       },
       formData: {
+        renterId: null,
         merchantId: null,
         fileName: null
       },
@@ -265,6 +289,9 @@ export default {
     },
     hasSalePricePermission() {
       return this.userPermissions.includes(ProductPermissions.salePrice)
+    },
+    hasRenterPermission() {
+      return this.userPermissions.includes(RenterPermissions.view)
     },
     needVendor() {
       return this.productCreation && this.hasVendorPermission
@@ -308,6 +335,10 @@ export default {
       this.excelResults.forEach(item => {
         item.merchantId = value
       })
+    },
+    handleRenterChanged(vendorId, label, renterId) {
+      this.renterCompanyId = vendorId
+      this.formData.renterId = renterId
     },
     handleFileChange(e) {
       const files = e.target.files
@@ -379,7 +410,8 @@ export default {
       if (skus.length > 0) {
         this.$refs.importForm.validate((valid) => {
           if (valid) {
-            this.$emit('onSelectionConfirmed', skus)
+            const renterId = this.updateState && this.updateRenterState ? this.formData.renterId : null
+            this.$emit('onSelectionConfirmed', skus, renterId)
             this.clearDialogData()
           }
         })
@@ -390,6 +422,8 @@ export default {
     },
     clearDialogData() {
       this.percentage = 0
+      this.updateRenterState = false
+      this.formData.renterId = null
       this.formData.merchantId = null
       this.formData.fileName = null
       this.parsedSkuList = []

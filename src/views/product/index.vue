@@ -1203,20 +1203,26 @@ export default {
         }
       }
     },
-    async onUpdateStateConfirmed(spuList) {
+    async onUpdateStateConfirmed(spuList, updateRenterId) {
       this.dialogUpdateStateVisible = false
+      if (!Array.isArray(spuList) || spuList.length === 0) {
+        return
+      }
       try {
         this.listLoading = true
-        const ownSpuList = spuList.filter(item => !this.isRenterAdmin || this.isOwnVendor(item.merchantId))
-        for (let i = 0; i < ownSpuList.length; i += 100) {
-          const spuSlice = ownSpuList.slice(i, i + 100)
-          await batchUpdateStateApi(spuSlice)
+        if (updateRenterId === null) {
+          const ownSpuList = spuList.filter(item => !this.isRenterAdmin || this.isOwnVendor(item.merchantId))
+          for (let i = 0; i < ownSpuList.length; i += 100) {
+            const spuSlice = ownSpuList.slice(i, i + 100)
+            await batchUpdateStateApi(spuSlice)
+          }
         }
-        if (this.isRenterAdmin) {
-          const otherSpuList = spuList.filter(item => !this.isOwnVendor(item.merchantId))
+        if (this.isRenterAdmin || updateRenterId !== null) {
+          const testRenter = item => updateRenterId !== null || !this.isOwnVendor(item.merchantId)
+          const otherSpuList = spuList.filter(testRenter)
           for (let i = 0; i < otherSpuList.length; i += 100) {
             const spuSlice = otherSpuList.slice(i, i + 100).map(item => ({
-              renterId: this.renterId,
+              renterId: updateRenterId !== null ? updateRenterId : this.renterId,
               skuId: item.mpu,
               ...item
             }))
