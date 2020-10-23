@@ -137,6 +137,7 @@
       @selection-change="handleDialogSelectionChange"
     >
       <el-table-column
+        :selectable="onRowSelectable"
         align="center"
         type="selection"
         width="55"
@@ -159,6 +160,11 @@
       <el-table-column label="商品价格(元)" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品状态" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.state | productState }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="hasPromotion" label="促销价(元)" align="center" width="100">
@@ -199,6 +205,13 @@ import VendorSelection from '@/components/VendorSelection'
 import { getProductsByMpuListApi, searchProductsApi } from '@/api/products'
 import { getPromotionByIdApi } from '@/api/promotions'
 import { ProductPermissions } from '@/utils/role-permissions'
+import {
+  product_state_off_shelves,
+  product_state_on_sale,
+  ProductStateOptions,
+  role_renter_name
+} from '@/utils/constants'
+import { floatToFixed } from '@/utils'
 
 const productMinPrice = 0
 const productMaxPrice = 1000000
@@ -207,6 +220,17 @@ const vendorAoyi = 2
 export default {
   name: 'GoodsSelectionDialog',
   components: { CategorySelection, Pagination, VendorSelection },
+  filters: {
+    productState: state => {
+      const value = typeof state === 'string' ? Number.parseInt(state) : state
+      if (Number.isNaN(value)) {
+        return state
+      } else {
+        const find = ProductStateOptions.find(option => option.value === value)
+        return find ? find.label : state
+      }
+    }
+  },
   props: {
     dialogVisible: {
       type: Boolean,
@@ -270,7 +294,8 @@ export default {
       vendorId: 'vendorId',
       validAppList: 'validAppList',
       platformAppId: 'platformAppId',
-      userPermissions: 'userPermissions'
+      userPermissions: 'userPermissions',
+      userRole: 'userRole'
     }),
     hasRenterPermission() {
       return this.userPermissions.includes(ProductPermissions.renter)
@@ -281,6 +306,9 @@ export default {
     platformRenterId() {
       const platform = this.validAppList.find(item => item.appId === this.platformAppId)
       return platform ? platform.renterId : this.renterId
+    },
+    isRenterAdmin() {
+      return this.userRole === role_renter_name
     },
     filterMpus: {
       get() {
@@ -365,6 +393,61 @@ export default {
       this.thirdCategoryValue = null
       this.dialogSkuData = []
     },
+    getRenterSpuState(spu) {
+      if (this.isRenterAdmin) {
+        const stateList = spu.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : spu.state
+        } else {
+          return spu.state
+        }
+      } else {
+        return spu.state
+      }
+    },
+    getRenterSpuPrice(spu) {
+      if (this.isRenterAdmin) {
+        const priceList = spu.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? floatToFixed(find.price / 100) : spu.price
+        } else {
+          return spu.price
+        }
+      } else {
+        return spu.price
+      }
+    },
+    getRenterSkuState(spuState, sku) {
+      const skuState = spuState === product_state_on_sale
+        ? sku.status.toString()
+        : product_state_off_shelves.toString()
+      if (this.isRenterAdmin) {
+        const stateList = sku.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : skuState
+        } else {
+          return skuState
+        }
+      } else {
+        return skuState
+      }
+    },
+    getRenterSkuPrice(sku) {
+      if (this.isRenterAdmin) {
+        const priceList = sku.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? find.price : sku.price
+        } else {
+          return sku.price
+        }
+      } else {
+        return sku.price
+      }
+    },
     async getProductsByMpuList(fetchList) {
       let mpuList = []
       for (let begin = 0; begin < fetchList.length; begin += 50) {
@@ -386,6 +469,7 @@ export default {
       const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
       const skuList = []
       for (const spu of list) {
+        const renterState = this.getRenterSpuState(spu)
         const prod = {
           id: spu.id,
           mpu: spu.mpu,
@@ -401,14 +485,16 @@ export default {
         if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
           if (this.useDefaultSku) {
             const sku = spu.skuList[0]
+            const skuState = this.getRenterSkuState(parseInt(renterState), sku)
+            const skuPrice = centToYuan(this.getRenterSkuPrice(sku))
             skuList.push({
               skuId: sku.code,
               skuIndex: 0,
               skuNum: spu.skuList.length,
               skuList: spu.skuList.map(
-                item => ({ skuId: item.code, state: sku.status.toString(), price: centToYuan(item.price) })),
-              state: sku.status.toString(),
-              price: centToYuan(sku.price),
+                item => ({ skuId: item.code, state: skuState, price: skuPrice })),
+              state: skuState,
+              price: skuPrice,
               ...prod
             })
           } else {
@@ -417,8 +503,8 @@ export default {
                 skuId: sku.code,
                 skuIndex: index,
                 skuNum: spu.skuList.length,
-                state: sku.status.toString(),
-                price: centToYuan(sku.price),
+                state: this.getRenterSkuState(renterState, sku),
+                price: centToYuan(this.getRenterSkuPrice(sku)),
                 ...prod
               })
             }
@@ -428,8 +514,8 @@ export default {
             skuId: spu.skuid,
             skuIndex: 0,
             skuNum: 1,
-            state: spu.state,
-            price: spu.price,
+            state: renterState,
+            price: this.getRenterSpuPrice(spu),
             ...prod
           })
         }
@@ -543,6 +629,11 @@ export default {
         }
         this.dialogSelectedItems.push(selectItem)
       }
+    },
+    onRowSelectable(row) {
+      const state = row.state
+      const value = typeof state === 'string' ? Number.parseInt(state) : state
+      return value === product_state_on_sale
     },
     handleDialogSelectionChange(val) {
       if (val.length > 0) {

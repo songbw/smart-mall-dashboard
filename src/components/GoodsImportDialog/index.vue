@@ -122,9 +122,10 @@ import uniqBy from 'lodash/uniqBy'
 import XLSX from 'xlsx'
 import { getProductsByMpuListApi } from '@/api/products'
 import {
-  product_state_on_sale,
   product_state_off_shelves,
-  ProductTaxRateOptions
+  product_state_on_sale,
+  ProductTaxRateOptions,
+  role_renter_name
 } from '@/utils/constants'
 import { ProductPermissions, RenterPermissions } from '@/utils/role-permissions'
 import VendorSelection from '@/components/VendorSelection'
@@ -280,7 +281,9 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
+      userRole: 'userRole',
       vendorId: 'vendorId',
+      renterId: 'renterId',
       categoriesLoaded: 'categoriesLoaded',
       categoryData: 'categories'
     }),
@@ -292,6 +295,9 @@ export default {
     },
     hasRenterPermission() {
       return this.userPermissions.includes(RenterPermissions.view)
+    },
+    isRenterAdmin() {
+      return this.userRole === role_renter_name
     },
     needVendor() {
       return this.productCreation && this.hasVendorPermission
@@ -626,10 +632,66 @@ export default {
       }
       return mpuList
     },
+    getRenterSpuState(spu) {
+      if (this.isRenterAdmin) {
+        const stateList = spu.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : spu.state
+        } else {
+          return spu.state
+        }
+      } else {
+        return spu.state
+      }
+    },
+    getRenterSpuPrice(spu) {
+      if (this.isRenterAdmin) {
+        const priceList = spu.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? floatToFixed(find.price / 100, 2) : spu.price
+        } else {
+          return spu.price
+        }
+      } else {
+        return spu.price
+      }
+    },
+    getRenterSkuState(spuState, sku) {
+      const skuState = spuState === product_state_on_sale
+        ? sku.status.toString()
+        : product_state_off_shelves.toString()
+      if (this.isRenterAdmin) {
+        const stateList = sku.appSkuStateList
+        if (Array.isArray(stateList) && stateList.length > 0) {
+          const find = stateList.find(item => item.renterId === this.renterId)
+          return find ? find.state.toString() : skuState
+        } else {
+          return skuState
+        }
+      } else {
+        return skuState
+      }
+    },
+    getRenterSkuPrice(sku) {
+      if (this.isRenterAdmin) {
+        const priceList = sku.appSkuPriceList
+        if (Array.isArray(priceList) && priceList.length > 0) {
+          const find = priceList.find(item => item.renterId === this.renterId)
+          return find ? find.price : sku.price
+        } else {
+          return sku.price
+        }
+      } else {
+        return sku.price
+      }
+    },
     parseSkuList(list, useDefaultSku) {
       const centToYuan = cent => cent > 0 ? (cent / 100).toFixed(2) : null
       const skuList = []
       for (const spu of list) {
+        const spuState = this.getRenterSpuState(spu)
         const prod = {
           id: spu.id,
           mpu: spu.mpu,
@@ -642,14 +704,16 @@ export default {
         if (Array.isArray(spu.skuList) && spu.skuList.length > 0) {
           if (useDefaultSku) {
             const sku = spu.skuList[0]
+            const skuState = this.getRenterSkuState(parseInt(spuState), sku)
+            const skuPrice = centToYuan(this.getRenterSkuPrice(sku))
             skuList.push({
               skuId: sku.code,
               skuIndex: 0,
               skuNum: spu.skuList.length,
               skuList: spu.skuList.map(
-                item => ({ skuId: item.code, state: sku.status.toString(), price: centToYuan(item.price) })),
-              state: sku.status.toString(),
-              price: centToYuan(sku.price),
+                item => ({ skuId: item.code, state: skuState, price: skuPrice })),
+              state: skuState,
+              price: skuPrice,
               ...prod
             })
           } else {
@@ -658,8 +722,8 @@ export default {
                 skuId: sku.code,
                 skuIndex: index,
                 skuNum: spu.skuList.length,
-                state: sku.status.toString(),
-                price: centToYuan(sku.price),
+                state: this.getRenterSkuState(parseInt(spuState), sku),
+                price: centToYuan(this.getRenterSkuPrice(sku)),
                 ...prod
               })
             }
@@ -669,8 +733,8 @@ export default {
             skuId: spu.skuid,
             skuIndex: 0,
             skuNum: 1,
-            state: spu.state,
-            price: spu.price,
+            state: spuState,
+            price: this.getRenterSpuPrice(spu),
             ...prod
           })
         }
