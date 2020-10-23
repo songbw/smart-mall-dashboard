@@ -217,36 +217,32 @@ import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import VendorRenter from './detail'
 import {
-  getCompanyListOfRenterApi,
-  deleteVendorApi,
-  lockVendorApi,
-  unlockVendorApi,
-  reviewVendorProfileApi,
-  createVendorProfileApi,
-  updateVendorProfileApi,
-  getRenterListApi,
   addCompanyToRenterApi,
-  delCompanyFromRenterApi
+  createVendorProfileApi,
+  delCompanyFromRenterApi,
+  deleteVendorApi,
+  getCompanyListOfRenterApi,
+  getRenterListApi,
+  lockVendorApi,
+  reviewVendorProfileApi,
+  unlockVendorApi,
+  updateVendorProfileApi
 } from '@/api/vendor'
+import { updateProductStateByMerchant } from '@/api/products'
 import {
-  updateProductStateByMerchant
-} from '@/api/products'
-import {
-  vendor_status_reviewing,
-  vendor_status_approved,
-  vendor_status_rejected,
-  vendor_status_locked,
-  VendorStatusOptions,
-  VendorInvoiceOptions,
-  VendorTaxpayerOptions,
+  platform_renter_id,
+  product_state_off_shelves,
   vendor_invoice_type_normal,
+  vendor_status_approved,
+  vendor_status_locked,
+  vendor_status_rejected,
+  vendor_status_reviewing,
   vendor_taxpayer_type_general,
-  platform_renter_id, product_state_off_shelves
+  VendorInvoiceOptions,
+  VendorStatusOptions,
+  VendorTaxpayerOptions
 } from '@/utils/constants'
-import {
-  VendorPermissions,
-  RenterPermissions
-} from '@/utils/role-permissions'
+import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
 
 const aoyi_vendor_id = 2
 const yiyatong_vendor_id = 4
@@ -428,7 +424,7 @@ export default {
               const ownVendor = this.renterId === platform_renter_id ? true : !hasPlatformRenter
               return {
                 ownVendor,
-                couldLock : ownVendor && (item.companyId !== aoyi_vendor_id && item.companyId !== yiyatong_vendor_id),
+                couldLock: ownVendor && (item.companyId !== aoyi_vendor_id && item.companyId !== yiyatong_vendor_id),
                 ...item
               }
             })
