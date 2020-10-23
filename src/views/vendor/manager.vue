@@ -118,7 +118,7 @@
           </el-button>
           <el-button
             v-if="hasEditPermission && scope.row.status === statusApproved"
-            :disabled="!scope.row.ownVendor"
+            :disabled="!scope.row.couldLock"
             type="danger"
             size="mini"
             @click="handleLockVendor(scope.$index)"
@@ -229,6 +229,9 @@ import {
   delCompanyFromRenterApi
 } from '@/api/vendor'
 import {
+  updateProductStateByMerchant
+} from '@/api/products'
+import {
   vendor_status_reviewing,
   vendor_status_approved,
   vendor_status_rejected,
@@ -238,12 +241,15 @@ import {
   VendorTaxpayerOptions,
   vendor_invoice_type_normal,
   vendor_taxpayer_type_general,
-  platform_renter_id
+  platform_renter_id, product_state_off_shelves
 } from '@/utils/constants'
 import {
   VendorPermissions,
   RenterPermissions
 } from '@/utils/role-permissions'
+
+const aoyi_vendor_id = 2
+const yiyatong_vendor_id = 4
 
 export default {
   name: 'VendorManager',
@@ -419,7 +425,12 @@ export default {
             list = data.rows.map(item => {
               const hasPlatformRenter = item.renterList &&
                 item.renterList.findIndex(renter => renter.renterId === platform_renter_id) >= 0
-              return { ...item, ownVendor: this.renterId === platform_renter_id ? true : !hasPlatformRenter }
+              const ownVendor = this.renterId === platform_renter_id ? true : !hasPlatformRenter
+              return {
+                ownVendor,
+                couldLock : ownVendor && (item.companyId !== aoyi_vendor_id && item.companyId !== yiyatong_vendor_id),
+                ...item
+              }
             })
             total = data.total
           }
@@ -487,12 +498,18 @@ export default {
     async handleLockVendor(index) {
       try {
         const name = this.vendorData[index].companyName
-        await this.$confirm(`冻结公司：${name}，此公司的管理员将无法登录, 是否继续?`, '警告', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
+        await this.$confirm(`冻结公司：${name}，此公司的管理员将无法登录，同时下架此商户的所有商品, 是否继续?`,
+          '警告',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
         await lockVendorApi({ id: this.vendorData[index].companyId })
+        await updateProductStateByMerchant({
+          merchantId: this.vendorData[index].companyId,
+          state: product_state_off_shelves
+        })
         await this.getVendorData()
       } catch (e) {
         console.warn('Vendor manager delete:' + e)

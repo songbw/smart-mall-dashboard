@@ -204,3 +204,11 @@ export function updateRenterSkuStateApi(params) {
     data: params
   })
 }
+
+export function updateProductStateByMerchant(params) {
+  return Vue.axios('products').request({
+    url: '/products/adminProd/merchant/state',
+    method: 'put',
+    data: params
+  })
+}
