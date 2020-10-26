@@ -279,7 +279,7 @@ import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 import { CategoryPermissions } from '@/utils/role-permissions'
 import * as excel from '@/utils/Export2Excel'
-import { role_vendor_name } from '@/utils/constants'
+import { role_vendor_name, role_vendor_op_name } from '@/utils/constants'
 
 const ExportHeaders = [
   { field: 'categoryId', label: '三级类别编号' },
@@ -391,7 +391,8 @@ export default {
       return this.userPermissions.includes(CategoryPermissions.update)
     },
     appOptions() {
-      return this.userRole === role_vendor_name ? this.validAppList : this.platformAppList
+      const isVendor = this.userRole === role_vendor_name || this.userRole === role_vendor_op_name
+      return isVendor ? this.validAppList : this.platformAppList
     },
     appIdSelected() {
       return !isEmpty(this.currentAppId)
@@ -454,8 +455,12 @@ export default {
   },
   methods: {
     async initData() {
-      await this.getAppPlatformList()
-      await this.getAllCategories()
+      if (this.hasViewPermission) {
+        await this.getAppPlatformList()
+        await this.getAllCategories()
+      } else {
+        this.$message.warning('没有查看类别权限，请联系管理员！')
+      }
     },
     async getAppPlatformList() {
       try {

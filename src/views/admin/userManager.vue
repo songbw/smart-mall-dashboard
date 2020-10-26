@@ -20,8 +20,21 @@
         </el-button>
       </el-form-item>
     </el-form>
+
     <div style="margin-bottom: 20px">
-      <el-button v-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
+      <el-tabs v-if="queryVendorRole" v-model="tabVendorRole" type="card" @tab-click="onVendorTabChanged">
+        <el-tab-pane label="商户管理员" :name="vendorAdminRole">
+          <el-button v-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
+            新建管理员
+          </el-button>
+        </el-tab-pane>
+        <el-tab-pane label="商户操作员" :name="vendorOperatorRole">
+          <el-button v-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
+            新建操作员
+          </el-button>
+        </el-tab-pane>
+      </el-tabs>
+      <el-button v-else-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
         新建管理员
       </el-button>
     </div>
@@ -239,20 +252,21 @@ import trim from 'lodash/trim'
 import Pagination from '@/components/Pagination/index'
 import VendorSelection from '@/components/VendorSelection/index'
 import {
+  createVendorUserApi,
+  deleteVendorUserApi,
+  getVendorRolesApi,
   getVendorUserListApi,
   setUserVendorApi,
-  createVendorUserApi,
-  updateVendorUserApi,
-  deleteVendorUserApi,
-  getVendorRolesApi
+  updateVendorUserApi
 } from '@/api/vendor'
 import {
   platform_renter_id,
   role_admin_name,
   role_renter_name,
-  role_vendor_name
+  role_vendor_name,
+  role_vendor_op_name
 } from '@/utils/constants'
-import { validUserName, validPhone } from '@/utils/validate'
+import { validPhone, validUserName } from '@/utils/validate'
 import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
 
 export default {
@@ -307,6 +321,8 @@ export default {
       platformAdminRole: role_admin_name,
       renterAdminRole: role_renter_name,
       vendorAdminRole: role_vendor_name,
+      vendorOperatorRole: role_vendor_op_name,
+      tabVendorRole: role_vendor_name,
       dataLoading: false,
       routerName: '',
       vendorRoleId: -1,
@@ -314,6 +330,8 @@ export default {
       adminRoleId: -1,
       queryName: '',
       queryPhone: '',
+      vendorAdminRoleId: null,
+      vendorOpRoleId: null,
       queryRoleId: null,
       queryCompanyId: null,
       queryOffset: 1,
@@ -481,6 +499,10 @@ export default {
     onVendorChanged(id) {
       this.queryCompanyId = isEmpty(id) ? null : id
     },
+    onVendorTabChanged(tab) {
+      this.queryRoleId = tab.name === role_vendor_name ? this.vendorRoleId : this.vendorOpRoleId
+      this.getUsersData()
+    },
     handleEditUserVendor(index) {
       this.vendorEditDialogVisible = true
       this.vendorForm.companyId = null
@@ -526,7 +548,7 @@ export default {
           })
           this.dataLoading = true
           await setUserVendorApi({ userId: this.vendorForm.userId, companyId: this.vendorForm.companyId })
-          this.getUsersData()
+          await this.getUsersData()
           this.$message.success('修改用户企业成功！')
         } catch (e) {
           console.warn('Vendor user manager set company error:' + e)
@@ -578,7 +600,7 @@ export default {
         }
         const user = await createVendorUserApi(params)
         await setUserVendorApi({ userId: user.id, companyId: this.userForm.companyId })
-        this.getUsersData()
+        await this.getUsersData()
       } catch (e) {
         console.warn('Create user error: ' + e)
         const msg = this.getErrorMessage(e)
@@ -650,7 +672,10 @@ export default {
           this.roleOptions = list.map(item => ({ id: item.id, value: item.name, label: item.description }))
           if (this.queryVendorRole) {
             const vendorRole = this.roleOptions.find(item => item.value === role_vendor_name)
-            this.queryRoleId = vendorRole ? vendorRole.id : null
+            this.vendorRoleId = vendorRole ? vendorRole.id : null
+            const vendorOpRole = this.roleOptions.find(item => item.value === role_vendor_op_name)
+            this.vendorOpRoleId = vendorOpRole ? vendorOpRole.id : null
+            this.queryRoleId = this.tabVendorRole === role_vendor_name ? this.vendorRoleId : this.vendorOpRoleId
           } else if (this.queryRenterRole) {
             const renterRole = this.roleOptions.find(item => item.value === role_renter_name)
             this.queryRoleId = renterRole ? renterRole.id : null

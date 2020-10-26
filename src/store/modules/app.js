@@ -1,20 +1,16 @@
 import isEmpty from 'lodash/isEmpty'
 import { getCosUrlApi } from '@/api/app'
 import {
-  storage_platform_id,
   default_app_id,
-  role_vendor_name,
+  invalid_renter_id,
   platform_renter_id,
-  vendor_status_approved,
-  invalid_renter_id
+  role_vendor_name,
+  role_vendor_op_name,
+  storage_platform_id,
+  vendor_status_approved
 } from '@/utils/constants'
 import { storageRemoveItem, storageSetItem } from '@/utils/storage'
-import {
-  getProfileApi,
-  getAppConfigListApi,
-  getRenterListApi,
-  getCompanyListOfRenterApi
-} from '@/api/vendor'
+import { getAppConfigListApi, getCompanyListOfRenterApi, getProfileApi, getRenterListApi } from '@/api/vendor'
 import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
 import { uniqBy } from 'lodash'
 
@@ -168,7 +164,7 @@ const actions = {
     }
     commit('SET_DATA_LOADING', { platformLoading: true })
     try {
-      if (role === role_vendor_name) {
+      if (role === role_vendor_name || role === role_vendor_op_name) {
         vendorAppIdList = await getVendorPlatformList()
         commit('SET_PLATFORM_APP_LIST', vendorAppIdList)
         commit('SET_VENDOR_APP_LIST', vendorAppIdList.map(item => item.appId))
@@ -179,7 +175,7 @@ const actions = {
         if (code === 200) {
           const platformList = data.map(
             item => ({ appId: item.appId, name: item.appName, renterId: item.renterId }))
-          if (role === role_vendor_name) {
+          if (role === role_vendor_name || role === role_vendor_op_name) {
             vendorAppIdList = await getVendorPlatformList(platformList)
           } else {
             vendorAppIdList = platformList.map(item => item.appId)

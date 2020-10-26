@@ -62,10 +62,10 @@
     >
       <el-form ref="roleForm" :model="roleForm" :rules="roleRules" label-width="120px">
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="roleForm.name" autocomplete="off" maxlength="10" />
+          <el-input v-model="roleForm.name" autocomplete="off" maxlength="50" />
         </el-form-item>
         <el-form-item label="角色描述" prop="description">
-          <el-input v-model="roleForm.description" autocomplete="off" maxlength="10" />
+          <el-input v-model="roleForm.description" autocomplete="off" maxlength="50" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">

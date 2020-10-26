@@ -1,11 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Layout from '@/layout'
-import {
-  role_vendor_name,
-  role_admin_name,
-  role_renter_name
-} from '@/utils/constants'
+import { role_admin_name, role_renter_name, role_vendor_name, role_vendor_op_name } from '@/utils/constants'
 
 if (!window.VueRouter) Vue.use(VueRouter)
 
@@ -544,20 +540,20 @@ export const constantRoutes = [
     meta: {
       title: '企业',
       icon: 'vendor',
-      roles: [role_vendor_name, role_renter_name]
+      roles: [role_vendor_name, role_vendor_op_name, role_renter_name]
     },
     children: [
       {
         path: 'user',
         name: 'UserInfo',
         component: () => import('@/views/vendor/userInfo'),
-        meta: { title: '管理员', icon: 'user', roles: [role_vendor_name, role_renter_name] }
+        meta: { title: '管理员', icon: 'user', roles: [role_vendor_name, role_vendor_op_name, role_renter_name] }
       },
       {
         path: 'vendorInfo',
         name: 'CompanyProfile',
         component: () => import('@/views/vendor/profile'),
-        meta: { title: '商户信息', icon: 'vendor-info', roles: [role_vendor_name] }
+        meta: { title: '商户信息', icon: 'vendor-info', roles: [role_vendor_name, role_vendor_op_name] }
       },
       {
         path: 'renterInfo',

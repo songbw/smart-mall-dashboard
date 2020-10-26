@@ -9,6 +9,7 @@ export const storage_renter_id = 'renter_id'
 export const storage_platform_id = 'app_id'
 
 export const role_vendor_name = 'vendor'
+export const role_vendor_op_name = 'vendor_operator'
 export const role_admin_name = 'admin'
 export const role_watcher_name = 'watcher'
 export const role_renter_name = 'renter'
