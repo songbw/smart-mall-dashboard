@@ -267,13 +267,11 @@ import isEqual from 'lodash/isEqual'
 import Pagination from '@/components/Pagination'
 import ExpressSelection from '@/components/ExpressSelection'
 import OrderProduct from './OrderProduct'
+import { exportVendorDeliverOrdersApi, getOrderListApi } from '@/api/orders'
 import {
-  getOrderListApi,
-  exportVendorDeliverOrdersApi
-} from '@/api/orders'
-import {
-  suborder_status_waiting_deliver,
+  role_watcher_name,
   suborder_status_delivered,
+  suborder_status_waiting_deliver,
   SubOrderStatusDefinitions
 } from '@/utils/constants'
 import ImportDialog from './ImportDialog'
@@ -392,12 +390,16 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
+      userRole: 'userRole',
       vendorApproved: 'vendorApproved',
       platformAppList: 'platformAppList',
       validAppList: 'validAppList',
       vendorList: 'vendorList',
       orderQuery: 'orderDeliveryQuery'
     }),
+    isWatcherUser() {
+      return this.userRole === role_watcher_name
+    },
     hasViewPermission() {
       return this.userPermissions.includes(OrderPermissions.view)
     },
@@ -426,7 +428,7 @@ export default {
       }
     },
     showAllAppIdList() {
-      return this.validAppList.length === this.platformAppList.length
+      return this.userRole !== role_watcher_name && this.validAppList.length === this.platformAppList.length
     },
     queryAppId: {
       get() {

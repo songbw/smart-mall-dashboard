@@ -63,15 +63,12 @@
 <script>
 import { mapGetters } from 'vuex'
 import isEmpty from 'lodash/isEmpty'
-import {
-  validVerificationCode
-} from '@/utils/validate'
+import { validVerificationCode } from '@/utils/validate'
 import {
   invalid_renter_id,
   platform_renter_id,
   role_admin_name,
   role_renter_name,
-  role_watcher_name,
   storage_merchant_id,
   storage_renter_id,
   vendor_status_approved
@@ -183,7 +180,7 @@ export default {
           try {
             this.twoFactorForm.phone = this.userPhone
             const role = await this.$store.dispatch('user/twoFactorAuth', this.twoFactorForm)
-            if (role_admin_name === role || role_watcher_name === role) {
+            if (role_admin_name === role) {
               this.$store.commit('vendor/SET_VENDOR_PROFILE', {
                 id: 0,
                 renterId: platform_renter_id,

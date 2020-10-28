@@ -124,6 +124,7 @@ import trim from 'lodash/trim'
 import { getMemberListApi } from '@/api/members'
 import Pagination from '@/components/Pagination'
 import { MemberPermissions } from '@/utils/role-permissions'
+import { role_watcher_name } from '@/utils/constants'
 
 export default {
   name: 'Members',
@@ -144,6 +145,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      userRole: 'userRole',
       userPermissions: 'userPermissions',
       platformAppList: 'platformAppList',
       validAppList: 'validAppList',
@@ -216,7 +218,7 @@ export default {
       }
     },
     showAllAppIdList() {
-      return this.validAppList.length === this.platformAppList.length
+      return this.userRole !== role_watcher_name && this.validAppList.length === this.platformAppList.length
     }
   },
   created() {

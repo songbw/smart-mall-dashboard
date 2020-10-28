@@ -1,7 +1,13 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Layout from '@/layout'
-import { role_admin_name, role_renter_name, role_vendor_name, role_vendor_op_name } from '@/utils/constants'
+import {
+  role_admin_name,
+  role_renter_name,
+  role_vendor_name,
+  role_vendor_op_name,
+  role_watcher_name
+} from '@/utils/constants'
 
 if (!window.VueRouter) Vue.use(VueRouter)
 
@@ -429,7 +435,7 @@ export const constantRoutes = [
       title: '会员',
       icon: 'members',
       group: 'members',
-      roles: [role_admin_name, role_renter_name]
+      roles: [role_admin_name, role_renter_name, role_watcher_name]
     },
     children: [
       {
@@ -440,7 +446,7 @@ export const constantRoutes = [
           title: '会员管理',
           icon: 'members-manager',
           group: 'members',
-          roles: [role_admin_name, role_renter_name]
+          roles: [role_admin_name, role_renter_name, role_watcher_name]
         }
       },
       {
@@ -451,7 +457,7 @@ export const constantRoutes = [
           title: '会员详情',
           icon: 'member-profile',
           group: 'members',
-          roles: [role_admin_name, role_renter_name]
+          roles: [role_admin_name, role_renter_name, role_watcher_name]
         },
         hidden: true
       },
@@ -463,7 +469,7 @@ export const constantRoutes = [
           title: '会员详情',
           icon: 'member-profile',
           group: 'members',
-          roles: [role_admin_name, role_renter_name]
+          roles: [role_admin_name, role_renter_name, role_watcher_name]
         },
         hidden: true
       },
@@ -475,7 +481,7 @@ export const constantRoutes = [
           title: '余额管理',
           icon: 'balances',
           group: 'members',
-          roles: [role_admin_name, role_renter_name]
+          roles: [role_admin_name, role_renter_name, role_watcher_name]
         }
       }
     ]

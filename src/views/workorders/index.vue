@@ -169,6 +169,7 @@ import Pagination from '@/components/Pagination'
 import { getWorkOrderListApi } from '@/api/workOrders'
 import { WorkOrderStatus, WorkOrderTypes } from './constants'
 import { WorkOrderPermissions } from '@/utils/role-permissions'
+import { role_watcher_name } from '@/utils/constants'
 
 export default {
   name: 'WorkOrders',
@@ -204,6 +205,7 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
+      userRole: 'userRole',
       platformAppList: 'platformAppList',
       validAppList: 'validAppList',
       workOrdersQuery: 'workOrdersQuery'
@@ -219,7 +221,7 @@ export default {
       }
     },
     showAllAppIdList() {
-      return this.validAppList.length === this.platformAppList.length
+      return this.userRole !== role_watcher_name && this.validAppList.length === this.platformAppList.length
     },
     queryAppId: {
       get() {
@@ -401,7 +403,7 @@ export default {
 </script>
 
 <style scoped>
-  .text-item {
-    text-align: start
-  }
+.text-item {
+  text-align: start
+}
 </style>

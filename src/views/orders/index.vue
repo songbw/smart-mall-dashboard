@@ -368,7 +368,7 @@ import { getWorkOrderByOrderListApi } from '@/api/workOrders'
 import { getPayTypeListByAppIdApi } from '@/api/payments'
 import {
   PayTypeOptions,
-  role_admin_name,
+  role_vendor_name,
   role_watcher_name,
   suborder_status_requested_service,
   SubOrderStatusDefinitions,
@@ -513,7 +513,7 @@ export default {
       vendorId: 'vendorId'
     }),
     isVendorUser() {
-      return this.userRole !== role_admin_name && this.userRole !== role_watcher_name
+      return this.userRole === role_vendor_name
     },
     hasViewPermission() {
       return this.userPermissions.includes(OrderPermissions.view)
@@ -552,7 +552,7 @@ export default {
       }
     },
     showAllAppIdList() {
-      return this.validAppList.length === this.platformAppList.length
+      return this.userRole !== role_watcher_name && this.validAppList.length === this.platformAppList.length
     },
     showExportDialogPayType() {
       return this.exportType === this.paymentType ||

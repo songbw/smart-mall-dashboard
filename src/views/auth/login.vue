@@ -77,7 +77,6 @@ import {
   platform_renter_id,
   role_admin_name,
   role_renter_name,
-  role_watcher_name,
   storage_merchant_id,
   storage_renter_id,
   vendor_status_approved
@@ -171,7 +170,7 @@ export default {
                 await this.$router.push({ path: '/login/2fa' })
               } else {
                 const role = await this.$store.dispatch('user/getRole')
-                if (role_admin_name === role || role_watcher_name === role) {
+                if (role_admin_name === role) {
                   this.$store.commit('vendor/SET_VENDOR_PROFILE', {
                     id: 0,
                     renterId: platform_renter_id,
