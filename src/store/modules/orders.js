@@ -15,7 +15,7 @@ const queryTemplate = {
   completeDateStart: null,
   completeDateEnd: null,
   subStatus: -1,
-  merchantId: -1,
+  merchantId: null,
   appId: 'all'
 }
 

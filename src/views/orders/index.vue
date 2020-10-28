@@ -47,16 +47,10 @@
         </el-select>
       </el-form-item>
       <el-form-item v-if="hasVendorPermission" label="供应商名">
-        <el-select :value="queryVendor" @change="onQueryVendorChanged">
-          <el-option
-            v-for="item in vendorOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          >
-            <span>{{ item.label }}</span>
-          </el-option>
-        </el-select>
+        <vendor-selection
+          :vendor-id="queryVendor"
+          @changed="onQueryVendorChanged"
+        />
       </el-form-item>
     </el-form>
     <el-form v-if="false" :inline="true">
@@ -377,6 +371,7 @@ import {
   WorkOrderStatusDefinition
 } from '@/utils/constants'
 import { OrderPermissions } from '@/utils/role-permissions'
+import VendorSelection from '@/components/VendorSelection/index'
 
 const maxExportMonths = 3
 
@@ -393,7 +388,7 @@ const validateDates = (start, end, amount = 3) => {
 }
 export default {
   name: 'Orders',
-  components: { Pagination, OrderProduct },
+  components: { VendorSelection, Pagination, OrderProduct },
   filters: {
     orderIdFilter: order => {
       return isEmpty(order.aoyiId)
@@ -421,7 +416,6 @@ export default {
         label: '全部'
       }].concat(SubOrderStatusDefinitions),
       vendorLoading: false,
-      vendors: [],
       listLoading: false,
       orderData: [],
       orderTotal: 0,
@@ -531,11 +525,15 @@ export default {
       return this.userPermissions.includes(OrderPermissions.vendor)
     },
     vendorOptions() {
+      const vendors = this.vendorList.map(item => ({
+        value: item.companyId,
+        label: item.companyName
+      }))
       if (this.exportType === this.vendorSettlementType ||
         this.exportType === this.vendorInvoiceType) {
-        return this.vendorLoading ? [] : this.vendors
+        return this.vendorLoading ? [] : vendors
       } else {
-        return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(this.vendors)
+        return this.vendorLoading ? [] : [{ value: -1, label: '全部' }].concat(vendors)
       }
     },
     appIdOptions() {
@@ -712,10 +710,6 @@ export default {
           this.vendorLoading = false
         }
       }
-      this.vendors = this.vendorList.map(item => ({
-        value: item.companyId,
-        label: item.companyName
-      }))
     },
     getVendorName(vendorId) {
       if (this.vendorOptions.length > 0 && vendorId != null) {
@@ -968,7 +962,7 @@ export default {
         const data = this.isVendorUser ? await exportVendorOrdersApi(params) : await exportOrdersApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
-        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendor = this.vendorOptions.find(item => item.value === params.merchantId)
         const vendorLabel = vendor ? vendor.label + '-' : ''
         const filename = `${vendorLabel}${appLabel}流水订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
@@ -998,7 +992,7 @@ export default {
           ? await exportVendorReconciliationApi(params) : await exportReconciliationApi(params)
         const appOption = 'appId' in params ? this.platformAppList.find(item => item.appId === params.appId) : null
         const appLabel = appOption ? appOption.name + '-' : ''
-        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendor = this.vendorOptions.find(item => item.value === params.merchantId)
         const vendorLabel = vendor ? vendor.label + '-' : ''
         const filename = `${vendorLabel}${appLabel}结算订单列表-${params.payStartDate}-${params.payEndDate}.xls`
         this.downloadBlobData(data, filename)
@@ -1085,7 +1079,7 @@ export default {
         const data = await exportVendorSettlementApi(params)
         const appOption = this.platformAppList.find(item => item.appId === params.appIds)
         const appLabel = appOption ? appOption.name + '-' : ''
-        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendor = this.vendorOptions.find(item => item.value === params.merchantId)
         const vendorLabel = vendor ? vendor.label + '-' : ''
         const filename = `${vendorLabel}${appLabel}货款结算报表-${params.startTime}-${params.endTime}.xls`
         this.downloadBlobData(data, filename)
@@ -1127,7 +1121,7 @@ export default {
         const data = await exportVendorInvoiceBillApi(params)
         const appOption = this.platformAppList.find(item => item.appId === params.appIds)
         const appLabel = appOption ? appOption.name + '-' : ''
-        const vendor = this.vendors.find(item => item.value === params.merchantId)
+        const vendor = this.vendorOptions.find(item => item.value === params.merchantId)
         const vendorLabel = vendor ? vendor.label + '-' : ''
         const filename = `${vendorLabel}${appLabel}供应商发票报表-${params.startTime}-${params.endTime}.xls`
         this.downloadBlobData(data, filename)
