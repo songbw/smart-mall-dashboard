@@ -717,15 +717,16 @@ import isNumber from 'lodash/isNumber'
 import sortBy from 'lodash/sortBy'
 import trim from 'lodash/trim'
 import {
-  createProductApi,
-  updateProductApi,
-  getDetailInfoByMpuApi,
-  updateSubSkuApi,
-  getInventoryBySkuCodesApi,
   batchUpdateStateApi,
+  createProductApi,
   createRenterSkuPriceApi,
+  deleteRenterSkuPriceApi,
+  getDetailInfoByMpuApi,
+  getInventoryBySkuCodesApi,
+  updateProductApi,
   updateRenterSkuPriceApi,
-  deleteRenterSkuPriceApi, updateRenterSkuStateApi
+  updateRenterSkuStateApi,
+  updateSubSkuApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
 import CustomThumbnail from './customThumbnail'
@@ -736,24 +737,24 @@ import VendorSelection from '@/components/VendorSelection'
 import ShippingPriceSelection from './shippingPriceSelection'
 import {
   max_upload_image_size,
-  ProductStateOptions,
+  platform_renter_id,
   product_default_tax_rate,
+  product_state_off_shelves,
+  product_state_on_sale,
+  product_sub_sku_on_sale,
+  product_sub_sku_sold_out,
+  ProductStateOptions,
+  ProductSubSkuStatusOptions,
   ProductTaxRateOptions,
   ProductTypeOptions,
-  product_sub_sku_sold_out,
-  product_sub_sku_on_sale,
-  ProductSubSkuStatusOptions,
-  product_state_on_sale,
-  product_state_off_shelves,
-  vendor_taxpayer_type_small_scale,
-  platform_renter_id,
-  role_renter_name
+  role_renter_name,
+  vendor_taxpayer_type_small_scale
 } from '@/utils/constants'
 import {
+  deleteMpuShippingPriceApi,
   getMerchantFreeShippingApi,
   getMpuShippingPriceApi,
-  setMpuShippingPriceApi,
-  deleteMpuShippingPriceApi
+  setMpuShippingPriceApi
 } from '@/api/freight'
 import { ProductPermissions } from '@/utils/role-permissions'
 import { cosUploadFiles } from '@/utils/cos'
@@ -837,7 +838,7 @@ export default {
   data() {
     this.productInfo = null
     const validateValue = (rule, value, callback) => {
-      if (value === null || value === '') {
+      if (isEmpty(value)) {
         switch (rule.field) {
           case 'merchantId':
             if (this.hasVendorPermission) {
@@ -977,7 +978,7 @@ export default {
               const price = convertToNumber(value)
               if (!isNaN(price)) {
                 const floorPrice = this.floorPrice
-                if (price >= floorPrice) {
+                if (price > floorPrice) {
                   callback()
                 } else {
                   callback(new Error(`商品销售价必需大于底价：${floorPrice}元`))
@@ -1229,8 +1230,14 @@ export default {
     getProductVendor(vendorId) {
       if (this.vendorList.length > 0 && vendorId != null) {
         const vendor = this.vendorList.find(option => option.companyId === vendorId)
-        vendor.renterList = this.renterList.filter(renter => vendor.renterIdList.includes(renter.renterId))
-        return vendor || null
+        if (vendor) {
+          vendor.renterList = this.renterList.filter(
+            renter => Array.isArray(vendor.renterIdList) && vendor.renterIdList.includes(renter.renterId)
+          )
+          return vendor
+        } else {
+          return null
+        }
       } else {
         return null
       }
