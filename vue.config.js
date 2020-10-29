@@ -66,7 +66,7 @@ module.exports = {
           {
             name: 'element-ui',
             var: 'ELEMENT',
-            version: '2.13.2',
+            version: '2.14.0',
             path: 'lib/index.js'
           },
           {
