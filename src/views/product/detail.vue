@@ -838,7 +838,7 @@ export default {
   data() {
     this.productInfo = null
     const validateValue = (rule, value, callback) => {
-      if (isEmpty(value)) {
+      if (value === '' || value === null) {
         switch (rule.field) {
           case 'merchantId':
             if (this.hasVendorPermission) {
