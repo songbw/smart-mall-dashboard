@@ -244,7 +244,7 @@ const actions = {
       commit('SET_DATA_LOADING', { vendorListLoading: true })
       const renterId = vendor.renter.id
       if (renterId !== platform_renter_id) {
-        params.renterId = this.renterId
+        params.renterId = renterId
       }
       if (platformList.length === 0) {
         await dispatch('getPlatformList')
