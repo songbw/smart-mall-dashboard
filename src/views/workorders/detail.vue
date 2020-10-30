@@ -334,29 +334,29 @@ import GoodsInfo from '@/components/Order/goodsInfo'
 import ExpressSelection from '@/components/ExpressSelection'
 import AddressInfo from './addressInfo'
 import AddressSelection from './addressSelection'
-import { getOrderListApi, changeOrderReceiverApi } from '@/api/orders'
+import { changeOrderReceiverApi, getOrderListApi } from '@/api/orders'
 import {
-  getWorkOrderByIdApi,
-  getWorkFlowListApi,
   createWorkOrderFlowApi,
-  reopenWorkOrderFlowApi,
   getDefaultReturnAddressApi,
   getReturnAddressListApi,
+  getWorkFlowListApi,
   getWorkFlowOpsCodeApi,
+  getWorkOrderByIdApi,
+  reopenWorkOrderFlowApi,
   resendYiyatongWorkOrder
 } from '@/api/workOrders'
 import {
-  work_order_status_request,
-  work_order_status_approved,
-  work_order_status_rejected,
-  work_order_status_working,
-  work_order_status_finished,
-  work_order_status_refunding,
   OrderStatusDefinitions,
   PaymentStatusDefinitions,
-  PayTypeOptions
+  PayTypeOptions,
+  work_order_status_approved,
+  work_order_status_finished,
+  work_order_status_refunding,
+  work_order_status_rejected,
+  work_order_status_request,
+  work_order_status_working
 } from '@/utils/constants'
-import { WorkOrderStatus, WorkOrderTypes, type_change_good, type_refund_only } from './constants'
+import { type_change_good, type_refund_only, WorkOrderStatus, WorkOrderTypes } from './constants'
 import { WorkOrderPermissions } from '@/utils/role-permissions'
 import ReceiverDialog from './receiverDialog'
 
@@ -649,7 +649,7 @@ export default {
         noRefund = !(momentDate.isValid() && momentDate.isAfter('2000-01-01', 'year'))
       }
       const status = this.workOrderData.status
-      const closed = status === work_order_status_finished
+      const closed = status === work_order_status_finished || status === work_order_status_rejected
       return this.hasResetPermission && closed && noRefund
     },
     flowOptions() {
