@@ -69,15 +69,14 @@
     </el-container>
     <div class="header-container">
       <div class="header-ops-container">
-        <el-button size="mini" @click="dialogImportVisible = true">
+        <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+          添加商品
+        </el-button>
+        <el-button size="mini" type="info" @click="dialogImportVisible = true">
           导入商品
         </el-button>
-        <el-button
-          type="primary"
-          size="mini"
-          @click="dialogSelectionVisible = true"
-        >
-          添加商品
+        <el-button size="mini" @click="handleExportGoods">
+          导出商品
         </el-button>
         <span style="font-size: 14px;margin-left: 10px">
           <i class="el-icon-warning-outline" />
@@ -510,6 +509,32 @@ export default {
     },
     onMarginBottomChanged(value) {
       this.marginBottom = value
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v => filterVal.map(j => {
+        if (j !== 'state') {
+          return v[j]
+        } else {
+          if (v[j] === '1') {
+            return '销售中'
+          } else {
+            return '已下架'
+          }
+        }
+      }))
+    },
+    handleExportGoods() {
+      import('@/utils/Export2Excel').then(excel => {
+        const tHeader = ['商品MPU']
+        const filterVal = ['mpu']
+        const list = this.skuData
+        const data = this.formatJson(filterVal, list)
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: `${this.titleTextValue}-商品列表`
+        })
+      })
     }
   }
 }
