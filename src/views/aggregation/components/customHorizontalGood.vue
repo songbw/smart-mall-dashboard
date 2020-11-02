@@ -65,11 +65,14 @@
           <el-color-picker v-model="skuBackgroundColor" />
           <span>{{ skuBackgroundColor }}</span>
         </el-form-item>
+        <el-form-item label="热销商品">
+          <el-switch v-model="bestSelling" />
+        </el-form-item>
       </el-form>
     </el-container>
     <div class="header-container">
       <div class="header-ops-container">
-        <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+        <el-button type="primary" size="mini" @click="onGoodsSelectionClicked">
           添加商品
         </el-button>
         <el-button size="mini" type="info" @click="dialogImportVisible = true">
@@ -116,6 +119,11 @@
       <el-table-column label="商品价格(元)" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="bestSelling" label="热销排名" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.ranking }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="250">
@@ -174,13 +182,18 @@
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
       :use-default-sku="true"
-      @onSelectionCancelled="onGoodsSelectionCancelled"
+      @onSelectionCancelled="dialogSelectionVisible = false"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
     <goods-import-dialog
       :dialog-visible="dialogImportVisible"
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
+    />
+    <best-selling-selection-dialog
+      :dialog-visible="bestSellingSelectionVisible"
+      @onSelectionCancelled="bestSellingSelectionVisible = false"
+      @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
     <el-dialog
       :visible.sync="editDialogVisible"
@@ -206,15 +219,16 @@
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
-import { horizontalGoodType, horizontalGoodSettings } from './templateType'
+import { horizontalGoodSettings, horizontalGoodType } from './templateType'
 import GoodsSelectionDialog from '@/components/GoodsSelectionDialog'
 import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
+import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
 
 export default {
   name: 'CustomHorizontalGood',
-  components: { GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, ImageUpload },
+  components: { BestSellingSelectionDialog, GoodsSelectionDialog, GoodsImportDialog, ImageTargetLink, ImageUpload },
   filters: {
     dateFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -227,6 +241,7 @@ export default {
       maxSkuNum: 16,
       dialogImportVisible: false,
       dialogSelectionVisible: false,
+      bestSellingSelectionVisible: false,
       selectedItems: [],
       originalImageProp: null,
       editDialogVisible: false,
@@ -391,6 +406,15 @@ export default {
         const settings = Object.assign({}, this.horizontalGoodData.settings, { skuBackgroundColor: newValue })
         this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
       }
+    },
+    bestSelling: {
+      get() {
+        return this.horizontalGoodData.settings.bestSelling
+      },
+      set(newValue) {
+        const settings = Object.assign({}, this.horizontalGoodData.settings, { bestSelling: newValue })
+        this.$store.commit('aggregations/SET_CONTENT_SETTINGS', settings)
+      }
     }
   },
   methods: {
@@ -483,11 +507,9 @@ export default {
       }
     },
     onGoodsSelectionConfirmed(skus) {
+      this.bestSellingSelectionVisible = false
       this.dialogSelectionVisible = false
       this.addGoodSkus(skus)
-    },
-    onGoodsSelectionCancelled() {
-      this.dialogSelectionVisible = false
     },
     handleImageTargetChanges(target) {
       if ('type' in target) {
@@ -523,6 +545,13 @@ export default {
         }
       }))
     },
+    onGoodsSelectionClicked() {
+      if (this.bestSelling) {
+        this.bestSellingSelectionVisible = true
+      } else {
+        this.dialogSelectionVisible = true
+      }
+    },
     handleExportGoods() {
       import('@/utils/Export2Excel').then(excel => {
         const tHeader = ['商品MPU']
@@ -541,18 +570,18 @@ export default {
 </script>
 
 <style scoped>
-  .show-border {
-    border: 1px solid #eee;
-  }
+.show-border {
+  border: 1px solid #eee;
+}
 
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 20px;
-  }
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 20px;
+}
 
-  .header-ops-container {
-    display: flex;
-    align-items: center;
-  }
+.header-ops-container {
+  display: flex;
+  align-items: center;
+}
 </style>

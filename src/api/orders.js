@@ -232,3 +232,11 @@ export function getExpressByLogisticsId(params) {
     params
   })
 }
+
+export function getBestSellingListApi(params) {
+  return Vue.axios('products').request({
+    url: '/orders/order/saleCount',
+    method: 'post',
+    data: params
+  })
+}

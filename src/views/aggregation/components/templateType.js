@@ -1,14 +1,14 @@
 import {
   aggregationBannerType,
-  aggregationServiceType,
-  aggregationGridType,
-  aggregationPromotionType,
-  aggregationGoodsType,
-  aggregationCouponType,
-  aggregationHotZoneType,
   aggregationComboType,
+  aggregationCouponType,
+  aggregationGoodsType,
+  aggregationGridType,
+  aggregationHorizontalGoodType,
+  aggregationHotZoneType,
   aggregationPromotionListType,
-  aggregationHorizontalGoodType
+  aggregationPromotionType,
+  aggregationServiceType
 } from '@/utils/constants'
 
 export const bannerType = aggregationBannerType
@@ -209,6 +209,7 @@ export const horizontalGoodSettings = {
     targetUrl: 'about:blank',
     targetName: '无链接'
   },
+  bestSelling: false,
   skuBackgroundColor: '#F8F8F8',
   marginX: '0',
   marginBottom: '0'

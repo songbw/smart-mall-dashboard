@@ -2,26 +2,26 @@ import moment from 'moment'
 import { getProductsByMpuListApi } from '@/api/products'
 import {
   createAggregationApi,
+  createAggregationGroupApi,
+  deleteAggregationGroupApi,
   getAggregationByIdApi,
+  getAggregationGroupsApi,
   updateAggregationApi,
   updateAggregationContentApi,
-  getAggregationGroupsApi,
-  createAggregationGroupApi,
-  updateAggregationGroupApi,
-  deleteAggregationGroupApi
+  updateAggregationGroupApi
 } from '@/api/aggregations'
 import {
-  product_state_on_sale,
   aggregationBannerType,
-  aggregationServiceType,
-  aggregationGridType,
-  aggregationPromotionType,
-  aggregationGoodsType,
-  aggregationCouponType,
-  aggregationHotZoneType,
   aggregationComboType,
+  aggregationCouponType,
+  aggregationGoodsType,
+  aggregationGridType,
+  aggregationHorizontalGoodType,
+  aggregationHotZoneType,
   aggregationPromotionListType,
-  aggregationHorizontalGoodType
+  aggregationPromotionType,
+  aggregationServiceType,
+  product_state_on_sale
 } from '@/utils/constants'
 
 // corresponding to appId types
@@ -368,6 +368,7 @@ const mutations = {
           const { list, settings } = data
           settings.marginX = 'marginX' in settings ? settings.marginX : 0
           settings.skuBackgroundColor = 'skuBackgroundColor' in settings ? settings.skuBackgroundColor : null
+          settings.bestSelling = 'bestSelling' in settings ? settings.bestSelling : false
           return { data: { list, settings }, ...rest }
         } else if (item.type === aggregationPromotionListType) {
           const { data, ...rest } = item
