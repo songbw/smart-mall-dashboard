@@ -84,11 +84,14 @@
       </div>
       <div v-if="opsButtonShow" class="header-container">
         <div class="header-ops-container">
-          <el-button @click="dialogImportVisible = true">
-            导入商品
-          </el-button>
           <el-button type="primary" @click="dialogSelectionVisible = true">
             添加商品
+          </el-button>
+          <el-button type="success" @click="bestSellingSelectionVisible = true">
+            添加热销商品
+          </el-button>
+          <el-button type="info" @click="dialogImportVisible = true">
+            导入商品
           </el-button>
         </div>
         <div class="header-ops-container">
@@ -174,7 +177,7 @@
               />
             </template>
             <template v-else>
-              <span>{{ scope.row.discount > 0 ?scope.row.discount.toFixed(2) : null }}</span>
+              <span>{{ scope.row.discount > 0 ? scope.row.discount.toFixed(2) : null }}</span>
               <el-button
                 v-if="viewOnly === false"
                 icon="el-icon-edit"
@@ -247,7 +250,14 @@
       <goods-selection-dialog
         :dialog-visible="dialogSelectionVisible"
         :use-default-sku="true"
-        @onSelectionCancelled="onGoodsSelectionCancelled"
+        @onSelectionCancelled="dialogSelectionVisible = false"
+        @onSelectionConfirmed="onGoodsSelectionConfirmed"
+      />
+      <best-selling-selection-dialog
+        :dialog-visible="bestSellingSelectionVisible"
+        :use-default-sku="true"
+        :sku-count="100"
+        @onSelectionCancelled="bestSellingSelectionVisible = false"
         @onSelectionConfirmed="onGoodsSelectionConfirmed"
       />
       <goods-import-dialog
@@ -308,10 +318,11 @@ import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import PromotionInfo from './promotionInfo'
 import { ProductStateOptions } from '@/utils/constants'
+import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
 
 export default {
   name: 'SelectGoods',
-  components: { PromotionInfo, GoodsSelectionDialog, GoodsImportDialog, Pagination, ImageUpload },
+  components: { BestSellingSelectionDialog, PromotionInfo, GoodsSelectionDialog, GoodsImportDialog, Pagination, ImageUpload },
   filters: {
     dateFilter: date => {
       const format = 'YYYY-MM-DD HH:mm:ss'
@@ -366,6 +377,7 @@ export default {
       },
       currentScheduleId: null,
       dialogSelectionVisible: false,
+      bestSellingSelectionVisible: false,
       dialogImportVisible: false,
       offset: 1,
       limit: 80,
@@ -588,11 +600,9 @@ export default {
       }).catch(() => {
       })
     },
-    onGoodsSelectionCancelled() {
-      this.dialogSelectionVisible = false
-    },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
+      this.bestSellingSelectionVisible = false
       this.handleAddSkus(skus)
     },
     onGoodsImportConfirmed(skus) {
@@ -908,18 +918,18 @@ export default {
 </script>
 
 <style scoped>
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 20px;
-  }
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 20px;
+}
 
-  .header-ops-container {
-    display: flex;
-    align-items: center;
-  }
+.header-ops-container {
+  display: flex;
+  align-items: center;
+}
 
-  .footer-container {
-    text-align: center;
-  }
+.footer-container {
+  text-align: center;
+}
 </style>

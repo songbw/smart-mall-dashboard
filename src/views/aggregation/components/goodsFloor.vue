@@ -60,10 +60,13 @@
       </div>
     </div>
     <div class="header-container">
-      <el-form :inline="true">
+      <el-form label-width="8rem" inline>
         <el-form-item label="商品背景颜色">
           <el-color-picker v-model="skuBackgroundColor" />
           <span>{{ skuBackgroundColor }}</span>
+        </el-form-item>
+        <el-form-item label="热销商品">
+          <el-switch v-model="bestSelling" />
         </el-form-item>
       </el-form>
       <el-button
@@ -78,7 +81,7 @@
     <div v-if="showDetail">
       <div class="header-container">
         <div class="header-ops-container">
-          <el-button type="primary" size="mini" @click="dialogSelectionVisible = true">
+          <el-button type="primary" size="mini" @click="onGoodsSelectionClicked">
             添加商品
           </el-button>
           <el-button size="mini" type="info" @click="dialogImportVisible = true">
@@ -121,6 +124,11 @@
         <el-table-column label="商品价格(元)" align="center" width="100">
           <template slot-scope="scope">
             <span>{{ scope.row.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="bestSelling" label="热销排名" align="center" width="100">
+          <template slot-scope="scope">
+            <span>{{ scope.row.ranking }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" width="250">
@@ -177,13 +185,19 @@
     <goods-selection-dialog
       :dialog-visible="dialogSelectionVisible"
       :use-default-sku="true"
-      @onSelectionCancelled="onGoodsSelectionCancelled"
+      @onSelectionCancelled="dialogSelectionVisible = false"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
     <goods-import-dialog
       :dialog-visible="dialogImportVisible"
       @onSelectionCancelled="onGoodsImportCancelled"
       @onSelectionConfirmed="onGoodsImportConfirmed"
+    />
+    <best-selling-selection-dialog
+      :dialog-visible="bestSellingSelectionVisible"
+      :sku-count="100"
+      @onSelectionCancelled="bestSellingSelectionVisible = false"
+      @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
     <el-dialog
       :visible.sync="editDialogVisible"
@@ -213,10 +227,11 @@ import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
 import { goodsType } from './templateType'
+import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
 
 export default {
   name: 'GoodsFloor',
-  components: { GoodsSelectionDialog, GoodsImportDialog, ImageUpload, ImageTargetLink },
+  components: { BestSellingSelectionDialog, GoodsSelectionDialog, GoodsImportDialog, ImageUpload, ImageTargetLink },
   props: {
     title: {
       type: String,
@@ -235,6 +250,7 @@ export default {
     return {
       dialogImportVisible: false,
       dialogSelectionVisible: false,
+      bestSellingSelectionVisible: false,
       showDetail: false,
       editingTitle: false,
       floorTitle: this.title,
@@ -308,6 +324,14 @@ export default {
       },
       set(value) {
         this.$emit('skuColorChanged', this.index, value)
+      }
+    },
+    bestSelling: {
+      get() {
+        return 'bestSelling' in this.floorInfo ? this.floorInfo.bestSelling : false
+      },
+      set(value) {
+        this.$emit('bestSellingChanged', this.index, value)
       }
     },
     skuData: {
@@ -426,6 +450,7 @@ export default {
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
+      this.bestSellingSelectionVisible = false
       this.$emit('addContent', this.index, skus)
     },
     onGoodsSelectionCancelled() {
@@ -451,6 +476,13 @@ export default {
         }
       }))
     },
+    onGoodsSelectionClicked() {
+      if (this.bestSelling) {
+        this.bestSellingSelectionVisible = true
+      } else {
+        this.dialogSelectionVisible = true
+      }
+    },
     handleExportGoods() {
       import('@/utils/Export2Excel').then(excel => {
         const tHeader = ['商品MPU']
@@ -472,22 +504,22 @@ export default {
 </script>
 
 <style scoped>
-  .floor-container {
-    margin: 10px 0;
-    background-color: #F2F6FC;
-    border: 1px dashed #eee;
-    width: 100%;
-  }
+.floor-container {
+  margin: 10px 0;
+  background-color: #F2F6FC;
+  border: 1px dashed #eee;
+  width: 100%;
+}
 
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 20px;
-    align-items: center;
-  }
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 20px;
+  align-items: center;
+}
 
-  .header-ops-container {
-    display: flex;
-    align-items: center;
-  }
+.header-ops-container {
+  display: flex;
+  align-items: center;
+}
 </style>

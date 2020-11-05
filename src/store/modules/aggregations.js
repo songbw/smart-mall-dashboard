@@ -341,21 +341,12 @@ const mutations = {
           const { list, settings } = data
           const newList = list.map(floor => ({
             title: floor.title,
-            titleImageUrl: 'titleImageUrl' in floor
-              ? floor.titleImageUrl
-              : null,
-            skuBackgroundColor: 'skuBackgroundColor' in floor
-              ? floor.skuBackgroundColor
-              : null,
-            titleTargetType: 'titleTargetType' in floor
-              ? floor.titleTargetType
-              : 'blank',
-            titleTargetUrl: 'titleTargetUrl' in floor
-              ? floor.titleTargetUrl
-              : 'about:blank',
-            titleTargetName: 'titleTargetName' in floor
-              ? floor.titleTargetName
-              : '无链接',
+            titleImageUrl: 'titleImageUrl' in floor ? floor.titleImageUrl : null,
+            skuBackgroundColor: 'skuBackgroundColor' in floor ? floor.skuBackgroundColor : null,
+            bestSelling: 'bestSelling' in floor ? floor.bestSelling : false,
+            titleTargetType: 'titleTargetType' in floor ? floor.titleTargetType : 'blank',
+            titleTargetUrl: 'titleTargetUrl' in floor ? floor.titleTargetUrl : 'about:blank',
+            titleTargetName: 'titleTargetName' in floor ? floor.titleTargetName : '无链接',
             skus: floor.skus
           }))
           settings.showFloorTitle = 'showFloorTitle' in settings
@@ -471,6 +462,9 @@ const mutations = {
       }
       if ('skuBackgroundColor' in params.value) {
         template.data.list[index].skuBackgroundColor = params.value.skuBackgroundColor
+      }
+      if ('bestSelling' in params.value) {
+        template.data.list[index].bestSelling = params.value.bestSelling
       }
       if ('skus' in params.value) {
         template.data.list[index].skus = params.value.skus

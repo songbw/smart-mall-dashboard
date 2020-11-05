@@ -13,6 +13,7 @@
         @titleImageChanged="onGoodsFloorTitleImageChanged"
         @titleTargetChanged="onGoodsFloorTitleTargetChanged"
         @skuColorChanged="onGoodsFloorSkuColorChanged"
+        @bestSellingChanged="onGoodsFloorBestSellingChanged"
         @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
         @changeContent="onGoodsFloorContentChanged"
@@ -244,6 +245,7 @@ export default {
         title: '楼层 ' + index,
         titleImageUrl: null,
         skuBackgroundColor: '#F8F8F8',
+        bestSelling: false,
         titleTargetType: 'blank',
         titleTargetUrl: 'about:blank',
         titleTargetName: '无链接',
@@ -282,6 +284,10 @@ export default {
     },
     onGoodsFloorSkuColorChanged(floorIndex, color) {
       const floor = { skuBackgroundColor: color }
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onGoodsFloorBestSellingChanged(floorIndex, val) {
+      const floor = { bestSelling: val }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentAdded(floorIndex, skus) {
@@ -334,15 +340,15 @@ export default {
 </script>
 
 <style scoped>
-  .goods-list-container {
-    width: 100%;
-  }
+.goods-list-container {
+  width: 100%;
+}
 
-  .goods-ops-container {
-    margin: 10px;
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
+.goods-ops-container {
+  margin: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
 </style>

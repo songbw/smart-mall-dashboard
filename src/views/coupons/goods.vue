@@ -11,6 +11,14 @@
           添加商品
         </el-button>
         <el-button
+          type="success"
+          size="mini"
+          :disabled="viewOnly"
+          @click="bestSellingSelectionVisible = true"
+        >
+          添加热销商品
+        </el-button>
+        <el-button
           size="mini"
           type="info"
           :disabled="viewOnly"
@@ -97,6 +105,12 @@
       @onSelectionCancelled="onGoodsSelectionCancelled"
       @onSelectionConfirmed="onGoodsSelectionConfirmed"
     />
+    <best-selling-selection-dialog
+      :dialog-visible="bestSellingSelectionVisible"
+      :preset-first-category="firstClassCategory"
+      @onSelectionCancelled="bestSellingSelectionVisible = false"
+      @onSelectionConfirmed="onGoodsSelectionConfirmed"
+    />
     <goods-import-dialog
       :dialog-visible="dialogImportVisible"
       @onSelectionCancelled="onGoodsImportCancelled"
@@ -114,10 +128,11 @@ import GoodsImportDialog from '@/components/GoodsImportDialog'
 import Pagination from '@/components/Pagination'
 import { getProductsByMpuListApi } from '@/api/products'
 import { parseSkuList } from './utils'
+import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
 
 export default {
   name: 'CouponGoods',
-  components: { GoodsSelectionDialog, GoodsImportDialog, Pagination },
+  components: { BestSellingSelectionDialog, GoodsSelectionDialog, GoodsImportDialog, Pagination },
   props: {
     mpuList: {
       type: Array,
@@ -142,6 +157,7 @@ export default {
     return {
       dialogImportVisible: false,
       dialogSelectionVisible: false,
+      bestSellingSelectionVisible: false,
       dataLoading: false,
       skuInfoList: [],
       selectedItems: [],
@@ -218,6 +234,7 @@ export default {
     },
     onGoodsSelectionConfirmed(skus) {
       this.dialogSelectionVisible = false
+      this.bestSellingSelectionVisible = false
       this.addContentSkus(skus)
     },
     onGoodsSelectionCancelled() {
@@ -270,14 +287,14 @@ export default {
 </script>
 
 <style scoped>
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 20px;
-  }
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 20px;
+}
 
-  .header-ops-container {
-    display: flex;
-    align-items: center;
-  }
+.header-ops-container {
+  display: flex;
+  align-items: center;
+}
 </style>

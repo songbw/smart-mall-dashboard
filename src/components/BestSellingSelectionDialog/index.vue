@@ -12,7 +12,8 @@
     <el-form @submit.prevent.native="handleDialogFilterSearch">
       <el-form-item label="商品类别">
         <category-selection
-          :first-value="firstCategoryValue"
+          :first-selectable="presetFirstCategory === null"
+          :first-value="presetFirstCategory || firstCategoryValue"
           :second-value="secondCategoryValue"
           :third-value="thirdCategoryValue"
           @changed="handleCategorySelectionChanged"
@@ -131,6 +132,14 @@ export default {
     useDefaultSku: {
       type: Boolean,
       default: false
+    },
+    presetFirstCategory: {
+      type: Number,
+      default: null
+    },
+    skuCount: {
+      type: Number,
+      default: 50
     }
   },
   data() {
@@ -295,11 +304,10 @@ export default {
     getFilterParams() {
       const params = {
         appId: this.platformAppId,
-        pageSize: 20
+        pageSize: this.skuCount
       }
-      const categoryId = this.thirdCategoryValue ||
-        this.secondCategoryValue ||
-        this.firstCategoryValue || null
+      const categoryId = this.thirdCategoryValue || this.secondCategoryValue ||
+        this.presetFirstCategory || this.firstCategoryValue || null
 
       if (categoryId !== null) {
         params.category = categoryId

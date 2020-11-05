@@ -240,6 +240,9 @@ export const CouponStatusDefinition = [{
   value: coupon_status_init,
   label: '编辑中'
 }, {
+  value: coupon_status_published,
+  label: '已发布'
+}, {
   value: coupon_status_ready_for_sale,
   label: '未开始'
 }, {
