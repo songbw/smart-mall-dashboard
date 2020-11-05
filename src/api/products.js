@@ -212,3 +212,11 @@ export function updateProductStateByMerchant(params) {
     data: params
   })
 }
+
+export function getHotWordListApi(params) {
+  return Vue.axios('products').request({
+    url: '/products/es/prod/admin/top',
+    method: 'get',
+    params
+  })
+}

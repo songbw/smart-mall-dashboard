@@ -295,6 +295,12 @@ export const constantRoutes = [
         component: () => import('@/views/coupons/usages'),
         meta: { title: '领取详情', group: 'coupons' },
         hidden: true
+      },
+      {
+        path: 'hotWords',
+        name: 'HotWords',
+        component: () => import('@/views/hotwords/index'),
+        meta: { title: '热词管理', icon: 'hot-words', group: 'hotwords' }
       }
       /*
       {
