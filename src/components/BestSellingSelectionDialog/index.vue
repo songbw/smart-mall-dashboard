@@ -82,9 +82,9 @@
           <span>{{ scope.row.state | productState }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="热销排名" align="center" width="100">
+      <el-table-column label="销售数量" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.ranking }}</span>
+          <span>{{ scope.row.saleCount }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品详情" align="center" width="80">
@@ -256,7 +256,7 @@ export default {
           merchantId: spu.merchantId,
           floorPrice: spu.floorPrice,
           brand: spu.brand,
-          ranking: spu.ranking
+          saleCount: spu.saleCount
         }
         if (this.hasPromotion) {
           prod.discount = spu.discount
@@ -329,7 +329,7 @@ export default {
         const { code, data } = await getBestSellingListApi(filterParams)
         if (code === 200 && Array.isArray(data)) {
           total = data.length
-          list = data.map((item, index) => ({ ...item, ranking: index + 1 }))
+          list = data
         }
       } catch (e) {
         console.warn('Select product error:' + e)
@@ -355,7 +355,7 @@ export default {
             imagePath: item.image,
             brand: item.brand,
             name: item.name,
-            ranking: item.ranking,
+            saleCount: item.saleCount,
             intro: ''
           }
           if (this.hasPromotion) {

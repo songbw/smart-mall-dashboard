@@ -121,9 +121,9 @@
           <span>{{ scope.row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="bestSelling" label="热销排名" align="center" width="100">
+      <el-table-column v-if="bestSelling" label="销售数量" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.ranking }}</span>
+          <span>{{ scope.row.saleCount }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="250">
