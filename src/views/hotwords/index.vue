@@ -4,8 +4,28 @@
       <el-form-item label="运营平台">
         <el-input readonly :value="currentAppName" style="width: 480px" />
       </el-form-item>
-      <el-form-item v-if="couldEdit">
-        <el-button type="primary" @click="onCreateClicked">
+      <el-form-item label="热词数量">
+        <el-select v-model="queryCount">
+          <el-option label="TOP10" value="10" />
+          <el-option label="TOP20" value="20" />
+          <el-option label="TOP30" value="30" />
+          <el-option label="TOP50" value="50" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="日期范围">
+        <el-date-picker
+          v-model="queryDates"
+          type="daterange"
+          start-placeholder="选择查询开始日期"
+          end-placeholder="选择查询结束日期"
+          value-format="yyyy-MM-dd"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="queryHotWords">
+          查询
+        </el-button>
+        <el-button v-if="couldEdit" type="info" @click="onCreateClicked">
           添加热词
         </el-button>
       </el-form-item>
@@ -13,7 +33,7 @@
         <span
           v-for="word in wordList"
           :key="word.value"
-          style="margin: 0 12px"
+          style="margin-right: 12px"
         >
           <el-tag
             :closable="couldEdit"
@@ -82,6 +102,8 @@ export default {
       couldEdit: false,
       dataLoading: false,
       dialogFormVisible: false,
+      queryDates: null,
+      queryCount: '10',
       maxCount: 0,
       wordForm: {
         value: '',
@@ -103,7 +125,7 @@ export default {
   },
   watch: {
     appId: function (value, old) {
-      this.initData()
+      this.queryHotWords()
     }
   },
   created() {
@@ -111,12 +133,23 @@ export default {
   },
   methods: {
     async initData() {
+      await this.queryHotWords()
+    },
+    async queryHotWords() {
+      let list = []
       try {
         this.dataLoading = true
-        const { code, data } = await getHotWordListApi()
+        const params = {
+          pageSize: this.queryCount
+        }
+        if (Array.isArray(this.queryDates) && this.queryDates.length === 2) {
+          params.startTime = this.queryDates[0]
+          params.endTime = this.queryDates[1]
+        }
+        const { code, data } = await getHotWordListApi(params)
         if (code === 200 && Array.isArray(data)) {
           const typeLength = typeList.length
-          this.wordList = data
+          list = data
             .filter(item => item.appId === this.appId)
             .flatMap(item => item.hotWordList)
             .map((item, index) => ({
@@ -129,6 +162,7 @@ export default {
         console.warn('Get hot word list error:' + e)
       } finally {
         this.dataLoading = false
+        this.wordList = list
       }
     },
     onCreateClicked() {
