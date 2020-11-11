@@ -127,6 +127,16 @@
       </div>
     </div>
     <el-form inline>
+      <el-form-item v-if="hasVendorPermission">
+        <el-button
+          :disabled="productSelection.length === 0"
+          type="success"
+          icon="el-icon-copy-document"
+          @click="handleCopySelection"
+        >
+          复制已选{{ productSelection.length }}个商品
+        </el-button>
+      </el-form-item>
       <el-form-item v-if="!isRenterAdmin">
         <el-button
           v-if="hasUpdatePermission"
@@ -414,6 +424,12 @@
       @cancelled="dialogExportVisible = false"
       @confirmed="handleConfirmExportProducts"
     />
+    <copy-dialog
+      :mpu-id-list="copyMpuList"
+      :dialog-visible="copyDialogVisible"
+      @cancelled="copyDialogVisible = false"
+      @confirmed="onGoodCopyConfirmed"
+    />
   </div>
 </template>
 
@@ -424,15 +440,15 @@ import isEqual from 'lodash/isEqual'
 import trim from 'lodash/trim'
 import moment from 'moment'
 import {
-  getProductListApi,
-  updateProductApi,
-  searchProductsApi,
-  deleteProductApi,
-  createProductApi,
-  exportProductsApi,
-  exportFloorPriceApi,
   batchUpdateProductsApi,
   batchUpdateStateApi,
+  createProductApi,
+  deleteProductApi,
+  exportFloorPriceApi,
+  exportProductsApi,
+  getProductListApi,
+  searchProductsApi,
+  updateProductApi,
   updateRenterSkuStateApi
 } from '@/api/products'
 import { searchBrandsApi } from '@/api/brands'
@@ -441,24 +457,27 @@ import GoodsImportDialog from '@/components/GoodsImportDialog'
 import CategorySelection from '@/components/CategorySelection'
 import VendorSelection from '@/components/VendorSelection'
 import {
+  platform_renter_id,
+  product_state_all,
+  product_state_is_editing,
   product_state_off_shelves,
   product_state_on_sale,
-  product_state_is_editing,
-  product_state_all,
   ProductStateOptions,
-  role_renter_name, platform_renter_id
+  role_renter_name
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
 import InventoryDialog from './inventoryDialog'
 import ExportDialog from './exportDialog'
 import { floatToFixed } from '@/utils'
+import CopyDialog from '@/views/product/copyDialog'
 
 const vendorAoyi = 2
 
 export default {
   name: 'Product',
   components: {
+    CopyDialog,
     Pagination,
     CategorySelection,
     GoodsImportDialog,
@@ -499,9 +518,11 @@ export default {
       productExporting: false,
       productSelection: [],
       selectedMpuList: [],
+      copyMpuList: [],
       dialogImportVisible: false,
       dialogUpdateVisible: false,
       dialogUpdateStateVisible: false,
+      copyDialogVisible: false,
       editDialogVisible: false,
       shippingPriceDialogVisible: false,
       brandLoading: false,
@@ -1333,8 +1354,15 @@ export default {
     handleMpuPrefixChanged(value) {
       this.listMpuPrefix = value
     },
-    async onGoodsImportConfirmed(spuList) {
+    onGoodsImportConfirmed(spuList) {
       this.dialogImportVisible = false
+      this.handleCreateSpuList(spuList)
+    },
+    onGoodCopyConfirmed(spuList) {
+      this.copyDialogVisible = false
+      this.handleCreateSpuList(spuList)
+    },
+    async handleCreateSpuList(spuList) {
       if (spuList.length > 0) {
         const loading = this.$loading({
           lock: true,
@@ -1375,6 +1403,10 @@ export default {
         loading.close()
         this.getListData()
       }
+    },
+    handleCopySelection() {
+      this.copyMpuList = this.productSelection.map(item => item.mpu)
+      this.copyDialogVisible = true
     },
     handleEditSelection() {
       Object.keys(this.selectionForm).forEach(key => {
