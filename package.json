@@ -19,7 +19,7 @@
     "core-js": "^3.7.0",
     "cos-js-sdk-v5": "^0.5.27",
     "echarts": "^4.9.0",
-    "element-ui": "^2.14.0",
+    "element-ui": "^2.14.1",
     "file-saver": "^2.0.2",
     "google-libphonenumber": "^3.2.15",
     "localforage": "^1.9.0",
