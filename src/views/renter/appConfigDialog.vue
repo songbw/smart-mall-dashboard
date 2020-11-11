@@ -4,7 +4,7 @@
     :close-on-press-escape="false"
     :show-close="false"
     :visible="dialogVisible"
-    :title="appConfig !== null ? '编辑租户' : '创建租户'"
+    :title="appConfig !== null ? '编辑运营端' : '创建运营端'"
     @open="onDialogOpen"
   >
     <el-form
