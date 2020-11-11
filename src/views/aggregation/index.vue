@@ -58,7 +58,6 @@
           <div v-if="hasEditPermission" style="display: flex;justify-content: space-between">
             <el-button-group>
               <el-button
-                :disabled="!vendorApproved"
                 type="primary"
                 icon="el-icon-document-add"
                 @click="createPage"
@@ -66,17 +65,24 @@
                 创建聚合页
               </el-button>
               <el-button
-                :disabled="!vendorApproved || aggregationSelection.length === 0"
+                :disabled="aggregationSelection.length === 0"
                 type="info"
+                icon="el-icon-brush"
+                @click="clonePages"
+              >
+                批量复制聚合页
+              </el-button>
+              <el-button
+                :disabled="aggregationSelection.length === 0"
+                type="warning"
                 icon="el-icon-brush"
                 @click="revisePages"
               >
-                移除已下架商品
+                批量修正聚合页
               </el-button>
             </el-button-group>
             <el-button-group>
               <el-button
-                :disabled="!vendorApproved"
                 type="info"
                 icon="el-icon-folder"
                 @click="handleCreateGroup"
@@ -216,6 +222,7 @@
     />
     <clone-dialog
       :dialog-visible="cloneDialogVisible"
+      :change-name="clonePageName"
       title="复制聚合页"
       name-title="聚合页名称"
       @cancelled="cloneDialogVisible = false"
@@ -245,21 +252,22 @@
 import { mapGetters } from 'vuex'
 import moment from 'moment'
 import trim from 'lodash/trim'
+import isEmpty from 'lodash/isEmpty'
 import Pagination from '@/components/Pagination'
 import CloneDialog from '@/components/CloneDialog'
 import PreviewDialog from './components/previewDialog'
 import {
+  deleteAggregationApi,
   getAggregationsApi,
   searchAggregationsApi,
-  deleteAggregationApi,
   updateAggregationApi
 } from '@/api/aggregations'
 import { AggregationPermissions } from '@/utils/role-permissions'
 import {
-  AggregationStatusOptions,
   aggregation_editing_status,
+  aggregation_off_shelves_status,
   aggregation_on_sale_status,
-  aggregation_off_shelves_status
+  AggregationStatusOptions
 } from './constants'
 import { invalid_app_id } from '@/utils/constants'
 
@@ -311,8 +319,9 @@ export default {
       qrCodeDialogVisible: false,
       listLoading: false,
       queryGroupId: '-1',
+      clonePageName: true,
       cloneDialogVisible: false,
-      cloneId: null,
+      cloneIdList: [],
       aggregationSelection: [],
       reviseDialogVisible: false,
       reviseProgress: 0,
@@ -323,7 +332,6 @@ export default {
   computed: {
     ...mapGetters({
       userPermissions: 'userPermissions',
-      vendorApproved: 'vendorApproved',
       listQuery: 'aggregationsQuery',
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId',
@@ -427,7 +435,7 @@ export default {
     },
     async getAggregationGroups() {
       try {
-        if (this.vendorApproved && this.hasViewPermission) {
+        if (this.hasViewPermission) {
           await this.$store.dispatch('aggregations/getGroups', {
             offset: 1, limit: 100, appId: this.appId
           })
@@ -437,17 +445,15 @@ export default {
       }
     },
     getListData() {
-      if (this.vendorApproved) {
-        if (this.hasViewPermission) {
-          const params = this.getFilterParams()
-          if (params) {
-            this.queryFilterData(params)
-          } else {
-            this.queryAllData()
-          }
+      if (this.hasViewPermission) {
+        const params = this.getFilterParams()
+        if (params) {
+          this.queryFilterData(params)
         } else {
-          this.$message.warning('没有查看聚合页权限，请联系管理员！')
+          this.queryAllData()
         }
+      } else {
+        this.$message.warning('没有查看聚合页权限，请联系管理员！')
       }
     },
     async queryAllData() {
@@ -547,16 +553,33 @@ export default {
       })
     },
     handleClone(index) {
-      this.cloneId = this.aggregationList[index].id
+      this.cloneIdList = [this.aggregationList[index].id]
+      this.clonePageName = true
       this.cloneDialogVisible = true
     },
     async handleClonePage(params) {
       this.cloneDialogVisible = false
       try {
         this.listLoading = true
-        const id = await this.$store.dispatch('aggregations/clonePage', { id: this.cloneId, ...params })
-        if (id >= 0) {
+        const idList = []
+        for (const cloneId of this.cloneIdList) {
+          let name = params.name
+          if (isEmpty(name)) {
+            const find = this.aggregationList.find(item => item.id === cloneId)
+            name = (find ? find.name : '') + '(cloned)'
+          }
+          const id = await this.$store.dispatch('aggregations/clonePage', {
+            id: cloneId,
+            appId: params.appId,
+            name
+          })
+          idList.push(id)
+        }
+        if (idList.length > 0) {
           this.$message.success('复制聚合页成功，请切换到对应的聚合页平台查看')
+          if (this.appId === params.appId) {
+            this.getListData()
+          }
         }
       } catch (e) {
         console.warn('Clone aggregation page error:' + e)
@@ -692,6 +715,11 @@ export default {
     },
     handleSelectionChange(selection) {
       this.aggregationSelection = selection
+    },
+    clonePages() {
+      this.cloneIdList = this.aggregationSelection.map(item => item.id)
+      this.clonePageName = false
+      this.cloneDialogVisible = true
     },
     async revisePages() {
       try {

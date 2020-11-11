@@ -7,7 +7,7 @@
     :title="title"
   >
     <el-form ref="cloneForm" :model="cloneForm" :rules="cloneRules" label-width="6rem">
-      <el-form-item :label="nameTitle" prop="name">
+      <el-form-item v-if="changeName" :label="nameTitle" prop="name">
         <el-input v-model="cloneForm.name" maxlength="50" />
       </el-form-item>
       <el-form-item label="运营平台" prop="appId">
@@ -48,6 +48,10 @@ export default {
     nameTitle: {
       type: String,
       default: '名称'
+    },
+    changeName: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
@@ -86,12 +90,14 @@ export default {
   methods: {
     handleDialogCancel() {
       this.$emit('cancelled')
+      this.cloneForm.name = ''
       this.$refs.cloneForm.resetFields()
     },
     handleDialogConfirm() {
       this.$refs.cloneForm.validate((valid) => {
         if (valid) {
           this.$emit('confirmed', { ...this.cloneForm })
+          this.cloneForm.name = ''
           this.$refs.cloneForm.resetFields()
         }
       })

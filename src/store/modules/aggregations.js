@@ -578,7 +578,7 @@ const actions = {
       const clonePage = {
         appId: params.appId,
         name: params.name,
-        homePage: data.result.homePage,
+        homePage: false,
         backgroundColor: data.result.backgroundColor,
         header: data.result.header,
         effectiveDate: now,
