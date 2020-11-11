@@ -353,6 +353,7 @@ export default {
         const { code, msg } = await createAppConfigApi({ renterId: this.renterId, ...appData })
         if (code === 200) {
           await this.getAppConfigList()
+          await this.$store.dispatch('app/getPlatformList', true)
         } else {
           this.$message.warning(msg)
         }
@@ -376,6 +377,7 @@ export default {
         const { code, msg } = await updateAppConfigApi({ ...this.currentAppConfig, ...appData })
         if (code === 200) {
           await this.getAppConfigList()
+          await this.$store.dispatch('app/getPlatformList', true)
         } else {
           this.$message.warning(msg)
         }
