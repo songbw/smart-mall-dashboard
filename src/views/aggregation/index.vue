@@ -71,7 +71,7 @@
                 icon="el-icon-brush"
                 @click="revisePages"
               >
-                批量修正聚合页
+                移除已下架商品
               </el-button>
             </el-button-group>
             <el-button-group>
