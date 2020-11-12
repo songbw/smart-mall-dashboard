@@ -14,6 +14,7 @@
         @titleTargetChanged="onGoodsFloorTitleTargetChanged"
         @skuColorChanged="onGoodsFloorSkuColorChanged"
         @bestSellingChanged="onGoodsFloorBestSellingChanged"
+        @updateContent="onGoodsFloorContentUpdate"
         @addContent="onGoodsFloorContentAdded"
         @sortContent="onGoodsFloorContentSort"
         @changeContent="onGoodsFloorContentChanged"
@@ -288,6 +289,10 @@ export default {
     },
     onGoodsFloorBestSellingChanged(floorIndex, val) {
       const floor = { bestSelling: val }
+      this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
+    },
+    onGoodsFloorContentUpdate(floorIndex, skus) {
+      const floor = { skus }
       this.$store.commit('aggregations/SET_GOODS_LIST', { index: floorIndex, value: floor })
     },
     onGoodsFloorContentAdded(floorIndex, skus) {

@@ -73,7 +73,7 @@
         :icon="showDetail ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
         type="primary"
         size="small"
-        @click="showDetail = !showDetail"
+        @click="onShowDetailClicked"
       >
         {{ collapseLabel }}
       </el-button>
@@ -81,6 +81,9 @@
     <div v-if="showDetail">
       <div class="header-container">
         <div class="header-ops-container">
+          <el-button :loading="skuLoading" icon="el-icon-refresh" type="warning" size="mini" @click="refreshSkuData">
+            刷新商品
+          </el-button>
           <el-button type="primary" size="mini" @click="onGoodsSelectionClicked">
             添加商品
           </el-button>
@@ -100,6 +103,7 @@
       </div>
       <el-table
         ref="skuTable"
+        v-loading="skuLoading"
         :data="skuData"
         style="width: 100%"
         height="350"
@@ -124,6 +128,11 @@
         <el-table-column label="商品价格(元)" align="center" width="100">
           <template slot-scope="scope">
             <span>{{ scope.row.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品状态" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{ scope.row.state | productState }}</span>
           </template>
         </el-table-column>
         <el-table-column v-if="bestSelling" label="销售数量" align="center" width="100">
@@ -228,10 +237,24 @@ import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
 import { goodsType } from './templateType'
 import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
+import { getProductsByMpuListApi } from '@/api/products'
+import { invalid_renter_id, product_state_off_shelves, ProductStateOptions } from '@/utils/constants'
+import { floatToFixed } from '@/utils'
 
 export default {
   name: 'GoodsFloor',
   components: { BestSellingSelectionDialog, GoodsSelectionDialog, GoodsImportDialog, ImageUpload, ImageTargetLink },
+  filters: {
+    productState: state => {
+      const value = typeof state === 'string' ? Number.parseInt(state) : state
+      if (Number.isNaN(value)) {
+        return state
+      } else {
+        const find = ProductStateOptions.find(option => option.value === value)
+        return find ? find.label : state
+      }
+    }
+  },
   props: {
     title: {
       type: String,
@@ -251,11 +274,11 @@ export default {
       dialogImportVisible: false,
       dialogSelectionVisible: false,
       bestSellingSelectionVisible: false,
+      skuLoading: false,
       showDetail: false,
       editingTitle: false,
       floorTitle: this.title,
       selectedItems: [],
-      tempSkuData: [],
       fetchedCount: 0,
       editDialogVisible: false,
       editGoodIndex: -1,
@@ -265,9 +288,15 @@ export default {
   },
   computed: {
     ...mapGetters({
+      platformAppList: 'platformAppList',
+      currentAggregation: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    renterId() {
+      const find = this.platformAppList.find(item => this.currentAggregation.appId === item.appId)
+      return find ? find.renterId : invalid_renter_id
+    },
     goodsInfo: function () {
       if (this.pageTemplateList[this.currentTemplateIndex].type === goodsType) {
         return this.pageTemplateList[this.currentTemplateIndex].data
@@ -360,6 +389,62 @@ export default {
     }
   },
   methods: {
+    onShowDetailClicked() {
+      this.showDetail = !this.showDetail
+      if (this.showDetail && this.skuData.length > 0) {
+        this.refreshSkuData()
+      }
+    },
+    getRenterSpuState(spu, renterId) {
+      const stateList = spu.appSkuStateList
+      if (Array.isArray(stateList) && stateList.length > 0) {
+        const find = stateList.find(item => item.renterId === renterId)
+        return find ? find.state.toString() : spu.state
+      } else {
+        return spu.state
+      }
+    },
+    getRenterSpuPrice(spu, renterId) {
+      const priceList = spu.appSkuPriceList
+      if (Array.isArray(priceList) && priceList.length > 0) {
+        const find = priceList.find(item => item.renterId === renterId)
+        return find ? floatToFixed(find.price / 100) : spu.price
+      } else {
+        return spu.price
+      }
+    },
+    getSpuData(mpu, list) {
+      const find = list.find(item => item.mpu === mpu)
+      if (find) {
+        return {
+          state: this.getRenterSpuState(find, this.renterId),
+          price: this.getRenterSpuPrice(find, this.renterId)
+        }
+      } else {
+        return { state: product_state_off_shelves.toString(), price: '0' }
+      }
+    },
+    async refreshSkuData() {
+      try {
+        this.skuLoading = true
+        const params = {
+          mpuIdList: this.skuData.map(item => item.mpu).join(',')
+        }
+        const { code, data } = await getProductsByMpuListApi(params)
+        if (code === 200 && data.result.length > 0) {
+          const fetchedList = data.result
+          const list = this.skuData.map(item => {
+            const spuData = this.getSpuData(item.mpu, fetchedList)
+            return { ...item, state: spuData.state, price: spuData.price }
+          })
+          this.$emit('updateContent', this.index, list)
+        }
+      } catch (e) {
+        console.warn('Get product list error:' + e)
+      } finally {
+        this.skuLoading = false
+      }
+    },
     handleSortFloor(up) {
       this.$emit('sortFloor', this.index, up)
     },

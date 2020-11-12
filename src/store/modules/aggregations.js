@@ -21,8 +21,10 @@ import {
   aggregationPromotionListType,
   aggregationPromotionType,
   aggregationServiceType,
+  invalid_renter_id,
   product_state_on_sale
 } from '@/utils/constants'
+import { floatToFixed } from '@/utils'
 
 // corresponding to appId types
 const urlResetTypes = ['aggregation', 'promotion']
@@ -211,13 +213,35 @@ const cloneTemplate = (srcAppId, dstAppId, template) => {
   }
 }
 
-const isProductValid = (product) => {
-  const price = Number.parseFloat(product.price)
-  return !Number.isNaN(price) && price > 0 && Number.parseInt(product.state) ===
+const getRenterSpuState = (spu, renterId) => {
+  const stateList = spu.appSkuStateList
+  if (Array.isArray(stateList) && stateList.length > 0) {
+    const find = stateList.find(item => item.renterId === renterId)
+    return find ? find.state.toString() : spu.state
+  } else {
+    return spu.state
+  }
+}
+
+const getRenterSpuPrice = (spu, renterId) => {
+  const priceList = spu.appSkuPriceList
+  if (Array.isArray(priceList) && priceList.length > 0) {
+    const find = priceList.find(item => item.renterId === renterId)
+    return find ? floatToFixed(find.price / 100) : spu.price
+  } else {
+    return spu.price
+  }
+}
+
+const isProductValid = (product, renterId) => {
+  const spuPrice = getRenterSpuPrice(product, renterId)
+  const price = Number.parseFloat(spuPrice)
+  const state = getRenterSpuState(product, renterId)
+  return !Number.isNaN(price) && price > 0 && Number.parseInt(state) ===
     product_state_on_sale
 }
 
-async function filterOnSaleMpuList(mpuList) {
+async function filterOnSaleMpuList(mpuList, renterId) {
   let onSaleList = []
   if (mpuList.length > 0) {
     for (let begin = 0; begin < mpuList.length; begin += 50) {
@@ -228,7 +252,7 @@ async function filterOnSaleMpuList(mpuList) {
         const { code, data } = await getProductsByMpuListApi(params)
         if (code === 200 && data.result.length > 0) {
           onSaleList = onSaleList.concat(
-            data.result.filter(item => isProductValid(item))
+            data.result.filter(item => isProductValid(item, renterId))
               .map(item => item.mpu)
           )
         }
@@ -240,12 +264,12 @@ async function filterOnSaleMpuList(mpuList) {
   return onSaleList
 }
 
-async function reviseList(list, type) {
+async function reviseList(list, type, renterId) {
   switch (type) {
     case aggregationPromotionType:
     case aggregationComboType:
     case aggregationHorizontalGoodType: {
-      const onSaleList = await filterOnSaleMpuList(list.map(item => item.mpu))
+      const onSaleList = await filterOnSaleMpuList(list.map(item => item.mpu), renterId)
       return list.filter(item => onSaleList.includes(item.mpu))
     }
     case aggregationGoodsType:
@@ -254,8 +278,7 @@ async function reviseList(list, type) {
       for (const listItem of list) {
         const { skus, ...rest } = listItem
         if (Array.isArray(skus)) {
-          const onSaleList = await filterOnSaleMpuList(
-            skus.map(item => item.mpu))
+          const onSaleList = await filterOnSaleMpuList(skus.map(item => item.mpu), renterId)
           newList.push({
             skus: skus.filter(item => onSaleList.includes(item.mpu)),
             ...rest
@@ -269,9 +292,9 @@ async function reviseList(list, type) {
   }
 }
 
-async function reviseTemplate(template) {
+async function reviseTemplate(template, renterId) {
   const { data, ...rest } = template
-  const list = await reviseList(data.list, template.type)
+  const list = await reviseList(data.list, template.type, renterId)
   const settings = data.settings
   return {
     data: { list, settings },
@@ -598,14 +621,17 @@ const actions = {
     }
     return -1
   },
-  async revisePage({ commit }, params) {
+  async revisePage({ commit, rootState }, params) {
     const id = params.id
     const { code, data } = await getAggregationByIdApi({ id })
     if (code === 200 && data.result && data.result.content) {
+      const { app } = rootState
+      const appConfig = app.platformList.find(item => item.appId === data.result.appId)
+      const renterId = appConfig ? appConfig.renterId : invalid_renter_id
       const content = JSON.parse(data.result.content)
       const reviseContent = []
       for (const contentItem of content) {
-        const reviseItem = await reviseTemplate(contentItem)
+        const reviseItem = await reviseTemplate(contentItem, renterId)
         reviseContent.push(reviseItem)
       }
       await updateAggregationContentApi({

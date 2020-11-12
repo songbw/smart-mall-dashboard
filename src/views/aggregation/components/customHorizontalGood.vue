@@ -72,6 +72,9 @@
     </el-container>
     <div class="header-container">
       <div class="header-ops-container">
+        <el-button :loading="skuLoading" icon="el-icon-refresh" type="warning" size="mini" @click="refreshSkuData">
+          刷新商品
+        </el-button>
         <el-button type="primary" size="mini" @click="onGoodsSelectionClicked">
           添加商品
         </el-button>
@@ -95,6 +98,7 @@
     </div>
     <el-table
       ref="skuTable"
+      v-loading="skuLoading"
       :data="skuData"
       style="width: 100%"
       max-height="450"
@@ -119,6 +123,11 @@
       <el-table-column label="商品价格(元)" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="商品状态" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.state | productState }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="bestSelling" label="销售数量" align="center" width="100">
@@ -225,6 +234,9 @@ import GoodsImportDialog from '@/components/GoodsImportDialog'
 import ImageUpload from '@/components/ImageUpload'
 import ImageTargetLink from './imageTargetLink'
 import BestSellingSelectionDialog from '@/components/BestSellingSelectionDialog/index'
+import { invalid_renter_id, product_state_off_shelves, ProductStateOptions } from '@/utils/constants'
+import { floatToFixed } from '@/utils'
+import { getProductsByMpuListApi } from '@/api/products'
 
 export default {
   name: 'CustomHorizontalGood',
@@ -234,6 +246,15 @@ export default {
       const format = 'YYYY-MM-DD HH:mm:ss'
       const momentDate = moment(date)
       return momentDate.isValid() ? momentDate.format(format) : ''
+    },
+    productState: state => {
+      const value = typeof state === 'string' ? Number.parseInt(state) : state
+      if (Number.isNaN(value)) {
+        return state
+      } else {
+        const find = ProductStateOptions.find(option => option.value === value)
+        return find ? find.label : state
+      }
     }
   },
   data() {
@@ -242,6 +263,8 @@ export default {
       dialogImportVisible: false,
       dialogSelectionVisible: false,
       bestSellingSelectionVisible: false,
+      skuLoading: false,
+      parsedSkuData: [],
       selectedItems: [],
       originalImageProp: null,
       editDialogVisible: false,
@@ -252,10 +275,15 @@ export default {
   },
   computed: {
     ...mapGetters({
+      platformAppList: 'platformAppList',
       pageInfo: 'currentAggregation',
       pageTemplateList: 'currentAggregationContent',
       currentTemplateIndex: 'currentAggregationContentIndex'
     }),
+    renterId() {
+      const find = this.platformAppList.find(item => this.pageInfo.appId === item.appId)
+      return find ? find.renterId : invalid_renter_id
+    },
     pageAppId() {
       return this.pageInfo.appId
     },
@@ -418,6 +446,56 @@ export default {
     }
   },
   methods: {
+    getRenterSpuState(spu, renterId) {
+      const stateList = spu.appSkuStateList
+      if (Array.isArray(stateList) && stateList.length > 0) {
+        const find = stateList.find(item => item.renterId === renterId)
+        return find ? find.state.toString() : spu.state
+      } else {
+        return spu.state
+      }
+    },
+    getRenterSpuPrice(spu, renterId) {
+      const priceList = spu.appSkuPriceList
+      if (Array.isArray(priceList) && priceList.length > 0) {
+        const find = priceList.find(item => item.renterId === renterId)
+        return find ? floatToFixed(find.price / 100) : spu.price
+      } else {
+        return spu.price
+      }
+    },
+    getSpuData(mpu, list) {
+      const find = list.find(item => item.mpu === mpu)
+      if (find) {
+        return {
+          state: this.getRenterSpuState(find, this.renterId),
+          price: this.getRenterSpuPrice(find, this.renterId)
+        }
+      } else {
+        return { state: product_state_off_shelves.toString(), price: '0' }
+      }
+    },
+    async refreshSkuData() {
+      try {
+        this.skuLoading = true
+        const params = {
+          mpuIdList: this.skuData.map(item => item.mpu).join(',')
+        }
+        const { code, data } = await getProductsByMpuListApi(params)
+        if (code === 200 && data.result.length > 0) {
+          const fetchedList = data.result
+          const list = this.skuData.map(item => {
+            const spuData = this.getSpuData(item.mpu, fetchedList)
+            return { ...item, state: spuData.state, price: spuData.price }
+          })
+          this.$store.commit('aggregations/SET_PROMOTION_LIST', list)
+        }
+      } catch (e) {
+        console.warn('Get product list error:' + e)
+      } finally {
+        this.skuLoading = false
+      }
+    },
     toTimeString(num) {
       if (num < 10) {
         return '0' + num.toString()
