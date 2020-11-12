@@ -424,26 +424,32 @@ export default {
         return { state: product_state_off_shelves.toString(), price: '0' }
       }
     },
-    async refreshSkuData() {
-      try {
-        this.skuLoading = true
+    async getProductsByMpuList(fetchList) {
+      let mpuList = []
+      for (let begin = 0; begin < fetchList.length; begin += 50) {
         const params = {
-          mpuIdList: this.skuData.map(item => item.mpu).join(',')
+          mpuIdList: fetchList.slice(begin, begin + 50).join(',')
         }
-        const { code, data } = await getProductsByMpuListApi(params)
-        if (code === 200 && data.result.length > 0) {
-          const fetchedList = data.result
-          const list = this.skuData.map(item => {
-            const spuData = this.getSpuData(item.mpu, fetchedList)
-            return { ...item, state: spuData.state, price: spuData.price }
-          })
-          this.$emit('updateContent', this.index, list)
+        try {
+          const { code, data } = await getProductsByMpuListApi(params)
+          if (code === 200 && data.result.length > 0) {
+            mpuList = mpuList.concat(data.result)
+          }
+        } catch (err) {
+          console.warn('Coupon Goods: search error:' + err)
         }
-      } catch (e) {
-        console.warn('Get product list error:' + e)
-      } finally {
-        this.skuLoading = false
       }
+      return mpuList
+    },
+    async refreshSkuData() {
+      this.skuLoading = true
+      const fetchedList = await this.getProductsByMpuList(this.skuData.map(item => item.mpu))
+      const list = this.skuData.map(item => {
+        const spuData = this.getSpuData(item.mpu, fetchedList)
+        return { ...item, state: spuData.state, price: spuData.price }
+      })
+      this.$emit('updateContent', this.index, list)
+      this.skuLoading = false
     },
     handleSortFloor(up) {
       this.$emit('sortFloor', this.index, up)
