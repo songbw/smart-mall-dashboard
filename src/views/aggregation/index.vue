@@ -33,6 +33,9 @@
         <el-button type="primary" icon="el-icon-search" @click="handleFilter">
           搜索
         </el-button>
+        <el-button v-if="isPlatformAdmin" type="warning" icon="el-icon-brush" @click="handleBatchRevise">
+          清理下架商品
+        </el-button>
       </el-form-item>
     </el-form>
     <el-form v-if="false" inline>
@@ -257,8 +260,10 @@ import Pagination from '@/components/Pagination'
 import CloneDialog from '@/components/CloneDialog'
 import PreviewDialog from './components/previewDialog'
 import {
+  batchReviseAggregationsApi,
   deleteAggregationApi,
   getAggregationsApi,
+  reviseAggregationByIdListApi,
   searchAggregationsApi,
   updateAggregationApi
 } from '@/api/aggregations'
@@ -269,7 +274,7 @@ import {
   aggregation_on_sale_status,
   AggregationStatusOptions
 } from './constants'
-import { invalid_app_id } from '@/utils/constants'
+import { invalid_app_id, role_admin_name } from '@/utils/constants'
 
 export default {
   name: 'AggregationPages',
@@ -336,8 +341,12 @@ export default {
       aggregationGroups: 'aggregationGroups',
       groupId: 'aggregationGroupId',
       appList: 'platformAppList',
-      appId: 'platformAppId'
+      appId: 'platformAppId',
+      userRole: 'userRole'
     }),
+    isPlatformAdmin() {
+      return this.userRole === role_admin_name
+    },
     hasViewPermission() {
       return this.userPermissions.includes(AggregationPermissions.view)
     },
@@ -532,6 +541,23 @@ export default {
     handleFilter() {
       this.queryOffset = 1
       this.getListData()
+    },
+    handleBatchRevise() {
+      this.$confirm('是否继续清理所有（销售中）聚合页中已下架商品？', '警告', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.listLoading = true
+        batchReviseAggregationsApi().then(() => {
+          this.getListData()
+        }).catch(error => {
+          this.$message(error)
+        }).finally(() => {
+          this.listLoading = false
+        })
+      }).catch(() => {
+      })
     },
     createPage() {
       this.$router.push({
@@ -728,23 +754,17 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        this.cancelRevise = false
-        this.reviseDialogVisible = true
-        let count = 0
-        const total = this.aggregationSelection.length
-        for (const aggregation of this.aggregationSelection) {
-          this.reviseName = aggregation.name
-          count++
-          this.reviseProgress = Math.round(100 * count / total)
-          await this.$store.dispatch('aggregations/revisePage', { id: aggregation.id })
-          if (this.cancelRevise) break
+        this.listLoading = true
+        const idList = this.aggregationSelection.map(item => item.id)
+        const { code } = await reviseAggregationByIdListApi(idList)
+        if (code === 200) {
+          await this.getListData()
         }
-        if (!this.cancelRevise) this.$message.success('修改聚合页成功！')
       } catch (e) {
         console.warn('Revise aggregation error:' + e)
       } finally {
         this.$refs['aggregationTable'].clearSelection()
-        this.reviseDialogVisible = false
+        this.listLoading = false
       }
     },
     handleCancelRevise() {

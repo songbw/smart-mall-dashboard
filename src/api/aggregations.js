@@ -87,3 +87,18 @@ export function deleteAggregationGroupApi(params) {
     params
   })
 }
+
+export function batchReviseAggregationsApi() {
+  return Vue.axios('aggregations').request({
+    url: '/aggregations/adminAggregation/batch/cleanMpu',
+    method: 'get'
+  })
+}
+
+export function reviseAggregationByIdListApi(params) {
+  return Vue.axios('aggregations').request({
+    url: '/aggregations/adminAggregation/cleanMpu',
+    method: 'post',
+    data: params
+  })
+}

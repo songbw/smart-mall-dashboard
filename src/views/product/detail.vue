@@ -702,7 +702,7 @@
       :renter-id="editRenterId"
       :sku-id="editRenterSkuId"
       :renter-list="productVendor ? productVendor.renterList : []"
-      :sku-list="hasSubSku ? subSkuList: [{code: productForm.skuid}]"
+      :sku-list="hasSubSku ? [{code: productForm.skuid}, ...subSkuList]: [{code: productForm.skuid}]"
       @cancelled="renterStateDialogVisible = false"
       @confirmed="onRenterStateConfirmed"
     />
@@ -1171,15 +1171,13 @@ export default {
     },
     renterStateList() {
       const isRenterAdmin = this.userRole === role_renter_name
-      let stateList = []
-      if (this.hasSubSku) {
+      let stateList = this.productInfo && Array.isArray(this.productInfo.appSkuStateList)
+        ? this.productInfo.appSkuStateList
+        : []
+      if (this.hasSubSku && stateList.length === 0) {
         stateList = this.subSkuList
           .filter(item => Array.isArray(item.appSkuStateList) && item.appSkuStateList.length > 0)
           .flatMap(item => item.appSkuStateList)
-      } else {
-        stateList = this.productInfo && Array.isArray(this.productInfo.appSkuStateList)
-          ? this.productInfo.appSkuStateList
-          : []
       }
       return stateList
         .filter(item => isRenterAdmin ? item.renterId === this.renterId : true)
@@ -2226,8 +2224,14 @@ export default {
       this.renterStateDialogVisible = false
       try {
         this.loading = true
-        const mpu = this.hasSubSku ? this.productForm.skuid : this.productForm.mpu
-        const { code } = await updateRenterSkuStateApi([{ mpu, ...data }])
+        const { skuId, ...rest } = data
+        // Use mpu for the all product
+        const mpu = skuId !== this.productForm.skuid ? this.productForm.skuid : this.productForm.mpu
+        const { code } = await updateRenterSkuStateApi([{
+          mpu,
+          skuId: mpu === this.productForm.skuid ? skuId : mpu,
+          ...rest
+        }])
         if (code === 200) {
           await this.getProductInfo()
         }
