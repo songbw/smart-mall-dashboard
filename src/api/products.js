@@ -220,3 +220,17 @@ export function getHotWordListApi(params) {
     params
   })
 }
+
+export function syncYiyatongProductsApi() {
+  return Vue.axios('products').request({
+    url: '/products/third/prod/star',
+    method: 'get'
+  })
+}
+
+export function syncYiyatongPriceApi() {
+  return Vue.axios('products').request({
+    url: '/products/third/prod/star/price',
+    method: 'get'
+  })
+}

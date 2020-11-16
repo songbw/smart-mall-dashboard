@@ -103,6 +103,22 @@
           >
             批量上下架商品
           </el-button>
+          <el-button
+            v-if="isPlatformAdmin"
+            type="info"
+            icon="el-icon-refresh"
+            @click="handleSyncYiyatongProducts"
+          >
+            同步怡亚通商品
+          </el-button>
+          <el-button
+            v-if="isPlatformAdmin"
+            type="info"
+            icon="el-icon-refresh"
+            @click="handleSyncYiyatongPrice"
+          >
+            同步怡亚通价格
+          </el-button>
         </div>
         <div>
           <el-button
@@ -448,6 +464,8 @@ import {
   exportProductsApi,
   getProductListApi,
   searchProductsApi,
+  syncYiyatongPriceApi,
+  syncYiyatongProductsApi,
   updateProductApi,
   updateRenterSkuStateApi
 } from '@/api/products'
@@ -463,6 +481,7 @@ import {
   product_state_off_shelves,
   product_state_on_sale,
   ProductStateOptions,
+  role_admin_name,
   role_renter_name
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
@@ -584,6 +603,9 @@ export default {
     },
     isRenterAdmin() {
       return this.userRole === role_renter_name
+    },
+    isPlatformAdmin() {
+      return this.userRole === role_admin_name
     },
     mpuPrefixOptions() {
       let vendorId = -1
@@ -1515,6 +1537,48 @@ export default {
       this.selectedMpuList = []
       if (ret.suc) {
         this.$message.success('修改商品运费模板成功！')
+      }
+    },
+    async handleSyncYiyatongProducts() {
+      try {
+        await this.$confirm(`是否继续同步怡亚通商品?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.listLoading = true
+        const { code } = await syncYiyatongProductsApi()
+        if (code === 200) {
+          this.$message.success('同步怡亚通商品成功！')
+          await this.getListData()
+        } else {
+          this.$message.error('同步怡亚通商品失败，请联系管理员！')
+        }
+      } catch (e) {
+        console.warn('Sync Yiyatong products:' + e)
+      } finally {
+        this.listLoading = false
+      }
+    },
+    async handleSyncYiyatongPrice() {
+      try {
+        await this.$confirm(`是否继续同步怡亚通商品价格?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        this.listLoading = true
+        const { code } = await syncYiyatongPriceApi()
+        if (code === 200) {
+          this.$message.success('同步怡亚通商品价格成功！')
+          await this.getListData()
+        } else {
+          this.$message.error('同步怡亚通商品价格失败，请联系管理员！')
+        }
+      } catch (e) {
+        console.warn('Sync Yiyatong product price:' + e)
+      } finally {
+        this.listLoading = false
       }
     }
   }
