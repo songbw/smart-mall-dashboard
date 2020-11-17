@@ -23,7 +23,7 @@
         <el-form-item label="商品MPU">
           <el-input v-model="listMpu" :clearable="true" placeholder="输入商品MPU" maxlength="20" />
         </el-form-item>
-        <el-form-item v-if="hasRenterPermission" label="租户名">
+        <el-form-item v-if="isPlatformAdmin" label="租户名">
           <vendor-selection
             :vendor-id="renterCompanyId"
             company-type="renter"
@@ -103,22 +103,6 @@
           >
             批量上下架商品
           </el-button>
-          <el-button
-            v-if="isPlatformAdmin"
-            type="info"
-            icon="el-icon-refresh"
-            @click="handleSyncYiyatongProducts"
-          >
-            同步怡亚通商品
-          </el-button>
-          <el-button
-            v-if="isPlatformAdmin"
-            type="info"
-            icon="el-icon-refresh"
-            @click="handleSyncYiyatongPrice"
-          >
-            同步怡亚通价格
-          </el-button>
         </div>
         <div>
           <el-button
@@ -142,6 +126,26 @@
         </div>
       </div>
     </div>
+    <el-form v-if="isPlatformAdmin" inline>
+      <el-form-item>
+        <el-button
+          type="info"
+          icon="el-icon-refresh"
+          @click="handleSyncYiyatongProducts"
+        >
+          同步怡亚通商品
+        </el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button
+          type="info"
+          icon="el-icon-refresh"
+          @click="handleSyncYiyatongPrice"
+        >
+          同步怡亚通价格
+        </el-button>
+      </el-form-item>
+    </el-form>
     <el-form inline>
       <el-form-item v-if="hasVendorPermission">
         <el-button
