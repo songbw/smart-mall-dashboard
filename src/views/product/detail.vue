@@ -254,7 +254,10 @@
           :max="1000000"
         />
         <span style="font-size: 12px;margin-left: 10px;">
-          <i class="el-icon-warning-outline">计算方式：一般纳税人等于进货价，小规模纳税人等于进货价*（ 1 + 13% - 3%）</i>
+          <i class="el-icon-warning-outline">
+            <span>计算方式：进货价 *（ 1 + {{ productVendor ? productVendor.rate : '0' }}）</span>
+            <span>，供应商最低利润率：{{ productVendor ? productVendor.rate : '0' }}</span>
+          </i>
         </span>
       </el-form-item>
       <el-form-item v-if="hasSalePricePermission" label="对比价格(元)">
@@ -747,8 +750,7 @@ import {
   ProductSubSkuStatusOptions,
   ProductTaxRateOptions,
   ProductTypeOptions,
-  role_renter_name,
-  vendor_taxpayer_type_small_scale
+  role_renter_name
 } from '@/utils/constants'
 import {
   deleteMpuShippingPriceApi,
@@ -763,6 +765,7 @@ import { scrollTo } from '@/utils/scroll-to'
 import SubSkuInfo from './subSkuInfo'
 import RenterPriceDialog from '@/views/product/renterPriceDialog'
 import RenterStateDialog from '@/views/product/renterStateDialog'
+import { getVendorProfileByIdApi } from '@/api/vendor'
 
 const decode = require('unescape')
 
@@ -1064,11 +1067,10 @@ export default {
           return this.productForm.floorPrice
         } else {
           const sprice = convertToNumber(this.mpuSprice)
-          const taxRate = 0.03
           if (this.productForm.merchantId !== null && sprice > 0) {
             if (this.productVendor !== null) {
-              const taxpayerType = this.productVendor.taxpayerType
-              const rate = taxpayerType === vendor_taxpayer_type_small_scale ? (1.13 - taxRate) : 1
+              const vendorRate = parseFloat(this.productVendor.rate)
+              const rate = isNaN(vendorRate) ? 1 : (1 + vendorRate)
               const value = sprice * rate
               return floatToFixed(value, 2)
             } else {
@@ -1225,20 +1227,28 @@ export default {
         }
       }
     },
-    getProductVendor(vendorId) {
-      if (this.vendorList.length > 0 && vendorId != null) {
-        const vendor = this.vendorList.find(option => option.companyId === vendorId)
-        if (vendor) {
-          vendor.renterList = this.renterList.filter(
-            renter => Array.isArray(vendor.renterIdList) && vendor.renterIdList.includes(renter.renterId)
-          )
-          return vendor
-        } else {
-          return null
+    async getProductVendor(vendorId) {
+      try {
+        if (vendorId !== null) {
+          const { code, data } = await getVendorProfileByIdApi({ id: vendorId })
+          if (code === 200) {
+            if (this.vendorList.length > 0 && vendorId != null) {
+              const vendor = this.vendorList.find(option => option.companyId === vendorId)
+              if (vendor) {
+                vendor.renterList = this.renterList.filter(
+                  renter => Array.isArray(vendor.renterIdList) && vendor.renterIdList.includes(renter.renterId)
+                )
+                return { ...vendor, rate: data.rate }
+              } else {
+                return null
+              }
+            }
+          }
         }
-      } else {
-        return null
+      } catch (e) {
+        console.warn('Get vendor profile error:' + e)
       }
+      return null
     },
     async getInventoryBySkuCodes(skuList) {
       try {
@@ -1338,7 +1348,7 @@ export default {
         this.uploadThumbnailData.pathName = this.thumbnailUploadPath
         this.introductionUploadPath = this.productInfo.id + '/XTU'
         this.uploadIntroductionData.pathName = this.introductionUploadPath
-        this.productVendor = this.getProductVendor(this.productForm.merchantId)
+        this.productVendor = await this.getProductVendor(this.productForm.merchantId)
         await this.getCategoryName(this.productForm.category)
         await this.getMerchantFreeShipping(this.productForm.merchantId)
         await this.getMpuShippingPrice(this.productForm.mpu)
@@ -1368,9 +1378,13 @@ export default {
         }
       }
     },
-    handleMerchantChanged(value) {
-      this.productForm.merchantId = Number.parseInt(value)
-      this.getMerchantFreeShipping(this.productForm.merchantId)
+    async handleMerchantChanged(value) {
+      this.loading = true
+      const vendorId = isNaN(Number.parseInt(value)) ? null : parseInt(value)
+      this.productForm.merchantId = vendorId
+      this.productVendor = await this.getProductVendor(vendorId)
+      await this.getMerchantFreeShipping(vendorId)
+      this.loading = false
     },
     handleBrandChanged(value) {
       this.productForm.brandId = value
@@ -1855,10 +1869,14 @@ export default {
     },
     async getMerchantFreeShipping(merchantId) {
       try {
-        const { code, data } = await getMerchantFreeShippingApi({ merchantId })
-        if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
-          const shipMerchants = data.result.filter(item => item.merchantId === merchantId)
-          this.freeShippingData = shipMerchants.length > 0 ? shipMerchants[0] : data.result[0]
+        if (merchantId !== null) {
+          const { code, data } = await getMerchantFreeShippingApi({ merchantId })
+          if (code === 200 && Array.isArray(data.result) && data.result.length > 0) {
+            const shipMerchants = data.result.filter(item => item.merchantId === merchantId)
+            this.freeShippingData = shipMerchants.length > 0 ? shipMerchants[0] : data.result[0]
+          }
+        } else {
+          this.freeShippingData = null
         }
       } catch (e) {
         console.warn('Product get merchant free shipping error:' + e)

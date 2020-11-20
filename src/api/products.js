@@ -16,6 +16,7 @@ export function searchProductsApi(params) {
     ...rest
   }
   if (query) data.name = query
+  data.sortValue = 'sortValue' in params ? params.sortValue : 'merchant_sort'
 
   return Vue.axios('products').request({
     url: '/products/adminProd/search/v2',

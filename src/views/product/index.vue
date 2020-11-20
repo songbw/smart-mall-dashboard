@@ -844,7 +844,7 @@ export default {
         if (params) {
           params.offset = this.listOffset
           params.limit = this.listLimit
-          params.order = 'desc'
+          params.sortValue = 'id' // 'merchant_sort', 'updated_at'
           await this.getFilterProducts(params)
         } else {
           await this.getAllProducts()
@@ -1421,13 +1421,16 @@ export default {
         for (let begin = 0; begin < spuList.length; begin += maxNum) {
           const spuSlice = spuList.slice(begin, begin + maxNum)
           try {
-            await batchUpdateProductsApi(spuSlice)
+            const { code, msg } = await batchUpdateProductsApi(spuSlice)
+            if (code !== 200) {
+              this.$message.warning(msg)
+            }
           } catch (e) {
             console.warn('Batch update products error:' + e)
           }
         }
         loading.close()
-        this.getListData()
+        await this.getListData()
       }
     },
     handleCopySelection() {

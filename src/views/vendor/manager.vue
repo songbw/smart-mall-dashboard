@@ -58,6 +58,16 @@
           <el-tag>{{ scope.row.status | vendorStatus }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="优先级" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.priority }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="最低利润率" align="center" width="120">
+        <template slot-scope="scope">
+          <span>{{ scope.row.rate | vendorRate }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="发票类型" align="center" width="140">
         <template slot-scope="scope">
           <span>{{ scope.row.invoiceType | vendorInvoice }}</span>
@@ -173,6 +183,18 @@
             maxlength="50"
           />
         </el-form-item>
+        <el-form-item label="优先级" prop="priority">
+          <el-input-number v-model="vendorProfile.priority" :min="0" :max="50" step-strictly />
+          <span style="margin-left: 12px">
+            <i class="el-icon-warning-outline" />数字越大，商户的优先级越高，优先显示商品
+          </span>
+        </el-form-item>
+        <el-form-item label="最低利润率" prop="rate">
+          <el-input-number v-model="vendorProfile.rate" :min="0" :max="1000" step-strictly />
+          <span style="margin-left: 12px">
+            <i class="el-icon-warning-outline" />商品销售价格 >= 进货价 * （1 + {{ vendorProfile.rate }}%)
+          </span>
+        </el-form-item>
         <el-form-item label="发票类型">
           <el-select
             v-model="vendorProfile.invoiceType"
@@ -243,14 +265,20 @@ import {
   VendorTaxpayerOptions
 } from '@/utils/constants'
 import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
+import { floatToFixed } from '@/utils'
 
 const aoyi_vendor_id = 2
 const yiyatong_vendor_id = 4
+const default_price_rate = 10
 
 export default {
   name: 'VendorManager',
   components: { VendorRenter, Pagination },
   filters: {
+    vendorRate: rate => {
+      const val = parseFloat(rate)
+      return isNaN(val) ? '' : Math.round(val * 100).toString() + '%'
+    },
     vendorStatus: (status) => {
       const item = VendorStatusOptions.find(vendor => vendor.value === status)
       return item ? item.label : ''
@@ -333,6 +361,8 @@ export default {
         name: null,
         address: null,
         industry: '',
+        priority: 0,
+        rate: default_price_rate,
         invoiceType: vendor_invoice_type_normal,
         taxpayerType: vendor_taxpayer_type_general,
         appId: '',
@@ -532,6 +562,8 @@ export default {
       this.vendorProfile.name = ''
       this.vendorProfile.address = ''
       this.vendorProfile.industry = ''
+      this.vendorProfile.priority = 0
+      this.vendorProfile.rate = default_price_rate
       this.vendorProfile.invoiceType = vendor_invoice_type_normal
       this.vendorProfile.taxpayerType = vendor_taxpayer_type_general
       this.vendorProfile.appId = ''
@@ -544,9 +576,12 @@ export default {
     },
     handleEditVendor(index) {
       const vendor = this.vendorData[index]
+      const rate = parseFloat(vendor.rate)
       this.vendorId = vendor.companyId
       this.vendorProfile.name = vendor.companyName
       this.vendorProfile.address = vendor.address
+      this.vendorProfile.priority = Number.isInteger(vendor.priority) ? vendor.priority : 0
+      this.vendorProfile.rate = isNaN(rate) ? default_price_rate : Math.round(rate * 100)
       this.vendorProfile.industry = vendor.industry
       this.vendorProfile.invoiceType = vendor.invoiceType
       this.vendorProfile.taxpayerType = vendor.taxpayerType
@@ -562,6 +597,7 @@ export default {
     handleDialogConfirm() {
       this.$refs.vendorForm.validate(async (valid) => {
         if (valid) {
+          this.vendorDialogVisible = false
           if (this.vendorId >= 0) {
             await this.confirmUpdateVendor()
           } else {
@@ -572,10 +608,14 @@ export default {
     },
     async confirmCreateVendor() {
       try {
-        const { id } = await createVendorProfileApi(this.vendorProfile)
+        const { rate, ...rest } = this.vendorProfile
+        const { id } = await createVendorProfileApi({
+          rate: floatToFixed(rate / 100, 2).toString(),
+          ...rest
+        })
+        this.dataLoading = true
         await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
         await addCompanyToRenterApi({ companyId: id, renterId: this.renterId })
-        this.vendorDialogVisible = false
         await this.getVendorData()
       } catch (e) {
         console.warn('Create vendor profile error:' + e)
@@ -583,12 +623,19 @@ export default {
         if (msg) {
           this.$message.error(msg)
         }
+      } finally {
+        this.dataLoading = false
       }
     },
     async confirmUpdateVendor() {
       try {
-        await updateVendorProfileApi({ id: this.vendorId, ...this.vendorProfile })
-        this.vendorDialogVisible = false
+        const { rate, ...rest } = this.vendorProfile
+        this.dataLoading = true
+        await updateVendorProfileApi({
+          id: this.vendorId,
+          rate: floatToFixed(rate / 100, 2).toString(),
+          ...rest
+        })
         await this.getVendorData()
       } catch (e) {
         console.warn('Update vendor profile error:' + e)
@@ -596,6 +643,8 @@ export default {
         if (msg) {
           this.$message.error(msg)
         }
+      } finally {
+        this.dataLoading = false
       }
     },
     getErrorMessage(error) {
