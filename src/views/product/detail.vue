@@ -29,6 +29,7 @@
         <vendor-selection
           v-if="createProduct"
           :vendor-id="productForm.merchantId ? productForm.merchantId.toString() : null"
+          :own-vendor="true"
           @changed="handleMerchantChanged"
         />
         <span v-else>

@@ -19,6 +19,7 @@
       <el-form-item v-if="needVendor" label="供应商名" prop="merchantId">
         <vendor-selection
           :vendor-id="formData.merchantId"
+          :own-vendor="true"
           @changed="handleVendorChanged"
         />
       </el-form-item>
