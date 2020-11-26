@@ -60,7 +60,7 @@ module.exports = {
           {
             name: 'vuex',
             var: 'Vuex',
-            version: '3.5.1',
+            version: '3.6.0',
             path: 'dist/vuex.min.js'
           },
           {

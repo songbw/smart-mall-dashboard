@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "axios": "^0.21.0",
-    "core-js": "^3.7.0",
+    "core-js": "^3.8.0",
     "cos-js-sdk-v5": "^0.5.27",
     "echarts": "^4.9.0",
     "element-ui": "^2.14.1",
@@ -41,7 +41,7 @@
     "vue-qriously": "^1.1.1",
     "vue-router": "^3.4.9",
     "vue-scrollto": "^2.20.0",
-    "vuex": "^3.5.1",
+    "vuex": "^3.6.0",
     "xlsx": "^0.16.9"
   },
   "devDependencies": {
