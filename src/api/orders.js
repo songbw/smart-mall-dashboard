@@ -218,7 +218,7 @@ export function changeOrderReceiverApi(params) {
 }
 
 export function getExpressByThirdSnApi(params) {
-  return Vue.axios('products').request({
+  return Vue.axios('orders').request({
     url: '/aoyis/star/orders/express',
     method: 'get',
     params
@@ -226,7 +226,7 @@ export function getExpressByThirdSnApi(params) {
 }
 
 export function getExpressByLogisticsId(params) {
-  return Vue.axios('products').request({
+  return Vue.axios('orders').request({
     url: '/orders/order/workorder/logistics',
     method: 'get',
     params
@@ -234,8 +234,16 @@ export function getExpressByLogisticsId(params) {
 }
 
 export function getBestSellingListApi(params) {
-  return Vue.axios('products').request({
+  return Vue.axios('orders').request({
     url: '/orders/order/saleCount',
+    method: 'post',
+    data: params
+  })
+}
+
+export function getOrderListByIdListApi(params) {
+  return Vue.axios('orders').request({
+    url: '/orders/order/batch/subOrderId',
     method: 'post',
     data: params
   })

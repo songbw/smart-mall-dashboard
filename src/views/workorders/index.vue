@@ -83,6 +83,9 @@
         <el-button type="primary" icon="el-icon-search" @click="getWorkOrderList">
           搜索
         </el-button>
+        <el-button icon="el-icon-download" type="success" @click="exportDialogVisible= true">
+          导出售后工单
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -156,6 +159,10 @@
       :limit.sync="queryLimit"
       @pagination="getWorkOrderList"
     />
+    <export-dialog
+      :dialog-visible="exportDialogVisible"
+      @done="exportDialogVisible = false"
+    />
   </div>
 </template>
 
@@ -170,10 +177,11 @@ import { getWorkOrderListApi } from '@/api/workOrders'
 import { WorkOrderStatus, WorkOrderTypes } from './constants'
 import { WorkOrderPermissions } from '@/utils/role-permissions'
 import { role_watcher_name } from '@/utils/constants'
+import ExportDialog from './exportDialog'
 
 export default {
   name: 'WorkOrders',
-  components: { Pagination },
+  components: { ExportDialog, Pagination },
   filters: {
     statusFilter: status => {
       const find = WorkOrderStatus.find(option => option.value === status)
@@ -195,6 +203,7 @@ export default {
         value: 0,
         label: '全部'
       }].concat(WorkOrderTypes),
+      exportDialogVisible: false,
       listLoading: false,
       workOrderData: [],
       workOrderTotal: 0,
