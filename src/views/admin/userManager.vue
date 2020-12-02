@@ -10,7 +10,7 @@
       <el-form-item v-if="queryVendorRole || queryRenterRole" label="公司名称">
         <vendor-selection
           :vendor-id="queryCompanyId"
-          :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
+          :company-type="queryVendorRole ? 'vendor' : 'renter'"
           @changed="onVendorChanged"
         />
       </el-form-item>
@@ -35,7 +35,7 @@
         </el-tab-pane>
       </el-tabs>
       <el-button v-else-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
-        新建管理员
+        {{ queryWatcherRole ? '新建观察员' : '新建管理员' }}
       </el-button>
     </div>
     <el-table
@@ -140,7 +140,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="userDialogVisible"
-      title="新建管理员"
+      :title="queryWatcherRole ? '新建观察员' : '新建管理员'"
     >
       <el-form
         ref="userForm"
@@ -264,7 +264,8 @@ import {
   role_admin_name,
   role_renter_name,
   role_vendor_name,
-  role_vendor_op_name
+  role_vendor_op_name,
+  role_watcher_name
 } from '@/utils/constants'
 import { validPhone, validUserName } from '@/utils/validate'
 import { RenterPermissions, VendorPermissions } from '@/utils/role-permissions'
@@ -321,6 +322,7 @@ export default {
       platformAdminRole: role_admin_name,
       renterAdminRole: role_renter_name,
       vendorAdminRole: role_vendor_name,
+      watcherAdminRole: role_watcher_name,
       vendorOperatorRole: role_vendor_op_name,
       tabVendorRole: role_vendor_name,
       dataLoading: false,
@@ -425,6 +427,9 @@ export default {
     },
     queryAdminRole() {
       return this.routerName === 'PlatformAdminManager'
+    },
+    queryWatcherRole() {
+      return this.routerName === 'WatcherAdminManager'
     }
   },
   created() {
@@ -619,6 +624,8 @@ export default {
           const errno = Number.parseInt(data.error)
           if (!Number.isNaN(errno)) {
             return data.message + '，请确认后重试！'
+          } else {
+            return data && data.msg ? data.msg : null
           }
         } else if (status >= 500) {
           return '服务平台出现问题，请联系管理员！'
@@ -682,6 +689,9 @@ export default {
           } else if (this.queryAdminRole) {
             const adminRole = this.roleOptions.find(item => item.value === role_admin_name)
             this.queryRoleId = adminRole ? adminRole.id : null
+          } else if (this.queryWatcherRole) {
+            const watcherRole = this.roleOptions.find(item => item.value === role_watcher_name)
+            this.queryRoleId = watcherRole ? watcherRole.id : null
           }
         }
       } catch (e) {

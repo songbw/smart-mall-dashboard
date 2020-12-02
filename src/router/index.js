@@ -510,7 +510,7 @@ export const constantRoutes = [
         meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name, role_renter_name] }
       },
       {
-        path: 'adminManager',
+        path: 'vendorAdminManager',
         name: 'VendorAdminManager',
         component: () => import('@/views/admin/userManager'),
         meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name, role_renter_name] }
@@ -600,10 +600,16 @@ export const constantRoutes = [
         hidden: true
       },
       {
-        path: 'adminManager',
+        path: 'renterAdminManager',
         name: 'RenterAdminManager',
         component: () => import('@/views/admin/userManager'),
         meta: { title: '租户管理员', icon: 'user-manager', roles: [role_admin_name] }
+      },
+      {
+        path: 'watcherAdminManager',
+        name: 'WatcherAdminManager',
+        component: () => import('@/views/admin/userManager'),
+        meta: { title: '租户观察员', icon: 'user-manager', roles: [role_admin_name] }
       }
     ]
   },
