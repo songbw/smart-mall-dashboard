@@ -751,7 +751,8 @@ import {
   ProductSubSkuStatusOptions,
   ProductTaxRateOptions,
   ProductTypeOptions,
-  role_renter_name
+  role_renter_name,
+  role_renter_op_name
 } from '@/utils/constants'
 import {
   deleteMpuShippingPriceApi,
@@ -1024,6 +1025,9 @@ export default {
       renterId: 'renterId',
       vendorProfile: 'vendorProfile'
     }),
+    isRenterAdminOrOp() {
+      return this.userRole === role_renter_op_name || this.userRole === role_renter_name
+    },
     hasCreatePermission() {
       return this.userPermissions.includes(ProductPermissions.create)
     },
@@ -1148,7 +1152,7 @@ export default {
       return this.productVendor ? this.productVendor.renterIdList.length > 0 : false
     },
     renterPriceList() {
-      const isRenterAdmin = this.userRole === role_renter_name
+      const isRenterAdmin = this.isRenterAdminOrOp
       let priceList = []
       if (this.hasSubSku) {
         priceList = this.subSkuList
@@ -1173,7 +1177,7 @@ export default {
         })
     },
     renterStateList() {
-      const isRenterAdmin = this.userRole === role_renter_name
+      const isRenterAdmin = this.isRenterAdminOrOp
       let stateList = this.productInfo && Array.isArray(this.productInfo.appSkuStateList)
         ? this.productInfo.appSkuStateList
         : []
@@ -2137,7 +2141,7 @@ export default {
       })
     },
     onAddRenterPriceClicked() {
-      this.editRenterId = this.userRole === role_renter_name ? this.renterId : ''
+      this.editRenterId = this.isRenterAdminOrOp ? this.renterId : ''
       this.editRenterSkuId = ''
       this.editRenterPrice = floatToFixed(this.productForm.price, 2) * 100
       this.renterPriceDialogVisible = true
@@ -2207,7 +2211,7 @@ export default {
       }
     },
     onAddRenterStateClicked() {
-      this.editRenterId = this.userRole === role_renter_name ? this.renterId : ''
+      this.editRenterId = this.isRenterAdminOrOp ? this.renterId : ''
       this.editRenterSkuId = ''
       this.renterStateDialogVisible = true
     },

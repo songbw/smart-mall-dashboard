@@ -13,6 +13,7 @@ export const role_vendor_op_name = 'vendor_operator'
 export const role_admin_name = 'admin'
 export const role_watcher_name = 'watcher'
 export const role_renter_name = 'renter'
+export const role_renter_op_name = 'renter_operator'
 
 export const platform_renter_id = '0'
 export const invalid_renter_id = 'invalid_renter_id'

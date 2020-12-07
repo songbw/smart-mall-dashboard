@@ -572,6 +572,12 @@ export const constantRoutes = [
         name: 'RenterProfile',
         component: () => import('@/views/renter/renterInfo'),
         meta: { title: '租户信息', icon: 'vendor-info', roles: [role_renter_name] }
+      },
+      {
+        path: 'renterOpManager',
+        name: 'RenterOpManager',
+        component: () => import('@/views/admin/userManager'),
+        meta: { title: '租户操作员', icon: 'user-manager', roles: [role_renter_name] }
       }
     ]
   },
@@ -606,10 +612,10 @@ export const constantRoutes = [
         meta: { title: '租户管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
-        path: 'watcherAdminManager',
-        name: 'WatcherAdminManager',
+        path: 'renterOpAdminManager',
+        name: 'RenterOpAdminManager',
         component: () => import('@/views/admin/userManager'),
-        meta: { title: '租户观察员', icon: 'user-manager', roles: [role_admin_name] }
+        meta: { title: '租户操作员', icon: 'user-manager', roles: [role_admin_name] }
       }
     ]
   },

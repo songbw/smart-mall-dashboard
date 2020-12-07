@@ -22,7 +22,7 @@
 import { mapGetters } from 'vuex'
 import { RenterPermissions } from '@/utils/role-permissions'
 import isEmpty from 'lodash/isEmpty'
-import { platform_renter_id, role_renter_name } from '@/utils/constants'
+import { platform_renter_id, role_renter_name, role_renter_op_name } from '@/utils/constants'
 
 export default {
   name: 'VendorSelection',
@@ -63,6 +63,9 @@ export default {
     isRenterAdmin() {
       return this.userRole === role_renter_name
     },
+    isRenterOp() {
+      return this.userRole === role_renter_op_name
+    },
     vendorOptions() {
       if (this.companyType === 'renter') {
         return this.renterList.map(item => ({
@@ -76,7 +79,7 @@ export default {
           label: item.companyName,
           renterIdList: item.renterIdList
         }))
-        if (this.ownVendor && this.isRenterAdmin) {
+        if (this.ownVendor && (this.isRenterAdmin || this.isRenterOp)) {
           return vendorList.filter(
             item => item.renterIdList.includes(this.renterId) && !item.renterIdList.includes(platform_renter_id)
           )

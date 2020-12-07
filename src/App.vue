@@ -17,7 +17,11 @@ import {
   storage_platform_id,
   storage_renter_id,
   role_admin_name,
-  vendor_status_approved, platform_renter_id, role_renter_name, invalid_renter_id
+  vendor_status_approved,
+  platform_renter_id,
+  role_renter_name,
+  invalid_renter_id,
+  role_renter_op_name
 } from '@/utils/constants'
 
 import {
@@ -64,7 +68,7 @@ export default {
           await storageSetItem(storage_merchant_id, 0)
           await storageSetItem(storage_renter_id, platform_renter_id)
         } else if (!isEmpty(token)) {
-          if (role === role_renter_name) {
+          if (role === role_renter_name || role === role_renter_op_name) {
             await this.getRenterProfile()
           } else {
             await this.getVendorProfile()

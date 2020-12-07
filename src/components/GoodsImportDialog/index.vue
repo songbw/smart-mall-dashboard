@@ -126,7 +126,8 @@ import {
   product_state_off_shelves,
   product_state_on_sale,
   ProductTaxRateOptions,
-  role_renter_name
+  role_renter_name,
+  role_renter_op_name
 } from '@/utils/constants'
 import { ProductPermissions, RenterPermissions } from '@/utils/role-permissions'
 import VendorSelection from '@/components/VendorSelection'
@@ -297,8 +298,8 @@ export default {
     hasRenterPermission() {
       return this.userPermissions.includes(RenterPermissions.view)
     },
-    isRenterAdmin() {
-      return this.userRole === role_renter_name
+    isRenterAdminOrOp() {
+      return this.userRole === role_renter_name || this.userRole === role_renter_op_name
     },
     needVendor() {
       return this.productCreation && this.hasVendorPermission
@@ -634,7 +635,7 @@ export default {
       return mpuList
     },
     getRenterSpuState(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = spu.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -647,7 +648,7 @@ export default {
       }
     },
     getRenterSpuPrice(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = spu.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)
@@ -663,7 +664,7 @@ export default {
       const skuState = spuState === product_state_on_sale
         ? sku.status.toString()
         : product_state_off_shelves.toString()
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = sku.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -676,7 +677,7 @@ export default {
       }
     },
     getRenterSkuPrice(sku) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = sku.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)

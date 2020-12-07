@@ -7,7 +7,10 @@
       <el-form-item label="电话号码">
         <el-input v-model="queryPhone" placeholder="输入电话号码" clearable />
       </el-form-item>
-      <el-form-item v-if="queryVendorRole || queryRenterRole" label="公司名称">
+      <el-form-item
+        v-if="queryVendorRole || queryRenterRole || (isPlatformAdmin && queryRenterOpRole)"
+        label="公司名称"
+      >
         <vendor-selection
           :vendor-id="queryCompanyId"
           :company-type="queryVendorRole ? 'vendor' : 'renter'"
@@ -35,7 +38,7 @@
         </el-tab-pane>
       </el-tabs>
       <el-button v-else-if="hasEditPermission" type="primary" icon="el-icon-plus" @click="handleCreateUser">
-        {{ queryWatcherRole ? '新建观察员' : '新建管理员' }}
+        {{ queryRenterOpRole ? '新建操作员' : '新建管理员' }}
       </el-button>
     </div>
     <el-table
@@ -140,7 +143,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="userDialogVisible"
-      :title="queryWatcherRole ? '新建观察员' : '新建管理员'"
+      :title="queryRenterOpRole ? '新建操作员' : '新建管理员'"
     >
       <el-form
         ref="userForm"
@@ -177,7 +180,7 @@
             placeholder="输入手机号码"
           />
         </el-form-item>
-        <el-form-item label="企业列表" prop="companyId">
+        <el-form-item v-if="!queryRenterOpRole || isPlatformAdmin" label="企业列表" prop="companyId">
           <vendor-selection
             :vendor-id="userForm.companyId"
             :company-type="queryVendorRole ? vendorAdminRole : renterAdminRole"
@@ -263,6 +266,7 @@ import {
   platform_renter_id,
   role_admin_name,
   role_renter_name,
+  role_renter_op_name,
   role_vendor_name,
   role_vendor_op_name,
   role_watcher_name
@@ -406,10 +410,18 @@ export default {
   },
   computed: {
     ...mapGetters({
+      companyId: 'vendorId',
       renterId: 'renterId',
       userPermissions: 'userPermissions',
-      vendorList: 'vendorList'
+      vendorList: 'vendorList',
+      userRole: 'userRole'
     }),
+    isPlatformAdmin() {
+      return this.userRole === role_admin_name
+    },
+    isRenterAdmin() {
+      return this.userRole === role_renter_name
+    },
     hasViewPermission() {
       return this.userPermissions.includes(VendorPermissions.userView)
     },
@@ -428,8 +440,8 @@ export default {
     queryAdminRole() {
       return this.routerName === 'PlatformAdminManager'
     },
-    queryWatcherRole() {
-      return this.routerName === 'WatcherAdminManager'
+    queryRenterOpRole() {
+      return this.routerName === 'RenterOpAdminManager' || this.routerName === 'RenterOpManager'
     }
   },
   created() {
@@ -476,7 +488,9 @@ export default {
         if (!isEmpty(this.queryName)) {
           params.name = this.queryName
         }
-        if (this.queryCompanyId !== null) {
+        if (this.isRenterAdmin && this.queryRenterOpRole) {
+          params.companyId = this.companyId
+        } else if (this.queryCompanyId !== null) {
           params.companyId = this.queryCompanyId
         }
         this.dataLoading = true
@@ -604,7 +618,8 @@ export default {
           params.phone = this.userForm.phone
         }
         const user = await createVendorUserApi(params)
-        await setUserVendorApi({ userId: user.id, companyId: this.userForm.companyId })
+        const companyId = this.isRenterAdmin && this.queryRenterOpRole ? this.companyId : this.userForm.companyId
+        await setUserVendorApi({ userId: user.id, companyId })
         await this.getUsersData()
       } catch (e) {
         console.warn('Create user error: ' + e)
@@ -689,9 +704,9 @@ export default {
           } else if (this.queryAdminRole) {
             const adminRole = this.roleOptions.find(item => item.value === role_admin_name)
             this.queryRoleId = adminRole ? adminRole.id : null
-          } else if (this.queryWatcherRole) {
-            const watcherRole = this.roleOptions.find(item => item.value === role_watcher_name)
-            this.queryRoleId = watcherRole ? watcherRole.id : null
+          } else if (this.queryRenterOpRole) {
+            const renterOpRole = this.roleOptions.find(item => item.value === role_renter_op_name)
+            this.queryRoleId = renterOpRole ? renterOpRole.id : null
           }
         }
       } catch (e) {

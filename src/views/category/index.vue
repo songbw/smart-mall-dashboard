@@ -53,7 +53,7 @@
           <span style="margin-left: 12px"><i class="el-icon-warning-outline" />选择运营平台可修改对应类别属性</span>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleCreateFirstClass">
+          <el-button :disabled="!isPlatformAdmin" type="primary" @click="handleCreateFirstClass">
             新建一级类别
           </el-button>
         </el-form-item>
@@ -75,11 +75,18 @@
             <el-tag v-if="topCategoryShowState">{{ topCategoryShowState }}</el-tag>
           </span>
           <el-button-group v-if="currentSelectedTopCategory">
-            <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(null)">
+            <el-button
+              :disabled="!(isPlatformAdmin || appIdSelected)"
+              type="primary"
+              size="mini"
+              icon="el-icon-edit"
+              @click="handleEdit(null)"
+            >
               {{ hasEditPermission ? '编辑' : '查看' }}
             </el-button>
             <el-button
               v-if="hasEditPermission"
+              :disabled="!isPlatformAdmin"
               type="info"
               size="mini"
               @click="handleCreateSubClass"
@@ -88,7 +95,7 @@
             </el-button>
             <el-button
               v-if="hasEditPermission && currentSelectedTopCategory.idate"
-              :disabled="currentSelectedTopCategory.subTotal > 0"
+              :disabled="currentSelectedTopCategory.subTotal > 0 || !isPlatformAdmin"
               type="danger"
               size="mini"
               @click="handleDelete(currentSelectedTopCategory)"
@@ -179,11 +186,17 @@
             </el-table-column>
             <el-table-column label="操作" align="center" width="260">
               <template slot-scope="scope">
-                <el-button size="mini" type="primary" @click="handleEdit(scope.row)">
+                <el-button
+                  size="mini"
+                  :disabled="!(isPlatformAdmin || appIdSelected)"
+                  type="primary"
+                  @click="handleEdit(scope.row)"
+                >
                   {{ hasEditPermission ? '编辑' : '查看' }}
                 </el-button>
                 <el-button
                   v-if="hasEditPermission && scope.row.idate"
+                  :disabled="!isPlatformAdmin"
                   size="mini"
                   type="danger"
                   @click="handleDelete(scope.row)"
@@ -279,7 +292,7 @@ import { mapGetters } from 'vuex'
 import ImageUpload from '@/components/ImageUpload'
 import { CategoryPermissions } from '@/utils/role-permissions'
 import * as excel from '@/utils/Export2Excel'
-import { role_vendor_name, role_vendor_op_name } from '@/utils/constants'
+import { role_admin_name, role_vendor_name, role_vendor_op_name } from '@/utils/constants'
 
 const ExportHeaders = [
   { field: 'categoryId', label: '三级类别编号' },
@@ -384,6 +397,9 @@ export default {
       platformAppList: 'platformAppList',
       validAppList: 'validAppList'
     }),
+    isPlatformAdmin() {
+      return this.userRole === role_admin_name
+    },
     hasViewPermission() {
       return this.userPermissions.includes(CategoryPermissions.view)
     },

@@ -107,7 +107,13 @@ import { mapGetters } from 'vuex'
 import CategorySelection from '@/components/CategorySelection'
 import { getProductsByMpuListApi } from '@/api/products'
 import { getBestSellingListApi } from '@/api/orders'
-import { product_state_off_shelves, product_state_on_sale, ProductStateOptions } from '@/utils/constants'
+import {
+  product_state_off_shelves,
+  product_state_on_sale,
+  ProductStateOptions,
+  role_renter_name,
+  role_renter_op_name
+} from '@/utils/constants'
 import { floatToFixed } from '@/utils'
 
 export default {
@@ -156,8 +162,12 @@ export default {
   },
   computed: {
     ...mapGetters({
-      platformAppId: 'platformAppId'
-    })
+      platformAppId: 'platformAppId',
+      userRole: 'userRole'
+    }),
+    isRenterAdminOrOp() {
+      return this.userRole === role_renter_op_name || this.userRole === role_renter_name
+    }
   },
   methods: {
     isProductValid(product) {
@@ -172,7 +182,7 @@ export default {
       this.dialogSkuData = []
     },
     getRenterSpuState(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = spu.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -185,7 +195,7 @@ export default {
       }
     },
     getRenterSpuPrice(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = spu.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)
@@ -201,7 +211,7 @@ export default {
       const skuState = spuState === product_state_on_sale
         ? sku.status.toString()
         : product_state_off_shelves.toString()
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = sku.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -214,7 +224,7 @@ export default {
       }
     },
     getRenterSkuPrice(sku) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = sku.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)

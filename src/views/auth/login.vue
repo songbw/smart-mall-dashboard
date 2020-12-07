@@ -77,6 +77,7 @@ import {
   platform_renter_id,
   role_admin_name,
   role_renter_name,
+  role_renter_op_name,
   storage_merchant_id,
   storage_renter_id,
   vendor_status_approved
@@ -179,7 +180,7 @@ export default {
                   await storageSetItem(storage_merchant_id, 0)
                   await storageSetItem(storage_renter_id, platform_renter_id)
                 } else {
-                  if (role_renter_name === role) {
+                  if (role_renter_name === role || role_renter_op_name === role) {
                     await this.getRenterProfile()
                   } else {
                     await this.getVendorProfile()

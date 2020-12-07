@@ -8,7 +8,7 @@
     @open="skuInit"
   >
     <el-form ref="renterStateForm" :model="skuForm" :rules="formRules" label-width="160px">
-      <el-form-item v-if="!isRenterAdmin" label="租户名称" prop="renterId">
+      <el-form-item v-if="!isRenterAdminOrOp" label="租户名称" prop="renterId">
         <el-select v-model="skuForm.renterId">
           <el-option
             v-for="item in renterOptions"
@@ -41,7 +41,7 @@
 
 <script>
 import isEmpty from 'lodash/isEmpty'
-import { platform_renter_id, role_renter_name } from '@/utils/constants'
+import { platform_renter_id, role_renter_name, role_renter_op_name } from '@/utils/constants'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -105,8 +105,8 @@ export default {
     ...mapGetters({
       userRole: 'userRole'
     }),
-    isRenterAdmin() {
-      return this.userRole === role_renter_name
+    isRenterAdminOrOp() {
+      return this.userRole === role_renter_name || this.userRole === role_renter_op_name
     },
     renterOptions() {
       return isEmpty(this.renterId)

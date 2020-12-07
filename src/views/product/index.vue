@@ -87,7 +87,7 @@
             批量创建
           </el-button>
           <el-button
-            v-if="hasUpdatePermission && !isRenterAdmin"
+            v-if="hasUpdatePermission && !isRenterAdminOrOp"
             :disabled="!vendorApproved"
             type="warning"
             icon="el-icon-upload2"
@@ -157,7 +157,7 @@
           复制已选{{ productSelection.length }}个商品
         </el-button>
       </el-form-item>
-      <el-form-item v-if="!isRenterAdmin">
+      <el-form-item v-if="!isRenterAdminOrOp">
         <el-button
           v-if="hasUpdatePermission"
           :disabled="productSelection.length === 0"
@@ -168,7 +168,7 @@
           修改已选{{ productSelection.length }}个商品
         </el-button>
       </el-form-item>
-      <el-form-item v-if="!isRenterAdmin">
+      <el-form-item v-if="!isRenterAdminOrOp">
         <el-button
           v-if="hasUpdatePermission"
           :disabled="productSelection.length === 0"
@@ -179,7 +179,7 @@
           修改已选运费模板
         </el-button>
       </el-form-item>
-      <el-form-item v-if="isRenterAdmin">
+      <el-form-item v-if="isRenterAdminOrOp">
         <span><i class="el-icon-warning-outline" />商品默认状态为供应商设置，租户可以修改供应商已上架商品的状态</span>
       </el-form-item>
     </el-form>
@@ -209,7 +209,7 @@
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column v-if="isRenterAdmin" column-key="mpuState" label="默认状态" align="center" width="120">
+      <el-table-column v-if="isRenterAdminOrOp" column-key="mpuState" label="默认状态" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.mpuState | productState }}</span>
         </template>
@@ -321,7 +321,7 @@
               </el-dropdown-item>
               <el-dropdown-item
                 v-if="hasStatePermission && !isProductOnSale(scope.row.renterState)"
-                :disabled="isRenterAdmin && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
+                :disabled="isRenterAdminOrOp && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
                 :command="`start:${scope.$index}`"
                 icon="el-icon-sell"
               >
@@ -330,7 +330,7 @@
               <el-dropdown-item
                 v-else-if="hasStatePermission && isProductOnSale(scope.row.renterState)"
                 :command="`stop:${scope.$index}`"
-                :disabled="isRenterAdmin && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
+                :disabled="isRenterAdminOrOp && !isOwnVendor(scope.row.merchantId) && scope.row.mpuState !== '1'"
                 icon="el-icon-sold-out"
               >
                 下架商品
@@ -486,7 +486,8 @@ import {
   product_state_on_sale,
   ProductStateOptions,
   role_admin_name,
-  role_renter_name
+  role_renter_name,
+  role_renter_op_name
 } from '@/utils/constants'
 import { ProductPermissions } from '@/utils/role-permissions'
 import ShippingPriceSelection from './shippingPriceSelection'
@@ -605,8 +606,8 @@ export default {
     hasExportPermission() {
       return this.userPermissions.includes(ProductPermissions.export)
     },
-    isRenterAdmin() {
-      return this.userRole === role_renter_name
+    isRenterAdminOrOp() {
+      return this.userRole === role_renter_name || this.userRole === role_renter_op_name
     },
     isPlatformAdmin() {
       return this.userRole === role_admin_name
@@ -784,7 +785,7 @@ export default {
       }
     },
     getRenterSpuState(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = spu.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -797,7 +798,7 @@ export default {
       }
     },
     getRenterSpuPrice(spu) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = spu.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)
@@ -813,7 +814,7 @@ export default {
       const skuState = spuState === product_state_on_sale
         ? sku.status.toString()
         : product_state_off_shelves.toString()
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const stateList = sku.appSkuStateList
         if (Array.isArray(stateList) && stateList.length > 0) {
           const find = stateList.find(item => item.renterId === this.renterId)
@@ -826,7 +827,7 @@ export default {
       }
     },
     getRenterSkuPrice(sku) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const priceList = sku.appSkuPriceList
         if (Array.isArray(priceList) && priceList.length > 0) {
           const find = priceList.find(item => item.renterId === this.renterId)
@@ -1037,7 +1038,7 @@ export default {
        */
     },
     isOwnVendor(vendorId) {
-      if (this.isRenterAdmin) {
+      if (this.isRenterAdminOrOp) {
         const productVendor = this.productVendors.find(option => option.companyId.toString() === vendorId.toString())
         const hasPlatformRenter = productVendor
           ? productVendor.renterIdList.includes(platform_renter_id)
@@ -1258,13 +1259,13 @@ export default {
       try {
         this.listLoading = true
         if (updateRenterId === null) {
-          const ownSpuList = spuList.filter(item => !this.isRenterAdmin || this.isOwnVendor(item.merchantId))
+          const ownSpuList = spuList.filter(item => !this.isRenterAdminOrOp || this.isOwnVendor(item.merchantId))
           for (let i = 0; i < ownSpuList.length; i += 100) {
             const spuSlice = ownSpuList.slice(i, i + 100)
             await batchUpdateStateApi(spuSlice)
           }
         }
-        if (this.isRenterAdmin || updateRenterId !== null) {
+        if (this.isRenterAdminOrOp || updateRenterId !== null) {
           const testRenter = item => updateRenterId !== null || !this.isOwnVendor(item.merchantId)
           const otherSpuList = spuList.filter(testRenter)
           for (let i = 0; i < otherSpuList.length; i += 100) {
