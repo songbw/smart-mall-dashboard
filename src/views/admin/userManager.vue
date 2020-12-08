@@ -161,21 +161,21 @@
         </el-form-item>
         <el-form-item label="初始密码" prop="password">
           <el-input
-            v-model="userForm.password"
+            v-model.trim="userForm.password"
             placeholder="请输入密码"
             show-password
           />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirm">
           <el-input
-            v-model="userForm.confirm"
+            v-model.trim="userForm.confirm"
             type="password"
             placeholder="再次输入密码"
           />
         </el-form-item>
         <el-form-item label="手机号码" prop="phone">
           <el-input
-            v-model="userForm.phone"
+            v-model.trim="userForm.phone"
             type="tel"
             placeholder="输入手机号码"
           />
@@ -206,7 +206,7 @@
         </el-form-item>
         <el-form-item label="手机号码" prop="phone">
           <el-input
-            v-model="phoneForm.phone"
+            v-model.trim="phoneForm.phone"
             type="tel"
             placeholder="输入手机号码"
           />
