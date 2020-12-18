@@ -1731,16 +1731,17 @@ export default {
       } else {
         const index = parseInt(options.Index)
         if (!isNaN(index)) {
-          this.uploadedFiles[index] = '/' + options.Key
+          this.uploadedFiles.push({ index, key: '/' + options.Key })
         } else {
           this.failedFiles.push(options)
         }
       }
       if (this.uploadedFiles.length + this.failedFiles.length === this.toUploadFiles.length) {
-        for (const url of this.uploadedFiles) {
-          if (!this.thumbnails.includes(url)) {
-            this.thumbnails.push(url)
-            this.thumbnailUrls.push(this.$store.getters.cosUrl + url)
+        const sortedList = sortBy(this.uploadedFiles, ['index'])
+        for (const url of sortedList) {
+          if (!this.thumbnails.includes(url.key)) {
+            this.thumbnails.push(url.key)
+            this.thumbnailUrls.push(this.$store.getters.cosUrl + url.key)
           }
         }
         this.uploadedFiles = []
