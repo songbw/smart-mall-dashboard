@@ -33,7 +33,7 @@
     "simple-crypto-js": "^3.0.0",
     "unescape": "^1.0.1",
     "v-charts": "^1.19.0",
-    "validator": "^13.5.1",
+    "validator": "^13.5.2",
     "vue": "^2.6.12",
     "vue-axios": "^2.1.5",
     "vue-count-to": "^1.0.13",
