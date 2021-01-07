@@ -561,7 +561,7 @@ export default {
           value: '20',
           label: '苏宁易购'
         }, {
-          value: '30',
+          value: '3',
           label: '唯品会'
         }]
       } else {
