@@ -10,7 +10,7 @@
       <div class="bullshit">
         <div class="bullshit__oops">OOPS!</div>
         <div class="bullshit__info">All rights reserved
-          <a style="color:#20a0ff" href="https://mall.weesharing.com" target="_blank">凤巢信息科技</a>
+          <a style="color:#20a0ff" href="https://mall.weesharing.com" target="_blank">信息科技</a>
         </div>
         <div class="bullshit__headline">已经飘到火星了......</div>
         <div class="bullshit__info">请检查地址是否输入正确，或者等待网管驾驶飞船来营救！</div>

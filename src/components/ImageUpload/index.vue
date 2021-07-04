@@ -126,6 +126,8 @@ export default {
       this.$refs[this.refName].click()
     },
     handleUploadImageSuccess(key) {
+      console.log('cos url is ' + this.$store.getters.cosUrl)
+      console.log('key is ' + key)
       const imageUrl = this.$store.getters.cosUrl + '/' + key
       this.$emit('success', imageUrl)
     },
@@ -134,6 +136,7 @@ export default {
       this.$emit('failed')
     },
     handleUploadImageFinish(err, data, options) {
+      console.log(data)
       this.uploadingImage = false
       if (err) {
         this.handleUploadImageError()

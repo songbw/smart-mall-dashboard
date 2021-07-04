@@ -156,7 +156,6 @@
         <el-form-item label="类别名称" prop="categoryName">
           <el-input
             :value="dialogValue.categoryName"
-            :readonly="editCategory && dialogValue.idate === null"
             maxlength="10"
             class="dialog-form-item"
             @input="onDialogNameInput"

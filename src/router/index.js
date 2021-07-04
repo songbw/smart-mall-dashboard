@@ -183,13 +183,14 @@ export const constantRoutes = [
         name: 'Bulletins',
         component: () => import('@/views/bulletins/index'),
         meta: { title: '商品公告', icon: 'bulletins', roles: [role_admin_name] }
-      },
-      {
-        path: 'sync',
-        name: 'ProductSync',
-        component: () => import('@/views/sync/index'),
-        meta: { title: '商品同步', icon: 'sync', roles: [role_admin_name] }
       }
+      // ,
+      // {
+      //   path: 'sync',
+      //   name: 'ProductSync',
+      //   component: () => import('@/views/sync/index'),
+      //   meta: { title: '商品同步', icon: 'sync', roles: [role_admin_name] }
+      // }
     ]
   },
   {
@@ -199,12 +200,12 @@ export const constantRoutes = [
     name: 'Operations',
     meta: { title: '运营', icon: 'golds', roles: [role_admin_name] },
     children: [
-      {
-        path: 'platforms',
-        name: 'PlatformManagement',
-        component: () => import('@/views/platforms/index'),
-        meta: { title: '平台管理', icon: 'platforms' }
-      },
+      // {
+      //   path: 'platforms',
+      //   name: 'PlatformManagement',
+      //   component: () => import('@/views/platforms/index'),
+      //   meta: { title: '平台管理', icon: 'platforms' }
+      // },
       {
         path: 'tags',
         name: 'CouponTags',
@@ -298,12 +299,12 @@ export const constantRoutes = [
         meta: { title: '领取详情', group: 'coupons' },
         hidden: true
       },
-      {
-        path: 'barterCards',
-        name: 'barterCards',
-        component: () => import('@/views/barterCard/index'),
-        meta: { title: '提货卡管理', icon: 'barterCard', group: 'barterCards' }
-      },
+      // {
+      //   path: 'barterCards',
+      //   name: 'barterCards',
+      //   component: () => import('@/views/barterCard/index'),
+      //   meta: { title: '提货卡管理', icon: 'barterCard', group: 'barterCards' }
+      // },
       {
         path: 'barterCardDetail/:id',
         name: 'BarterCardDetail',
@@ -390,30 +391,30 @@ export const constantRoutes = [
       }
     ]
   },
-  {
-    path: '/statistics',
-    component: Layout,
-    name: 'StatisticsManager',
-    meta: { title: '统计', icon: 'statistics', roles: [role_admin_name] },
-    children: [
-      {
-        path: 'http://tongji.baidu.com/web/welcome/ico?s=e5999c4dd415c039d4682ccd929d3374',
-        meta: { title: '无锡市民卡', icon: 'link' }
-      },
-      {
-        path: 'http://tongji.baidu.com/web/welcome/ico?s=5cb98b7dc7f3fe90a73f9363f6c4d67f',
-        meta: { title: '最珠海', icon: 'link' }
-      },
-      {
-        path: 'http://tongji.baidu.com/web/welcome/ico?s=489c1d4ef77566d573266c21b816cbca',
-        meta: { title: '关爱通', icon: 'link' }
-      },
-      {
-        path: 'http://tongji.baidu.com/web/welcome/ico?s=013c2a67e96a8b835c219320ff617fac',
-        meta: { title: '万科云城', icon: 'link' }
-      }
-    ]
-  },
+  // {
+  //   path: '/statistics',
+  //   component: Layout,
+  //   name: 'StatisticsManager',
+  //   meta: { title: '统计', icon: 'statistics', roles: [role_admin_name] },
+  //   children: [
+  //     // {
+  //     //   path: 'http://tongji.baidu.com/web/welcome/ico?s=e5999c4dd415c039d4682ccd929d3374',
+  //     //   meta: { title: '无锡市民卡', icon: 'link' }
+  //     // },
+  //     // {
+  //     //   path: 'http://tongji.baidu.com/web/welcome/ico?s=5cb98b7dc7f3fe90a73f9363f6c4d67f',
+  //     //   meta: { title: '最珠海', icon: 'link' }
+  //     // },
+  //     // {
+  //     //   path: 'http://tongji.baidu.com/web/welcome/ico?s=489c1d4ef77566d573266c21b816cbca',
+  //     //   meta: { title: '关爱通', icon: 'link' }
+  //     // },
+  //     // {
+  //     //   path: 'http://tongji.baidu.com/web/welcome/ico?s=013c2a67e96a8b835c219320ff617fac',
+  //     //   meta: { title: '万科云城', icon: 'link' }
+  //     // }
+  //   ]
+  // },
   {
     path: '/members',
     component: Layout,
@@ -460,18 +461,19 @@ export const constantRoutes = [
           roles: [role_admin_name, role_watcher_name]
         },
         hidden: true
-      },
-      {
-        path: 'balances',
-        name: 'MemberBalances',
-        component: () => import('@/views/members/balances'),
-        meta: {
-          title: '余额管理',
-          icon: 'balances',
-          group: 'members',
-          roles: [role_admin_name, role_watcher_name]
-        }
       }
+      // ,
+      // {
+      //   path: 'balances',
+      //   name: 'MemberBalances',
+      //   component: () => import('@/views/members/balances'),
+      //   meta: {
+      //     title: '余额管理',
+      //     icon: 'balances',
+      //     group: 'members',
+      //     roles: [role_admin_name, role_watcher_name]
+      //   }
+      // }
     ]
   },
   {
@@ -480,7 +482,7 @@ export const constantRoutes = [
     redirect: '/vendorInfo/profile',
     name: 'VendorInfo',
     meta: {
-      title: '商户',
+      title: '店铺',
       icon: 'vendor',
       roles: [role_vendor_name]
     },
@@ -505,7 +507,7 @@ export const constantRoutes = [
     redirect: '/vendorManager/manager',
     name: 'VendorMain',
     meta: {
-      title: '商户',
+      title: '店铺',
       icon: 'vendor',
       roles: [role_admin_name]
     },
@@ -514,39 +516,39 @@ export const constantRoutes = [
         path: 'manager',
         name: 'VendorManager',
         component: () => import('@/views/vendor/manager'),
-        meta: { title: '商户公司', icon: 'vendor', roles: [role_admin_name] }
+        meta: { title: '店铺公司', icon: 'vendor', roles: [role_admin_name] }
       },
       {
         path: 'users',
         name: 'UserManager',
         component: () => import('@/views/vendor/userManager'),
-        meta: { title: '商户管理员', icon: 'user-manager', roles: [role_admin_name] }
+        meta: { title: '店铺管理员', icon: 'user-manager', roles: [role_admin_name] }
       },
       {
         path: 'vendorShippingPrice',
         name: 'VendorShippingPrice',
         component: () => import('@/views/freight/shippingPrice'),
-        meta: { title: '商户运费', icon: 'shipping-price', roles: [role_admin_name] }
+        meta: { title: '店铺运费', icon: 'shipping-price', roles: [role_admin_name] }
       },
       {
         path: 'createVendorShippingPrice',
         name: 'CreateVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '店铺运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {
         path: 'viewVendorShippingPrice/:id',
         name: 'ViewVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '店铺运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {
         path: 'editVendorShippingPrice/:id',
         name: 'EditVendorShippingPrice',
         component: () => import('@/views/freight/shippingPriceDetail'),
-        meta: { title: '商户运费模板', icon: 'shipping-price', roles: [role_admin_name] },
+        meta: { title: '店铺运费模板', icon: 'shipping-price', roles: [role_admin_name] },
         hidden: true
       },
       {

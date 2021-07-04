@@ -31,7 +31,7 @@ const state = {
   ready: false,
   platformId: default_app_id,
   needSettings: true,
-  cosUrl: `https://iwallet-1258175138.image.myqcloud.com`,
+  cosUrl: `https://iwallet-1303074949.cos.ap-chengdu.myqcloud.com`,
   platformList: [],
   vendorPlatformList: [] // The app id list of the login user
 }
@@ -78,6 +78,7 @@ const actions = {
   async getCosUrl({ commit }) {
     try {
       const { data } = await getCosUrlApi()
+      console.log(data)
       if ('cdnUrl' in data && !isEmpty(data.cdnUrl)) {
         commit('SET_COS_URL', data.cdnUrl)
       } else if ('baseUrl' in data && !isEmpty(data.baseUrl)) {

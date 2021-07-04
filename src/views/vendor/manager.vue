@@ -22,7 +22,7 @@
     </el-form>
     <div v-if="hasEditPermission" style="margin-bottom: 20px">
       <el-button type="primary" icon="el-icon-plus" @click="handleCreateVendor">
-        创建新商户
+        创建新店铺
       </el-button>
     </div>
     <el-table
@@ -138,7 +138,7 @@
       :close-on-press-escape="false"
       :show-close="false"
       :visible.sync="vendorDialogVisible"
-      :title="vendorId >= 0 ? '编辑商户' : '创建商户'"
+      :title="vendorId >= 0 ? '编辑店铺' : '创建店铺'"
     >
       <el-form
         ref="vendorForm"
@@ -147,10 +147,10 @@
         label-position="right"
         label-width="100px"
       >
-        <el-form-item label="商户名" prop="name">
+        <el-form-item label="店铺名" prop="name">
           <el-input v-model="vendorProfile.name" maxlength="30" />
         </el-form-item>
-        <el-form-item label="商户地址" prop="address">
+        <el-form-item label="店铺地址" prop="address">
           <el-input
             v-model="vendorProfile.address"
             class="item-input"
@@ -185,7 +185,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="商户行业" prop="industry">
+        <el-form-item label="店铺行业" prop="industry">
           <el-select
             v-model="vendorIndustry"
             multiple
@@ -293,14 +293,14 @@ export default {
       if (!isEmpty(value)) {
         callback()
       } else {
-        callback(new Error('请输入商户名'))
+        callback(new Error('请输入店铺名'))
       }
     }
     const validateAddress = (rule, value, callback) => {
       if (!isEmpty(value)) {
         callback()
       } else {
-        callback(new Error('请输入商户地址'))
+        callback(new Error('请输入店铺地址'))
       }
     }
     const validateInvoice = (rule, value, callback) => {
@@ -328,7 +328,7 @@ export default {
       if (!isEmpty(value)) {
         callback()
       } else {
-        callback(new Error('请选择商户类型'))
+        callback(new Error('请选择店铺类型'))
       }
     }
     return {
@@ -474,7 +474,7 @@ export default {
           this.dataLoading = false
         }
       } else {
-        this.$message.warning('没有查看商户的权限，请联系管理员！')
+        this.$message.warning('没有查看店铺的权限，请联系管理员！')
       }
     },
     handleViewVendor(index) {
@@ -614,7 +614,7 @@ export default {
         await reviewVendorProfileApi({ id, status: vendor_status_approved, comments: 'Approved' })
         this.vendorDialogVisible = false
         this.getVendorData()
-        this.$message.success('商户创建成功！')
+        this.$message.success('店铺创建成功！')
       } catch (e) {
         console.warn('Create vendor profile error:' + e)
         const msg = this.getErrorMessage(e)
@@ -628,7 +628,7 @@ export default {
         await updateVendorProfileApi({ id: this.vendorId, ...this.vendorProfile })
         this.vendorDialogVisible = false
         this.getVendorData()
-        this.$message.success('商户更新成功！')
+        this.$message.success('店铺更新成功！')
       } catch (e) {
         console.warn('Update vendor profile error:' + e)
         const msg = this.getErrorMessage(e)

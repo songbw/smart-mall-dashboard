@@ -108,11 +108,11 @@ const convertToInt = value => Number.isInteger(value) ? value : Math.round(conve
 
 const PromotionHeaders = [
   { field: 'promotionId', label: '活动ID', type: 'integer', template: '20' },
-  { field: 'promotionName', label: '活动名称', type: 'string', template: '凤巢秒杀活动' },
+  { field: 'promotionName', label: '活动名称', type: 'string', template: '*秒杀活动' },
   { field: 'promotionState', label: '活动状态', type: 'string', template: '编辑中' },
   { field: 'mpu', label: '商品MPU', type: 'string', template: '10001234' },
   { field: 'skuid', label: '商品SKU', type: 'string', template: '10001234' },
-  { field: 'name', label: '商品名', type: 'string', template: '凤巢测试商品' },
+  { field: 'name', label: '商品名', type: 'string', template: '*测试商品' },
   { field: 'discount', label: '促销价格(元)', type: 'float', template: '888.88' },
   { field: 'price', label: '销售价格(元)', type: 'float', template: '888.88' },
   { field: 'sprice', label: '进货价格(元)', type: 'float', template: '666.66' },
